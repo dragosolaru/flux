@@ -3,6 +3,26 @@
 All notable changes to Flux are documented here.
 Format: [Version] — Date · Description
 
+## [Unreleased]
+
+- Provisioned the live environment end-to-end: Supabase project + migration,
+  Google OAuth credentials, Tesla developer app, Vercel deployment on
+  `flux-alpha-three.vercel.app`.
+- Registered Flux as a Tesla EU partner (`partner_accounts` POST) and exposed
+  the EC P-256 command-signing public key at
+  `/.well-known/appspecific/com.tesla.3p.public-key.pem` via a route handler.
+- Virtual Key paired with the first user's vehicle (Model 3, 2023).
+- Defensive parsing of `vehicle_data` so partially-asleep cars don't crash the
+  dashboard; auto wake-on-408 with one retry.
+- `/api/tesla/command` returns `412 VCP_REQUIRED` for cars that require Tesla's
+  Vehicle Command Protocol. UI surfaces a dedicated toast and a dismissible
+  banner explaining the limitation.
+- Scaffolded `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) for the
+  upcoming Tesla HTTP Proxy deployment on Fly.io. Flux already routes commands
+  through `TESLA_PROXY_BASE_URL` when set; otherwise falls back to Tesla
+  direct (legacy REST, works for pre-2021 cars).
+- Documented the next-session plan in `docs/NEXT-STEPS.md`.
+
 ## [0.1.0] — 2026-05-16 · Initial scaffold
 
 - Project initialized: **Flux by DAO Lab**
