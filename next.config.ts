@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/appspecific/com.tesla.3p.public-key.pem",
+        destination: "/api/tesla-public-key",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
