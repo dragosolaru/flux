@@ -127,7 +127,15 @@ export async function sendVehicleCommand(params: {
 }): Promise<TeslaCommandResponse> {
   const { accessToken, region } = await getValidAccessToken(params.vehicleId);
 
-  const url = `${baseUrl(region)}/api/1/vehicles/${params.teslaVehicleId}/command/${params.command}`;
+  // For Model 3/Y/S/X post-2021 Tesla requires command signing via the
+  // Vehicle Command Protocol. We delegate that to a self-hosted proxy
+  // (the tesla-http-proxy Go binary). When TESLA_PROXY_BASE_URL is set,
+  // route through the proxy; otherwise hit Tesla directly (works for
+  // pre-2021 Model S/X and for cars where REST commands still pass).
+  const proxyBase = process.env.TESLA_PROXY_BASE_URL?.replace(/\/$/, "");
+  const apiBase = proxyBase || baseUrl(region);
+
+  const url = `${apiBase}/api/1/vehicles/${params.teslaVehicleId}/command/${params.command}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
