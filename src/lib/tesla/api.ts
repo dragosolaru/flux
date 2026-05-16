@@ -31,6 +31,23 @@ export async function fetchVehicleList(params: {
   return (await res.json()) as TeslaVehicleListResponse;
 }
 
+/**
+ * Wakes a sleeping vehicle. Tesla returns 200 even before the car is fully
+ * awake — the caller should poll vehicle_data with retries.
+ */
+async function wakeVehicle(params: {
+  accessToken: string;
+  region: string;
+  teslaVehicleId: number;
+}) {
+  const url = `${baseUrl(params.region)}/api/1/vehicles/${params.teslaVehicleId}/wake_up`;
+  await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${params.accessToken}` },
+    cache: "no-store",
+  }).catch(() => null);
+}
+
 export async function fetchVehicleData(params: {
   vehicleId: string;
   teslaVehicleId: number;
@@ -39,36 +56,65 @@ export async function fetchVehicleData(params: {
   const { accessToken, region } = await getValidAccessToken(params.vehicleId);
 
   const url = `${baseUrl(region)}/api/1/vehicles/${params.teslaVehicleId}/vehicle_data?endpoints=${encodeURIComponent(TESLA_VEHICLE_DATA_ENDPOINTS)}`;
-  const res = await fetch(url, {
+
+  let res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
 
+  // If asleep (408) try a single wake_up + short retry before failing.
+  if (res.status === 408) {
+    await wakeVehicle({
+      accessToken,
+      region,
+      teslaVehicleId: params.teslaVehicleId,
+    });
+    await new Promise((r) => setTimeout(r, 4_000));
+    res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+  }
+
   if (!res.ok) {
-    throw new Error(`Tesla vehicle_data failed: ${res.status}`);
+    const body = await res.text().catch(() => "");
+    throw new Error(`Tesla vehicle_data ${res.status}: ${body.slice(0, 200)}`);
   }
 
   const json = (await res.json()) as TeslaVehicleDataResponse;
-  const r = json.response;
+  return mapVehicleData(json, params);
+}
+
+function mapVehicleData(
+  json: TeslaVehicleDataResponse,
+  params: { vehicleId: string; displayName: string },
+): VehicleState {
+  // Tesla may omit sub-objects when the car is half-asleep — treat each as
+  // optional and fall back to safe defaults so the dashboard renders.
+  const r = json.response ?? ({} as TeslaVehicleDataResponse["response"]);
+  const charge = r.charge_state ?? null;
+  const climate = r.climate_state ?? null;
+  const drive = r.drive_state ?? null;
+  const veh = r.vehicle_state ?? null;
 
   return {
     vehicleId: params.vehicleId,
     displayName: r.display_name ?? params.displayName,
     isOnline: r.state === "online",
-    batteryLevel: r.charge_state.battery_level,
-    batteryRangeKm: r.charge_state.battery_range * MILES_TO_KM,
-    chargeLimit: r.charge_state.charge_limit_soc,
-    chargingState: mapChargingState(r.charge_state.charging_state),
-    chargingRateKw: r.charge_state.charger_power,
-    timeToFullMinutes: Math.round(r.charge_state.time_to_full_charge * 60),
-    odometerKm: r.vehicle_state.odometer * MILES_TO_KM,
-    interiorTempC: r.climate_state.inside_temp,
-    exteriorTempC: r.climate_state.outside_temp,
-    isClimateOn: r.climate_state.is_climate_on,
-    isLocked: r.vehicle_state.locked,
-    isSentryMode: r.vehicle_state.sentry_mode,
-    latitude: r.drive_state.latitude,
-    longitude: r.drive_state.longitude,
+    batteryLevel: charge?.battery_level ?? 0,
+    batteryRangeKm: (charge?.battery_range ?? 0) * MILES_TO_KM,
+    chargeLimit: charge?.charge_limit_soc ?? 80,
+    chargingState: mapChargingState(charge?.charging_state ?? "Disconnected"),
+    chargingRateKw: charge?.charger_power ?? 0,
+    timeToFullMinutes: Math.round((charge?.time_to_full_charge ?? 0) * 60),
+    odometerKm: (veh?.odometer ?? 0) * MILES_TO_KM,
+    interiorTempC: climate?.inside_temp ?? 0,
+    exteriorTempC: climate?.outside_temp ?? 0,
+    isClimateOn: climate?.is_climate_on ?? false,
+    isLocked: veh?.locked ?? true,
+    isSentryMode: veh?.sentry_mode ?? false,
+    latitude: drive?.latitude ?? 0,
+    longitude: drive?.longitude ?? 0,
     recordedAt: new Date().toISOString(),
   };
 }
@@ -93,7 +139,8 @@ export async function sendVehicleCommand(params: {
   });
 
   if (!res.ok) {
-    throw new Error(`Tesla command failed: ${res.status}`);
+    const body = await res.text().catch(() => "");
+    throw new Error(`Tesla command ${res.status}: ${body.slice(0, 200)}`);
   }
 
   return (await res.json()) as TeslaCommandResponse;

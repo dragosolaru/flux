@@ -61,10 +61,11 @@ export interface TeslaVehicleDataResponse {
     vin: string;
     display_name: string;
     state: TeslaVehicleSummary["state"];
-    charge_state: TeslaChargeState;
-    climate_state: TeslaClimateState;
-    drive_state: TeslaDriveState;
-    vehicle_state: TeslaVehicleState;
+    // Sub-objects can be omitted when the car is asleep or partly responsive.
+    charge_state?: TeslaChargeState | null;
+    climate_state?: TeslaClimateState | null;
+    drive_state?: Partial<TeslaDriveState> | null;
+    vehicle_state?: TeslaVehicleState | null;
   };
 }
 
