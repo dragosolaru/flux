@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { CommandsLimitedBanner } from "@/components/vehicle/CommandsLimitedBanner";
 import { StatsGrid } from "@/components/vehicle/StatsGrid";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -62,6 +63,7 @@ export function DashboardClient({
         <>
           <VehicleCard state={data} isLoading={isLoading} />
           {data && <StatsGrid state={data} />}
+          <CommandsLimitedBanner domain="flux-alpha-three.vercel.app" />
           <div className="grid gap-4 md:grid-cols-2">
             <ChargingStatus state={data} isLoading={isLoading} />
             <CommandPanel vehicleId={vehicleId} state={data} />

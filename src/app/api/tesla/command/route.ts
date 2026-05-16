@@ -70,8 +70,21 @@ export async function POST(req: NextRequest) {
       result: result.response.reason,
     });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Command failed";
+    const message = err instanceof Error ? err.message : "Command failed";
+
+    // Tesla deprecated REST commands on Model 3/Y/S/X built after 2021.
+    // Surface this as a structured error so the UI can guide the user.
+    if (message.includes("Vehicle Command Protocol required")) {
+      return NextResponse.json(
+        {
+          success: false,
+          result: "Tesla Vehicle Command Protocol required",
+          code: "VCP_REQUIRED",
+        },
+        { status: 412 },
+      );
+    }
+
     return NextResponse.json({ success: false, result: message }, { status: 502 });
   }
 }
