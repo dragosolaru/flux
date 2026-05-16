@@ -1,0 +1,77 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
+
+import { auth } from "@/lib/auth";
+import { sendVehicleCommand } from "@/lib/tesla/api";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+
+const SUPPORTED_COMMANDS = [
+  "door_lock",
+  "door_unlock",
+  "honk_horn",
+  "flash_lights",
+  "auto_conditioning_start",
+  "auto_conditioning_stop",
+  "set_charge_limit",
+] as const;
+
+const bodySchema = z.object({
+  vehicleId: z.string().uuid(),
+  command: z.enum(SUPPORTED_COMMANDS),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(payload);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Invalid request body", issues: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data: vehicle, error } = await supabase
+    .from("vehicles")
+    .select("id, tesla_vehicle_id")
+    .eq("user_id", session.user.id)
+    .eq("id", parsed.data.vehicleId)
+    .maybeSingle();
+
+  if (error || !vehicle || !vehicle.tesla_vehicle_id) {
+    return NextResponse.json(
+      { message: "Vehicle not found" },
+      { status: 404 },
+    );
+  }
+
+  try {
+    const result = await sendVehicleCommand({
+      vehicleId: vehicle.id,
+      teslaVehicleId: vehicle.tesla_vehicle_id,
+      command: parsed.data.command,
+      body: parsed.data.params,
+    });
+
+    return NextResponse.json({
+      success: result.response.result,
+      result: result.response.reason,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Command failed";
+    return NextResponse.json({ success: false, result: message }, { status: 502 });
+  }
+}
