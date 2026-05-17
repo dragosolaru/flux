@@ -1,0 +1,86 @@
+{
+  "id": "vacation",
+  "name": "Vacation",
+  "description": "4-day trip: Bucharest → Brașov → Sinaia → Bucharest with hotel AC charging.",
+  "cycleDurationSeconds": 345600,
+  "initialBatteryLevel": 95,
+  "vehicle": {
+    "batteryCapacityKwh": 75,
+    "efficiencyKwhPer100km": 17,
+    "maxAcChargingRateKw": 11,
+    "maxDcChargingRateKw": 250
+  },
+  "steps": [
+    {
+      "startOffsetSeconds": 0,
+      "motionState": "charging",
+      "location": { "lat": 44.4268, "lng": 26.1025 },
+      "chargingRateKw": 11,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 28800,
+      "motionState": "driving",
+      "location": { "lat": 44.4268, "lng": 26.1025 },
+      "targetLocation": { "lat": 45.6579, "lng": 25.6012 },
+      "avgSpeedKmh": 95,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 34200,
+      "motionState": "parked",
+      "location": { "lat": 45.6579, "lng": 25.6012 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 50400,
+      "motionState": "charging",
+      "location": { "lat": 45.6579, "lng": 25.6012 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 86400,
+      "motionState": "driving",
+      "location": { "lat": 45.6579, "lng": 25.6012 },
+      "targetLocation": { "lat": 45.3585, "lng": 25.5455 },
+      "avgSpeedKmh": 65,
+      "climateOn": true,
+      "driverTempC": 21
+    },
+    {
+      "startOffsetSeconds": 88200,
+      "motionState": "parked",
+      "location": { "lat": 45.3585, "lng": 25.5455 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 115200,
+      "motionState": "charging",
+      "location": { "lat": 45.3585, "lng": 25.5455 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 172800,
+      "motionState": "driving",
+      "location": { "lat": 45.3585, "lng": 25.5455 },
+      "targetLocation": { "lat": 44.4268, "lng": 26.1025 },
+      "avgSpeedKmh": 98,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 177600,
+      "motionState": "plugged-idle",
+      "location": { "lat": 44.4268, "lng": 26.1025 },
+      "chargingRateKw": 11,
+      "chargingNetwork": "home",
+      "climateOn": false
+    }
+  ]
+}

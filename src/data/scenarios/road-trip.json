@@ -1,0 +1,89 @@
+{
+  "id": "road-trip",
+  "name": "Road Trip",
+  "description": "Frankfurt → Munich and back (400 km each way) with one DC fast-charge stop.",
+  "cycleDurationSeconds": 172800,
+  "initialBatteryLevel": 90,
+  "vehicle": {
+    "batteryCapacityKwh": 75,
+    "efficiencyKwhPer100km": 18,
+    "maxAcChargingRateKw": 11,
+    "maxDcChargingRateKw": 250
+  },
+  "steps": [
+    {
+      "startOffsetSeconds": 0,
+      "motionState": "charging",
+      "location": { "lat": 50.1109, "lng": 8.6821 },
+      "chargingRateKw": 11,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 28800,
+      "motionState": "driving",
+      "location": { "lat": 50.1109, "lng": 8.6821 },
+      "targetLocation": { "lat": 48.7700, "lng": 10.3200 },
+      "avgSpeedKmh": 125,
+      "climateOn": true,
+      "driverTempC": 20
+    },
+    {
+      "startOffsetSeconds": 33600,
+      "motionState": "charging",
+      "location": { "lat": 48.7700, "lng": 10.3200 },
+      "chargingRateKw": 150,
+      "chargingNetwork": "ionity",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 35400,
+      "motionState": "driving",
+      "location": { "lat": 48.7700, "lng": 10.3200 },
+      "targetLocation": { "lat": 48.1351, "lng": 11.5820 },
+      "avgSpeedKmh": 118,
+      "climateOn": true,
+      "driverTempC": 20
+    },
+    {
+      "startOffsetSeconds": 37200,
+      "motionState": "parked",
+      "location": { "lat": 48.1351, "lng": 11.5820 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 79200,
+      "motionState": "driving",
+      "location": { "lat": 48.1351, "lng": 11.5820 },
+      "targetLocation": { "lat": 48.7700, "lng": 10.3200 },
+      "avgSpeedKmh": 120,
+      "climateOn": true,
+      "driverTempC": 20
+    },
+    {
+      "startOffsetSeconds": 81000,
+      "motionState": "charging",
+      "location": { "lat": 48.7700, "lng": 10.3200 },
+      "chargingRateKw": 150,
+      "chargingNetwork": "ionity",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 82800,
+      "motionState": "driving",
+      "location": { "lat": 48.7700, "lng": 10.3200 },
+      "targetLocation": { "lat": 50.1109, "lng": 8.6821 },
+      "avgSpeedKmh": 122,
+      "climateOn": true,
+      "driverTempC": 20
+    },
+    {
+      "startOffsetSeconds": 87600,
+      "motionState": "plugged-idle",
+      "location": { "lat": 50.1109, "lng": 8.6821 },
+      "chargingRateKw": 11,
+      "chargingNetwork": "home",
+      "climateOn": false
+    }
+  ]
+}

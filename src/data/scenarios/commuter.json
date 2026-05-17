@@ -1,0 +1,55 @@
+{
+  "id": "commuter",
+  "name": "Daily Commuter",
+  "description": "Typical 9-to-5 commute with home AC charging overnight.",
+  "cycleDurationSeconds": 86400,
+  "initialBatteryLevel": 75,
+  "vehicle": {
+    "batteryCapacityKwh": 75,
+    "efficiencyKwhPer100km": 16,
+    "maxAcChargingRateKw": 11,
+    "maxDcChargingRateKw": 250
+  },
+  "steps": [
+    {
+      "startOffsetSeconds": 0,
+      "motionState": "charging",
+      "location": { "lat": 50.0755, "lng": 14.4378 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 25200,
+      "motionState": "driving",
+      "location": { "lat": 50.0755, "lng": 14.4378 },
+      "targetLocation": { "lat": 50.0870, "lng": 14.4213 },
+      "avgSpeedKmh": 42,
+      "climateOn": true,
+      "driverTempC": 21
+    },
+    {
+      "startOffsetSeconds": 27000,
+      "motionState": "parked",
+      "location": { "lat": 50.0870, "lng": 14.4213 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 61200,
+      "motionState": "driving",
+      "location": { "lat": 50.0870, "lng": 14.4213 },
+      "targetLocation": { "lat": 50.0755, "lng": 14.4378 },
+      "avgSpeedKmh": 38,
+      "climateOn": true,
+      "driverTempC": 21
+    },
+    {
+      "startOffsetSeconds": 63600,
+      "motionState": "plugged-idle",
+      "location": { "lat": 50.0755, "lng": 14.4378 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    }
+  ]
+}

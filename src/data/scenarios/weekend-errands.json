@@ -1,0 +1,84 @@
+{
+  "id": "weekend-errands",
+  "name": "Weekend Errands",
+  "description": "A Saturday of local trips: supermarket, gym, lunch out, back home.",
+  "cycleDurationSeconds": 86400,
+  "initialBatteryLevel": 82,
+  "vehicle": {
+    "batteryCapacityKwh": 75,
+    "efficiencyKwhPer100km": 15,
+    "maxAcChargingRateKw": 11,
+    "maxDcChargingRateKw": 250
+  },
+  "steps": [
+    {
+      "startOffsetSeconds": 0,
+      "motionState": "plugged-idle",
+      "location": { "lat": 48.2082, "lng": 16.3738 },
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 36000,
+      "motionState": "driving",
+      "location": { "lat": 48.2082, "lng": 16.3738 },
+      "targetLocation": { "lat": 48.2150, "lng": 16.3600 },
+      "avgSpeedKmh": 35,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 36720,
+      "motionState": "parked",
+      "location": { "lat": 48.2150, "lng": 16.3600 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 39600,
+      "motionState": "driving",
+      "location": { "lat": 48.2150, "lng": 16.3600 },
+      "targetLocation": { "lat": 48.2000, "lng": 16.3900 },
+      "avgSpeedKmh": 32,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 40320,
+      "motionState": "parked",
+      "location": { "lat": 48.2000, "lng": 16.3900 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 46800,
+      "motionState": "driving",
+      "location": { "lat": 48.2000, "lng": 16.3900 },
+      "targetLocation": { "lat": 48.2120, "lng": 16.3650 },
+      "avgSpeedKmh": 28,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 47700,
+      "motionState": "parked",
+      "location": { "lat": 48.2120, "lng": 16.3650 },
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 52200,
+      "motionState": "driving",
+      "location": { "lat": 48.2120, "lng": 16.3650 },
+      "targetLocation": { "lat": 48.2082, "lng": 16.3738 },
+      "avgSpeedKmh": 30,
+      "climateOn": true,
+      "driverTempC": 22
+    },
+    {
+      "startOffsetSeconds": 53100,
+      "motionState": "plugged-idle",
+      "location": { "lat": 48.2082, "lng": 16.3738 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    }
+  ]
+}
