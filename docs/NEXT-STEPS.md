@@ -1,144 +1,78 @@
-# NEXT STEPS — Tesla Command Proxy (mâine)
+# NEXT STEPS — Flux (post-pivot, 2026-05-17)
 
-Ultima sesiune (2026-05-16) a livrat:
+The previous version of this file planned to deploy the Tesla HTTP Proxy on Fly.io to unlock signed commands. That work is **paused**. The reason: Flux is pivoting to a **mock-first, multi-brand platform**. Real Tesla commands aren't the bottleneck anymore; the bottleneck is shipping a credible multi-brand product surface.
 
-- Dashboard read-only live pe https://flux-alpha-three.vercel.app
-- Autentificare (Google + email/password) funcțională
-- OAuth Tesla complet (PKCE, partner registration, Virtual Key paired)
-- Citirea datelor live de la "Black Panther" (Model 3, 2023, VIN `LRW3E7EL...`)
+The mock-first plan is captured formally in `openspec/changes/pivot-mock-first-platform/`. This file is the human-readable execution roadmap.
 
-Ce **NU** funcționează încă: comenzile (Lock/Unlock, Climate, Honk, Flash, Set Charge Limit).
-Cauză: Tesla cere **Vehicle Command Protocol** (signed commands) pe Model 3/Y/S/X
-post-2021. REST commands returnează 403.
+## What changed in one paragraph
 
-## Plan pentru sesiunea următoare
+Every brand becomes a mock backed by a Tier-3 stateful simulator we control. Battery drains while driving, charges while plugged in, commands mutate state, charging sessions and trips accumulate in real time. The dashboard is brand-blind; per-brand capability maps decide which cards and buttons render. Beyond OEM telemetry, we mock energy tariffs, charging-network discovery, weather (with range derating), and trip planning. Multi-vehicle on one account is now first-class — garage page, switcher, fleet aggregates. Mock disclosure is visible and honest (`MOCK` chip per card, demo-mode banner, `/about-data` transparency page). The real Tesla code stays in the tree behind `LIVE_INTEGRATIONS`; we will reactivate brand-by-brand once each brand's full UI surface is locked.
 
-Rulăm proxy-ul oficial Tesla (`tesla-http-proxy`, Go binary open-source) ca microserviciu
-pe Fly.io. Proxy-ul ține cheia privată EC, primește REST de la Flux și retransmite
-ca comenzi semnate. Aplicația Flux deja are integrare condiționată: dacă
-`TESLA_PROXY_BASE_URL` e setat, comenzile trec prin proxy; dacă nu, lovesc Tesla direct.
+## What's preserved
 
-Toate fișierele necesare sunt deja în repo, sub `tesla-proxy/`:
+- The live Tesla OAuth + PKCE + region probe + token refresh + AES-256-GCM encryption code stays in the tree. Don't delete.
+- `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) stays. Marked dormant in its README.
+- The first user's `Black Panther` vehicle row in DB is migrated to `data_source = 'mock'` with a seeded scenario; the existing demo URL keeps working.
 
-- `Dockerfile` — build `tesla-http-proxy` din `github.com/teslamotors/vehicle-command`
-- `entrypoint.sh` — materializează cheia privată din secret, generează cert intern, lansează proxy-ul pe `$PORT`
-- `fly.toml` — config Fly.io (Frankfurt, shared 256MB, auto-stop)
-- `README.md` — pașii de deploy pentru viitor
+## Execution phases (matches `tasks.md` in the OpenSpec change)
 
-## Checklist pentru tine (manual, în terminalul tău)
+| Phase | Theme                                  | Output                                                                 |
+| ----- | -------------------------------------- | ---------------------------------------------------------------------- |
+| 1     | Foundations: brand registry            | `src/lib/brands/` + 7 capability profiles + extended `VehicleState`    |
+| 2     | Stateful Tier-3 simulator              | `src/lib/mock/engine.ts` + scenarios + persistence + migration 002     |
+| 3     | Multi-vehicle architecture             | `/garage`, `/dashboard?v=<id>`, switcher, brand-dispatched API routes  |
+| 4     | Brand mock implementations             | Per-brand adapters + seed data for all 7 brands                        |
+| 5     | Extended telemetry surface             | TPMS, doors, windows, sentry, dashcam, software, service, SoH, etc.    |
+| 6     | Beyond OEM: tariffs                    | Tibber/Octopus/aWATTar mocks, `/energy` page, smart-charge recs        |
+| 7     | Beyond OEM: charging-network discovery | Station registry + map + nearest-plug card                             |
+| 8     | Beyond OEM: weather + range            | Weather provider + derating model                                      |
+| 9     | Beyond OEM: trip planning              | Router + cross-vehicle comparison                                      |
+| 10    | Aggregate / cross-vehicle              | Fleet totals, smart-charge coordinator, "Which car?" recommender       |
+| 11    | Mock disclosure UX                     | `<MockChip>`, `<MockGlobalBanner>`, `/about-data`                      |
+| 12    | Legacy preservation                    | `LIVE_INTEGRATIONS` flag plumbing, Tesla code gated                    |
+| 13    | Docs                                   | SCOPE / ARCHITECTURE / README / BRANDS / SIMULATOR                     |
+| 14    | Validation + demo                      | Demo user seeded with 3 mock cars, Playwright happy-path, README GIFs  |
 
-### 1. Instalare `flyctl`
-
-```bash
-curl -L https://fly.io/install.sh | sh
-```
-
-Adaugă în PATH dacă nu apare automat:
-
-```bash
-export PATH="$HOME/.fly/bin:$PATH"
-fly version   # trebuie să afișeze versiunea
-```
-
-### 2. Cont Fly.io + autentificare
-
-```bash
-fly auth signup   # sau "fly auth login" dacă ai deja cont
-```
-
-⚠️ Fly cere card de credit pentru verificare. Planul gratuit acoperă 1-2 app-uri
-mici fără să taxeze nimic. Dacă nu vrei card, spune-mi și mutăm pe **Railway**
-($5 flat / lună) sau **Render** (gratis dar app-ul intră în sleep după 15 min).
-
-### 3. Deploy proxy
-
-```bash
-cd "/Users/dragosolaru/Learn/Tesla Dasboard/flux/tesla-proxy"
-fly launch --copy-config --no-deploy
-```
-
-Răspunsuri la prompt-uri:
-- App name: `flux-tesla-proxy` (acceptă)
-- Organization: `personal`
-- Region: `fra` (Frankfurt) — cel mai aproape
-- Postgres / Redis / Tigris / Sentry: toate **No**
-
-Setează cheia privată ca secret (e cea pe care am generat-o în sesiunea trecută):
-
-```bash
-fly secrets set TESLA_PRIVATE_KEY="$(base64 < ~/.flux-keys/tesla-command-signing.pem)"
-```
-
-Apoi deploy:
-
-```bash
-fly deploy
-```
-
-Așteaptă ~3–4 minute. La final vezi URL-ul de forma `https://flux-tesla-proxy.fly.dev`.
-
-### 4. Configurează Flux să-l folosească
-
-În Vercel dashboard → `flux` → **Settings → Environment Variables** → **Add**:
-
-| Name | Value |
-|---|---|
-| `TESLA_PROXY_BASE_URL` | URL-ul Fly de la pasul 3 (ex: `https://flux-tesla-proxy.fly.dev`) |
-
-Bifează Production + Preview + Development. **Save**. Apoi **Deployments → ⋯ → Redeploy**
-pe ultimul deployment (sau push un commit gol).
-
-### 5. Test
-
-Deschide https://flux-alpha-three.vercel.app/dashboard și apasă **Honk** sau **Flash**.
-Ar trebui să vezi toast verde "Command sent: honk horn" și mașina răspunde fizic.
-
-## Dacă apare ceva nou
-
-- `502` pe `/api/tesla/command` cu mesaj de la proxy → verifică `fly logs` în terminal
-- `412 VCP_REQUIRED` în continuare → `TESLA_PROXY_BASE_URL` nu e citit, verifică
-  că redeploy-ul a inclus env-ul nou
-- `403` de la proxy către Tesla → cheia privată din secret nu se potrivește cu
-  cheia publică înregistrată ca partner / cu Virtual Key paired pe mașină
-
-## Locații cheie
-
-| Ce | Unde |
-|---|---|
-| Cheia privată EC (signing) | `~/.flux-keys/tesla-command-signing.pem` (chmod 600) |
-| Cheia publică EC | `src/app/api/tesla-public-key/route.ts` (hardcoded — e publică) |
-| Cheia publică servită | `https://flux-alpha-three.vercel.app/.well-known/appspecific/com.tesla.3p.public-key.pem` |
-| Tokens Tesla ale userului | Supabase tabela `tesla_tokens`, criptate AES-256-GCM |
-| Cheia AES de criptare | `TESLA_TOKEN_ENCRYPTION_KEY` în `.env.local` + Vercel |
-| Vehicle ID Tesla | `929644865845425` (Black Panther, VIN `LRW3E7EL0PC661169`, EU) |
-
-## Cum pornesc serverul
-
-### Production (Vercel) — NU trebuie pornit, rulează 24/7
-
-Vercel rulează aplicația ca **serverless functions on-demand**. Nu există un proces
-care "pornește" sau "oprește". Fiecare cerere care vine la `flux-alpha-three.vercel.app`
-ridică o instanță, răspunde, se oprește. Costă $0 când nu vin cereri.
-
-Pentru a redeploy (după ce schimbi env vars sau cod):
-
-- **Cod:** `git push origin main` din `flux/` → Vercel face autodeploy în 2 minute.
-- **Env vars:** modifici în dashboard → la Deployments alegi ultimul deployment →
-  meniul `⋯` → **Redeploy**. Sau push un commit gol: `git commit --allow-empty -m "redeploy" && git push`.
-
-Status în orice moment: https://vercel.com/dragosolaru → proiectul `flux`. Deployment-ul
-cu badge "Production" e cel care rulează.
-
-### Dev local — când vrei să modifici cod
+## To start implementing
 
 ```bash
 cd "/Users/dragosolaru/Learn/Tesla Dasboard/flux"
-nvm use         # citește .nvmrc → trece pe Node 22
-npm run dev     # pornește pe http://localhost:3000
+nvm use
+npm run dev
 ```
 
-Pentru OAuth Tesla doar production merge (Tesla nu acceptă `localhost` în redirect URI).
-Pentru tot ce înseamnă citire Tesla **după ce ai conectat o dată mașina pe production**,
-poți testa local fără probleme — același DB Supabase, aceiași tokeni criptați.
+Then open the OpenSpec change and apply tasks:
 
-Oprire: `Ctrl+C` în terminal.
+```bash
+openspec show pivot-mock-first-platform
+openspec status pivot-mock-first-platform
+# or use the slash command in Claude Code: /opsx:apply
+```
+
+## Working remotely while away
+
+Three paths if the laptop is closed:
+
+1. **claude.ai/code** — push to GitHub first, then access the repo from any browser on `claude.ai/code`. Cloud environment; nothing depends on the laptop.
+2. **GitHub Codespaces + Claude Code VS Code extension** — open the repo in Codespaces, install the Claude Code extension, work as if local.
+3. **Anthropic Console / Claude.ai chat** — planning only; insufficient for actual code edits.
+
+Recommended pre-trip checklist:
+- `git init && git add . && git commit -m "checkpoint: pre-pivot snapshot"`
+- Push to a GitHub repo (private if desired).
+- Verify `claude.ai/code` can open the repo.
+
+## On Tesla developer credentials
+
+For the pivot we don't need the Tesla developer app active. We can leave it as-is — the code will simply ignore Tesla real APIs while `LIVE_INTEGRATIONS` does not include `tesla`. If you want to tidy up:
+
+1. Visit https://developer.tesla.com → your app.
+2. Optionally deactivate it. The public-key endpoint stays served by Flux automatically; it's harmless to leave it up.
+
+We will reactivate the app later (phase 0.2 of the post-pivot roadmap) when wiring the first live integration.
+
+## If something blocks the mock-first plan
+
+- `npm run dev` failing → check `nvm use` (Node 22 in `.nvmrc`).
+- Supabase migration 002 conflicts with existing data → run on a fresh project, point local at it via `.env.local`, migrate `Black Panther` via the documented script.
+- Simulator tick producing non-deterministic output → check that no `Date.now()` or `Math.random()` leaks into `tick()` outside the seeded RNG and the explicit `now` parameter.

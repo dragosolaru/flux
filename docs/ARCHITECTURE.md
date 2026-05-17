@@ -1,5 +1,7 @@
 # ARCHITECTURE — Flux
 
+> **Post-pivot note (2026-05-17).** This document describes both the **current direction** (mock-first, multi-brand, capability-driven UI, Tier-3 simulator) and the **preserved legacy** (real Tesla integration that stays in-tree behind a feature flag). When two sections appear to disagree, the post-pivot sections (§Brand registry, §Tier-3 simulator, §Capability-driven UI, §External-data abstraction) are authoritative; the original Tesla-specific sections describe code that remains in the repo but is gated by `LIVE_INTEGRATIONS`. The formal source of truth for what changes is `openspec/changes/pivot-mock-first-platform/`.
+
 ## DAO Lab engineering standards
 
 This codebase demonstrates the patterns DAO Lab applies in every client project:
@@ -86,29 +88,178 @@ OAuth tokens granted by Tesla are **bearer credentials**: anyone with the access
 
 When the user is on `/charging`, the same hook is used, so polling state is shared across pages — no thundering herd.
 
-## Multi-brand extensibility
+## Multi-brand extensibility (post-pivot: brand registry + capability map)
 
-The internal `VehicleState` type (in `src/types/vehicle.ts`) is **brand-agnostic** by design:
+The internal `VehicleState` type (in `src/types/vehicle.ts`) is **brand-agnostic** by design. Post-pivot, it is also a **superset** covering all 11 OEM telemetry categories (identity, energy, drive, climate, body, security, software, efficiency, trips, charging history, subscriptions, safety). Fields a given brand does not expose are `null`; the UI hides them rather than rendering placeholders.
 
-```
-VehicleState
-├── batteryLevel, batteryRangeKm, chargingState, chargingRateKw, …
-├── interiorTempC, exteriorTempC, isClimateOn
-├── isLocked, isSentryMode
-└── latitude, longitude
-```
-
-Adding BMW will look like:
+Brand support is **registry-driven**, not subclassed:
 
 ```
-src/lib/bmw/
-├── constants.ts   # endpoints, regions
-├── auth.ts        # ConnectedDrive OAuth
-├── tokens.ts      # encrypt/refresh (likely reuses crypto helpers)
-└── api.ts         # maps BMW responses → VehicleState
+src/lib/brands/
+├── registry.ts              # BRANDS = { tesla, bmw, polestar, mercedes, vw, hyundai, renault }
+├── types.ts                 # BrandProfile, BrandCapabilities
+├── capabilities.ts          # capability map schema
+└── <brand>/
+    ├── profile.ts           # capability map, displayName, data source
+    └── adapter.ts           # (raw) => Partial<VehicleState>
 ```
 
-The `vehicles.brand` column on the DB and a small dispatcher in `/api/<brand>/vehicle` are the only places that need to know about brand selection. UI components are already brand-blind.
+Each `BrandProfile` exposes:
+
+- `key`: stable identifier
+- `displayName`
+- `capabilities`: nested map of telemetry fields and commands the brand supports
+- `dataSource`: `mock` | `live`
+- `adapter`: pure function mapping raw API output → internal `VehicleState`
+
+UI components read `useBrandCapabilities(currentBrand)` and gate themselves accordingly. A Tesla card is rich; a Polestar card has no Honk button, no Sentry card, no cell-voltages panel — these literally don't render. The same JSX produces seven different cards.
+
+`vehicles.brand` and `vehicles.data_source` columns on the DB drive the dispatcher in `/api/vehicles/:id/{state,commands}`. The dispatcher's behavior:
+
+1. Load vehicle row, verify ownership.
+2. Look up the brand profile.
+3. If `dataSource === "mock"` → call the mock simulator (`src/lib/mock/engine.ts`).
+4. If `dataSource === "live"` → call the brand's live adapter.
+5. Normalize through the brand adapter → typed `VehicleState`.
+
+The decision point is row-data, not env-data. A single account can mix mock and live vehicles when live integrations come back online.
+
+## Tier-3 stateful mock simulator
+
+The simulator is the engine room of the mock-first MVP. Goals:
+
+- Commands actually do something (lock changes `isLocked`, climate drains battery, charge limit affects time-to-full).
+- History accumulates (charging sessions, trips, monthly cost).
+- Brand capabilities are validated end-to-end (the simulator refuses to perform commands a brand can't do).
+
+### Shape
+
+```ts
+// src/lib/mock/engine.ts
+interface MockVehicleSnapshot {
+  state: VehicleState
+  motionState: "parked" | "driving" | "charging" | "plugged-idle"
+  scenarioId: string | null
+  scenarioStep: number
+  lastTickAt: string
+}
+
+function tick(snapshot: MockVehicleSnapshot, now: Date, brand: BrandProfile): MockVehicleSnapshot
+function applyCommand(snapshot: MockVehicleSnapshot, command: string, args: unknown, brand: BrandProfile): MockVehicleSnapshot
+```
+
+`tick` is **pure**: given a snapshot + clock + brand, produce the next snapshot. No `Date.now()`, no `Math.random()` outside an explicit seeded RNG. Determinism keeps tests reliable and demos reproducible.
+
+### Persistence
+
+`mock_vehicle_state` (one row per vehicle) stores the latest snapshot + `last_tick_at`. On every `GET /api/vehicles/:id/state`, the handler:
+
+1. Loads the row.
+2. Ticks to `now` (advancing battery, location, odometer, motion-state transitions, scenario steps).
+3. Persists the new snapshot.
+4. Returns the projected `VehicleState`.
+
+No background worker required for v1. The 30s dashboard polling drives ticks at a rate well below what would matter.
+
+### Scenarios
+
+Scenarios are JSON files (`commuter.json`, `road-trip.json`, `weekend-errands.json`, `vacation.json`) describing ordered steps with timestamps, motion transitions, and waypoints. The engine advances `scenarioStep` based on wall-clock progression so an idle account opened at 18:00 shows vehicles plausibly arriving home from work.
+
+### Charging sessions & trips
+
+The engine detects `motionState === "charging"` runs and aggregates them into `charging_sessions` rows (`started_at`, `ended_at`, `energy_added_kwh`, `start_soc`, `end_soc`, `network`, `cost_eur`, `location_lat/lng`). Similarly, `motionState === "driving"` runs aggregate into `trips`. This makes the History pages real data, not fake fixtures.
+
+## Capability-driven UI
+
+Components never check `vehicle.brand === "tesla"`. They check `caps.commands.honk`, `caps.telemetry.cellVoltages`, etc.
+
+```tsx
+function CommandPanel({ vehicle, state }: Props) {
+  const caps = useBrandCapabilities(vehicle.brand)
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {caps.commands.lock     && <LockButton  vehicle={vehicle} locked={state.isLocked} />}
+      {caps.commands.climate  && <ClimateBtn  vehicle={vehicle} on={state.isClimateOn} />}
+      {caps.commands.honk     && <HonkButton  vehicle={vehicle} />}
+      {caps.commands.flash    && <FlashButton vehicle={vehicle} />}
+      {caps.commands.charge   && <ChargeBtn   vehicle={vehicle} state={state} />}
+    </div>
+  )
+}
+```
+
+The same pattern applies to `StatsGrid`, detail panels, and even page-level nav (a brand without trip history doesn't show a "Trips" tab).
+
+### Hide, don't disable
+
+Disabled buttons signal "this feature exists but you can't use it right now." That's the wrong message for "this brand doesn't have this feature." Hide entirely. The UI is honest about brand differences.
+
+## External-data abstraction (beyond OEM)
+
+Tariffs, charging-network discovery, weather, and routing all follow the **same registry pattern** as brands:
+
+```
+src/lib/external/
+├── tariffs/
+│   ├── registry.ts          # TARIFF_PROVIDERS = { tibber-mock, octopus-mock, awattar-mock }
+│   └── <provider>/
+│       ├── provider.ts
+│       └── fixtures.ts
+├── charging-networks/
+│   ├── registry.ts          # NETWORKS = { ionity, tesla-sc, enbw, allego, fastned }
+│   └── stations.ts          # ~50 EU stations with stalls + plug types + max kW + base price
+├── weather/
+│   ├── registry.ts
+│   └── mock-provider.ts
+└── routing/
+    ├── registry.ts
+    └── mock-router.ts       # great-circle + waypoint heuristic, charging-stop insertion
+```
+
+The user picks active providers in settings. The dashboard reads the active provider. When real APIs are plugged in (roadmap 0.5+), only the underlying fetch changes; the shape stays.
+
+## Multi-vehicle UX
+
+Routes:
+
+- `/garage` (default landing) — grid of vehicle cards + fleet aggregates.
+- `/dashboard?v=<vehicleId>` — deep card view.
+- `/energy` — tariffs + smart charging.
+- `/charging-map` — nearby stations.
+- `/trip` — trip planner.
+- `/about-data` — mock-vs-live transparency table.
+
+Top nav has a **vehicle switcher pill** (current vehicle + dropdown of others). The Dashboard, Trip, and Charging-Map pages all act on the active vehicle.
+
+Fleet totals on the Garage page sum across all vehicles for: combined available range, kWh charged this month, monthly cost, CO₂ saved vs. ICE baseline. The smart-charge coordinator (across multiple plugged-in vehicles) and the "Which car?" recommender live on the Garage too.
+
+## Mock disclosure
+
+The product is honest about which data is simulated:
+
+| Surface                                | When it appears                                              |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `MOCK` chip in card header (amber)     | Vehicle has `dataSource === "mock"`                          |
+| Global "Demo mode" banner              | Every vehicle on the account is mock                         |
+| `/about-data` transparency page        | Always available; lists live-vs-mock per data category       |
+
+The chip tooltip and the banner both link to `/about-data`. We never tell the user "this is live" when it isn't.
+
+## Legacy live-Tesla preservation
+
+The original Tesla code (OAuth + PKCE + region probe + token refresh + AES-256-GCM encryption + vehicle-data parser + command routes) **stays in the tree**. Re-deriving it would cost days; the cost of keeping it is one env flag check and an unused import path.
+
+- `LIVE_INTEGRATIONS` env: comma-separated brand keys (`tesla,bmw,...`). When `tesla` is in the list, the Tesla brand profile is allowed `dataSource = "live"`. Otherwise, all Tesla vehicles are forced to mock regardless of DB row state.
+- `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) stays. Its README is marked "currently dormant."
+- `/connect/tesla` and `/api/tesla/*` routes return 410 Gone with a JSON message when `tesla` is not in `LIVE_INTEGRATIONS`.
+
+### Reactivation procedure (future phase 0.2)
+
+1. Set `LIVE_INTEGRATIONS=tesla` in Vercel env.
+2. Deploy `tesla-proxy/` on Fly.io per the original NEXT-STEPS plan (preserved in git history).
+3. Set `TESLA_PROXY_BASE_URL` on Vercel.
+4. From the UI, the "Add real Tesla" CTA reappears in onboarding.
+5. Existing mock Tesla vehicles can be converted to live by user action (re-OAuth and flip `data_source = 'live'` on the row).
 
 ## Implementation decisions
 

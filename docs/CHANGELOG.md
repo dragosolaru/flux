@@ -5,6 +5,16 @@ Format: [Version] — Date · Description
 
 ## [Unreleased]
 
+### 2026-05-17 — Pivot to mock-first multi-brand platform
+
+- Direction change: Flux abandons "Tesla-only, real API" as the MVP shape and adopts a **mock-first, multi-brand** posture. Every brand is implemented against a Tier-3 stateful simulator; live integrations come back brand-by-brand later, gated by the `LIVE_INTEGRATIONS` env flag.
+- Scaffolded OpenSpec (`openspec/`) with the formal change proposal `pivot-mock-first-platform`, including proposal, design, tasks, and 8 capability spec deltas (vehicle-platform, mock-simulator, fleet-management, energy-tariffs, charging-network-discovery, weather-and-range, trip-planning, mock-disclosure). The change passes `openspec validate --strict`.
+- Documented the new direction in `docs/SCOPE.md`, `docs/NEXT-STEPS.md`, `docs/ARCHITECTURE.md`, and `README.md`. Tesla HTTP Proxy plan in the previous `NEXT-STEPS.md` is paused (not deleted; the `tesla-proxy/` scaffold stays in the tree).
+- 7 supported brands targeted (Tesla, BMW, Polestar, Mercedes-EQ, VW-ID, Hyundai/Kia, Renault), chosen for EU market share and to validate the capability-driven UI across distinct capability profiles.
+- Beyond-OEM data layers planned and specced (mocked): energy tariffs, charging-network discovery, weather + range derating, trip planning.
+
+### 2026-05-16 — Live Tesla integration (now superseded by mock-first)
+
 - Provisioned the live environment end-to-end: Supabase project + migration,
   Google OAuth credentials, Tesla developer app, Vercel deployment on
   `flux-alpha-three.vercel.app`.
