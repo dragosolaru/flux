@@ -10,6 +10,7 @@ const items = [
   { href: "/garage",    label: "Garage",    icon: LayoutGrid },
   { href: "/dashboard", label: "Dashboard", icon: Car },
   { href: "/charging",  label: "Charging",  icon: BatteryCharging },
+  { href: "/energy",    label: "Energy",    icon: Zap },
   { href: "/settings",  label: "Settings",  icon: Settings },
 ];
 

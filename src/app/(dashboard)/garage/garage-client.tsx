@@ -1,14 +1,27 @@
 "use client";
 
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Zap } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { VehicleListCard } from "@/components/vehicle/VehicleListCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVehicles } from "@/hooks/useVehicles";
+import { apiFetch } from "@/lib/api-fetch";
+import type { TariffForecast } from "@/lib/external/tariffs/types";
+
+interface TariffResponse extends TariffForecast {
+  providerId: string;
+  providerName: string;
+}
 
 export function GarageClient() {
   const { data: vehicles, isLoading } = useVehicles();
+  const { data: tariff } = useQuery({
+    queryKey: ["tariff-prices"],
+    queryFn: () => apiFetch<TariffResponse>("/api/tariffs/prices"),
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -23,6 +36,22 @@ export function GarageClient() {
         </div>
         <AddVehicleModal />
       </div>
+
+      {/* Cheapest tariff window hint */}
+      {tariff && tariff.cheapestAvgPrice < tariff.currentPrice && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-chart-2/30 bg-chart-2/10 px-3 py-2 text-sm text-chart-2">
+          <Zap className="size-3.5 shrink-0" />
+          <span>
+            Cheapest plug-in:{" "}
+            <strong>
+              {String(tariff.cheapestWindowStart).padStart(2, "0")}:00
+              {" – "}
+              {String(tariff.cheapestWindowEnd).padStart(2, "0")}:00
+            </strong>
+            {" · "}save {((tariff.currentPrice - tariff.cheapestAvgPrice) * 100).toFixed(1)} ct/kWh vs now
+          </span>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
