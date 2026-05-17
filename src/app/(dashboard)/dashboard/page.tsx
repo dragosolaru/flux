@@ -3,35 +3,37 @@ import { redirect } from "next/navigation";
 import { DashboardClient } from "./dashboard-client";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import type { BrandKey } from "@/lib/brands/types";
 
-export const metadata = {
-  title: "Dashboard · Flux",
-};
+export const metadata = { title: "Dashboard · Flux" };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ v?: string }>;
+}) {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
+  if (!session?.user?.id) redirect("/login");
+
+  const { v: vehicleId } = await searchParams;
+  if (!vehicleId) redirect("/garage");
 
   const supabase = createSupabaseAdminClient();
   const { data: vehicle } = await supabase
     .from("vehicles")
-    .select("id, display_name")
+    .select("id, display_name, brand, nickname")
+    .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
     .maybeSingle();
 
-  if (!vehicle) {
-    redirect("/connect/tesla");
-  }
+  if (!vehicle) redirect("/garage");
 
   return (
     <DashboardClient
       vehicleId={vehicle.id}
-      vehicleName={vehicle.display_name}
+      vehicleName={vehicle.nickname ?? vehicle.display_name}
+      brand={vehicle.brand as BrandKey}
     />
   );
 }

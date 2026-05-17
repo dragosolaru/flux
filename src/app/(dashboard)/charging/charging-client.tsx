@@ -48,7 +48,7 @@ export function ChargingClient({
     mutate({
       vehicleId,
       command: "set_charge_limit",
-      params: { percent: limit },
+      args: { limitPct: limit },
     });
   }
 

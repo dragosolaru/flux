@@ -3,50 +3,37 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { TeslaCommand } from "@/types/tesla";
+import type { CommandName } from "@/types/history";
 
 interface CommandInput {
   vehicleId: string;
-  command: TeslaCommand;
-  params?: Record<string, unknown>;
+  command: CommandName;
+  args?: Record<string, unknown> | null;
 }
 
 interface CommandResult {
   success: boolean;
-  result: string;
-  code?: "VCP_REQUIRED";
+  message?: string;
 }
 
 export function useVehicleCommand() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: CommandInput): Promise<CommandResult> => {
-      const res = await fetch("/api/tesla/command", {
+    mutationFn: async ({ vehicleId, command, args }: CommandInput): Promise<CommandResult> => {
+      const res = await fetch(`/api/vehicles/${vehicleId}/commands`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ command, args }),
       });
-      const body = (await res.json()) as CommandResult;
-      // Pass non-OK responses through to the success handler so we can
-      // distinguish between transport errors and known command failures.
-      return body;
+      return (await res.json()) as CommandResult;
     },
     onSuccess: (data, variables) => {
-      if (data.code === "VCP_REQUIRED") {
-        toast.error(
-          "Tesla blocks REST commands on this car — needs Vehicle Command Proxy + Virtual Key pairing. See dashboard banner.",
-          { duration: 8_000 },
-        );
-        return;
-      }
       if (data.success) {
         toast.success(`Command sent: ${variables.command.replace(/_/g, " ")}`);
-        queryClient.invalidateQueries({
-          queryKey: ["vehicle", variables.vehicleId],
-        });
+        queryClient.invalidateQueries({ queryKey: ["vehicle", variables.vehicleId] });
       } else {
-        toast.error(`Command failed: ${data.result}`);
+        toast.error(data.message ?? "Command failed");
       }
     },
     onError: (err: Error) => {

@@ -1,0 +1,70 @@
+import { NextResponse } from "next/server";
+
+import { auth } from "@/lib/auth";
+import { getBrand } from "@/lib/brands/registry";
+import { isLiveEnabled } from "@/lib/live-integrations";
+import { tick } from "@/lib/mock/engine";
+import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
+import { createInitialSnapshot } from "@/lib/mock/seed";
+import { fetchVehicleData } from "@/lib/tesla/api";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import type { BrandKey } from "@/lib/brands/types";
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ vehicleId: string }> },
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { vehicleId } = await params;
+  const supabase = createSupabaseAdminClient();
+
+  const { data: vehicle, error: vehErr } = await supabase
+    .from("vehicles")
+    .select("id, brand, data_source, display_name, tesla_vehicle_id, tesla_region")
+    .eq("id", vehicleId)
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  if (vehErr || !vehicle) {
+    return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
+  }
+
+  const profile = getBrand(vehicle.brand);
+  if (!profile) {
+    return NextResponse.json({ message: "unknown-brand" }, { status: 400 });
+  }
+
+  // Live path: brand is in LIVE_INTEGRATIONS and vehicle is marked live
+  if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
+    if (vehicle.brand === "tesla" && vehicle.tesla_vehicle_id) {
+      try {
+        const state = await fetchVehicleData({
+          vehicleId: vehicle.id,
+          teslaVehicleId: vehicle.tesla_vehicle_id,
+          displayName: vehicle.display_name,
+        });
+        return NextResponse.json(state);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Live fetch failed";
+        return NextResponse.json({ message: msg }, { status: 502 });
+      }
+    }
+    return NextResponse.json({ message: "Live adapter not available for this brand" }, { status: 501 });
+  }
+
+  // Mock path: tick the simulator to now
+  let prev = await loadSnapshot(vehicleId);
+  if (!prev) {
+    prev = createInitialSnapshot(vehicleId, vehicle.display_name, vehicle.brand as BrandKey, "commuter");
+    await saveSnapshot(vehicleId, null, prev);
+  }
+
+  const next = tick(prev, new Date(), profile);
+  await saveSnapshot(vehicleId, prev, next);
+
+  return NextResponse.json(next.state);
+}

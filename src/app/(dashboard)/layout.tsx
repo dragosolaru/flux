@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { auth } from "@/lib/auth";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({
   children,
@@ -13,18 +12,6 @@ export default async function DashboardLayout({
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");
-  }
-
-  const supabase = createSupabaseAdminClient();
-  const { data: vehicles } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("user_id", session.user.id)
-    .eq("is_active", true)
-    .limit(1);
-
-  if (!vehicles || vehicles.length === 0) {
-    redirect("/connect/tesla");
   }
 
   return (

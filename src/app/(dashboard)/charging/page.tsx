@@ -8,41 +8,44 @@ export const metadata = {
   title: "Charging · Flux",
 };
 
-export default async function ChargingPage() {
+export default async function ChargingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ v?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const { v: vehicleId } = await searchParams;
+  if (!vehicleId) redirect("/garage");
 
   const supabase = createSupabaseAdminClient();
   const { data: vehicle } = await supabase
     .from("vehicles")
-    .select("id, display_name")
+    .select("id, display_name, nickname")
+    .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
     .maybeSingle();
 
-  if (!vehicle) redirect("/connect/tesla");
+  if (!vehicle) redirect("/garage");
 
   const { data: history } = await supabase
-    .from("vehicle_snapshots")
-    .select(
-      "id, battery_level, charging_rate_kw, is_charging, recorded_at",
-    )
+    .from("charging_sessions")
+    .select("id, started_at, ended_at, energy_added_kwh, start_soc, end_soc, network")
     .eq("vehicle_id", vehicle.id)
-    .eq("is_charging", true)
-    .order("recorded_at", { ascending: false })
+    .order("started_at", { ascending: false })
     .limit(10);
 
   return (
     <ChargingClient
       vehicleId={vehicle.id}
-      vehicleName={vehicle.display_name}
+      vehicleName={vehicle.nickname ?? vehicle.display_name}
       history={(history ?? []).map((row) => ({
         id: row.id,
-        batteryLevel: row.battery_level,
-        chargingRateKw: row.charging_rate_kw,
-        recordedAt: row.recorded_at,
+        batteryLevel: row.end_soc,
+        chargingRateKw: null,
+        recordedAt: row.started_at,
       }))}
     />
   );

@@ -1,11 +1,46 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { ChevronDown, LogOut, Moon, Sun } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useVehicles } from "@/hooks/useVehicles";
+
+function VehicleSwitcher() {
+  const { data: vehicles } = useVehicles();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const currentId = searchParams.get("v");
+  const current = vehicles?.find((v) => v.id === currentId);
+
+  if (!vehicles || vehicles.length === 0) return null;
+
+  return (
+    <div className="flex items-center">
+      <select
+        value={currentId ?? ""}
+        onChange={(e) => {
+          if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
+        }}
+        className="h-8 cursor-pointer rounded-md border bg-background px-2 pr-7 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+        aria-label="Switch vehicle"
+      >
+        {!currentId && <option value="">— select vehicle —</option>}
+        {vehicles.map((v) => (
+          <option key={v.id} value={v.id}>
+            {v.nickname ?? v.displayName}
+          </option>
+        ))}
+      </select>
+      {current && (
+        <ChevronDown className="pointer-events-none -ml-6 size-3.5 text-muted-foreground" />
+      )}
+    </div>
+  );
+}
 
 export function TopBar() {
   const { data: session } = useSession();
@@ -24,6 +59,8 @@ export function TopBar() {
       <div className="md:hidden flex items-center gap-2 font-semibold">
         Flux
       </div>
+
+      <VehicleSwitcher />
 
       <div className="ml-auto flex items-center gap-2">
         <Button

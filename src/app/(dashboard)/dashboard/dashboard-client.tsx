@@ -6,31 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
-import { CommandsLimitedBanner } from "@/components/vehicle/CommandsLimitedBanner";
 import { StatsGrid } from "@/components/vehicle/StatsGrid";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { useVehicle } from "@/hooks/useVehicle";
+import type { BrandKey } from "@/lib/brands/types";
 
 interface DashboardClientProps {
   vehicleId: string;
   vehicleName: string;
+  brand: BrandKey;
 }
 
-export function DashboardClient({
-  vehicleId,
-  vehicleName,
-}: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClientProps) {
   const { data, isLoading, isFetching, error, refetch } = useVehicle(vehicleId);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {vehicleName}
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{vehicleName}</h1>
           <p className="text-sm text-muted-foreground">
-            Live state from the Tesla Fleet API · refreshes every 30s
+            Refreshes every 30s
           </p>
         </div>
         <Button
@@ -39,9 +35,7 @@ export function DashboardClient({
           onClick={() => refetch()}
           disabled={isFetching}
         >
-          <RefreshCw
-            className={`size-4 ${isFetching ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -63,10 +57,9 @@ export function DashboardClient({
         <>
           <VehicleCard state={data} isLoading={isLoading} />
           {data && <StatsGrid state={data} />}
-          <CommandsLimitedBanner domain="flux-alpha-three.vercel.app" />
           <div className="grid gap-4 md:grid-cols-2">
             <ChargingStatus state={data} isLoading={isLoading} />
-            <CommandPanel vehicleId={vehicleId} state={data} />
+            <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
           </div>
         </>
       )}
