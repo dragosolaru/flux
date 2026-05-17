@@ -6,6 +6,33 @@ import { getScenario, getStepInfoAt } from "./scenarios";
 import { getModelSpec } from "@/lib/brands/models";
 import type { VehicleState } from "@/types/vehicle";
 
+// Brand-specific version strings for software card
+const SOFTWARE_VERSIONS: Record<BrandKey, string> = {
+  tesla:    "2025.14.3",
+  bmw:      "07/2025",
+  polestar: "P2.8.1",
+  mercedes: "EQ-OS 3.1.0",
+  vw:       "3.5.0",
+  hyundai:  "25W13",
+  renault:  "SYS-1.9",
+};
+
+// Stable mock tire pressures (kPa) — ~35 psi nominal, slight rear increase for load
+const NOMINAL_TIRE_PRESSURES = {
+  frontLeftKpa:  241,
+  frontRightKpa: 241,
+  rearLeftKpa:   248,
+  rearRightKpa:  248,
+};
+
+// 96-cell pack at ~3.7 V each, slight variance to look realistic
+function makeCellVoltages(): number[] {
+  return Array.from({ length: 96 }, (_, i) => {
+    const jitter = ((i * 7) % 17) * 0.001; // deterministic, 0–16 mV spread
+    return 3.680 + jitter;
+  });
+}
+
 export function createInitialSnapshot(
   vehicleId: string,
   displayName: string,
@@ -34,8 +61,9 @@ export function createInitialSnapshot(
     chargingState: "disconnected",
     chargingRateKw: null,
     timeToFullMinutes: null,
-    batteryHealthPct: null,
-    cellVoltages: null,
+    // Static telemetry — capability mask nulls these for brands that don't expose them
+    batteryHealthPct: 92.4,
+    cellVoltages: makeCellVoltages(),
     motionState: step.motionState,
     odometerKm: 0,
     speedKmh: null,
@@ -51,19 +79,19 @@ export function createInitialSnapshot(
     seatHeatingLevel: null,
     steeringHeating: null,
     isLocked: true,
-    doorsOpen: null,
-    windowsOpen: null,
-    isTrunkOpen: null,
-    isFrunkOpen: null,
+    doorsOpen: { frontLeft: false, frontRight: false, rearLeft: false, rearRight: false },
+    windowsOpen: { frontLeft: false, frontRight: false, rearLeft: false, rearRight: false },
+    isTrunkOpen: false,
+    isFrunkOpen: false,
     isSentryMode: false,
-    isDashcamRecording: null,
-    softwareVersion: null,
-    updateAvailable: null,
+    isDashcamRecording: false,
+    softwareVersion: SOFTWARE_VERSIONS[brand],
+    updateAvailable: false,
     updateVersionLabel: null,
     serviceDueAt: null,
-    tirePressures: null,
-    safetyScore: null,
-    efficiencyScore: null,
+    tirePressures: NOMINAL_TIRE_PRESSURES,
+    safetyScore: 95,
+    efficiencyScore: 82,
     recordedAt: now.toISOString(),
   };
 
