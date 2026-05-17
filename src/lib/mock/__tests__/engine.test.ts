@@ -60,6 +60,7 @@ function makeSnapshot(overrides: Partial<MockVehicleSnapshot> = {}): MockVehicle
     motionState: "parked",
     scenarioId: "commuter",
     lastTickAt: "2026-01-01T08:00:00Z",
+    vehicleSpec: null,
     activeChargingSessionStart: null,
     activeChargingSessionNetwork: null,
     activeChargingSessionStartSoc: null,

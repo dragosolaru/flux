@@ -6,6 +6,8 @@ export interface MockVehicleSnapshot {
   motionState: MotionState;
   scenarioId: string | null;
   lastTickAt: string; // ISO
+  // Brand/model-specific vehicle spec — overrides scenario.vehicle during tick
+  vehicleSpec: ScenarioVehicle | null;
   // Open session tracking — set when a session starts, cleared on close
   activeChargingSessionStart: string | null;
   activeChargingSessionNetwork: ChargingNetwork | null;

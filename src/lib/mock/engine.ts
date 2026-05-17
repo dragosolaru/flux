@@ -33,21 +33,24 @@ function applyChunk(
 ): MockVehicleSnapshot {
   if (chunkSeconds <= 0) return snapshot;
 
+  // Brand/model spec overrides scenario defaults when set
+  const vehicleSpec = snapshot.vehicleSpec ?? scenario.vehicle;
+
   const state: VehicleState = { ...snapshot.state };
   const battery = state.batteryLevel ?? scenario.initialBatteryLevel;
   const odometer = state.odometerKm ?? 0;
-  const cap = scenario.vehicle.batteryCapacityKwh;
+  const cap = vehicleSpec.batteryCapacityKwh;
 
   switch (step.motionState) {
     case "driving": {
       const speed = step.avgSpeedKmh ?? 80;
       const distKm = speed * (chunkSeconds / 3600);
-      const drainKwh = (distKm / 100) * scenario.vehicle.efficiencyKwhPer100km;
+      const drainKwh = (distKm / 100) * vehicleSpec.efficiencyKwhPer100km;
       const drainPct = (drainKwh / cap) * 100;
 
       state.batteryLevel = Math.max(0, battery - drainPct);
       state.batteryRangeKm =
-        (state.batteryLevel / 100) * ((cap / scenario.vehicle.efficiencyKwhPer100km) * 100);
+        (state.batteryLevel / 100) * ((cap / vehicleSpec.efficiencyKwhPer100km) * 100);
       state.odometerKm = odometer + distKm;
       state.speedKmh = speed;
       state.chargingState = "disconnected";
@@ -67,7 +70,7 @@ function applyChunk(
     }
 
     case "charging": {
-      const rate = step.chargingRateKw ?? scenario.vehicle.maxAcChargingRateKw;
+      const rate = step.chargingRateKw ?? vehicleSpec.maxAcChargingRateKw;
       const limit = state.chargeLimit ?? 80;
 
       if (battery < limit) {
@@ -75,7 +78,7 @@ function applyChunk(
         const gainPct = (gainKwh / cap) * 100;
         state.batteryLevel = Math.min(limit, battery + gainPct);
         state.batteryRangeKm =
-          (state.batteryLevel / 100) * ((cap / scenario.vehicle.efficiencyKwhPer100km) * 100);
+          (state.batteryLevel / 100) * ((cap / vehicleSpec.efficiencyKwhPer100km) * 100);
         state.chargingState = "charging";
         state.chargingRateKw = rate;
         state.timeToFullMinutes = Math.ceil(
@@ -98,7 +101,7 @@ function applyChunk(
       // Battery full — maintain charge, no active charging rate
       state.chargingState = battery >= (state.chargeLimit ?? 80) ? "complete" : "charging";
       if (state.chargingState === "charging") {
-        const rate = step.chargingRateKw ?? scenario.vehicle.maxAcChargingRateKw;
+        const rate = step.chargingRateKw ?? vehicleSpec.maxAcChargingRateKw;
         const gainKwh = rate * (chunkSeconds / 3600);
         state.batteryLevel = Math.min(state.chargeLimit ?? 80, battery + (gainKwh / cap) * 100);
         state.chargingRateKw = rate;
@@ -122,7 +125,7 @@ function applyChunk(
         const drainPct = (drainKwh / cap) * 100;
         state.batteryLevel = Math.max(0, battery - drainPct);
         state.batteryRangeKm =
-          (state.batteryLevel / 100) * ((cap / scenario.vehicle.efficiencyKwhPer100km) * 100);
+          (state.batteryLevel / 100) * ((cap / vehicleSpec.efficiencyKwhPer100km) * 100);
       }
 
       state.chargingState = "disconnected";

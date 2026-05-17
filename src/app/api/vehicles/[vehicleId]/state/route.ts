@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
 import { getBrand } from "@/lib/brands/registry";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { tick } from "@/lib/mock/engine";
@@ -66,5 +67,6 @@ export async function GET(
   const next = tick(prev, new Date(), profile);
   await saveSnapshot(vehicleId, prev, next);
 
-  return NextResponse.json(next.state);
+  const maskedState = applyCapabilityMask(next.state, profile.capabilities.telemetry);
+  return NextResponse.json(maskedState);
 }

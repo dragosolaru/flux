@@ -1,20 +1,25 @@
 // Creates the initial MockVehicleSnapshot for a newly added mock vehicle.
 
-import type { BrandKey, VehicleState } from "@/types/vehicle";
+import type { BrandKey } from "@/lib/brands/types";
 import type { MockVehicleSnapshot } from "./types";
 import { getScenario, getStepInfoAt } from "./scenarios";
+import { getModelSpec } from "@/lib/brands/models";
+import type { VehicleState } from "@/types/vehicle";
 
 export function createInitialSnapshot(
   vehicleId: string,
   displayName: string,
   brand: BrandKey,
   scenarioId: string,
+  modelName?: string | null,
 ): MockVehicleSnapshot {
   const scenario = getScenario(scenarioId) ?? getScenario("commuter")!;
+  const spec = getModelSpec(brand, modelName ?? null);
   const now = new Date();
   const { step } = getStepInfoAt(scenario, now);
 
-  const maxRangeKm = (scenario.vehicle.batteryCapacityKwh / scenario.vehicle.efficiencyKwhPer100km) * 100;
+  const maxRangeKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
+  const initialBattery = scenario.initialBatteryLevel;
 
   const state: VehicleState = {
     vehicleId,
@@ -23,9 +28,9 @@ export function createInitialSnapshot(
     dataSource: "mock",
     isOnline: true,
     lastSeenAt: now.toISOString(),
-    batteryLevel: scenario.initialBatteryLevel,
-    batteryRangeKm: (scenario.initialBatteryLevel / 100) * maxRangeKm,
-    chargeLimit: 80,
+    batteryLevel: initialBattery,
+    batteryRangeKm: (initialBattery / 100) * maxRangeKm,
+    chargeLimit: spec.defaultChargeLimit,
     chargingState: "disconnected",
     chargingRateKw: null,
     timeToFullMinutes: null,
@@ -67,6 +72,12 @@ export function createInitialSnapshot(
     motionState: step.motionState,
     scenarioId,
     lastTickAt: now.toISOString(),
+    vehicleSpec: {
+      batteryCapacityKwh: spec.batteryCapacityKwh,
+      efficiencyKwhPer100km: spec.efficiencyKwhPer100km,
+      maxAcChargingRateKw: spec.maxAcChargingRateKw,
+      maxDcChargingRateKw: spec.maxDcChargingRateKw,
+    },
     activeChargingSessionStart: null,
     activeChargingSessionNetwork: null,
     activeChargingSessionStartSoc: null,
