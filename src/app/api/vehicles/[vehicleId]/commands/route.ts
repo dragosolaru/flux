@@ -20,7 +20,7 @@ const VALID_COMMANDS: CommandName[] = [
 
 const bodySchema = z.object({
   command: z.enum(VALID_COMMANDS as [CommandName, ...CommandName[]]),
-  args: z.record(z.unknown()).optional().nullable(),
+  args: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 export async function POST(
