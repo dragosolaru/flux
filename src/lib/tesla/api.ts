@@ -98,23 +98,61 @@ function mapVehicleData(
   const veh = r.vehicle_state ?? null;
 
   return {
+    // identity
     vehicleId: params.vehicleId,
     displayName: r.display_name ?? params.displayName,
+    brand: "tesla",
+    dataSource: "live",
+    // connectivity
     isOnline: r.state === "online",
-    batteryLevel: charge?.battery_level ?? 0,
-    batteryRangeKm: (charge?.battery_range ?? 0) * MILES_TO_KM,
-    chargeLimit: charge?.charge_limit_soc ?? 80,
+    lastSeenAt: new Date().toISOString(),
+    // energy
+    batteryLevel: charge?.battery_level ?? null,
+    batteryRangeKm: charge?.battery_range != null ? charge.battery_range * MILES_TO_KM : null,
+    chargeLimit: charge?.charge_limit_soc ?? null,
     chargingState: mapChargingState(charge?.charging_state ?? "Disconnected"),
-    chargingRateKw: charge?.charger_power ?? 0,
-    timeToFullMinutes: Math.round((charge?.time_to_full_charge ?? 0) * 60),
-    odometerKm: (veh?.odometer ?? 0) * MILES_TO_KM,
-    interiorTempC: climate?.inside_temp ?? 0,
-    exteriorTempC: climate?.outside_temp ?? 0,
-    isClimateOn: climate?.is_climate_on ?? false,
-    isLocked: veh?.locked ?? true,
-    isSentryMode: veh?.sentry_mode ?? false,
-    latitude: drive?.latitude ?? 0,
-    longitude: drive?.longitude ?? 0,
+    chargingRateKw: charge?.charger_power ?? null,
+    timeToFullMinutes: charge?.time_to_full_charge != null
+      ? Math.round(charge.time_to_full_charge * 60)
+      : null,
+    batteryHealthPct: null,
+    cellVoltages: null,
+    // drive / motion
+    motionState: null,
+    odometerKm: veh?.odometer != null ? veh.odometer * MILES_TO_KM : null,
+    speedKmh: null,
+    headingDeg: drive?.heading ?? null,
+    // location
+    latitude: drive?.latitude ?? null,
+    longitude: drive?.longitude ?? null,
+    // climate
+    interiorTempC: climate?.inside_temp ?? null,
+    exteriorTempC: climate?.outside_temp ?? null,
+    isClimateOn: climate?.is_climate_on ?? null,
+    driverTempC: climate?.driver_temp_setting ?? null,
+    passengerTempC: null,
+    hvacMode: null,
+    seatHeatingLevel: null,
+    steeringHeating: null,
+    // body / security
+    isLocked: veh?.locked ?? null,
+    doorsOpen: null,
+    windowsOpen: null,
+    isTrunkOpen: null,
+    isFrunkOpen: null,
+    isSentryMode: veh?.sentry_mode ?? null,
+    isDashcamRecording: null,
+    // software
+    softwareVersion: veh?.car_version ?? null,
+    updateAvailable: null,
+    updateVersionLabel: null,
+    serviceDueAt: null,
+    // tpms
+    tirePressures: null,
+    // scores
+    safetyScore: null,
+    efficiencyScore: null,
+    // metadata
     recordedAt: new Date().toISOString(),
   };
 }

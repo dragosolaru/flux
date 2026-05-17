@@ -31,37 +31,41 @@ export function ChargingStatus({ state, isLoading }: ChargingStatusProps) {
               <StatusIcon chargingState={state.chargingState} />
               <div>
                 <div className="font-medium capitalize">
-                  {state.chargingState.replace(/_/g, " ")}
+                  {(state.chargingState ?? "disconnected").replace(/_/g, " ")}
                 </div>
                 {state.chargingState === "charging" && (
                   <div className="text-sm text-muted-foreground">
-                    {state.chargingRateKw.toFixed(1)} kW · ETA{" "}
+                    {state.chargingRateKw?.toFixed(1) ?? "—"} kW · ETA{" "}
                     {formatMinutes(state.timeToFullMinutes)}
                   </div>
                 )}
-                {state.chargingState !== "charging" && (
+                {state.chargingState !== "charging" && state.chargeLimit != null && (
                   <div className="text-sm text-muted-foreground">
                     Charge limit {state.chargeLimit}%
                   </div>
                 )}
               </div>
             </div>
-            <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn(
-                  "absolute inset-y-0 left-0 transition-all",
-                  state.chargingState === "charging"
-                    ? "bg-chart-2"
-                    : "bg-primary/60",
+            {state.batteryLevel != null && (
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "absolute inset-y-0 left-0 transition-all",
+                    state.chargingState === "charging"
+                      ? "bg-chart-2"
+                      : "bg-primary/60",
+                  )}
+                  style={{ width: `${state.batteryLevel}%` }}
+                />
+                {state.chargeLimit != null && (
+                  <div
+                    className="absolute inset-y-0 w-px bg-foreground/40"
+                    style={{ left: `${state.chargeLimit}%` }}
+                    aria-label="Charge limit"
+                  />
                 )}
-                style={{ width: `${state.batteryLevel}%` }}
-              />
-              <div
-                className="absolute inset-y-0 w-px bg-foreground/40"
-                style={{ left: `${state.chargeLimit}%` }}
-                aria-label="Charge limit"
-              />
-            </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>
@@ -83,8 +87,8 @@ function StatusIcon({
   return <Plug className="size-6 text-muted-foreground" />;
 }
 
-function formatMinutes(min: number): string {
-  if (!min || min <= 0) return "—";
+function formatMinutes(min: number | null | undefined): string {
+  if (min == null || min <= 0) return "—";
   const h = Math.floor(min / 60);
   const m = min % 60;
   if (h === 0) return `${m}m`;

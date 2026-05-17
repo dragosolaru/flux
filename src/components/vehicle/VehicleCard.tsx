@@ -48,17 +48,21 @@ export function VehicleCard({ state, isLoading }: VehicleCardProps) {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {state.isLocked ? (
+                {state.isLocked !== false ? (
                   <Lock className="h-3.5 w-3.5" />
                 ) : (
                   <Unlock className="h-3.5 w-3.5 text-destructive" />
                 )}
-                <span>{state.isLocked ? "Locked" : "Unlocked"}</span>
-                <span className="text-muted-foreground/40">•</span>
-                <MapPin className="h-3.5 w-3.5" />
-                <span className="tabular-nums">
-                  {state.latitude.toFixed(3)}, {state.longitude.toFixed(3)}
-                </span>
+                <span>{state.isLocked === false ? "Unlocked" : "Locked"}</span>
+                {state.latitude != null && state.longitude != null && (
+                  <>
+                    <span className="text-muted-foreground/40">•</span>
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="tabular-nums">
+                      {state.latitude.toFixed(3)}, {state.longitude.toFixed(3)}
+                    </span>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -69,7 +73,7 @@ export function VehicleCard({ state, isLoading }: VehicleCardProps) {
             <Skeleton className="h-32 w-56 rounded-xl" />
           ) : (
             <BatteryGauge
-              level={state.batteryLevel}
+              level={state.batteryLevel ?? 0}
               isCharging={state.chargingState === "charging"}
             />
           )}

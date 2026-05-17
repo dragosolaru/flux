@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { Gauge, Snowflake, Thermometer, Wind } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,27 +12,29 @@ interface StatsGridProps {
 
 export function StatsGrid({ state }: StatsGridProps) {
   const stats = [
-    {
+    state.batteryRangeKm != null && {
       label: "Range",
       value: `${Math.round(state.batteryRangeKm)} km`,
       icon: Gauge,
     },
-    {
+    state.odometerKm != null && {
       label: "Odometer",
       value: `${Math.round(state.odometerKm).toLocaleString()} km`,
       icon: Gauge,
     },
-    {
+    state.interiorTempC != null && {
       label: "Interior",
       value: `${state.interiorTempC.toFixed(1)} °C`,
       icon: Thermometer,
     },
-    {
+    state.exteriorTempC != null && {
       label: "Exterior",
       value: `${state.exteriorTempC.toFixed(1)} °C`,
       icon: state.exteriorTempC < 5 ? Snowflake : Wind,
     },
-  ];
+  ].filter(Boolean) as { label: string; value: string; icon: ComponentType<{ className?: string }> }[];
+
+  if (stats.length === 0) return null;
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
