@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BatteryCharging, Car, Garage, Settings, Zap } from "lucide-react";
+import { BatteryCharging, Car, LayoutGrid, Settings, Zap } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/garage",    label: "Garage",    icon: Garage },
+  { href: "/garage",    label: "Garage",    icon: LayoutGrid },
   { href: "/dashboard", label: "Dashboard", icon: Car },
   { href: "/charging",  label: "Charging",  icon: BatteryCharging },
   { href: "/settings",  label: "Settings",  icon: Settings },
