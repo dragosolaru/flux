@@ -54,18 +54,17 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
       }
 
-      // For Google sign-ins, ensure a Supabase auth user exists so the rest
-      // of the app (which is keyed on auth.uid()) can find a profile row.
+      // For Google sign-ins, resolve a Supabase auth UUID so every other
+      // API route (which inserts with user_id FK) gets a real UUID.
       //
-      // We cache the resolved id on the JWT so this lookup happens at most
-      // once per session (subsequent jwt() callbacks short-circuit because
-      // token.id is already set).
+      // IMPORTANT: do NOT guard with !token.id here. When NextAuth processes a
+      // Google sign-in it first sets token.id = user.id, which is Google's
+      // numeric `sub` string — not a Supabase UUID. The !token.id guard would
+      // then short-circuit and the vehicles INSERT would fail the FK constraint.
       //
-      // Lookup uses paginated listUsers with a small page size to avoid
-      // returning every user's email on every sign-in. Bounded at 10 pages
-      // × 100 users = 1000-user demo cap. For production scale, swap this
-      // for a `profiles_by_email` indexed table sync.
-      if (account?.provider === "google" && profile?.email && !token.id) {
+      // `account` is only present on the initial sign-in callback, so this
+      // block naturally runs at most once per session.
+      if (account?.provider === "google" && profile?.email) {
         const supabase = createSupabaseAdminClient();
 
         let match: { id: string } | undefined;
