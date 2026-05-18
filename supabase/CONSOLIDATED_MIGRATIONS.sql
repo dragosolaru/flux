@@ -1,10 +1,13 @@
 -- =============================================================================
--- Flux — CONSOLIDATED migration (002 + 003 + 004 in one paste-and-run)
+-- Flux — CONSOLIDATED migration (002 + 003 + 004 + 005 in one paste-and-run)
 --
 -- Paste this entire file into Supabase SQL Editor and run once.
 -- All statements are idempotent (use IF NOT EXISTS / IF EXISTS).
 -- Safe to re-run if migrations have been partially applied.
 -- =============================================================================
+
+-- Ensure uuid support (safe no-op if already installed)
+create extension if not exists "uuid-ossp";
 
 -- -----------------------------------------------------------------------------
 -- 002: Extend vehicles table for multi-brand + mock support
@@ -20,10 +23,20 @@ alter table vehicles
   add column if not exists photo_url   text,
   add column if not exists nickname    text;
 
--- tesla_region becomes nullable (non-Tesla brands don't need it)
-alter table vehicles
-  alter column tesla_region drop not null,
-  alter column tesla_region set default null;
+-- tesla_region becomes nullable (non-Tesla brands don't need it).
+-- Guard: only run if the column exists, to avoid errors on fresh schemas.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_name = 'vehicles' and column_name = 'tesla_region'
+  ) then
+    alter table vehicles
+      alter column tesla_region drop not null,
+      alter column tesla_region set default null;
+  end if;
+end;
+$$;
 
 -- Migrate existing real Tesla vehicle to mock for demo consistency
 update vehicles set data_source = 'mock' where brand = 'tesla' and data_source is null;
@@ -53,7 +66,7 @@ create table if not exists mock_vehicle_state (
 -- -----------------------------------------------------------------------------
 
 create table if not exists charging_sessions (
-  id                  uuid primary key default uuid_generate_v4(),
+  id                  uuid primary key default gen_random_uuid(),
   vehicle_id          uuid not null references vehicles(id) on delete cascade,
   started_at          timestamptz not null,
   ended_at            timestamptz,
@@ -76,7 +89,7 @@ create index if not exists charging_sessions_vehicle_started_idx
 -- -----------------------------------------------------------------------------
 
 create table if not exists trips (
-  id                        uuid primary key default uuid_generate_v4(),
+  id                        uuid primary key default gen_random_uuid(),
   vehicle_id                uuid not null references vehicles(id) on delete cascade,
   started_at                timestamptz not null,
   ended_at                  timestamptz,
@@ -97,11 +110,11 @@ create index if not exists trips_vehicle_started_idx
   on trips(vehicle_id, started_at desc);
 
 -- -----------------------------------------------------------------------------
--- 002: Command events (audit log of all user / automation commands)
+-- 002: Command events (audit log)
 -- -----------------------------------------------------------------------------
 
 create table if not exists command_events (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   vehicle_id  uuid not null references vehicles(id) on delete cascade,
   command     text not null,
   args        jsonb,
@@ -122,11 +135,6 @@ alter table mock_vehicle_state enable row level security;
 alter table charging_sessions  enable row level security;
 alter table trips              enable row level security;
 alter table command_events     enable row level security;
-
-drop policy if exists "Users can access their own mock state" on mock_vehicle_state;
-create policy "Users can access their own mock state"
-  on mock_vehicle_state for all
-  using (vehicle_id in (select id from vehicles where user_id = auth.uid()));
 
 drop policy if exists "Users can access their own charging sessions" on charging_sessions;
 create policy "Users can access their own charging sessions"
@@ -168,13 +176,24 @@ create policy "Users can manage their own settings"
   using (user_id = auth.uid());
 
 -- -----------------------------------------------------------------------------
--- 005: Schema hardening from senior audit (composite index, check constraints,
--- updated_at trigger, tighter RLS)
+-- 005: Schema hardening — composite index, check constraints,
+--      updated_at trigger, tighter RLS
 -- -----------------------------------------------------------------------------
 
-create index if not exists vehicles_user_id_active_idx
-  on vehicles(user_id, is_active);
+-- Composite index for hot-path vehicles query
+-- Guard: check if is_active column exists before creating index
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_name = 'vehicles' and column_name = 'is_active'
+  ) then
+    execute 'create index if not exists vehicles_user_id_active_idx on vehicles(user_id, is_active)';
+  end if;
+end;
+$$;
 
+-- network check on charging_sessions
 alter table charging_sessions
   drop constraint if exists charging_sessions_network_check;
 alter table charging_sessions
@@ -184,6 +203,7 @@ alter table charging_sessions
     or network in ('ionity', 'tesla-sc', 'enbw', 'allego', 'fastned', 'home', 'other')
   );
 
+-- scenario_id check on mock_vehicle_state
 alter table mock_vehicle_state
   drop constraint if exists mock_vehicle_state_scenario_id_check;
 alter table mock_vehicle_state
@@ -193,6 +213,7 @@ alter table mock_vehicle_state
     or scenario_id in ('commuter', 'weekend-errands', 'road-trip', 'vacation')
   );
 
+-- vehicles.updated_at with auto-update trigger
 alter table vehicles
   add column if not exists updated_at timestamptz not null default now();
 
@@ -209,6 +230,7 @@ create trigger vehicles_set_updated_at
   before update on vehicles
   for each row execute function set_updated_at();
 
+-- RLS on mock_vehicle_state with WITH CHECK
 drop policy if exists "Users can access their own mock state" on mock_vehicle_state;
 create policy "Users can access their own mock state"
   on mock_vehicle_state for all
@@ -216,8 +238,9 @@ create policy "Users can access their own mock state"
   with check (vehicle_id in (select id from vehicles where user_id = auth.uid()));
 
 -- =============================================================================
--- Done. Verify by running:
+-- Done. Verify with:
 --   select count(*) from mock_vehicle_state;
 --   select count(*) from user_settings;
---   select column_name from information_schema.columns where table_name = 'vehicles';
+--   select column_name from information_schema.columns
+--     where table_name = 'vehicles' order by ordinal_position;
 -- =============================================================================
