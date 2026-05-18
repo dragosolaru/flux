@@ -1,42 +1,97 @@
-# NEXT STEPS — Flux (post-pivot, 2026-05-17)
+# NEXT STEPS — Flux (Phase 13, 2026-05-18)
 
-The previous version of this file planned to deploy the Tesla HTTP Proxy on Fly.io to unlock signed commands. That work is **paused**. The reason: Flux is pivoting to a **mock-first, multi-brand platform**. Real Tesla commands aren't the bottleneck anymore; the bottleneck is shipping a credible multi-brand product surface.
+Phases 1–6 are implemented. This file covers the remaining phases 7–14 from `openspec/changes/pivot-mock-first-platform/tasks.md`.
 
-The mock-first plan is captured formally in `openspec/changes/pivot-mock-first-platform/`. This file is the human-readable execution roadmap.
+## Phase 7 — Beyond OEM: Charging-network discovery
 
-## What changed in one paragraph
+- `src/lib/external/charging-networks/` registry: Ionity, Tesla-SC, EnBW, Allego, Fastned
+- Mock station registry (~50 EU stations) with stalls, plug types, max kW, base price
+- Live-availability simulator: stalls flicker on a Poisson process
+- `/charging-map` page: Leaflet/MapLibre map with station pins and click-to-detail panel
+- Station detail panel: stalls available now, price, supported plugs, distance from vehicle, ETA
+- Filter by network, max kW, plug type, price
+- Per-vehicle "Nearest plug for your car" card on dashboard
 
-Every brand becomes a mock backed by a Tier-3 stateful simulator we control. Battery drains while driving, charges while plugged in, commands mutate state, charging sessions and trips accumulate in real time. The dashboard is brand-blind; per-brand capability maps decide which cards and buttons render. Beyond OEM telemetry, we mock energy tariffs, charging-network discovery, weather (with range derating), and trip planning. Multi-vehicle on one account is now first-class — garage page, switcher, fleet aggregates. Mock disclosure is visible and honest (`MOCK` chip per card, demo-mode banner, `/about-data` transparency page). The real Tesla code stays in the tree behind `LIVE_INTEGRATIONS`; we will reactivate brand-by-brand once each brand's full UI surface is locked.
+## Phase 8 — Beyond OEM: Weather + range derating
 
-## What's preserved
+- `src/lib/external/weather/` provider abstraction, mock provider
+- Weather schema: current temp, wind, precipitation, 24h forecast per lat/lng
+- Range derating model: −0.5%/°C below 15°C, wind headwind impact, precipitation impact
+- Vehicle card shows "Range: 412 km (ideal 480, −14% weather)"
+- Tooltip explains derating factors
 
-- The live Tesla OAuth + PKCE + region probe + token refresh + AES-256-GCM encryption code stays in the tree. Don't delete.
-- `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) stays. Marked dormant in its README.
-- The first user's `Black Panther` vehicle row in DB is migrated to `data_source = 'mock'` with a seeded scenario; the existing demo URL keeps working.
+## Phase 9 — Beyond OEM: Trip planning
 
-## Execution phases (matches `tasks.md` in the OpenSpec change)
+- `src/lib/external/routing/` provider abstraction, mock provider (great-circle + waypoint heuristic)
+- `/trip` page: origin (current vehicle position), destination (autocomplete or city picker)
+- Route computation with optimal charging stops based on capacity, derating, network coverage
+- Output: total distance, total time, charging stops with kWh + price + duration
+- Cross-vehicle comparison: "Black Panther 6h12m / 1 stop · Demo i4 6h45m / 2 stops"
+- "Take this car" action stores trip suggestion
 
-| Phase | Theme                                  | Output                                                                 |
-| ----- | -------------------------------------- | ---------------------------------------------------------------------- |
-| 1     | Foundations: brand registry            | `src/lib/brands/` + 7 capability profiles + extended `VehicleState`    |
-| 2     | Stateful Tier-3 simulator              | `src/lib/mock/engine.ts` + scenarios + persistence + migration 002     |
-| 3     | Multi-vehicle architecture             | `/garage`, `/dashboard?v=<id>`, switcher, brand-dispatched API routes  |
-| 4     | Brand mock implementations             | Per-brand adapters + seed data for all 7 brands                        |
-| 5     | Extended telemetry surface             | TPMS, doors, windows, sentry, dashcam, software, service, SoH, etc.    |
-| 6     | Beyond OEM: tariffs                    | Tibber/Octopus/aWATTar mocks, `/energy` page, smart-charge recs        |
-| 7     | Beyond OEM: charging-network discovery | Station registry + map + nearest-plug card                             |
-| 8     | Beyond OEM: weather + range            | Weather provider + derating model                                      |
-| 9     | Beyond OEM: trip planning              | Router + cross-vehicle comparison                                      |
-| 10    | Aggregate / cross-vehicle              | Fleet totals, smart-charge coordinator, "Which car?" recommender       |
-| 11    | Mock disclosure UX                     | `<MockChip>`, `<MockGlobalBanner>`, `/about-data`                      |
-| 12    | Legacy preservation                    | `LIVE_INTEGRATIONS` flag plumbing, Tesla code gated                    |
-| 13    | Docs                                   | SCOPE / ARCHITECTURE / README / BRANDS / SIMULATOR                     |
-| 14    | Validation + demo                      | Demo user seeded with 3 mock cars, Playwright happy-path, README GIFs  |
+## Phase 10 — Aggregate / cross-vehicle features
+
+- Garage page fleet-totals card: combined range, monthly cost, total kWh, CO₂
+- Smart-charge coordinator: given multiple plugged-in vehicles + tariff windows, propose charging order
+- Cross-brand efficiency comparison chart (kWh/100km per car per week)
+- Grid CO₂ intensity tracker (mock provider) → "Charging now: 87 g CO₂/kWh · cleaner at 14:00"
+- "Which car?" recommender: input destination, rank vehicles by SoC sufficiency + charging stops needed
+
+## Phase 11 — Mock disclosure UX
+
+- `<MockChip>` component (amber badge) in `VehicleCard` header when `dataSource === "mock"`
+- Tooltip on hover with plain-language explanation
+- `<MockGlobalBanner>` — slim dismissible banner when all user vehicles are mock
+- `/about-data` page: per-category truth table (live vs mock), per-vehicle status
+- Links to `/about-data` from chip tooltip and banner
+
+## Phase 12 — Legacy preservation + cleanup
+
+- Wrap live Tesla code paths in `LIVE_INTEGRATIONS` check
+- Hide `/connect/tesla` from nav when `tesla` not in `LIVE_INTEGRATIONS`
+- `/api/tesla/*` routes return `410 Gone` with JSON message when live Tesla is disabled
+- Document re-activation procedure in `docs/ARCHITECTURE.md` (§ Legacy live-Tesla preservation)
+- Keep `tesla-proxy/` folder + Dockerfile; mark README.md inside with "currently dormant"
+
+## Phase 13 — Docs + portfolio polish
+
+- [x] Update `README.md` to reflect mock-first multi-brand platform
+- [x] Rewrite `docs/SCOPE.md` MVP section
+- [x] Expand `docs/ARCHITECTURE.md` with brand-registry, simulator, capability sections
+- [x] Add `docs/BRANDS.md` — per-brand capability matrix
+- [x] Add `docs/SIMULATOR.md` — Tier-3 engine guide + scenario authoring
+- [x] Append `docs/CHANGELOG.md` entry for phases 1–6
+- [x] Replace `docs/NEXT-STEPS.md` with remaining phases 7–14
+
+## Phase 14 — Validation + portfolio demo
+
+- Seed demo user with 3 cars (1 Tesla mock + 1 BMW mock + 1 Polestar mock) and a tariff
+- Playwright happy-path: login → garage shows 3 cars → click each → commands work → tariff card present
+- Visual regression on garage grid (chromatic-style snapshot)
+- README screenshots / GIFs refreshed
+- Deploy preview link added to README and DAO Lab portfolio
+
+---
+
+## Future roadmap (post-mock)
+
+| Phase | Theme | Highlights |
+|---|---|---|
+| 0.2 | Re-activate Tesla live | `LIVE_INTEGRATIONS=tesla`, re-run vehicle-command-proxy on Fly.io |
+| 0.3 | BMW + Polestar live | First non-Tesla live adapters |
+| 0.4 | Mercedes / VW / Hyundai / Renault | Continue brand coverage live |
+| 0.5 | Real tariff providers | Tibber + Octopus real APIs |
+| 0.6 | Real charging-network data | OpenChargeMap + Ionity / Fastned real APIs |
+| 0.7 | iOS / Android widgets | Read-only battery + range widget |
+| 0.8 | Trip routing real | ABRP-grade real planner |
+| 1.0 | Monetization | Freemium (1 vehicle) + Pro at €4.99/month |
+
+---
 
 ## To start implementing
 
 ```bash
-cd "/Users/dragosolaru/Learn/Tesla Dasboard/flux"
+cd /home/user/flux
 nvm use
 npm run dev
 ```
@@ -46,33 +101,11 @@ Then open the OpenSpec change and apply tasks:
 ```bash
 openspec show pivot-mock-first-platform
 openspec status pivot-mock-first-platform
-# or use the slash command in Claude Code: /opsx:apply
+# or in Claude Code: /opsx:apply
 ```
 
-## Working remotely while away
-
-Three paths if the laptop is closed:
-
-1. **claude.ai/code** — push to GitHub first, then access the repo from any browser on `claude.ai/code`. Cloud environment; nothing depends on the laptop.
-2. **GitHub Codespaces + Claude Code VS Code extension** — open the repo in Codespaces, install the Claude Code extension, work as if local.
-3. **Anthropic Console / Claude.ai chat** — planning only; insufficient for actual code edits.
-
-Recommended pre-trip checklist:
-- `git init && git add . && git commit -m "checkpoint: pre-pivot snapshot"`
-- Push to a GitHub repo (private if desired).
-- Verify `claude.ai/code` can open the repo.
-
-## On Tesla developer credentials
-
-For the pivot we don't need the Tesla developer app active. We can leave it as-is — the code will simply ignore Tesla real APIs while `LIVE_INTEGRATIONS` does not include `tesla`. If you want to tidy up:
-
-1. Visit https://developer.tesla.com → your app.
-2. Optionally deactivate it. The public-key endpoint stays served by Flux automatically; it's harmless to leave it up.
-
-We will reactivate the app later (phase 0.2 of the post-pivot roadmap) when wiring the first live integration.
-
-## If something blocks the mock-first plan
+## Common issues
 
 - `npm run dev` failing → check `nvm use` (Node 22 in `.nvmrc`).
-- Supabase migration 002 conflicts with existing data → run on a fresh project, point local at it via `.env.local`, migrate `Black Panther` via the documented script.
-- Simulator tick producing non-deterministic output → check that no `Date.now()` or `Math.random()` leaks into `tick()` outside the seeded RNG and the explicit `now` parameter.
+- Supabase migration conflicts → run on a fresh project, point local at it via `.env.local`.
+- Simulator tick producing non-deterministic output → verify no `Date.now()` or `Math.random()` leaks into `tick()` outside the seeded RNG and the explicit `now` parameter.

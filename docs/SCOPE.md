@@ -25,22 +25,46 @@ EV owners who want **more** than the stock manufacturer app gives them:
 
 The MVP is a mock-first multi-brand platform with the ambition of being **more capable than any single OEM app**.
 
+Phases 1–6 are implemented. Phases 7–14 are in progress (see `docs/NEXT-STEPS.md`).
+
+### Phase 1–6: implemented
+
 - **7 supported brands**, mock-only: Tesla, BMW, Polestar, Mercedes-EQ, Volkswagen-ID, Hyundai/Kia, Renault.
-- **Capability-driven UI**: every telemetry card and command button is gated on what the current brand actually exposes. Unsupported features are hidden, not disabled.
-- **Multi-vehicle per account**: garage grid as default landing, deep-card view at `/dashboard?v=<id>`, vehicle switcher in the top bar.
-- **Tier-3 stateful simulator**: per-vehicle state machine with a deterministic clock. Battery actually drains while driving, charges while plugged in, climate consumes kWh, commands mutate state, charging sessions and trips accumulate in real time.
-- **Scenario player**: pre-built scripted scenarios (`commuter`, `road-trip`, `weekend-errands`, `vacation`) make idle accounts look alive.
-- **Beyond-OEM data layers**, all mocked:
-  - **Energy tariffs** (Tibber-/Octopus-/aWATTar-style dynamic pricing) → 24h price curve, cheapest-window calculator, smart-charge recommendations.
-  - **Charging-network discovery** (Ionity, Tesla SC, EnBW, Allego, Fastned) → interactive map, real-time stall availability, plug-compatibility filter.
-  - **Weather + range derating** → realistic km-range based on temperature, wind, precipitation.
-  - **Trip planning** → routes with optimal charging stops, multi-vehicle ETA comparison.
-- **Aggregate / cross-vehicle features**: fleet totals, smart-charge coordinator across plugged-in cars, cross-brand efficiency comparison, "Which car should I take?" recommender, grid CO₂ intensity tracker.
-- **Mock disclosure**: `MOCK` chip on every simulated card; global "Demo mode" banner when all vehicles are mock; `/about-data` transparency page.
+  - Brand registry at `src/lib/brands/` with `BrandProfile`, `BrandCapabilities`, and per-brand `profile.ts` files.
+  - `BrandCapabilities` covers 31 telemetry fields, 18 commands, history retention, and refresh model.
+  - `BRAND_MODELS` in `models.ts` holds real WLTP figures for 17 models across 7 brands.
+- **VehicleState superset**: `src/types/vehicle.ts` is a brand-agnostic superset of all OEM data fields. Fields unsupported by a brand are `null`.
+- **Capability-driven UI**: every telemetry card and command button is gated on `caps.telemetry.*` / `caps.commands.*`. Unsupported features hide entirely — never disabled.
+- **`useBrandCapabilities(brand)` hook** for components.
+- **`LIVE_INTEGRATIONS` env flag**: empty by default (everything mock). Comma-separated brand keys activate live adapters brand by brand.
+- **Tier-3 stateful simulator** (`src/lib/mock/`):
+  - Pure `tick(snapshot, now, brand)` with scenario-step-aligned chunk physics.
+  - `applyCommand(snapshot, command, args, brand)` with capability gate (throws on unsupported commands).
+  - 4 scenarios: `commuter` (24h), `road-trip` (48h), `weekend-errands` (24h), `vacation` (96h).
+  - `CYCLE_ANCHOR_MS = 2026-01-01T00:00:00Z` for deterministic wall-clock progression.
+  - Session boundary detection: charging sessions and trips derived from `motionState` transitions.
+  - Persistence in `mock_vehicle_state`; history in `charging_sessions`, `trips`, `command_events`.
+  - `createInitialSnapshot` seeds correct per-model physics from WLTP specs.
+- **Multi-vehicle per account**: garage grid as default landing, deep-card view at `/dashboard?v=<id>`, vehicle switcher in top bar.
+- **Brand-dispatched API routes**: `GET /api/vehicles/:id/state`, `POST /api/vehicles/:id/commands`, `GET /api/vehicles`, `POST /api/vehicles`, `DELETE /api/vehicles/:id`.
+- **Extended telemetry UI**: TPMS (4 tires), doors (4 + trunk + frunk), windows, sentry/dashcam, software card, battery health (SoH), cell voltages — all gated on brand capability.
+- **Energy tariffs** (`src/lib/external/tariffs/`): mock Tibber, Octopus, aWATTar providers. `/energy` page with 24h price curve, cheapest-window highlight, smart-charge recommendation.
+- **Database migrations**: `001_initial.sql`, `002_mock_platform.sql` (mock tables + RLS), `003_mock_vehicle_spec.sql`, `004_user_settings.sql`.
 - Google OAuth + email/password sign-in.
 - Dark mode first, light mode supported.
 - Row-Level Security on every Supabase table.
 - AES-256-GCM encryption at rest for any OAuth tokens that exist (Tesla legacy + future live integrations).
+
+### Planned (Phases 7–14)
+
+- **Charging-network discovery** (Ionity, Tesla SC, EnBW, Allego, Fastned) → interactive map, real-time stall availability, plug-compatibility filter.
+- **Weather + range derating** → realistic km-range based on temperature, wind, precipitation.
+- **Trip planning** → routes with optimal charging stops, multi-vehicle ETA comparison.
+- **Aggregate / cross-vehicle features**: fleet totals, smart-charge coordinator, "Which car should I take?" recommender, grid CO₂ intensity tracker.
+- **Mock disclosure UX**: `MOCK` chip per card, global "Demo mode" banner, `/about-data` transparency page.
+- **Legacy preservation**: `LIVE_INTEGRATIONS` flag plumbing fully wired; Tesla live paths gated.
+- **Documentation** (Phase 13 — current).
+- **Validation + demo**: demo user with 3 mock cars, Playwright happy-path, README GIFs.
 
 ## Non-goals for MVP
 

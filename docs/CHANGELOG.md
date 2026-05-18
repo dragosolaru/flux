@@ -5,6 +5,15 @@ Format: [Version] — Date · Description
 
 ## [Unreleased]
 
+### 2026-05-18 — Phase 13: documentation
+
+- Added `docs/BRANDS.md` — per-brand capability matrix table covering all 31 telemetry fields, 18 commands, history settings, and model specs (WLTP figures) for all 7 brands. Sourced directly from `src/lib/brands/*/profile.ts` and `src/lib/brands/models.ts`.
+- Added `docs/SIMULATOR.md` — complete Tier-3 engine guide: `tick()` algorithm, `applyCommand()` capability gate, physics per motion state (driving drain, charging gain, climate drain), CYCLE_ANCHOR time model, scenario JSON format with full field reference, session boundary detection, seed process, and scenario authoring guide.
+- Rewrote `README.md` to reflect mock-first multi-brand platform: what it is, 7 supported brands with models, key features, tech stack, local setup steps, env var table, project structure.
+- Expanded `docs/ARCHITECTURE.md` with: brand registry pattern (file layout, BrandProfile shape, API dispatcher flow), VehicleState superset + capability mask, full Tier-3 simulator section (tick algorithm, applyChunk physics per state, applyCommand, scenario system, CYCLE_ANCHOR, session boundary detection), database schema overview for all 4 mock tables, tariff provider abstraction, multi-vehicle UX routes.
+- Updated `docs/SCOPE.md` MVP section to reflect completed phases 1–6.
+- Replaced `docs/NEXT-STEPS.md` with remaining phases 7–14 from the OpenSpec task list.
+
 ### 2026-05-17 — Pivot to mock-first multi-brand platform
 
 - Direction change: Flux abandons "Tesla-only, real API" as the MVP shape and adopts a **mock-first, multi-brand** posture. Every brand is implemented against a Tier-3 stateful simulator; live integrations come back brand-by-brand later, gated by the `LIVE_INTEGRATIONS` env flag.

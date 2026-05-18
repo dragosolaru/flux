@@ -23,9 +23,9 @@ This codebase demonstrates the patterns DAO Lab applies in every client project:
 ## Why Supabase
 
 - **Postgres with RLS** — strong primitives, real SQL, easy migration path to self-hosted later.
-- **Built-in auth users + admin API** — pairs naturally with Auth.js. We register users in Supabase's `auth.users` and use Auth.js purely for session management.
+- **Built-in auth users + admin API** — pairs naturally with Auth.js.
 - **Free tier covers MVP** — no infra cost until traction.
-- **Storage + Realtime available later** — we can add charging session storage and live-updating dashboards without changing platforms.
+- **Storage + Realtime available later** — live-updating dashboards without changing platforms.
 
 ## Why Auth.js v5
 
@@ -33,283 +33,471 @@ This codebase demonstrates the patterns DAO Lab applies in every client project:
 - JWT sessions by default (no extra DB round-trip per request).
 - Stable v5 API: `auth()` everywhere we need the session — RSC, route handlers, middleware.
 
-## Tesla OAuth flow
+---
 
-```
- ┌──────────┐    1. click "Connect"    ┌──────────────────────┐
- │ Browser  │ ───────────────────────► │  GET /api/tesla/     │
- │          │                          │       connect        │
- │          │                          └──────────┬───────────┘
- │          │                                     │
- │          │   2. set HttpOnly cookies           │
- │          │   ◄─── (pkce_verifier, state) ──────┤
- │          │                                     │
- │          │   3. 302 redirect to                │
- │          │      auth.tesla.com ◄──────────────┘
- │          │
- │          │    4. user authenticates with Tesla
- │          │
- │          │    5. Tesla 302s back to
- │          │       /api/tesla/callback?code=…&state=…
- │          │ ───────────────────────► ┌──────────────────────┐
- │          │                          │  GET /api/tesla/     │
- │          │                          │       callback       │
- │          │                          │                      │
- │          │                          │  - validate state    │
- │          │                          │  - exchange code     │
- │          │                          │    for tokens (PKCE) │
- │          │                          │  - probe regions     │
- │          │                          │  - encrypt + persist │
- │          │                          │  - 302 /dashboard    │
- │          │                          └──────────────────────┘
- │          │
- │ /dashboard polls /api/tesla/vehicle every 30s
- │          │ ───────────────────────► (auth → load token →
- │          │                            refresh if expiring →
- │          │                            call Tesla → parse →
- │          │                            insert snapshot → return)
- └──────────┘
-```
+## Brand registry pattern
 
-## Token encryption rationale
+Brand support is **registry-driven**, not subclassed. There are no brand-specific code paths in the UI; everything gates on capability maps.
 
-OAuth tokens granted by Tesla are **bearer credentials**: anyone with the access token can read vehicle data and send commands until it expires. Even though Supabase RLS already prevents cross-user reads, we treat the database as a sensitive-data boundary:
-
-- A future operations mistake (accidentally exposed backup, mis-scoped service role key, dev sharing a dump for debugging) should not leak working Tesla credentials.
-- AES-256-GCM with a per-record IV provides both confidentiality and integrity. The encryption key lives only in the server's environment, never in the DB.
-- The cost is negligible (~50 µs per encrypt/decrypt) compared to the round-trip to Tesla.
-
-## TanStack Query polling strategy
-
-- **30-second `refetchInterval`** while the dashboard tab is active. Tesla's Fleet API rate limits per app comfortably support this for a single vehicle.
-- **20-second `staleTime`** prevents a `useVehicle()` call from a different mounted component triggering a duplicate fetch within the polling window.
-- **`refetchOnWindowFocus: false`** — refocusing the tab does not double-fire alongside the interval.
-- **Mutations invalidate** the relevant `["vehicle", vehicleId]` query, so a successful lock/unlock surfaces the new locked state on the next poll without waiting up to 30s.
-
-When the user is on `/charging`, the same hook is used, so polling state is shared across pages — no thundering herd.
-
-## Multi-brand extensibility (post-pivot: brand registry + capability map)
-
-The internal `VehicleState` type (in `src/types/vehicle.ts`) is **brand-agnostic** by design. Post-pivot, it is also a **superset** covering all 11 OEM telemetry categories (identity, energy, drive, climate, body, security, software, efficiency, trips, charging history, subscriptions, safety). Fields a given brand does not expose are `null`; the UI hides them rather than rendering placeholders.
-
-Brand support is **registry-driven**, not subclassed:
+### File layout
 
 ```
 src/lib/brands/
-├── registry.ts              # BRANDS = { tesla, bmw, polestar, mercedes, vw, hyundai, renault }
-├── types.ts                 # BrandProfile, BrandCapabilities
-├── capabilities.ts          # capability map schema
+├── registry.ts              # BRANDS: Record<BrandKey, BrandProfile>
+├── types.ts                 # BrandProfile, BrandCapabilities, TelemetryCapabilities, CommandCapabilities
+├── capabilities.ts          # capability map schema helpers
+├── models.ts                # per-brand model specs (WLTP figures, charge rates, capacity)
 └── <brand>/
-    ├── profile.ts           # capability map, displayName, data source
+    ├── profile.ts           # capability map, displayName, dataSource
     └── adapter.ts           # (raw) => Partial<VehicleState>
 ```
 
-Each `BrandProfile` exposes:
-
-- `key`: stable identifier
-- `displayName`
-- `capabilities`: nested map of telemetry fields and commands the brand supports
-- `dataSource`: `mock` | `live`
-- `adapter`: pure function mapping raw API output → internal `VehicleState`
-
-UI components read `useBrandCapabilities(currentBrand)` and gate themselves accordingly. A Tesla card is rich; a Polestar card has no Honk button, no Sentry card, no cell-voltages panel — these literally don't render. The same JSX produces seven different cards.
-
-`vehicles.brand` and `vehicles.data_source` columns on the DB drive the dispatcher in `/api/vehicles/:id/{state,commands}`. The dispatcher's behavior:
-
-1. Load vehicle row, verify ownership.
-2. Look up the brand profile.
-3. If `dataSource === "mock"` → call the mock simulator (`src/lib/mock/engine.ts`).
-4. If `dataSource === "live"` → call the brand's live adapter.
-5. Normalize through the brand adapter → typed `VehicleState`.
-
-The decision point is row-data, not env-data. A single account can mix mock and live vehicles when live integrations come back online.
-
-## Tier-3 stateful mock simulator
-
-The simulator is the engine room of the mock-first MVP. Goals:
-
-- Commands actually do something (lock changes `isLocked`, climate drains battery, charge limit affects time-to-full).
-- History accumulates (charging sessions, trips, monthly cost).
-- Brand capabilities are validated end-to-end (the simulator refuses to perform commands a brand can't do).
-
-### Shape
+### BrandProfile shape
 
 ```ts
-// src/lib/mock/engine.ts
-interface MockVehicleSnapshot {
-  state: VehicleState
-  motionState: "parked" | "driving" | "charging" | "plugged-idle"
-  scenarioId: string | null
-  scenarioStep: number
-  lastTickAt: string
+interface BrandProfile {
+  key: BrandKey;           // "tesla" | "bmw" | "polestar" | "mercedes" | "vw" | "hyundai" | "renault"
+  displayName: string;
+  dataSource: "mock" | "live";
+  capabilities: {
+    telemetry: TelemetryCapabilities;   // 31 fields, each boolean
+    commands:  CommandCapabilities;     // 18 commands, each boolean
+    history:   HistoryCapabilities;     // chargingSessions, trips, commandLog, retention
+    refreshModel: "polling" | "push" | "on-demand";
+  };
+  adapter: (raw: unknown) => Partial<VehicleState>;
 }
-
-function tick(snapshot: MockVehicleSnapshot, now: Date, brand: BrandProfile): MockVehicleSnapshot
-function applyCommand(snapshot: MockVehicleSnapshot, command: string, args: unknown, brand: BrandProfile): MockVehicleSnapshot
 ```
 
-`tick` is **pure**: given a snapshot + clock + brand, produce the next snapshot. No `Date.now()`, no `Math.random()` outside an explicit seeded RNG. Determinism keeps tests reliable and demos reproducible.
+### Registry lookup
 
-### Persistence
+```ts
+// src/lib/brands/registry.ts
+export const BRANDS: Record<BrandKey, BrandProfile> = {
+  tesla, bmw, polestar, mercedes, vw, hyundai, renault
+};
+export function getBrand(key: string): BrandProfile | null
+```
 
-`mock_vehicle_state` (one row per vehicle) stores the latest snapshot + `last_tick_at`. On every `GET /api/vehicles/:id/state`, the handler:
+`isLiveEnabled(brand)` (from `src/lib/live-integrations.ts`) reads the `LIVE_INTEGRATIONS` env var and sets `dataSource`. When the var is empty, every brand defaults to `"mock"`.
 
-1. Loads the row.
-2. Ticks to `now` (advancing battery, location, odometer, motion-state transitions, scenario steps).
-3. Persists the new snapshot.
-4. Returns the projected `VehicleState`.
+### API dispatcher
 
-No background worker required for v1. The 30s dashboard polling drives ticks at a rate well below what would matter.
+`GET /api/vehicles/:id/state` and `POST /api/vehicles/:id/commands`:
 
-### Scenarios
+1. Load vehicle row; verify ownership via Auth.js session + `user_id` check.
+2. `getBrand(vehicle.brand)` — get profile.
+3. If `dataSource === "mock"` → load snapshot from `mock_vehicle_state`, call `tick(snapshot, now, brand)`, persist, normalize through `brand.adapter`.
+4. If `dataSource === "live"` → call brand's live adapter.
+5. Return typed `VehicleState`.
 
-Scenarios are JSON files (`commuter.json`, `road-trip.json`, `weekend-errands.json`, `vacation.json`) describing ordered steps with timestamps, motion transitions, and waypoints. The engine advances `scenarioStep` based on wall-clock progression so an idle account opened at 18:00 shows vehicles plausibly arriving home from work.
+The decision is row-data (`vehicles.data_source`), not env-data. A single account can mix mock and live vehicles once live integrations reactivate.
 
-### Charging sessions & trips
+---
 
-The engine detects `motionState === "charging"` runs and aggregates them into `charging_sessions` rows (`started_at`, `ended_at`, `energy_added_kwh`, `start_soc`, `end_soc`, `network`, `cost_eur`, `location_lat/lng`). Similarly, `motionState === "driving"` runs aggregate into `trips`. This makes the History pages real data, not fake fixtures.
+## VehicleState superset + capability mask
 
-## Capability-driven UI
+`src/types/vehicle.ts` defines a single `VehicleState` interface that is the **superset of all OEM data fields**. Every field a brand does not expose is `null`. The interface covers:
 
-Components never check `vehicle.brand === "tesla"`. They check `caps.commands.honk`, `caps.telemetry.cellVoltages`, etc.
+| Category | Fields (representative) |
+|---|---|
+| Identity | `vehicleId`, `displayName`, `brand`, `dataSource`, `isOnline` |
+| Energy | `batteryLevel`, `batteryRangeKm`, `chargeLimit`, `chargingState`, `chargingRateKw`, `timeToFullMinutes`, `batteryHealthPct`, `cellVoltages` |
+| Drive / motion | `motionState`, `odometerKm`, `speedKmh`, `headingDeg`, `latitude`, `longitude` |
+| Climate | `interiorTempC`, `exteriorTempC`, `isClimateOn`, `driverTempC`, `passengerTempC`, `hvacMode`, `seatHeatingLevel`, `steeringHeating` |
+| Body | `doorsOpen` (4 doors), `windowsOpen` (4 windows), `isTrunkOpen`, `isFrunkOpen` |
+| Security | `isLocked`, `isSentryMode`, `isDashcamRecording` |
+| Software | `softwareVersion`, `updateAvailable`, `updateVersionLabel`, `serviceDueAt` |
+| Tyres | `tirePressures` (frontLeft/Right, rearLeft/Right kPa) |
+| Scores | `safetyScore`, `efficiencyScore` |
+
+A field being `null` in the state means either the vehicle reported it as null, or the brand's capability mask does not expose it. The UI treats both cases the same: the card does not render.
+
+### Capability-driven rendering
 
 ```tsx
 function CommandPanel({ vehicle, state }: Props) {
   const caps = useBrandCapabilities(vehicle.brand)
   return (
     <div className="grid grid-cols-2 gap-2">
-      {caps.commands.lock     && <LockButton  vehicle={vehicle} locked={state.isLocked} />}
-      {caps.commands.climate  && <ClimateBtn  vehicle={vehicle} on={state.isClimateOn} />}
-      {caps.commands.honk     && <HonkButton  vehicle={vehicle} />}
-      {caps.commands.flash    && <FlashButton vehicle={vehicle} />}
-      {caps.commands.charge   && <ChargeBtn   vehicle={vehicle} state={state} />}
+      {caps.commands.lock        && <LockButton   vehicle={vehicle} locked={state.isLocked} />}
+      {caps.commands.climateOn   && <ClimateBtn   vehicle={vehicle} on={state.isClimateOn} />}
+      {caps.commands.honk        && <HonkButton   vehicle={vehicle} />}
+      {caps.commands.flash       && <FlashButton  vehicle={vehicle} />}
+      {caps.commands.startCharging && <ChargeBtn  vehicle={vehicle} state={state} />}
     </div>
   )
 }
 ```
 
-The same pattern applies to `StatsGrid`, detail panels, and even page-level nav (a brand without trip history doesn't show a "Trips" tab).
+**Hide, don't disable.** A disabled button signals "feature exists but unavailable right now." That's wrong for "this brand doesn't have this feature." Components hide entirely when the capability is false.
 
-### Hide, don't disable
+---
 
-Disabled buttons signal "this feature exists but you can't use it right now." That's the wrong message for "this brand doesn't have this feature." Hide entirely. The UI is honest about brand differences.
+## Tier-3 simulator
 
-## External-data abstraction (beyond OEM)
+### Overview
 
-Tariffs, charging-network discovery, weather, and routing all follow the **same registry pattern** as brands:
+The mock simulator maintains a per-vehicle `MockVehicleSnapshot` persisted in `mock_vehicle_state` (one row per vehicle). On every `GET /api/vehicles/:id/state`, the route handler:
+
+1. Loads the snapshot.
+2. Calls `tick(snapshot, now, brand)`.
+3. Persists the ticked snapshot.
+4. Returns the projected `VehicleState`.
+
+No background worker is required. The 30s TanStack Query polling drives ticks at a frequency well below what matters.
+
+### tick()
+
+```ts
+// src/lib/mock/engine.ts
+function tick(
+  snapshot: MockVehicleSnapshot,
+  now: Date,
+  brand: BrandProfile,
+): MockVehicleSnapshot
+```
+
+`tick` is **pure**: given a snapshot + clock, produce the next snapshot. No `Date.now()`, no `Math.random()` calls outside a seeded RNG. Determinism keeps tests reliable and demos reproducible.
+
+The function walks from `snapshot.lastTickAt` to `now` in scenario-step-aligned chunks:
 
 ```
-src/lib/external/
-├── tariffs/
-│   ├── registry.ts          # TARIFF_PROVIDERS = { tibber-mock, octopus-mock, awattar-mock }
-│   └── <provider>/
-│       ├── provider.ts
-│       └── fixtures.ts
-├── charging-networks/
-│   ├── registry.ts          # NETWORKS = { ionity, tesla-sc, enbw, allego, fastned }
-│   └── stations.ts          # ~50 EU stations with stalls + plug types + max kW + base price
-├── weather/
-│   ├── registry.ts
-│   └── mock-provider.ts
-└── routing/
-    ├── registry.ts
-    └── mock-router.ts       # great-circle + waypoint heuristic, charging-stop insertion
+while cursor < now:
+  step, stepDuration, positionInStep = getStepInfoAt(scenario, cursor)
+  chunkSeconds = min(remainingInStep, remainingTotal)
+  if step.motionState changed since last chunk → handleTransition()
+  current = applyChunk(current, step, chunkSeconds, ...)
+  cursor += chunkSeconds
 ```
 
-The user picks active providers in settings. The dashboard reads the active provider. When real APIs are plugged in (roadmap 0.5+), only the underlying fetch changes; the shape stays.
+#### Physics per motion state
+
+| Motion state | Battery effect | Other |
+|---|---|---|
+| `driving` | Drain: `(distKm / 100) × efficiencyKwhPer100km / batteryCapacityKwh × 100` pct | Odometer += distKm; location lerped toward targetLocation |
+| `charging` | Gain: `chargingRateKw × chunkHours / batteryCapacityKwh × 100` pct, capped at chargeLimit | chargingState = "charging" or "complete" once at limit |
+| `plugged-idle` | Same gain as charging if below chargeLimit; 0 rate if at limit | chargingState = "complete" at limit |
+| `parked` | Climate drain: 1.5 kW while `isClimateOn = true` | Battery left unchanged otherwise |
+
+### applyCommand()
+
+```ts
+function applyCommand(
+  snapshot: MockVehicleSnapshot,
+  command: CommandName,
+  args: Record<string, unknown> | null,
+  brand: BrandProfile,
+): MockVehicleSnapshot
+```
+
+Before mutating state, `applyCommand` checks `brand.capabilities.commands[capKey]`. If `false`, throws `Error("command-not-supported:<command>")`, which the route handler converts to HTTP 422. This means the same rejection logic works in both the API and unit tests — no brand-check duplication.
+
+Commands and their state effects:
+
+| Command | State mutation |
+|---|---|
+| `lock` / `unlock` | `isLocked` |
+| `climate_on` / `climate_off` | `isClimateOn` |
+| `set_climate_temp` | `driverTempC = args.temp` |
+| `set_charge_limit` | `chargeLimit = clamp(args.limitPct, 50, 100)` |
+| `start_charging` / `stop_charging` | `chargingState` |
+| `vent_windows` / `close_windows` | `windowsOpen` |
+| `activate_sentry` / `deactivate_sentry` | `isSentryMode` |
+| `honk`, `flash`, `remote_start` | Side-effect only; no state field |
+| `set_charge_amps`, `open_charge_port`, `close_charge_port` | No-op in v1 mock |
+
+### Scenario system
+
+#### CYCLE_ANCHOR
+
+```ts
+const CYCLE_ANCHOR_MS = new Date("2026-01-01T00:00:00Z").getTime();
+```
+
+All time calculations are relative to this anchor. `getStepInfoAt(scenario, now)` computes:
+
+```
+elapsedMs = now - CYCLE_ANCHOR_MS
+cycleOffsetMs = elapsedMs % (scenario.cycleDurationSeconds × 1000)   // positive modulo
+cycleOffsetSec = cycleOffsetMs / 1000
+```
+
+Then walks `scenario.steps` to find the step whose `startOffsetSeconds <= cycleOffsetSec`. The result is `{ step, stepDuration, positionInStep }` — a deterministic answer for any `now`.
+
+#### Scenario JSON format
+
+```json
+{
+  "id": "commuter",
+  "name": "Daily Commuter",
+  "description": "...",
+  "cycleDurationSeconds": 86400,
+  "initialBatteryLevel": 75,
+  "vehicle": {
+    "batteryCapacityKwh": 75,
+    "efficiencyKwhPer100km": 16,
+    "maxAcChargingRateKw": 11,
+    "maxDcChargingRateKw": 250
+  },
+  "steps": [
+    {
+      "startOffsetSeconds": 0,
+      "motionState": "charging",
+      "location": { "lat": 50.0755, "lng": 14.4378 },
+      "chargingRateKw": 7.4,
+      "chargingNetwork": "home",
+      "climateOn": false
+    },
+    {
+      "startOffsetSeconds": 25200,
+      "motionState": "driving",
+      "location": { "lat": 50.0755, "lng": 14.4378 },
+      "targetLocation": { "lat": 50.0870, "lng": 14.4213 },
+      "avgSpeedKmh": 42,
+      "climateOn": true,
+      "driverTempC": 21
+    }
+  ]
+}
+```
+
+`ScenarioStep` fields:
+
+| Field | Required | Notes |
+|---|---|---|
+| `startOffsetSeconds` | Yes | Seconds from cycle start when this step begins |
+| `motionState` | Yes | `"parked"` \| `"driving"` \| `"charging"` \| `"plugged-idle"` |
+| `location` | Yes | `{ lat, lng }` — vehicle position at step start |
+| `targetLocation` | No | For driving steps; location is lerped from `location` to `targetLocation` over step duration |
+| `avgSpeedKmh` | No (driving) | Defaults to 80 km/h if omitted |
+| `chargingRateKw` | No (charging) | Defaults to `vehicle.maxAcChargingRateKw` if omitted |
+| `chargingNetwork` | No | `"home"` \| `"ionity"` \| `"tesla-sc"` \| `"enbw"` \| `"allego"` \| `"fastned"` \| `"other"` |
+| `climateOn` | No | When omitted, climate state carries over from previous step |
+| `driverTempC` | No | Only applied when `climateOn = true` |
+
+The `vehicle` block in the scenario is a fallback default. When a vehicle's `vehicleSpec` is set (from `models.ts` at seed time), it overrides the scenario defaults for `batteryCapacityKwh`, `efficiencyKwhPer100km`, and charge rates. This makes the same scenario drive correctly for a 60 kWh Renault and a 107 kWh Mercedes.
+
+### Session boundary detection
+
+`handleTransition(snapshot, from, to, at)` runs whenever motion state changes between scenario chunks:
+
+- `driving → anything`: clears `activeTripStart` (persistence layer detects null = "close trip")
+- `charging/plugged-idle → anything`: clears `activeChargingSessionStart`
+- `anything → driving`: sets `activeTripStart`, `activeTripStartLat/Lng`, `activeTripStartOdometerKm`
+- `anything → charging/plugged-idle`: sets `activeChargingSessionStart`, `activeChargingSessionStartSoc`
+
+`saveSnapshot` (persistence layer) compares `prev` and `next` snapshots. If `prev.activeTripStart` was set and `next.activeTripStart` is null, it inserts a `trips` row. Same pattern for charging sessions → `charging_sessions` row. Calculated fields:
+
+- `distance_km = odometerKm_now - activeTripStartOdometerKm`
+- `avg_speed_kmh = (distance_km / durationSeconds) × 3600`
+- `energy_added_kwh = (endSoc - startSoc) / 100 × batteryCapacityKwh` (approximated)
+
+---
+
+## History tracking — database tables
+
+Migration `002_mock_platform.sql` creates:
+
+### mock_vehicle_state
+
+One row per vehicle. Updated on every tick. Stores the full `VehicleState` as JSONB plus motion tracking fields.
+
+```sql
+vehicle_id                         uuid PK → vehicles(id)
+state                              jsonb           -- full VehicleState
+motion_state                       text            -- parked | driving | charging | plugged-idle
+scenario_id                        text
+last_tick_at                       timestamptz
+active_charging_session_start      timestamptz
+active_charging_session_network    text
+active_charging_session_start_soc  integer
+active_trip_start                  timestamptz
+active_trip_start_lat/lng          numeric(9,6)
+active_trip_start_odometer_km      numeric(10,2)
+```
+
+### charging_sessions
+
+```sql
+id, vehicle_id, started_at, ended_at, energy_added_kwh,
+start_soc, end_soc, network, cost_eur,
+location_lat, location_lng, location_name, max_charging_rate_kw
+```
+
+Indexed on `(vehicle_id, started_at DESC)`.
+
+### trips
+
+```sql
+id, vehicle_id, started_at, ended_at,
+start_lat, start_lng, end_lat, end_lng,
+start_address, end_address,
+distance_km, energy_used_kwh, avg_speed_kmh, max_speed_kmh, efficiency_kwh_per_100km
+```
+
+Indexed on `(vehicle_id, started_at DESC)`.
+
+### command_events
+
+Audit log of all user commands.
+
+```sql
+id, vehicle_id, command, args (jsonb), success, error_code,
+source (user | automation), issued_at
+```
+
+All four tables have RLS policies that restrict rows to the vehicle's owner via `auth.uid()`.
+
+---
+
+## Tariff provider abstraction
+
+Tariff providers follow the same registry pattern as brands:
+
+```
+src/lib/external/tariffs/
+├── registry.ts          # TARIFF_PROVIDERS = { tibber-mock, octopus-mock, awattar-mock }
+└── <provider>/
+    ├── provider.ts
+    └── fixtures.ts      # hourly prices, forecast, off-peak windows
+```
+
+Provider shape:
+
+```ts
+interface TariffProvider {
+  id: string;
+  displayName: string;
+  getHourlyPrices(date: Date): HourlyPrice[];    // 24 entries
+  getForecast(): HourlyPrice[];                  // next 24h
+  getCurrentPrice(): number;                     // €/kWh
+  getOffPeakWindow(): { start: number; end: number };  // hours
+}
+```
+
+The user picks an active provider in Settings. The `/energy` page reads it. When real APIs are plugged in (roadmap 0.5+), only the underlying fetch changes; the shape stays.
+
+---
+
+## Database schema overview
+
+```
+profiles          — Auth.js mirror of auth.users rows
+vehicles          — per-user vehicles (brand, model, data_source, scenario_id)
+tesla_tokens      — AES-256-GCM encrypted OAuth tokens (legacy live Tesla)
+vehicle_snapshots — append-only polling snapshots (legacy live Tesla)
+
+mock_vehicle_state — one row per vehicle; current simulator state
+charging_sessions  — completed charging sessions, derived from simulator
+trips              — completed trips, derived from simulator
+command_events     — audit log of all user commands
+```
+
+All tables have RLS. The app never accesses Supabase from the browser with data queries — all reads and writes go through `/api/*` route handlers that use the service-role client after verifying the Auth.js session.
+
+---
 
 ## Multi-vehicle UX
 
 Routes:
 
-- `/garage` (default landing) — grid of vehicle cards + fleet aggregates.
+- `/garage` — default landing; grid of vehicle cards + fleet aggregates.
 - `/dashboard?v=<vehicleId>` — deep card view.
-- `/energy` — tariffs + smart charging.
-- `/charging-map` — nearby stations.
-- `/trip` — trip planner.
+- `/energy` — tariffs + smart charging recommendations.
+- `/charging-map` — charging-network discovery map.
+- `/trip` — trip planner with charging-stop insertion.
 - `/about-data` — mock-vs-live transparency table.
 
-Top nav has a **vehicle switcher pill** (current vehicle + dropdown of others). The Dashboard, Trip, and Charging-Map pages all act on the active vehicle.
+Top nav has a **vehicle switcher pill** (current vehicle + dropdown of others). Dashboard, Trip, and Charging-Map pages all act on the active vehicle.
 
-Fleet totals on the Garage page sum across all vehicles for: combined available range, kWh charged this month, monthly cost, CO₂ saved vs. ICE baseline. The smart-charge coordinator (across multiple plugged-in vehicles) and the "Which car?" recommender live on the Garage too.
+---
 
 ## Mock disclosure
 
-The product is honest about which data is simulated:
+| Surface | When it appears |
+|---|---|
+| `MOCK` chip in card header (amber) | Vehicle has `dataSource === "mock"` |
+| Global "Demo mode" banner | All user vehicles are mock |
+| `/about-data` transparency page | Always available; lists live-vs-mock per data category |
 
-| Surface                                | When it appears                                              |
-| -------------------------------------- | ------------------------------------------------------------ |
-| `MOCK` chip in card header (amber)     | Vehicle has `dataSource === "mock"`                          |
-| Global "Demo mode" banner              | Every vehicle on the account is mock                         |
-| `/about-data` transparency page        | Always available; lists live-vs-mock per data category       |
+The chip tooltip and the banner both link to `/about-data`. The product is honest: we never label simulated data as live.
 
-The chip tooltip and the banner both link to `/about-data`. We never tell the user "this is live" when it isn't.
+---
 
 ## Legacy live-Tesla preservation
 
-The original Tesla code (OAuth + PKCE + region probe + token refresh + AES-256-GCM encryption + vehicle-data parser + command routes) **stays in the tree**. Re-deriving it would cost days; the cost of keeping it is one env flag check and an unused import path.
+The original Tesla code (OAuth + PKCE + region probe + token refresh + AES-256-GCM encryption) stays in the tree. Re-deriving it would cost days; keeping it costs one flag check.
 
-- `LIVE_INTEGRATIONS` env: comma-separated brand keys (`tesla,bmw,...`). When `tesla` is in the list, the Tesla brand profile is allowed `dataSource = "live"`. Otherwise, all Tesla vehicles are forced to mock regardless of DB row state.
-- `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) stays. Its README is marked "currently dormant."
-- `/connect/tesla` and `/api/tesla/*` routes return 410 Gone with a JSON message when `tesla` is not in `LIVE_INTEGRATIONS`.
+- `LIVE_INTEGRATIONS` env: comma-separated brand keys. When `tesla` is in the list, the Tesla brand profile switches `dataSource = "live"`.
+- `tesla-proxy/` (Dockerfile + fly.toml) stays; README marked "currently dormant."
+- `/connect/tesla` and `/api/tesla/*` routes return `410 Gone` when `tesla` is not in `LIVE_INTEGRATIONS`.
 
-### Reactivation procedure (future phase 0.2)
+### Reactivation procedure (Phase 0.2 roadmap)
 
 1. Set `LIVE_INTEGRATIONS=tesla` in Vercel env.
-2. Deploy `tesla-proxy/` on Fly.io per the original NEXT-STEPS plan (preserved in git history).
+2. Deploy `tesla-proxy/` on Fly.io per the original NEXT-STEPS plan.
 3. Set `TESLA_PROXY_BASE_URL` on Vercel.
-4. From the UI, the "Add real Tesla" CTA reappears in onboarding.
-5. Existing mock Tesla vehicles can be converted to live by user action (re-OAuth and flip `data_source = 'live'` on the row).
+4. "Add real Tesla" CTA reappears in onboarding.
+5. Existing mock Tesla vehicles can be converted to live by re-OAuth and flipping `data_source = 'live'`.
+
+---
+
+## Tesla OAuth flow (legacy, reactivates under LIVE_INTEGRATIONS)
+
+```
+ Browser  → GET /api/tesla/connect
+         ← set HttpOnly cookies (pkce_verifier, state)
+         ← 302 redirect to auth.tesla.com
+
+ user authenticates with Tesla
+
+ Tesla   → 302 /api/tesla/callback?code=…&state=…
+         → validate state + exchange code (PKCE)
+         → probe regions (EU / NA / CN)
+         → AES-256-GCM encrypt + persist tokens
+         → 302 /dashboard
+```
+
+## TanStack Query polling strategy
+
+- **30-second `refetchInterval`** while the tab is active.
+- **20-second `staleTime`** prevents duplicate fetches within the polling window.
+- **`refetchOnWindowFocus: false`** — refocus does not double-fire alongside the interval.
+- **Mutations invalidate** the relevant `["vehicle", vehicleId]` query for immediate feedback.
+
+---
 
 ## Implementation decisions
 
-The bootstrap prompt explicitly asked for any non-obvious decisions to be recorded here. The notable ones:
+### 1. Next.js 16, not 15
 
-### 1. We landed on Next.js 16, not 15
-
-`npx create-next-app@latest` shipped Next.js **16.2** at the time of scaffolding (Jan 2026 cutoff: Next 16 GA). The breaking changes vs. 15 are minor for this stack — `params`/`searchParams` are already `Promise<…>` (carried over from 15.0), and `cookies()` is async (same). All code is written against the Next 16 conventions documented in `node_modules/next/dist/docs`.
+`npx create-next-app@latest` shipped Next.js 16.2 at the time of scaffolding. `params`/`searchParams` are `Promise<…>` and `cookies()` is async — all code is written against the Next 16 conventions documented in `node_modules/next/dist/docs`.
 
 ### 2. Tailwind v4 with OKLCH tokens
 
-Tailwind v4 is the default in `create-next-app@16`. We use the new `@theme inline` block in `globals.css` to wire CSS variables to Tailwind utility classes (`bg-background`, `text-foreground`, etc.). Color tokens use **OKLCH** for perceptually uniform contrast across light/dark modes. shadcn's "new-york" style is replicated manually because the official shadcn CLI requires Node ≥ 20 and we wanted the scaffold to work without forcing a Node bump.
+Tailwind v4 is the default in `create-next-app@16`. CSS variables wired via `@theme inline` block in `globals.css`. Colors use OKLCH for perceptually uniform contrast across light/dark.
 
-### 3. shadcn primitives are hand-written, not generated
+### 3. shadcn primitives are hand-written
 
-We did not run `shadcn init` (it is interactive in Node 18). All primitives in `src/components/ui/` are written by hand against the documented shadcn New York patterns. `components.json` is included so the upstream CLI can layer in additional primitives later without conflict.
+`shadcn init` is interactive in Node 18. All primitives in `src/components/ui/` are written by hand against documented shadcn New York patterns. `components.json` is included so the upstream CLI can layer in additional primitives without conflict.
 
 ### 4. Supabase client choices
 
-- **Browser**: `createBrowserClient` from `@supabase/ssr` — wired in `src/lib/supabase/client.ts`.
-- **Server (request-bound)**: `createServerClient` from `@supabase/ssr` with the Next 16 async `cookies()`. Use this when an RLS-aware query is needed.
-- **Admin (service role)**: a plain `@supabase/supabase-js` client. We use this in route handlers **after** verifying the Auth.js session, because Auth.js owns the source of truth for the user identity in this app, not Supabase's session cookie.
+- **Browser**: `createBrowserClient` from `@supabase/ssr`.
+- **Server (request-bound)**: `createServerClient` from `@supabase/ssr` with async `cookies()`.
+- **Admin (service role)**: plain `@supabase/supabase-js` client, used in route handlers after verifying the Auth.js session.
 
-The pragmatic effect: RLS still protects the DB at the platform level, but our app-level authorization is enforced by Auth.js + explicit `eq("user_id", session.user.id)` filters in service-role queries.
+RLS still protects the DB at the platform level; app-level authorization is enforced by Auth.js + explicit `eq("user_id", session.user.id)` filters.
 
 ### 5. Auth.js + Supabase user identity
 
-When a user signs in with Google for the first time, the Auth.js `jwt` callback calls `supabase.auth.admin.createUser({ email, email_confirm: true })`. This produces a `auth.users` row whose `id` becomes the canonical user identity throughout the app. The `handle_new_user` Postgres trigger then mirrors that row into `profiles`. Credentials sign-in delegates to Supabase directly via `signInWithPassword`.
+First Google sign-in: Auth.js `jwt` callback calls `supabase.auth.admin.createUser`. This produces an `auth.users` row whose `id` becomes the canonical user identity. The `handle_new_user` trigger mirrors it to `profiles`. Because Supabase sessions are not used, RLS policies that test `auth.uid()` won't see the user — all server-side data access uses the service-role client with explicit `user_id` filters.
 
-This means the Supabase `auth.users` table is the source of truth for user IDs, even though session management is owned by Auth.js. RLS policies that test `auth.uid()` won't see this user automatically because we're not using Supabase sessions — that's why our server-side data access uses the service-role client with explicit `user_id` filters.
+### 6. Simulator tick is driven by reads, not a cron
 
-### 6. PKCE for Tesla OAuth
+Advancing state on every read (rather than a background job) keeps the infrastructure simple for the mock-first MVP. The 30s polling interval on the dashboard is sufficient to produce plausible real-time updates. The design naturally upgrades to a background tick job later if needed.
 
-Tesla's Fleet API supports PKCE. We use it even though we're a confidential client (we have a `TESLA_CLIENT_SECRET`). The verifier is stored in an HttpOnly cookie scoped to the OAuth window (10 minutes). Combined with the `state` parameter, this defends against CSRF on the callback.
+### 7. Disconnect ≠ revoke (legacy Tesla)
 
-### 7. Region detection by probe
-
-The Tesla Fleet API is region-partitioned (EU / NA / CN). The callback handler tries each region's `/api/1/vehicles` endpoint with the freshly issued access token. The first region that returns ≥ 1 vehicle wins and is stored on the `vehicles.tesla_region` column. Subsequent calls use that region without re-probing.
-
-### 8. Snapshot writes are fire-and-forget
-
-The vehicle GET route writes a `vehicle_snapshots` row on every successful fetch, but does not await it. The user's dashboard latency is bound only by Tesla's API; the snapshot write happens in the background. This is acceptable because:
-
-- A dropped snapshot only loses one polling sample (we have a snapshot every 30s).
-- The `vehicle_snapshots` table is append-only and used for history, not source-of-truth state.
-
-### 9. Charging history is read from snapshots, not Tesla
-
-Tesla doesn't expose a clean "charging session history" endpoint, so we synthesize it client-side: any snapshot with `is_charging = true`, sorted descending. This is naïve (one session can span many snapshots) but works for the MVP charging page. A future improvement: a server-side job that collapses consecutive `is_charging` snapshots into discrete `charging_sessions` rows.
-
-### 10. Disconnect ≠ revoke
-
-`DELETE /api/vehicles/:id` removes the local row and cascades the tokens. It does **not** call Tesla's token revocation endpoint. If we wanted to be a strictly polite OAuth client, we would `POST /oauth2/v3/revoke` first. The current trade-off is operational simplicity; the encrypted tokens are destroyed locally so the access is functionally gone from Flux's side.
+`DELETE /api/vehicles/:id` removes the local row and cascades the tokens. It does not call Tesla's token revocation endpoint. The encrypted tokens are destroyed locally, so access is functionally gone from Flux's side.
