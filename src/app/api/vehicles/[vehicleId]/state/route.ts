@@ -25,7 +25,7 @@ export async function GET(
 
   const { data: vehicle, error: vehErr } = await supabase
     .from("vehicles")
-    .select("id, brand, data_source, display_name, tesla_vehicle_id, tesla_region")
+    .select("id, brand, data_source, display_name, model, tesla_vehicle_id, tesla_region")
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .maybeSingle();
@@ -60,7 +60,13 @@ export async function GET(
   // Mock path: tick the simulator to now
   let prev = await loadSnapshot(vehicleId);
   if (!prev) {
-    prev = createInitialSnapshot(vehicleId, vehicle.display_name, vehicle.brand as BrandKey, "commuter");
+    prev = createInitialSnapshot(
+      vehicleId,
+      vehicle.display_name,
+      vehicle.brand as BrandKey,
+      "commuter",
+      vehicle.model ?? null,
+    );
     await saveSnapshot(vehicleId, null, prev);
   }
 

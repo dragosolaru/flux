@@ -84,12 +84,12 @@ async function maybeCloseChargingSession(
   if (!prev.activeChargingSessionStart || next.activeChargingSessionStart) return;
 
   const endSoc = next.state.batteryLevel ?? null;
+  // Use the vehicle spec (real battery capacity) to compute kWh added
+  // from the SoC delta. Falls back to scenario default if spec missing.
+  const batteryCapacityKwh = next.vehicleSpec?.batteryCapacityKwh ?? null;
   const energyAdded =
-    prev.activeChargingSessionStartSoc != null && endSoc != null
-      ? ((endSoc - prev.activeChargingSessionStartSoc) / 100) *
-        (next.state.batteryRangeKm
-          ? next.state.batteryRangeKm / ((endSoc / 100) || 1) * (16 / 100)
-          : 0)
+    prev.activeChargingSessionStartSoc != null && endSoc != null && batteryCapacityKwh
+      ? ((endSoc - prev.activeChargingSessionStartSoc) / 100) * batteryCapacityKwh
       : null;
 
   await supabase.from("charging_sessions").insert({

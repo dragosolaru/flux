@@ -6,6 +6,7 @@
 // =============================================================================
 
 import type { BrandProfile } from "@/lib/brands/types";
+import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import type { MotionState, VehicleState } from "@/types/vehicle";
 import type { CommandName } from "@/types/history";
 import { getScenario, getStepInfoAt } from "./scenarios";
@@ -155,10 +156,11 @@ function applyChunk(
 export function tick(
   snapshot: MockVehicleSnapshot,
   now: Date,
-  brand: BrandProfile,
+  _brand: BrandProfile,
 ): MockVehicleSnapshot {
-  void brand; // Brand affects the adapter layer; engine uses scenario specs
-
+  // Brand profile is part of the public signature so the dispatcher can pass
+  // through, but the engine physics is brand-agnostic — the capability mask is
+  // applied in the API layer after tick.
   const fromTime = new Date(snapshot.lastTickAt);
   const elapsedMs = now.getTime() - fromTime.getTime();
   if (elapsedMs <= 0) return snapshot;
@@ -243,26 +245,6 @@ function handleTransition(
 // applyCommand — mutate state for a user command
 // ---------------------------------------------------------------------------
 
-const COMMAND_CAP_MAP: Record<CommandName, keyof BrandProfile["capabilities"]["commands"]> = {
-  lock:              "lock",
-  unlock:            "unlock",
-  climate_on:        "climateOn",
-  climate_off:       "climateOff",
-  set_climate_temp:  "setClimateTemp",
-  honk:              "honk",
-  flash:             "flash",
-  set_charge_limit:  "setChargeLimit",
-  set_charge_amps:   "setChargeAmps",
-  start_charging:    "startCharging",
-  stop_charging:     "stopCharging",
-  open_charge_port:  "openChargePort",
-  close_charge_port: "closeChargePort",
-  vent_windows:      "ventWindows",
-  close_windows:     "closeWindows",
-  activate_sentry:   "activateSentry",
-  deactivate_sentry: "deactivateSentry",
-  remote_start:      "remoteStart",
-};
 
 export function applyCommand(
   snapshot: MockVehicleSnapshot,

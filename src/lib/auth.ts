@@ -56,15 +56,29 @@ export const authConfig: NextAuthConfig = {
 
       // For Google sign-ins, ensure a Supabase auth user exists so the rest
       // of the app (which is keyed on auth.uid()) can find a profile row.
-      if (account?.provider === "google" && profile?.email) {
+      //
+      // We cache the resolved id on the JWT so this lookup happens at most
+      // once per session (subsequent jwt() callbacks short-circuit because
+      // token.id is already set).
+      //
+      // Lookup uses paginated listUsers with a small page size to avoid
+      // returning every user's email on every sign-in. Bounded at 10 pages
+      // × 100 users = 1000-user demo cap. For production scale, swap this
+      // for a `profiles_by_email` indexed table sync.
+      if (account?.provider === "google" && profile?.email && !token.id) {
         const supabase = createSupabaseAdminClient();
-        const { data: existing } = await supabase.auth.admin.listUsers();
-        const found = existing?.users.find(
-          (u) => u.email === profile.email,
-        );
 
-        if (found) {
-          token.id = found.id;
+        let match: { id: string } | undefined;
+        let page = 1;
+        while (!match && page <= 10) {
+          const { data } = await supabase.auth.admin.listUsers({ page, perPage: 100 });
+          match = data?.users.find((u) => u.email === profile.email);
+          if (!data || data.users.length < 100) break;
+          page++;
+        }
+
+        if (match) {
+          token.id = match.id;
         } else {
           const { data: created } = await supabase.auth.admin.createUser({
             email: profile.email,

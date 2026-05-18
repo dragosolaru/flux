@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import { getBrand } from "@/lib/brands/registry";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { applyCommand } from "@/lib/mock/engine";
@@ -49,7 +50,7 @@ export async function POST(
   const supabase = createSupabaseAdminClient();
   const { data: vehicle, error: vehErr } = await supabase
     .from("vehicles")
-    .select("id, brand, data_source, display_name, tesla_vehicle_id")
+    .select("id, brand, data_source, display_name, model, tesla_vehicle_id")
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .maybeSingle();
@@ -63,19 +64,8 @@ export async function POST(
     return NextResponse.json({ message: "unknown-brand" }, { status: 400 });
   }
 
-  // Capability check before any adapter call
-  const capMap: Record<CommandName, keyof typeof profile.capabilities.commands> = {
-    lock: "lock", unlock: "unlock",
-    climate_on: "climateOn", climate_off: "climateOff", set_climate_temp: "setClimateTemp",
-    honk: "honk", flash: "flash",
-    set_charge_limit: "setChargeLimit", set_charge_amps: "setChargeAmps",
-    start_charging: "startCharging", stop_charging: "stopCharging",
-    open_charge_port: "openChargePort", close_charge_port: "closeChargePort",
-    vent_windows: "ventWindows", close_windows: "closeWindows",
-    activate_sentry: "activateSentry", deactivate_sentry: "deactivateSentry",
-    remote_start: "remoteStart",
-  };
-  if (!profile.capabilities.commands[capMap[command]]) {
+  // Capability check using the shared COMMAND_CAP_MAP (same map the simulator uses)
+  if (!profile.capabilities.commands[COMMAND_CAP_MAP[command]]) {
     return NextResponse.json({ message: "command-not-supported" }, { status: 400 });
   }
 
@@ -88,7 +78,13 @@ export async function POST(
   try {
     let prev = await loadSnapshot(vehicleId);
     if (!prev) {
-      prev = createInitialSnapshot(vehicleId, vehicle.display_name, vehicle.brand as BrandKey, "commuter");
+      prev = createInitialSnapshot(
+        vehicleId,
+        vehicle.display_name,
+        vehicle.brand as BrandKey,
+        "commuter",
+        vehicle.model ?? null,
+      );
     }
     const next = applyCommand(prev, command, args ?? null, profile);
     await saveSnapshot(vehicleId, prev, next);

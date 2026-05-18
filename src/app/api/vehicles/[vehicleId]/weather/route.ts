@@ -17,14 +17,7 @@ export async function GET(
   const { vehicleId } = await params;
   const supabase = createSupabaseAdminClient();
 
-  // Pull current vehicle state to get lat/lng and range
-  const { data: stateRow } = await supabase
-    .from("mock_vehicle_state")
-    .select("state")
-    .eq("vehicle_id", vehicleId)
-    .maybeSingle();
-
-  // Verify vehicle belongs to user
+  // Verify vehicle belongs to user FIRST — prevents leaking state for foreign vehicles
   const { data: vehicle } = await supabase
     .from("vehicles")
     .select("id")
@@ -35,6 +28,13 @@ export async function GET(
   if (!vehicle) {
     return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
   }
+
+  // Then pull current vehicle state for lat/lng and range
+  const { data: stateRow } = await supabase
+    .from("mock_vehicle_state")
+    .select("state")
+    .eq("vehicle_id", vehicleId)
+    .maybeSingle();
 
   const state = stateRow?.state as { latitude?: number; longitude?: number; batteryRangeKm?: number } | null;
   const lat = state?.latitude ?? 50.0;

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Seed initial mock state
-  const snapshot = createInitialSnapshot(vehicle.id, nickname, brand, scenario.id);
+  const snapshot = createInitialSnapshot(vehicle.id, nickname, brand, scenario.id, model ?? null);
   await saveSnapshot(vehicle.id, null, snapshot);
 
   return NextResponse.json({ id: vehicle.id }, { status: 201 });

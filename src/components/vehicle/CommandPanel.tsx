@@ -26,15 +26,21 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const inFlight = (cmd: CommandName) =>
     isPending && variables?.command === cmd;
 
+  // While state is loading we default the toggles to the "safer" action:
+  // climate off (no battery drain), lock (vehicle secured). This avoids
+  // surfacing "Unlock" as the default button before data arrives.
   const climateActive = state?.isClimateOn ?? false;
   const climateCmd: CommandName = climateActive ? "climate_off" : "climate_on";
   const lockCmd: CommandName = state?.isLocked === false ? "lock" : "unlock";
+  const stateLoaded = state != null;
 
   const buttons = [
     caps.commands.lock && caps.commands.unlock && {
-      cmd: lockCmd,
-      label: lockCmd === "lock" ? "Lock" : "Unlock",
-      icon: lockCmd === "lock" ? Lock : Unlock,
+      // While loading, show "Lock" label (defensive default) — button stays
+      // disabled until state arrives so the action matches the label.
+      cmd: stateLoaded ? lockCmd : "lock",
+      label: stateLoaded ? (lockCmd === "lock" ? "Lock" : "Unlock") : "Lock",
+      icon: stateLoaded ? (lockCmd === "lock" ? Lock : Unlock) : Lock,
       inFlight: inFlight("lock") || inFlight("unlock"),
     },
     caps.commands.climateOn && caps.commands.climateOff && {

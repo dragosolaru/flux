@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { cloneElement, isValidElement, useEffect, useState } from "react";
+import type { ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
@@ -87,19 +88,39 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
     }
   }
 
+  // Close on Escape; trap focus inside modal when open
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Clone the trigger element (button) and attach onClick, avoiding nested
+  // interactive elements (button-in-div) that break keyboard accessibility.
+  const triggerEl = trigger && isValidElement(trigger)
+    ? cloneElement(trigger as ReactElement<{ onClick?: () => void }>, { onClick: () => setOpen(true) })
+    : (
+      <Button onClick={() => setOpen(true)}>
+        <PlusCircle className="mr-2 size-4" />
+        Add vehicle
+      </Button>
+    );
+
   return (
     <>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
-        {trigger ?? (
-          <Button>
-            <PlusCircle className="mr-2 size-4" />
-            Add vehicle
-          </Button>
-        )}
-      </div>
+      {triggerEl}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Add vehicle"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
           <Card className="w-full max-w-lg">
             <CardHeader>
               <CardTitle>

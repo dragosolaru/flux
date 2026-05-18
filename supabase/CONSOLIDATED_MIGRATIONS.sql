@@ -167,6 +167,54 @@ create policy "Users can manage their own settings"
   on user_settings for all
   using (user_id = auth.uid());
 
+-- -----------------------------------------------------------------------------
+-- 005: Schema hardening from senior audit (composite index, check constraints,
+-- updated_at trigger, tighter RLS)
+-- -----------------------------------------------------------------------------
+
+create index if not exists vehicles_user_id_active_idx
+  on vehicles(user_id, is_active);
+
+alter table charging_sessions
+  drop constraint if exists charging_sessions_network_check;
+alter table charging_sessions
+  add constraint charging_sessions_network_check
+  check (
+    network is null
+    or network in ('ionity', 'tesla-sc', 'enbw', 'allego', 'fastned', 'home', 'other')
+  );
+
+alter table mock_vehicle_state
+  drop constraint if exists mock_vehicle_state_scenario_id_check;
+alter table mock_vehicle_state
+  add constraint mock_vehicle_state_scenario_id_check
+  check (
+    scenario_id is null
+    or scenario_id in ('commuter', 'weekend-errands', 'road-trip', 'vacation')
+  );
+
+alter table vehicles
+  add column if not exists updated_at timestamptz not null default now();
+
+create or replace function set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists vehicles_set_updated_at on vehicles;
+create trigger vehicles_set_updated_at
+  before update on vehicles
+  for each row execute function set_updated_at();
+
+drop policy if exists "Users can access their own mock state" on mock_vehicle_state;
+create policy "Users can access their own mock state"
+  on mock_vehicle_state for all
+  using (vehicle_id in (select id from vehicles where user_id = auth.uid()))
+  with check (vehicle_id in (select id from vehicles where user_id = auth.uid()));
+
 -- =============================================================================
 -- Done. Verify by running:
 --   select count(*) from mock_vehicle_state;

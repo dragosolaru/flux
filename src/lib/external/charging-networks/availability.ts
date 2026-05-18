@@ -1,4 +1,4 @@
-import type { StationAvailability } from "./types";
+import type { ChargingStation, StationAvailability } from "./types";
 import { STATIONS } from "./stations";
 
 /**
@@ -7,10 +7,7 @@ import { STATIONS } from "./stations";
  * station, time of day, and a slow-changing pseudo-random seed.
  * Result is stable for ~2 minutes (rounded epoch / 120s).
  */
-export function getAvailability(stationId: string): StationAvailability | null {
-  const station = STATIONS.find((s) => s.id === stationId);
-  if (!station) return null;
-
+function computeForStation(station: ChargingStation): StationAvailability {
   const now = new Date();
   const hour = now.getHours();
   const epoch2m = Math.floor(Date.now() / 120_000);
@@ -19,21 +16,27 @@ export function getAvailability(stationId: string): StationAvailability | null {
   const peakHour = (hour >= 8 && hour <= 10) || (hour >= 17 && hour <= 20);
   const baseOccupancy = peakHour ? 0.65 : 0.30;
 
-  // Deterministic per-stall occupancy using station id hash + epoch
   let occupied = 0;
   for (let stall = 0; stall < station.totalStalls; stall++) {
-    const seed = (stationId.charCodeAt(stall % stationId.length) * 31 + stall * 97 + epoch2m * 7) % 100;
+    const seed = (station.id.charCodeAt(stall % station.id.length) * 31 + stall * 97 + epoch2m * 7) % 100;
     if (seed < baseOccupancy * 100) occupied++;
   }
 
   return {
-    stationId,
+    stationId: station.id,
     availableStalls: station.totalStalls - occupied,
     totalStalls: station.totalStalls,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now.toISOString(),
   };
 }
 
+export function getAvailability(stationId: string): StationAvailability | null {
+  const station = STATIONS.find((s) => s.id === stationId);
+  if (!station) return null;
+  return computeForStation(station);
+}
+
+// O(n) instead of O(n²): iterate STATIONS directly, no per-station lookup
 export function getAllAvailability(): StationAvailability[] {
-  return STATIONS.map((s) => getAvailability(s.id)!);
+  return STATIONS.map(computeForStation);
 }

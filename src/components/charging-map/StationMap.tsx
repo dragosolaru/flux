@@ -3,16 +3,24 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { StationWithMeta } from "@/app/(dashboard)/charging-map/charging-map-client";
 
-// Fix Leaflet default icon paths broken by webpack
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+// Fix Leaflet default icon paths broken by webpack — done once per mount instead
+// of on module load to avoid HMR races and SSR side effects.
+function useLeafletIconFix() {
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current) return;
+    delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    });
+    done.current = true;
+  }, []);
+}
 
 function makeIcon(color: string, available: boolean) {
   const opacity = available ? 1 : 0.5;
@@ -46,7 +54,8 @@ interface StationMapProps {
   onSelect: (s: StationWithMeta) => void;
 }
 
-export default function StationMap({ stations, selected, onSelect }: StationMapProps) {
+export default function StationMap({ stations, selected: _selected, onSelect }: StationMapProps) {
+  useLeafletIconFix();
   return (
     <MapContainer
       center={[50.0, 12.0]}
