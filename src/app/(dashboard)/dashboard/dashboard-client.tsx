@@ -14,6 +14,7 @@ import { SoftwareCard } from "@/components/vehicle/SoftwareCard";
 import { StatsGrid } from "@/components/vehicle/StatsGrid";
 import { TirePressureCard } from "@/components/vehicle/TirePressureCard";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
+import { WeatherRangeCard } from "@/components/vehicle/WeatherRangeCard";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import type { BrandKey } from "@/lib/brands/types";
@@ -71,6 +72,11 @@ export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClie
           </div>
 
           {/* Extended telemetry — each section gated on brand capability */}
+          {/* Weather + derated range */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <WeatherRangeCard vehicleId={vehicleId} />
+          </div>
+
           {data && t && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {t.tirePressure && data.tirePressures && (
