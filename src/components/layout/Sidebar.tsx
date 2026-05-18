@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BatteryCharging, Car, Info, LayoutGrid, Settings, Zap } from "lucide-react";
+import { BatteryCharging, Car, Info, LayoutGrid, MapPin, Settings, Zap } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,8 +10,9 @@ const items = [
   { href: "/garage",    label: "Garage",    icon: LayoutGrid },
   { href: "/dashboard", label: "Dashboard", icon: Car },
   { href: "/charging",  label: "Charging",  icon: BatteryCharging },
-  { href: "/energy",      label: "Energy",     icon: Zap },
-  { href: "/about-data",  label: "About data", icon: Info },
+  { href: "/energy",        label: "Energy",      icon: Zap },
+  { href: "/charging-map", label: "Charge map",  icon: MapPin },
+  { href: "/about-data",   label: "About data",  icon: Info },
   { href: "/settings",    label: "Settings",   icon: Settings },
 ];
 
