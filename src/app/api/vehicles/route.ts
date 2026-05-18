@@ -6,6 +6,7 @@ import { getBrand } from "@/lib/brands/registry";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { saveSnapshot } from "@/lib/mock/persistence";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
 
 // GET /api/vehicles — list all active vehicles for the current user
@@ -15,11 +16,16 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("vehicles")
     .select("id, brand, display_name, nickname, model, year, data_source")
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .eq("is_active", true)
     .order("created_at", { ascending: true });
 
@@ -55,6 +61,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = addVehicleSchema.safeParse(body);
   if (!parsed.success) {
@@ -79,7 +90,7 @@ export async function POST(req: NextRequest) {
   const { data: vehicle, error: insertErr } = await supabase
     .from("vehicles")
     .insert({
-      user_id: session.user.id,
+      user_id: userId,
       brand,
       display_name: nickname,
       nickname,

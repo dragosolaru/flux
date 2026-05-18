@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import type { BrandKey } from "@/lib/brands/types";
 
@@ -54,13 +55,18 @@ export async function POST() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
   const supabase = createSupabaseAdminClient();
 
   // Find existing nicknames to skip
   const { data: existing } = await supabase
     .from("vehicles")
     .select("nickname")
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .eq("is_active", true);
 
   const existingNicknames = new Set((existing ?? []).map((v) => v.nickname));
@@ -76,7 +82,7 @@ export async function POST() {
     const { data: row, error } = await supabase
       .from("vehicles")
       .insert({
-        user_id: session.user.id,
+        user_id: userId,
         brand: seed.brand,
         model: seed.model,
         year: seed.year,
