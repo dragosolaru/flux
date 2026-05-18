@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { MockChip } from "./MockChip";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-fetch";
 import type { VehicleListItem } from "@/hooks/useVehicles";
 
 const BRAND_COLORS: Record<string, string> = {
@@ -35,36 +39,83 @@ interface VehicleListCardProps {
 export function VehicleListCard({ vehicle }: VehicleListCardProps) {
   const colorClass = BRAND_COLORS[vehicle.brand] ?? "bg-muted text-muted-foreground";
   const brandLabel = BRAND_LABEL[vehicle.brand] ?? vehicle.brand;
+  const [confirming, setConfirming] = useState(false);
+  const qc = useQueryClient();
 
-  return (
-    <Link href={`/dashboard?v=${vehicle.id}`} className="group block">
-      <Card className="transition-shadow group-hover:shadow-md">
+  const remove = useMutation({
+    mutationFn: () => apiFetch(`/api/vehicles/${vehicle.id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success(`${vehicle.nickname ?? vehicle.displayName} removed`);
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+    },
+    onError: () => toast.error("Failed to remove vehicle"),
+  });
+
+  if (confirming) {
+    return (
+      <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-4 p-5">
-          {/* Brand avatar */}
-          <div
-            className={cn(
-              "flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold",
-              colorClass,
-            )}
-          >
+          <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold", colorClass)}>
             {brandLabel[0]}
           </div>
-
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate font-semibold">
-                {vehicle.nickname ?? vehicle.displayName}
-              </span>
-              {vehicle.dataSource === "mock" && <MockChip />}
-            </div>
-            <div className="mt-0.5 truncate text-sm text-muted-foreground">
-              {[brandLabel, vehicle.model, vehicle.year].filter(Boolean).join(" · ")}
-            </div>
+            <p className="font-semibold">Remove {vehicle.nickname ?? vehicle.displayName}?</p>
+            <p className="text-sm text-muted-foreground">This cannot be undone.</p>
           </div>
-
-          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => setConfirming(false)}
+              className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => remove.mutate()}
+              disabled={remove.isPending}
+              className="rounded-md bg-destructive px-3 py-1.5 text-sm text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {remove.isPending ? "Removing…" : "Remove"}
+            </button>
+          </div>
         </CardContent>
       </Card>
-    </Link>
+    );
+  }
+
+  return (
+    <div className="group relative">
+      <Link href={`/dashboard?v=${vehicle.id}`} className="block">
+        <Card className="transition-shadow group-hover:shadow-md">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold", colorClass)}>
+              {brandLabel[0]}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate font-semibold">
+                  {vehicle.nickname ?? vehicle.displayName}
+                </span>
+                {vehicle.dataSource === "mock" && <MockChip />}
+              </div>
+              <div className="mt-0.5 truncate text-sm text-muted-foreground">
+                {[brandLabel, vehicle.model, vehicle.year].filter(Boolean).join(" · ")}
+              </div>
+            </div>
+
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      {/* Delete button — sits on top of the card, outside the Link */}
+      <button
+        onClick={(e) => { e.preventDefault(); setConfirming(true); }}
+        className="absolute right-12 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+        aria-label={`Remove ${vehicle.nickname ?? vehicle.displayName}`}
+      >
+        <Trash2 className="size-4" />
+      </button>
+    </div>
   );
 }

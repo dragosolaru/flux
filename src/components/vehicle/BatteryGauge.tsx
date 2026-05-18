@@ -15,7 +15,7 @@ export function BatteryGauge({
   size = 220,
   className,
 }: BatteryGaugeProps) {
-  const clamped = Math.max(0, Math.min(100, level));
+  const clamped = Math.round(Math.max(0, Math.min(100, level)));
   const stroke = 14;
   const radius = (size - stroke) / 2;
   const circumference = Math.PI * radius; // half circle
