@@ -43,7 +43,8 @@ export async function POST(
     );
   }
 
-  const { command, args } = parsed.data;
+  const command = parsed.data.command as CommandName;
+  const args = parsed.data.args ?? null;
 
   const supabase = createSupabaseAdminClient();
   const { data: vehicle, error: vehErr } = await supabase

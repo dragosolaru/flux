@@ -16,27 +16,6 @@ interface SmartChargeCardProps {
   forecast: TariffForecast | null;
 }
 
-interface VehicleWithState {
-  item: VehicleListItem;
-  state: VehicleState | null;
-}
-
-function useVehiclesWithState(): VehicleWithState[] {
-  const { data: vehicles } = useQuery({
-    queryKey: ["vehicles"],
-    queryFn: () => apiFetch<VehicleListItem[]>("/api/vehicles"),
-    staleTime: 60_000,
-  });
-
-  // Fetch state for each vehicle (reuse the same query keys as the dashboard)
-  const results: VehicleWithState[] = (vehicles ?? []).map((item) => {
-    // We can't call hooks in a loop, so we'll use a separate component below.
-    return { item, state: null };
-  });
-
-  return results;
-}
-
 function VehicleRecommendation({
   vehicle,
   forecast,

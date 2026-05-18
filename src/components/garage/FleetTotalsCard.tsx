@@ -1,7 +1,7 @@
 "use client";
 
 import { BatteryCharging, Leaf, MapPin, Zap } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api-fetch";
@@ -37,15 +37,14 @@ interface FleetTotalsCardProps {
 }
 
 export function FleetTotalsCard({ vehicles }: FleetTotalsCardProps) {
-  // Fetch state for each vehicle (reuse cached queries)
-  const stateQueries = vehicles.map((v) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
+  // useQueries: variable-length parallel queries — Rules-of-Hooks safe
+  const stateQueries = useQueries({
+    queries: vehicles.map((v) => ({
       queryKey: ["vehicle-state", v.id],
       queryFn: () => apiFetch<VehicleState>(`/api/vehicles/${v.id}/state`),
       staleTime: 30_000,
-    })
-  );
+    })),
+  });
 
   const states = stateQueries.map((q) => q.data ?? null);
   const loadedCount = states.filter(Boolean).length;

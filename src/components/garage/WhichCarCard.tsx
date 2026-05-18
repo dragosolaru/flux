@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Car, ChevronDown, Trophy } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Car, Trophy } from "lucide-react";
+import { useQueries } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,15 +13,15 @@ import type { VehicleState } from "@/types/vehicle";
 import type { BrandKey } from "@/lib/brands/types";
 import { cn } from "@/lib/utils";
 
-function useVehicleStates(vehicles: VehicleListItem[]) {
-  return vehicles.map((v) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
+function useVehicleStates(vehicles: VehicleListItem[]): (VehicleState | null)[] {
+  const queries = useQueries({
+    queries: vehicles.map((v) => ({
       queryKey: ["vehicle-state", v.id],
       queryFn: () => apiFetch<VehicleState>(`/api/vehicles/${v.id}/state`),
       staleTime: 30_000,
-    }).data ?? null
-  );
+    })),
+  });
+  return queries.map((q) => q.data ?? null);
 }
 
 interface Ranked {

@@ -3,6 +3,9 @@
 import { PlusCircle, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { FleetTotalsCard } from "@/components/garage/FleetTotalsCard";
 import { WhichCarCard } from "@/components/garage/WhichCarCard";
@@ -19,10 +22,30 @@ interface TariffResponse extends TariffForecast {
 
 export function GarageClient() {
   const { data: vehicles, isLoading } = useVehicles();
+  const qc = useQueryClient();
   const { data: tariff } = useQuery({
     queryKey: ["tariff-prices"],
     queryFn: () => apiFetch<TariffResponse>("/api/tariffs/prices"),
     staleTime: 5 * 60 * 1000,
+  });
+
+  const seedDemo = useMutation({
+    mutationFn: () =>
+      apiFetch<{ created: string[]; skipped: string[]; total: number }>(
+        "/api/seed-demo",
+        { method: "POST" },
+      ),
+    onSuccess: (data) => {
+      if (data.created.length > 0) {
+        toast.success(`Added ${data.created.length} demo vehicles`);
+      } else {
+        toast.info("Demo vehicles already exist");
+      }
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to seed demo");
+    },
   });
 
   return (
@@ -79,17 +102,26 @@ export function GarageClient() {
           <div>
             <p className="font-medium">No vehicles in your garage</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Add a mock vehicle to explore the platform.
+              Add your first vehicle or seed 3 demo vehicles to explore the platform.
             </p>
           </div>
-          <AddVehicleModal
-            trigger={
-              <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                <PlusCircle className="size-4" />
-                Add your first vehicle
-              </button>
-            }
-          />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <AddVehicleModal
+              trigger={
+                <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                  <PlusCircle className="size-4" />
+                  Add a vehicle
+                </button>
+              }
+            />
+            <button
+              onClick={() => seedDemo.mutate()}
+              disabled={seedDemo.isPending}
+              className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+            >
+              {seedDemo.isPending ? "Seeding…" : "Seed 3 demo vehicles"}
+            </button>
+          </div>
         </div>
       )}
     </div>
