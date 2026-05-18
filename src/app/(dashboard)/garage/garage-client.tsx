@@ -4,6 +4,8 @@ import { PlusCircle, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
+import { FleetTotalsCard } from "@/components/garage/FleetTotalsCard";
+import { WhichCarCard } from "@/components/garage/WhichCarCard";
 import { VehicleListCard } from "@/components/vehicle/VehicleListCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVehicles } from "@/hooks/useVehicles";
@@ -60,10 +62,16 @@ export function GarageClient() {
           ))}
         </div>
       ) : vehicles && vehicles.length > 0 ? (
-        <div className="space-y-3">
-          {vehicles.map((v) => (
-            <VehicleListCard key={v.id} vehicle={v} />
-          ))}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            {vehicles.map((v) => (
+              <VehicleListCard key={v.id} vehicle={v} />
+            ))}
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FleetTotalsCard vehicles={vehicles} />
+            <WhichCarCard vehicles={vehicles} />
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed py-16 text-center">
