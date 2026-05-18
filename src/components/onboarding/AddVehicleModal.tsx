@@ -8,18 +8,19 @@ import { CheckCircle2, PlusCircle, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const BRANDS = [
-  { value: "tesla",    label: "Tesla",         emoji: "⚡", color: "border-red-400/50 bg-red-500/10 hover:bg-red-500/20",    models: ["Model 3", "Model Y", "Model S", "Model X"] },
-  { value: "bmw",      label: "BMW",           emoji: "🔵", color: "border-blue-400/50 bg-blue-500/10 hover:bg-blue-500/20",   models: ["i4 eDrive35", "i4 M50", "iX xDrive40", "iX M60"] },
-  { value: "polestar", label: "Polestar",      emoji: "⭐", color: "border-yellow-400/50 bg-yellow-500/10 hover:bg-yellow-500/20", models: ["Polestar 2", "Polestar 3"] },
-  { value: "mercedes", label: "Mercedes-EQ",   emoji: "💎", color: "border-slate-400/50 bg-slate-500/10 hover:bg-slate-500/20",  models: ["EQE 300", "EQE 43 AMG", "EQS 450+"] },
-  { value: "vw",       label: "Volkswagen",    emoji: "🌀", color: "border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20",     models: ["ID.3", "ID.4", "ID.5", "ID.7"] },
-  { value: "hyundai",  label: "Hyundai / Kia", emoji: "🔋", color: "border-indigo-400/50 bg-indigo-500/10 hover:bg-indigo-500/20", models: ["Ioniq 5", "Ioniq 6", "EV6", "EV9"] },
-  { value: "renault",  label: "Renault",       emoji: "🟠", color: "border-orange-400/50 bg-orange-500/10 hover:bg-orange-500/20", models: ["Megane E-Tech", "Scenic E-Tech"] },
+  { value: "tesla",    label: "Tesla",         color: "border-red-400/50 bg-red-500/10 hover:bg-red-500/20 text-red-400",        models: ["Model 3", "Model Y", "Model S", "Model X"] },
+  { value: "bmw",      label: "BMW",           color: "border-blue-400/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400",    models: ["i4 eDrive35", "i4 M50", "iX xDrive40", "iX M60"] },
+  { value: "polestar", label: "Polestar",      color: "border-yellow-400/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400", models: ["Polestar 2", "Polestar 3"] },
+  { value: "mercedes", label: "Mercedes-EQ",   color: "border-slate-400/50 bg-slate-500/10 hover:bg-slate-500/20 text-slate-300",  models: ["EQE 300", "EQE 43 AMG", "EQS 450+"] },
+  { value: "vw",       label: "Volkswagen",    color: "border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400",       models: ["ID.3", "ID.4", "ID.5", "ID.7"] },
+  { value: "hyundai",  label: "Hyundai / Kia", color: "border-indigo-400/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400", models: ["Ioniq 5", "Ioniq 6", "EV6", "EV9"] },
+  { value: "renault",  label: "Renault",       color: "border-orange-400/50 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400", models: ["Megane E-Tech", "Scenic E-Tech"] },
 ];
 
 const SCENARIOS = [
@@ -178,7 +179,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
                         b.color,
                       )}
                     >
-                      <span className="mb-1.5 text-2xl">{b.emoji}</span>
+                      <BrandLogo brand={b.value} className="mb-2 size-8" />
                       <span className="text-sm font-semibold leading-tight">{b.label}</span>
                       <span className="mt-0.5 text-xs text-muted-foreground">{b.models.length} models</span>
                     </button>

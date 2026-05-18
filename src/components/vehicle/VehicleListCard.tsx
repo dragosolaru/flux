@@ -7,6 +7,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { MockChip } from "./MockChip";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
@@ -55,8 +56,8 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
     return (
       <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-4 p-5">
-          <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold", colorClass)}>
-            {brandLabel[0]}
+          <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl", colorClass)}>
+            <BrandLogo brand={vehicle.brand} className="size-7" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-semibold">Remove {vehicle.nickname ?? vehicle.displayName}?</p>
