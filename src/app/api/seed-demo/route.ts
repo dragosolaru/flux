@@ -69,7 +69,7 @@ export async function POST() {
     .eq("user_id", userId)
     .eq("is_active", true);
 
-  const existingNicknames = new Set((existing ?? []).map((v) => v.nickname));
+  const existingNicknames = new Set((existing ?? []).map((v: { nickname: string | null }) => v.nickname));
   const created: string[] = [];
   const skipped: string[] = [];
 

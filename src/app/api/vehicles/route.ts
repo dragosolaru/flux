@@ -34,7 +34,15 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    (data ?? []).map((v) => ({
+    (data ?? []).map((v: {
+      id: string;
+      brand: string;
+      display_name: string;
+      nickname: string | null;
+      model: string | null;
+      year: number | null;
+      data_source: string;
+    }) => ({
       id: v.id,
       brand: v.brand,
       displayName: v.display_name,

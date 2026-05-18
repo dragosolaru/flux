@@ -1,3 +1,4 @@
+import type { User } from "@supabase/supabase-js";
 import type { Session } from "next-auth";
 import { createSupabaseAdminClient } from "./server";
 
@@ -49,7 +50,7 @@ export async function ensureSupabaseUserId(
       page,
       perPage: 100,
     });
-    const match = data?.users.find((u) => u.email === email);
+    const match = data?.users.find((u: User) => u.email === email);
     if (match) return match.id;
     if (!data || data.users.length < 100) break;
     page++;
