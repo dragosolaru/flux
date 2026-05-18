@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { isLiveEnabled } from "@/lib/live-integrations";
 import {
   buildTeslaAuthorizeUrl,
   generatePkcePair,
@@ -9,6 +10,9 @@ import {
 } from "@/lib/tesla/auth";
 
 export async function GET() {
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "Tesla live integration is not enabled" }, { status: 410 });
+  }
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

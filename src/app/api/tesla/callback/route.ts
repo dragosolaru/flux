@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { isLiveEnabled } from "@/lib/live-integrations";
 import { exchangeCodeForTokens } from "@/lib/tesla/auth";
 import { fetchVehicleList } from "@/lib/tesla/api";
 import { encryptToken } from "@/lib/tesla/tokens";
@@ -9,6 +10,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { TeslaRegion } from "@/types/tesla";
 
 export async function GET(req: NextRequest) {
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "Tesla live integration is not enabled" }, { status: 410 });
+  }
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.redirect(new URL("/login", req.url));

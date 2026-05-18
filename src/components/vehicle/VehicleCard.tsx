@@ -3,6 +3,7 @@
 import { Lock, MapPin, Unlock } from "lucide-react";
 
 import { BatteryGauge } from "./BatteryGauge";
+import { MockChip } from "./MockChip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ export function VehicleCard({ state, isLoading }: VehicleCardProps) {
                 <h2 className="text-2xl font-semibold tracking-tight">
                   {state.displayName}
                 </h2>
+                {state.dataSource === "mock" && <MockChip />}
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",

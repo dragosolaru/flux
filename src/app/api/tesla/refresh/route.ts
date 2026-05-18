@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { isLiveEnabled } from "@/lib/live-integrations";
 import { getValidAccessToken } from "@/lib/tesla/tokens";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
@@ -14,6 +15,9 @@ const bodySchema = z.object({
  * will only hit Tesla if the cached token is about to expire.
  */
 export async function POST(req: NextRequest) {
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "Tesla live integration is not enabled" }, { status: 410 });
+  }
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

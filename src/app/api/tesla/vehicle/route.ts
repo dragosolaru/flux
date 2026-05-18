@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { isLiveEnabled } from "@/lib/live-integrations";
 import { fetchVehicleData } from "@/lib/tesla/api";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,9 @@ const querySchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "Tesla live integration is not enabled" }, { status: 410 });
+  }
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

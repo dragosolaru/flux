@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { MockChip } from "./MockChip";
 import { cn } from "@/lib/utils";
 import type { VehicleListItem } from "@/hooks/useVehicles";
 
@@ -54,11 +55,7 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
               <span className="truncate font-semibold">
                 {vehicle.nickname ?? vehicle.displayName}
               </span>
-              {vehicle.dataSource === "mock" && (
-                <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                  Mock
-                </span>
-              )}
+              {vehicle.dataSource === "mock" && <MockChip />}
             </div>
             <div className="mt-0.5 truncate text-sm text-muted-foreground">
               {[brandLabel, vehicle.model, vehicle.year].filter(Boolean).join(" · ")}
