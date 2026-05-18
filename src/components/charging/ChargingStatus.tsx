@@ -55,7 +55,7 @@ export function ChargingStatus({ state, isLoading }: ChargingStatusProps) {
                       ? "bg-chart-2"
                       : "bg-primary/60",
                   )}
-                  style={{ width: `${state.batteryLevel}%` }}
+                  style={{ width: `${Math.round(state.batteryLevel ?? 0)}%` }}
                 />
                 {state.chargeLimit != null && (
                   <div
