@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -55,8 +56,8 @@ function VwLogo({ className }: LogoProps) {
   return (
     <svg viewBox="0 0 100 100" fill="none" className={className} aria-hidden>
       <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="5" />
-      <path d="M30 26 L50 56 L70 26" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M22 44 L35 74 L50 54 L65 74 L78 44" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M30 26 L50 56 L70 26" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M22 44 L35 74 L50 54 L65 74 L78 44" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }
@@ -65,7 +66,7 @@ function HyundaiLogo({ className }: LogoProps) {
   return (
     <svg viewBox="0 0 200 80" fill="currentColor" className={className} aria-hidden>
       <ellipse cx="100" cy="40" rx="98" ry="38" fill="none" stroke="currentColor" strokeWidth="7" />
-      <path d="M54 18 L46 62 L59 62 L63 44 L97 44 L93 62 L106 62 L114 18 L101 18 L97 36 L67 36 L71 18 Z" />
+      <path d="M58 18 L50 62 L63 62 L67 44 L97 44 L93 62 L106 62 L114 18 L101 18 L97 36 L67 36 L71 18 Z" />
       <path d="M108 18 L100 62 L113 62 L121 18 Z" />
     </svg>
   );
@@ -81,14 +82,14 @@ function RenaultLogo({ className }: LogoProps) {
   );
 }
 
-const LOGOS: Record<string, React.FC<LogoProps>> = {
-  tesla: TeslaLogo,
-  bmw: BmwLogo,
+const LOGOS: Record<string, FC<LogoProps>> = {
+  tesla:    TeslaLogo,
+  bmw:      BmwLogo,
   polestar: PolestarLogo,
   mercedes: MercedesLogo,
-  vw: VwLogo,
-  hyundai: HyundaiLogo,
-  renault: RenaultLogo,
+  vw:       VwLogo,
+  hyundai:  HyundaiLogo,
+  renault:  RenaultLogo,
 };
 
 interface BrandLogoProps {

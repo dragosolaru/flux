@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { MapPin, Route } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -50,11 +50,11 @@ export function TripClient() {
             <select
               id="vehicle"
               value={vehicleId}
-              onChange={(e) => setVehicleId(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setVehicleId(e.target.value)}
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             >
               <option value="">Select a vehicle…</option>
-              {vehicles?.map((v) => (
+              {vehicles?.map((v: VehicleListItem) => (
                 <option key={v.id} value={v.id}>
                   {v.nickname ?? v.displayName}
                 </option>
@@ -69,7 +69,7 @@ export function TripClient() {
             <select
               id="destination"
               value={destinationIdx}
-              onChange={(e) => setDestinationIdx(Number(e.target.value))}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setDestinationIdx(Number(e.target.value))}
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             >
               <option value={-1}>Select a city…</option>

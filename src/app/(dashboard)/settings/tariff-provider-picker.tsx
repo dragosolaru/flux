@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState(activeProvider);
 
-  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  async function handleChange(e: ChangeEvent<HTMLSelectElement>) {
     const providerId = e.target.value;
     setSelected(providerId);
     try {

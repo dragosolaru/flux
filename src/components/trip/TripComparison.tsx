@@ -21,6 +21,18 @@ function formatHMin(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+interface QueryResult {
+  data: TripResponse | undefined;
+  error: Error | null;
+  isLoading: boolean;
+}
+
+interface RankedEntry {
+  vehicle: VehicleListItem;
+  data: TripResponse | undefined;
+  error: Error | null;
+}
+
 interface TripComparisonProps {
   destination: CityPreset;
   vehicles: VehicleListItem[];
@@ -42,15 +54,15 @@ export function TripComparison({ destination, vehicles }: TripComparisonProps) {
     })),
   });
 
-  const allDone = queries.every((q) => !q.isLoading);
+  const allDone = queries.every((q: QueryResult) => !q.isLoading);
   const ranked = queries
-    .map((q, i) => ({ vehicle: vehicles[i]!, data: q.data, error: q.error }))
-    .filter((r) => r.data?.plan.feasible)
-    .sort((a, b) => (a.data!.plan.totalMinutes) - (b.data!.plan.totalMinutes));
+    .map((q: QueryResult, i: number): RankedEntry => ({ vehicle: vehicles[i]!, data: q.data, error: q.error }))
+    .filter((r: RankedEntry) => r.data?.plan.feasible)
+    .sort((a: RankedEntry, b: RankedEntry) => (a.data!.plan.totalMinutes) - (b.data!.plan.totalMinutes));
 
   const infeasible = queries
-    .map((q, i) => ({ vehicle: vehicles[i]!, data: q.data, error: q.error }))
-    .filter((r) => r.error || !r.data?.plan.feasible);
+    .map((q: QueryResult, i: number): RankedEntry => ({ vehicle: vehicles[i]!, data: q.data, error: q.error }))
+    .filter((r: RankedEntry) => r.error || !r.data?.plan.feasible);
 
   return (
     <Card>
@@ -67,7 +79,7 @@ export function TripComparison({ destination, vehicles }: TripComparisonProps) {
           <p className="text-sm text-muted-foreground">Planning trips for all vehicles…</p>
         )}
 
-        {ranked.map((r, i) => {
+        {ranked.map((r: RankedEntry, i: number) => {
           const p = r.data!.plan;
           return (
             <div
@@ -103,7 +115,7 @@ export function TripComparison({ destination, vehicles }: TripComparisonProps) {
               {infeasible.length} vehicle(s) couldn&apos;t complete this trip
             </summary>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-              {infeasible.map((r) => (
+              {infeasible.map((r: RankedEntry) => (
                 <div key={r.vehicle.id}>
                   <strong>{r.vehicle.nickname ?? r.vehicle.displayName}</strong>:{" "}
                   {r.error instanceof Error

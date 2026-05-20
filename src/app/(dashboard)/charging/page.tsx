@@ -41,7 +41,7 @@ export default async function ChargingPage({
     <ChargingClient
       vehicleId={vehicle.id}
       vehicleName={vehicle.nickname ?? vehicle.display_name}
-      history={(history ?? []).map((row) => ({
+      history={(history ?? []).map((row: { id: string; started_at: string; ended_at: string | null; energy_added_kwh: number | null; start_soc: number | null; end_soc: number | null; network: string | null }) => ({
         id: row.id,
         batteryLevel: row.end_soc,
         chargingRateKw: null,

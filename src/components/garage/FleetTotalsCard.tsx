@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { BatteryCharging, Leaf, MapPin, Zap } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 
@@ -13,7 +14,7 @@ const ICE_CO2_KG_PER_100KM = 0.184; // kg CO₂ per km
 const EV_CO2_KG_PER_KWH = 0.04;     // EU average grid ~400g CO₂/kWh → per km
 
 function StatRow({ icon: Icon, label, value, note }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   label: string;
   value: string;
   note?: string;
@@ -46,7 +47,7 @@ export function FleetTotalsCard({ vehicles }: FleetTotalsCardProps) {
     })),
   });
 
-  const states = stateQueries.map((q) => q.data ?? null);
+  const states = stateQueries.map((q: { data?: VehicleState }) => q.data ?? null);
   const loadedCount = states.filter(Boolean).length;
 
   if (loadedCount === 0) {
@@ -60,25 +61,25 @@ export function FleetTotalsCard({ vehicles }: FleetTotalsCardProps) {
   }
 
   // Combined available range
-  const rangeStates = states.filter((s) => s?.batteryRangeKm != null);
-  const totalRangeKm = rangeStates.reduce((sum, s) => sum + (s!.batteryRangeKm ?? 0), 0);
+  const rangeStates = states.filter((s: VehicleState | null) => s?.batteryRangeKm != null);
+  const totalRangeKm = rangeStates.reduce((sum: number, s: VehicleState | null) => sum + (s!.batteryRangeKm ?? 0), 0);
   const rangeNote =
     rangeStates.length < loadedCount
       ? `${loadedCount - rangeStates.length} vehicle(s) excluded (range not reported)`
       : undefined;
 
   // Odometer total (proxy for lifetime kWh/CO₂)
-  const odometerStates = states.filter((s) => s?.odometerKm != null);
-  const totalOdoKm = odometerStates.reduce((sum, s) => sum + (s!.odometerKm ?? 0), 0);
+  const odometerStates = states.filter((s: VehicleState | null) => s?.odometerKm != null);
+  const totalOdoKm = odometerStates.reduce((sum: number, s: VehicleState | null) => sum + (s!.odometerKm ?? 0), 0);
 
   // CO₂ saved vs ICE baseline over total odometer
   const co2SavedKg = totalOdoKm * ICE_CO2_KG_PER_100KM;
 
   // Average battery level
-  const batteryStates = states.filter((s) => s?.batteryLevel != null);
+  const batteryStates = states.filter((s: VehicleState | null) => s?.batteryLevel != null);
   const avgBattery =
     batteryStates.length > 0
-      ? Math.round(batteryStates.reduce((s, v) => s + (v!.batteryLevel ?? 0), 0) / batteryStates.length)
+      ? Math.round(batteryStates.reduce((s: number, v: VehicleState | null) => s + (v!.batteryLevel ?? 0), 0) / batteryStates.length)
       : null;
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ChangeEvent } from "react";
 import { RefreshCw, Zap } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -49,7 +49,7 @@ export function EnergyClient() {
   });
 
   const handleProviderChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
+    (e: ChangeEvent<HTMLSelectElement>) => {
       switchMutation.mutate(e.target.value);
     },
     [switchMutation],
@@ -89,7 +89,7 @@ export function EnergyClient() {
                 onChange={handleProviderChange}
                 disabled={switchMutation.isPending}
               >
-                {settings?.providers.map((p) => (
+                {settings?.providers.map((p: { id: string; displayName: string }) => (
                   <option key={p.id} value={p.id}>{p.displayName}</option>
                 ))}
               </select>

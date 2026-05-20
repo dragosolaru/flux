@@ -63,7 +63,7 @@ export default async function SettingsPage() {
           {(vehicles ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No vehicles added yet. Visit the Garage to add one.</p>
           ) : (
-            (vehicles ?? []).map((v) => (
+            (vehicles ?? []).map((v: { id: string; display_name: string; brand: string; model: string | null; data_source: string }) => (
               <div
                 key={v.id}
                 className="flex flex-col gap-1 rounded-lg border p-4"

@@ -12,6 +12,7 @@ import { WhichCarCard } from "@/components/garage/WhichCarCard";
 import { VehicleListCard } from "@/components/vehicle/VehicleListCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVehicles } from "@/hooks/useVehicles";
+import type { VehicleListItem } from "@/hooks/useVehicles";
 import { apiFetch } from "@/lib/api-fetch";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
@@ -35,7 +36,7 @@ export function GarageClient() {
         "/api/seed-demo",
         { method: "POST" },
       ),
-    onSuccess: (data) => {
+    onSuccess: (data: { created: string[]; skipped: string[]; total: number }) => {
       if (data.created.length > 0) {
         toast.success(`Added ${data.created.length} demo vehicles`);
       } else {
@@ -43,7 +44,7 @@ export function GarageClient() {
       }
       qc.invalidateQueries({ queryKey: ["vehicles"] });
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       toast.error(err instanceof Error ? err.message : "Failed to seed demo");
     },
   });
@@ -87,7 +88,7 @@ export function GarageClient() {
       ) : vehicles && vehicles.length > 0 ? (
         <div className="space-y-4">
           <div className="space-y-3">
-            {vehicles.map((v) => (
+            {vehicles.map((v: VehicleListItem) => (
               <VehicleListCard key={v.id} vehicle={v} />
             ))}
           </div>

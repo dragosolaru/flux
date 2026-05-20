@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ export function LoginForm({ mode }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setPending(true);
 
@@ -83,7 +83,7 @@ export function LoginForm({ mode }: LoginFormProps) {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -94,7 +94,7 @@ export function LoginForm({ mode }: LoginFormProps) {
             type="password"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
             minLength={6}
           />

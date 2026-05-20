@@ -1,11 +1,12 @@
 "use client";
 
 import { AlertCircle, ArrowRight, Battery, Clock, Coins, MapPin, Plug } from "lucide-react";
+import type { ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api-fetch";
-import type { CityPreset, TripPlan } from "@/lib/external/routing/types";
+import type { CityPreset, ChargingStop, TripPlan } from "@/lib/external/routing/types";
 
 interface TripResponse {
   plan: TripPlan;
@@ -93,7 +94,7 @@ export function TripPlanResult({ vehicleId, destination }: TripPlanResultProps) 
         {/* Route waypoints */}
         <div className="space-y-2">
           <Waypoint label={plan.origin.label ?? "Start"} sub={`${plan.origin.lat.toFixed(2)}, ${plan.origin.lng.toFixed(2)}`} icon="origin" />
-          {plan.stops.map((stop, i) => (
+          {plan.stops.map((stop: ChargingStop, i: number) => (
             <Waypoint
               key={i}
               label={`${stop.station.name}`}
@@ -110,7 +111,7 @@ export function TripPlanResult({ vehicleId, destination }: TripPlanResultProps) 
 }
 
 function Stat({ icon: Icon, label, value, sub }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   label: string;
   value: string;
   sub?: string;
