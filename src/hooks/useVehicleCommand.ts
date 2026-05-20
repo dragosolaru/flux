@@ -28,7 +28,7 @@ export function useVehicleCommand() {
       });
       return (await res.json()) as CommandResult;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: CommandResult, variables: CommandInput) => {
       if (data.success) {
         toast.success(`Command sent: ${variables.command.replace(/_/g, " ")}`);
         queryClient.invalidateQueries({ queryKey: ["vehicle", variables.vehicleId] });

@@ -27,7 +27,7 @@ export const authConfig: NextAuthConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(rawCredentials) {
+      async authorize(rawCredentials: Partial<Record<string, unknown>>) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
 
@@ -71,7 +71,7 @@ export const authConfig: NextAuthConfig = {
         let page = 1;
         while (!match && page <= 10) {
           const { data } = await supabase.auth.admin.listUsers({ page, perPage: 100 });
-          match = data?.users.find((u) => u.email === profile.email);
+          match = data?.users.find((u: { id: string; email?: string }) => u.email === profile.email);
           if (!data || data.users.length < 100) break;
           page++;
         }

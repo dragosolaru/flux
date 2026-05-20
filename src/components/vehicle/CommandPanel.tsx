@@ -1,6 +1,7 @@
 "use client";
 
 import { Fan, Lock, Megaphone, Sparkles, Unlock } from "lucide-react";
+import type { ComponentType } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +62,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
       icon: Sparkles,
       inFlight: inFlight("flash"),
     },
-  ].filter(Boolean) as { cmd: CommandName; label: string; icon: React.ComponentType<{ className?: string }>; inFlight: boolean }[];
+  ].filter(Boolean) as { cmd: CommandName; label: string; icon: ComponentType<{ className?: string }>; inFlight: boolean }[];
 
   return (
     <Card>

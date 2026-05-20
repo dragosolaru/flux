@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -111,7 +111,7 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
 
       {/* Delete button — sits on top of the card, outside the Link */}
       <button
-        onClick={(e) => { e.preventDefault(); setConfirming(true); }}
+        onClick={(e: MouseEvent<HTMLButtonElement>) => { e.preventDefault(); setConfirming(true); }}
         className="absolute right-12 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
         aria-label={`Remove ${vehicle.nickname ?? vehicle.displayName}`}
       >
