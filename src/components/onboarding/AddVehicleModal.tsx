@@ -1,7 +1,7 @@
 "use client";
 
-import { cloneElement, isValidElement, useEffect, useState } from "react";
-import type { ReactElement } from "react";
+import { cloneElement, isValidElement, useEffect, useState, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, PlusCircle, X } from "lucide-react";
@@ -33,11 +33,20 @@ const SCENARIOS = [
 type Step = "brand" | "details" | "success";
 
 interface AddVehicleModalProps {
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
-  const [open, setOpen] = useState(false);
+export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }: AddVehicleModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  function setOpen(val: boolean) {
+    if (isControlled) onOpenChange?.(val);
+    else setInternalOpen(val);
+  }
   const [step, setStep] = useState<Step>("brand");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -69,7 +78,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
     reset();
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!nickname.trim()) { setError("Nickname is required"); return; }
     setLoading(true);
@@ -126,7 +135,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
           aria-modal="true"
           aria-label="Add vehicle"
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
-          onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+          onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
           <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200">
             <CardHeader className="relative pb-3">
@@ -194,7 +203,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
                     <select
                       id="model"
                       value={model}
-                      onChange={(e) => setModel(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setModel(e.target.value)}
                       className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                     >
                       {selectedBrand?.models.map((m) => (
@@ -211,7 +220,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
                       id="nickname"
                       placeholder="e.g. Black Panther"
                       value={nickname}
-                      onChange={(e) => setNickname(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                       autoFocus
                     />
                   </div>
@@ -221,7 +230,7 @@ export function AddVehicleModal({ trigger }: AddVehicleModalProps) {
                     <select
                       id="year"
                       value={year}
-                      onChange={(e) => setYear(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setYear(e.target.value)}
                       className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                     >
                       {Array.from({ length: 8 }, (_, i) => 2025 - i).map((y) => (

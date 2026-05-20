@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -82,7 +82,7 @@ export function ChargingClient({
               </div>
               <Slider
                 value={[limit]}
-                onValueChange={(v) => setLimit(v[0] ?? effectiveLimit)}
+                onValueChange={(v: number[]) => setLimit(v[0] ?? effectiveLimit)}
                 min={50}
                 max={100}
                 step={1}
@@ -121,7 +121,7 @@ export function ChargingClient({
                 id="time"
                 type="time"
                 value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setScheduleTime(e.target.value)}
                 className="rounded-md border bg-background px-2 py-1 text-sm"
               />
             </div>

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -93,7 +94,7 @@ function RenaultLogo({ className }: LogoProps) {
   );
 }
 
-const LOGOS: Record<string, React.FC<LogoProps>> = {
+const LOGOS: Record<string, FC<LogoProps>> = {
   tesla:    TeslaLogo,
   bmw:      BmwLogo,
   polestar: PolestarLogo,

@@ -26,7 +26,7 @@ export function MockGlobalBanner() {
   const allMock =
     vehicles != null &&
     vehicles.length > 0 &&
-    vehicles.every((v) => v.dataSource === "mock");
+    vehicles.every((v: VehicleListItem) => v.dataSource === "mock");
 
   if (!allMock || dismissed) return null;
 

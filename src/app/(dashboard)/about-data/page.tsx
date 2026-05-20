@@ -70,7 +70,7 @@ export default async function AboutDataPage() {
             <p className="text-sm text-muted-foreground">No vehicles added yet.</p>
           ) : (
             <div className="divide-y">
-              {activeVehicles.map((v) => {
+              {activeVehicles.map((v: { id: string; display_name: string; brand: string; model: string | null; data_source: string; nickname: string | null }) => {
                 const isLive = v.data_source === "live";
                 const brand = getBrand(v.brand as BrandKey);
                 const spec = BRAND_MODELS[v.brand as BrandKey]?.find(

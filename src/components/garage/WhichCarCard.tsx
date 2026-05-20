@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Car, Trophy } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 
@@ -21,7 +21,7 @@ function useVehicleStates(vehicles: VehicleListItem[]): (VehicleState | null)[] 
       staleTime: 30_000,
     })),
   });
-  return queries.map((q) => q.data ?? null);
+  return queries.map((q: { data?: VehicleState }) => q.data ?? null);
 }
 
 interface Ranked {
@@ -96,7 +96,7 @@ export function WhichCarCard({ vehicles }: WhichCarCardProps) {
               min={1}
               placeholder="Custom km"
               value={custom}
-              onChange={(e) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setCustom(e.target.value);
                 const n = parseInt(e.target.value);
                 if (n > 0) setDistKm(n);

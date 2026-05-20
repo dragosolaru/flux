@@ -99,7 +99,7 @@ export function SmartChargeCard({ forecast }: SmartChargeCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {vehicles.map((v) => (
+        {vehicles.map((v: VehicleListItem) => (
           <VehicleRecommendation key={v.id} vehicle={v} forecast={forecast} />
         ))}
         <p className="text-xs text-muted-foreground">

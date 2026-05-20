@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { MockGlobalBanner } from "@/components/layout/MockGlobalBanner";
@@ -8,7 +9,7 @@ import { auth } from "@/lib/auth";
 export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
