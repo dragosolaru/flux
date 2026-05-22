@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, AlertTriangle, XCircle, Loader2, Pencil, Home, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink, Home, Loader2, Pencil, XCircle, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,24 @@ import type { Document } from "@/types/costs";
 interface DocumentStatusCardProps {
   doc: Document;
   onEdit?: (documentId: string, updates: Record<string, unknown>) => void;
+}
+
+function friendlyError(raw: string | null): string {
+  if (!raw) return "Eroare necunoscută.";
+  if (raw.includes("credit balance") || raw.includes("too low")) {
+    return "Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing, apoi re-uploadează documentul.";
+  }
+  if (raw.includes("invalid_api_key") || raw.includes("401")) {
+    return "Cheia API Anthropic este invalidă. Verifică variabila ANTHROPIC_API_KEY în Vercel.";
+  }
+  if (raw.includes("rate_limit") || raw.includes("429")) {
+    return "Prea multe cereri. Încearcă din nou în câteva secunde.";
+  }
+  if (raw.includes("overloaded") || raw.includes("529")) {
+    return "Serviciul AI este temporar suprasolicitat. Încearcă din nou.";
+  }
+  // Return raw but cap length
+  return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
 }
 
 function StatusIcon({ status }: { status: Document["status"] }) {
@@ -31,9 +49,7 @@ function statusLabel(status: Document["status"]) {
 
 export function DocumentStatusCard({ doc, onEdit }: DocumentStatusCardProps) {
   const [editing, setEditing] = useState(false);
-  const [costRon, setCostRon] = useState(
-    String(doc.parsed_json?.cost_total ?? ""),
-  );
+  const [costRon, setCostRon] = useState(String(doc.parsed_json?.cost_total ?? ""));
   const [kwh, setKwh] = useState(String(doc.parsed_json?.total_kwh ?? ""));
 
   const parsed = doc.parsed_json;
@@ -85,9 +101,7 @@ export function DocumentStatusCard({ doc, onEdit }: DocumentStatusCardProps) {
                 </p>
                 <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                   {parsed.period_start && parsed.period_end && (
-                    <span>
-                      {parsed.period_start.slice(0, 7)} – {parsed.period_end.slice(0, 7)}
-                    </span>
+                    <span>{parsed.period_start.slice(0, 7)} – {parsed.period_end.slice(0, 7)}</span>
                   )}
                   {parsed.session_timestamp && (
                     <span>{new Date(parsed.session_timestamp).toLocaleDateString("ro-RO")}</span>
@@ -111,7 +125,9 @@ export function DocumentStatusCard({ doc, onEdit }: DocumentStatusCardProps) {
             )}
 
             {doc.status === "error" && (
-              <p className="mt-1 text-xs text-destructive">{doc.error_message}</p>
+              <p className="mt-1 text-xs text-destructive leading-snug">
+                {friendlyError(doc.error_message)}
+              </p>
             )}
 
             {doc.status === "needs_review" && !editing && (
@@ -154,16 +170,33 @@ export function DocumentStatusCard({ doc, onEdit }: DocumentStatusCardProps) {
             )}
           </div>
 
-          {/* Edit button */}
-          {(doc.status === "done" || doc.status === "needs_review") && !editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
-              aria-label="Editează"
-            >
-              <Pencil className="size-3.5" />
-            </button>
-          )}
+          {/* Action buttons */}
+          <div className="flex shrink-0 items-center gap-1">
+            {/* View document */}
+            {doc.view_url && (
+              <a
+                href={doc.view_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Deschide documentul"
+                title="Deschide documentul"
+              >
+                <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            {/* Edit */}
+            {(doc.status === "done" || doc.status === "needs_review") && !editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Editează"
+                title="Editează"
+              >
+                <Pencil className="size-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

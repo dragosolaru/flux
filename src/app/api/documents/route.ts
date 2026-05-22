@@ -37,14 +37,24 @@ export async function GET(request: Request) {
 
   const { data: documents, error } = await supabase
     .from("documents")
-    .select("id, source, document_type, original_filename, status, confidence, parsed_json, error_message, created_at, processed_at")
+    .select("id, source, document_type, original_filename, mime_type, storage_path, status, confidence, parsed_json, error_message, created_at, processed_at")
     .eq("vehicle_id", parsed.data.vehicleId)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
-  return NextResponse.json(documents ?? []);
+  // Generate short-lived signed URLs for viewing documents
+  const docsWithUrls = await Promise.all(
+    (documents ?? []).map(async (doc: { storage_path: string } & Record<string, unknown>) => {
+      const { data: signed } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(doc.storage_path, 3600);
+      return { ...doc, view_url: signed?.signedUrl ?? null };
+    }),
+  );
+
+  return NextResponse.json(docsWithUrls);
 }
 
 export async function POST(request: Request) {

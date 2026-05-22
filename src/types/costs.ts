@@ -17,6 +17,7 @@ export interface Document {
   confidence: number | null;
   created_at: string;
   processed_at: string | null;
+  view_url: string | null;
 }
 
 export interface EnergyCost {
