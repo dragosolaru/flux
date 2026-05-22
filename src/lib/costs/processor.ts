@@ -62,8 +62,15 @@ export async function processDocument(documentId: string): Promise<void> {
           parsed.total_kwh ?? 0,
           costRon,
         );
-        vehicleKwhAttributed = attribution.vehicleKwh;
-        vehicleCostRon = attribution.vehicleCostRon;
+        if (attribution.sessionCount > 0) {
+          vehicleKwhAttributed = attribution.vehicleKwh;
+          vehicleCostRon = attribution.vehicleCostRon;
+        } else {
+          // No charging sessions found for this period — can't attribute proportionally.
+          // Store the full bill cost and flag for review so the user can adjust.
+          vehicleKwhAttributed = parsed.total_kwh;
+          vehicleCostRon = costRon;
+        }
       }
     } else {
       // public_receipt — period = same day as session

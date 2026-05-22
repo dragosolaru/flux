@@ -38,22 +38,26 @@ function MonthlyCostChart({ months }: { months: MonthlyBucket[] }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex h-28 items-end gap-1">
-          {months.slice(-12).map((m) => (
-            <div key={m.month} className="group relative flex flex-1 flex-col items-center gap-1">
-              <div
-                className="w-full rounded-t bg-primary/70 transition-all group-hover:bg-primary"
-                style={{ height: `${(m.costRon / maxCost) * 100}%`, minHeight: m.costRon > 0 ? 2 : 0 }}
-              />
-              <span className="text-[9px] text-muted-foreground">
-                {m.month.slice(5)}
-              </span>
-              {/* Tooltip */}
-              <div className="pointer-events-none absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-[10px] shadow group-hover:block">
-                {m.costRon.toFixed(0)} lei
+        <div className="flex h-28 items-end gap-1.5 pb-5">
+          {months.slice(-12).map((m) => {
+            const MONTH_NAMES = ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"];
+            const monthIdx = parseInt(m.month.slice(5)) - 1;
+            const label = MONTH_NAMES[monthIdx] ?? m.month.slice(5);
+            return (
+              <div key={m.month} className="group relative flex flex-1 flex-col items-end justify-end" style={{ height: "100%" }}>
+                <div
+                  className="w-full rounded-t bg-primary/70 transition-all group-hover:bg-primary"
+                  style={{ height: `${(m.costRon / maxCost) * 96}%`, minHeight: m.costRon > 0 ? 3 : 0 }}
+                />
+                <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground">
+                  {label}
+                </span>
+                <div className="pointer-events-none absolute -top-7 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-[10px] shadow group-hover:block">
+                  {m.costRon.toFixed(0)} lei · {m.kwh.toFixed(1)} kWh
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

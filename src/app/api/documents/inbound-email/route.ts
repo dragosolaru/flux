@@ -27,6 +27,7 @@ import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SHORT_ID_RE = /[a-f0-9]{8}$/i; // last 8 hex chars of slug-shortid format
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 interface EmailAttachment {
@@ -35,12 +36,15 @@ interface EmailAttachment {
   buffer: Buffer;
 }
 
-function extractVehicleIdFromAddress(toHeader: string): string | null {
-  // Match flux+<vehicleId>@... where vehicleId is a UUID
+function extractVehicleIdFromAddress(toHeader: string): { type: "uuid"; id: string } | { type: "shortId"; id: string } | null {
   const match = toHeader.match(/flux\+([^@\s]+)@/i);
   if (!match) return null;
   const candidate = match[1];
-  if (UUID_RE.test(candidate)) return candidate;
+  // Format 1: full UUID (e.g. flux+f793064e-b685-475e-a557-efb3f1ab18ee@)
+  if (UUID_RE.test(candidate)) return { type: "uuid", id: candidate };
+  // Format 2: slug-shortid (e.g. flux+black-panther-f793064e@)
+  const shortMatch = candidate.match(SHORT_ID_RE);
+  if (shortMatch) return { type: "shortId", id: shortMatch[0].toLowerCase() };
   return null;
 }
 
@@ -122,20 +126,22 @@ export async function POST(request: Request) {
   const supabase = createSupabaseAdminClient();
 
   // Identify vehicle
-  let vehicleId: string | null = extractVehicleIdFromAddress(parsed.to);
+  const addressResult = extractVehicleIdFromAddress(parsed.to);
+  let vehicleId: string | null = null;
   let userId: string | null = null;
 
-  if (vehicleId) {
-    const { data: v } = await supabase
-      .from("vehicles")
-      .select("id, user_id")
-      .eq("id", vehicleId)
-      .eq("is_active", true)
-      .single();
-    if (v) {
-      userId = (v as { id: string; user_id: string }).user_id;
+  if (addressResult) {
+    let query;
+    if (addressResult.type === "uuid") {
+      query = supabase.from("vehicles").select("id, user_id").eq("id", addressResult.id).eq("is_active", true).single();
     } else {
-      vehicleId = null;
+      // shortId: first 8 hex chars of UUID (no dashes) → match against id::text
+      query = supabase.from("vehicles").select("id, user_id").ilike("id", `${addressResult.id}%`).eq("is_active", true).single();
+    }
+    const { data: v } = await query;
+    if (v) {
+      vehicleId = (v as { id: string; user_id: string }).id;
+      userId = (v as { id: string; user_id: string }).user_id;
     }
   }
 

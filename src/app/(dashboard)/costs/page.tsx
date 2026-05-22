@@ -8,10 +8,16 @@ interface PageProps {
   searchParams: Promise<{ v?: string }>;
 }
 
-function vehicleEmailAddress(vehicleId: string): string {
+function vehicleEmailAddress(vehicleId: string, nickname: string): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://flux.vercel.app";
   const domain = appUrl.replace(/^https?:\/\//, "").split("/")[0];
-  return `flux+${vehicleId}@${domain}`;
+  const slug = nickname
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 20);
+  const shortId = vehicleId.replace(/-/g, "").slice(0, 8);
+  return `flux+${slug}-${shortId}@${domain}`;
 }
 
 export default async function CostsPage({ searchParams }: PageProps) {
@@ -56,7 +62,7 @@ export default async function CostsPage({ searchParams }: PageProps) {
     <CostsClient
       vehicleId={v.id}
       vehicleName={vehicleName}
-      vehicleEmail={vehicleEmailAddress(v.id)}
+      vehicleEmail={vehicleEmailAddress(v.id, vehicleName)}
     />
   );
 }

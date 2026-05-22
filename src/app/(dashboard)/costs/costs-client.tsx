@@ -1,16 +1,66 @@
 "use client";
 
-import { Receipt } from "lucide-react";
+import { useState } from "react";
+import { Check, Copy, Mail, Receipt } from "lucide-react";
 import { DocumentUploadZone } from "@/components/costs/DocumentUploadZone";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
 import { CostDashboard } from "@/components/costs/CostDashboard";
 import { useDocuments, useUploadDocument, useEditDocument } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
+import { cn } from "@/lib/utils";
 
 interface CostsClientProps {
   vehicleId: string;
   vehicleName: string;
   vehicleEmail: string;
+}
+
+function EmailInbox({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    void navigator.clipboard.writeText(email).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  // Split into local@domain for nicer display
+  const [local, domain] = email.split("@");
+
+  return (
+    <div className="rounded-lg border bg-muted/30 px-4 py-3">
+      <div className="flex items-start gap-3">
+        <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">Trimite pe email</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Fotografiezi o factură sau bon și trimiți la adresa de mai jos — apare automat aici.
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="min-w-0 flex-1 overflow-hidden rounded-md border bg-background px-2.5 py-1.5">
+              <p className="truncate text-xs font-mono leading-none">
+                <span className="text-foreground">{local}</span>
+                <span className="text-muted-foreground">@{domain}</span>
+              </p>
+            </div>
+            <button
+              onClick={copy}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors",
+                copied
+                  ? "border-chart-2/40 bg-chart-2/10 text-chart-2"
+                  : "hover:bg-muted",
+              )}
+            >
+              {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+              {copied ? "Copiat!" : "Copiază"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
@@ -30,26 +80,14 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
         <p className="text-sm text-muted-foreground">{vehicleName}</p>
       </div>
 
-      {/* Dashboard */}
       <CostDashboard data={costs} isLoading={costsLoading} />
 
-      {/* Upload */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold">Adaugă document</h2>
         <DocumentUploadZone onUpload={handleUpload} disabled={uploading} />
-
-        {/* Email tip */}
-        <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-          <p className="font-medium">📧 Trimite pe email</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Poți trimite facturi și bonuri la{" "}
-            <span className="font-mono text-foreground">{vehicleEmail}</span>{" "}
-            și vor apărea automat aici.
-          </p>
-        </div>
+        <EmailInbox email={vehicleEmail} />
       </div>
 
-      {/* Documents list */}
       {!docsLoading && documents && documents.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">Documente procesate</h2>
