@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic, { APIError } from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import {
@@ -78,11 +78,24 @@ export async function parseDocument(doc: Document): Promise<ParsedDocument> {
 
   contentBlocks.push({ type: "text", text: DOCUMENT_EXTRACTION_PROMPT });
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: contentBlocks }],
-  });
+  let response: Awaited<ReturnType<typeof anthropic.messages.create>>;
+  try {
+    response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: contentBlocks }],
+    });
+  } catch (err) {
+    if (err instanceof APIError) {
+      if (err.status === 401) throw new Error("Cheia API Anthropic este invalidă. Verifică ANTHROPIC_API_KEY în setările Vercel.");
+      if (err.status === 402 || (err.message && err.message.includes("credit balance"))) {
+        throw new Error("Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing.");
+      }
+      if (err.status === 429) throw new Error("Prea multe cereri către Anthropic. Încearcă din nou în câteva secunde.");
+      if (err.status >= 500) throw new Error("Serviciul Anthropic este temporar indisponibil. Încearcă din nou.");
+    }
+    throw err;
+  }
 
   const text = response.content
     .filter((b) => b.type === "text")
