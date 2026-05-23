@@ -1,14 +1,15 @@
 /**
- * Inbound email webhook — compatible with:
- *   - Cloudmailin (JSON body or multipart)
- *   - Mailgun (multipart/form-data)
- *   - SendGrid Inbound Parse (multipart/form-data)
+ * Inbound email webhook — Cloudmailin "Multipart Normalized" format.
+ * Also compatible with Mailgun and SendGrid multipart/form-data.
  *
- * Vehicle identification (in order of precedence):
- *   1. To subaddress matches a vehicle short ID (8 hex)        → that vehicle
- *   2. To subaddress matches a registered user's email local   → user's first active vehicle
- *   3. Sender email matches a registered user                  → user's first active vehicle
- *   4. Subject contains a vehicle nickname                     → that vehicle
+ * Cloudmailin sends multipart/form-data with bracket-notation fields:
+ *   envelope[to], envelope[from], headers[to], headers[subject], attachments[]
+ *
+ * Vehicle identification (priority order):
+ *   1. +subaddress = 8-hex vehicle short ID  → that vehicle
+ *   2. +subaddress = user email local part   → user's first active vehicle
+ *   3. Sender email = registered user        → user's first active vehicle
+ *   4. Subject contains vehicle nickname     → that vehicle
  *
  * Env vars:
  *   EMAIL_WEBHOOK_SECRET            — shared secret (?secret= query param)
@@ -103,35 +104,25 @@ async function findVehicleByNickname(subject: string, supabase: AdminClient): Pr
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
-  console.log("[inbound-email] resolveVehicle", {
-    to: parsed.to,
-    from: parsed.from,
-    subject: parsed.subject,
-    subaddress,
-    shortIdMatch: subaddress ? SHORT_ID_RE.test(subaddress) : false,
-  });
-
-  // 1. Subaddress = vehicle short ID (8 hex chars — first segment of UUID)
-  // UUID type in PostgreSQL doesn't support ilike; use range bounds instead.
+  // 1. +subaddress = vehicle short ID (first 8 hex chars of UUID)
+  // Use range bounds — ilike doesn't work on PostgreSQL uuid columns.
   if (subaddress && SHORT_ID_RE.test(subaddress)) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("vehicles")
       .select("id, user_id")
       .gte("id", `${subaddress}-0000-0000-0000-000000000000`)
       .lte("id", `${subaddress}-ffff-ffff-ffff-ffffffffffff`)
       .eq("is_active", true)
       .single();
-    console.log("[inbound-email] step1 shortId", { subaddress, data: !!data, error: error?.message });
     if (data) {
       const v = data as { id: string; user_id: string };
       return { vehicleId: v.id, userId: v.user_id };
     }
   }
 
-  // 2. Subaddress = user email local part
+  // 2. +subaddress = user email local part
   if (subaddress) {
     const userId = await findUserByEmailLocalPart(subaddress, supabase);
-    console.log("[inbound-email] step2 emailLocalPart", { subaddress, userId });
     if (userId) {
       const vehicleId = await firstActiveVehicle(userId, supabase);
       if (vehicleId) return { vehicleId, userId };
@@ -140,23 +131,21 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
 
   // 3. Sender email = registered user
   const senderEmail = extractEmailAddress(parsed.from);
-  const userIdBySender = await findUserByEmail(senderEmail, supabase);
-  console.log("[inbound-email] step3 senderEmail", { senderEmail, userId: userIdBySender });
-  if (userIdBySender) {
-    const vehicleId = await firstActiveVehicle(userIdBySender, supabase);
-    if (vehicleId) return { vehicleId, userId: userIdBySender };
+  if (senderEmail) {
+    const userId = await findUserByEmail(senderEmail, supabase);
+    if (userId) {
+      const vehicleId = await firstActiveVehicle(userId, supabase);
+      if (vehicleId) return { vehicleId, userId };
+    }
   }
 
   // 4. Vehicle nickname in subject
-  const byNickname = await findVehicleByNickname(parsed.subject, supabase);
-  console.log("[inbound-email] step4 nickname", { found: !!byNickname });
-  return byNickname;
+  return findVehicleByNickname(parsed.subject, supabase);
 }
 
-interface CloudmailinBody {
+interface CloudmailinJsonBody {
   headers?: Record<string, string>;
   envelope?: { to?: string; from?: string };
-  plain?: string;
   attachments?: Array<{
     file_name?: string;
     content_type?: string;
@@ -166,18 +155,10 @@ interface CloudmailinBody {
   }>;
 }
 
-async function parseCloudmailinEmail(request: Request): Promise<ParsedEmail> {
-  const body = await request.json() as CloudmailinBody;
-
-  // Log raw structure to see exactly what Cloudmailin sends
-  console.log("[inbound-email] cloudmailin body keys", Object.keys(body));
-  console.log("[inbound-email] cloudmailin envelope", body.envelope);
-  console.log("[inbound-email] cloudmailin headers type+keys",
-    typeof body.headers,
-    Array.isArray(body.headers) ? "IS_ARRAY" : Object.keys(body.headers ?? {}),
-  );
-
+async function parseJsonEmail(request: Request): Promise<ParsedEmail> {
+  const body = await request.json() as CloudmailinJsonBody;
   const headers = body.headers ?? {};
+
   const to = headers.To ?? headers.to ?? body.envelope?.to ?? "";
   const from = headers.From ?? headers.from ?? body.envelope?.from ?? "";
   const subject = headers.Subject ?? headers.subject ?? "";
@@ -198,31 +179,26 @@ async function parseCloudmailinEmail(request: Request): Promise<ParsedEmail> {
 async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
   const formData = await request.formData();
 
-  // Log all field names so we can see exactly what Cloudmailin sends
-  const allKeys = [...formData.keys()];
-  console.log("[inbound-email] multipart keys", allKeys);
-
+  // Cloudmailin "Multipart Normalized" uses bracket-notation fields.
+  // Mailgun/SendGrid use flat To/From/Subject fields.
   const to =
+    (formData.get("envelope[to]") as string | null) ??
+    (formData.get("headers[to]") as string | null) ??
     (formData.get("To") as string | null) ??
     (formData.get("to") as string | null) ??
-    (formData.get("envelope[to]") as string | null) ??
-    (formData.get("headers[To]") as string | null) ??
-    (formData.get("headers[to]") as string | null) ??
     "";
 
   const from =
+    (formData.get("envelope[from]") as string | null) ??
+    (formData.get("headers[from]") as string | null) ??
     (formData.get("From") as string | null) ??
     (formData.get("from") as string | null) ??
-    (formData.get("envelope[from]") as string | null) ??
-    (formData.get("headers[From]") as string | null) ??
-    (formData.get("headers[from]") as string | null) ??
     "";
 
   const subject =
+    (formData.get("headers[subject]") as string | null) ??
     (formData.get("Subject") as string | null) ??
     (formData.get("subject") as string | null) ??
-    (formData.get("headers[Subject]") as string | null) ??
-    (formData.get("headers[subject]") as string | null) ??
     "";
 
   const attachments: EmailAttachment[] = [];
@@ -253,18 +229,11 @@ export async function POST(request: Request) {
   try {
     const ct = request.headers.get("content-type") ?? "";
     parsed = ct.includes("application/json")
-      ? await parseCloudmailinEmail(request)
+      ? await parseJsonEmail(request)
       : await parseMultipartEmail(request);
   } catch {
     return NextResponse.json({ message: "Failed to parse email" }, { status: 400 });
   }
-
-  console.log("[inbound-email] parsed", {
-    to: parsed.to,
-    from: parsed.from,
-    subject: parsed.subject,
-    attachments: parsed.attachments.map((a) => ({ filename: a.filename, mimeType: a.mimeType, size: a.buffer.length })),
-  });
 
   if (parsed.attachments.length === 0) {
     return NextResponse.json({ message: "No supported attachments found" }, { status: 200 });
