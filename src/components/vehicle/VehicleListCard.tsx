@@ -14,23 +14,11 @@ import { apiFetch } from "@/lib/api-fetch";
 import type { VehicleListItem } from "@/hooks/useVehicles";
 
 const BRAND_COLORS: Record<string, string> = {
-  tesla:    "bg-red-500/15 text-red-600 dark:text-red-400",
-  bmw:      "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  polestar: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
-  mercedes: "bg-slate-500/15 text-slate-600 dark:text-slate-400",
-  vw:       "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-  hyundai:  "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
-  renault:  "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+  tesla: "bg-red-500/15 text-red-600 dark:text-red-400",
 };
 
 const BRAND_LABEL: Record<string, string> = {
-  tesla:    "Tesla",
-  bmw:      "BMW",
-  polestar: "Polestar",
-  mercedes: "Mercedes-EQ",
-  vw:       "VW ID",
-  hyundai:  "Hyundai / Kia",
-  renault:  "Renault",
+  tesla: "Tesla",
 };
 
 interface VehicleListCardProps {

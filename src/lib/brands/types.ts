@@ -11,14 +11,7 @@ import type { VehicleState } from "@/types/vehicle";
 // Brand identity
 // ---------------------------------------------------------------------------
 
-export type BrandKey =
-  | "tesla"
-  | "bmw"
-  | "polestar"
-  | "mercedes"
-  | "vw"
-  | "hyundai"
-  | "renault";
+export type BrandKey = "tesla";
 
 // ---------------------------------------------------------------------------
 // Capability maps

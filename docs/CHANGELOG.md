@@ -6,6 +6,19 @@ All notable changes to Flux, newest first.
 
 ## [Unreleased]
 
+### 2026-05-23 — Tesla-only MVP separation
+
+- Brand registry trimmed to Tesla only; BMW, Polestar, Mercedes-EQ, VW, Hyundai/Kia, Renault archived on branch `demo-brands-archive`
+- Deleted: `src/lib/brands/{bmw,polestar,mercedes,vw,hyundai,renault}/`, `src/app/api/seed-demo/`
+- `BrandKey` type narrowed to `"tesla"`; `addVehicleSchema.brand` uses `z.literal("tesla")`
+- `AddVehicleModal` skips brand-selection step (Tesla is the only option), defaults to Tesla model selector
+- `BrandLogo` / `VehicleListCard` cleaned up — only Tesla logo + brand color
+- New `docs/LIVE-VS-DEMO.md` documenting the per-vehicle `data_source` model and the demo-archive branch recovery path
+- Auto-refresh costs dashboard when documents transition pending → done (was: 60s stale-time, no auto-update)
+- Petrol comparison hides when `totalCostRon = 0`; shows "Cu X mai scump" when EV cost > petrol equivalent (was: always showed "Tu economisești" even with negative savings)
+- Fixed Cloudmailin webhook field extraction: uses bracket notation (`envelope[to]`, `headers[to]`) sent by "Multipart Normalized" format
+- Fixed UUID prefix matching for vehicle short-ID lookup: uses gte/lte range bounds instead of unsupported `ilike` on uuid column
+
 ### 2026-05-23 — Per-vehicle email addressing (reverted per-user model)
 
 - Replaced single per-user inbound address with per-vehicle addresses

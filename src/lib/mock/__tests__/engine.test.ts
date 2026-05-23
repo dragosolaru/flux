@@ -232,19 +232,6 @@ describe("applyCommand", () => {
     expect(result.state.isSentryMode).toBe(true);
   });
 
-  it("throws command-not-supported for restricted brand", () => {
-    const snap = makeSnapshot({ state: { ...makeSnapshot().state, brand: "renault" } });
-    expect(() => applyCommand(snap, "honk", null, BRANDS.renault)).toThrow(
-      "command-not-supported:honk",
-    );
-  });
-
-  it("throws for flash on Polestar", () => {
-    expect(() =>
-      applyCommand(makeSnapshot(), "flash", null, BRANDS.polestar),
-    ).toThrow("command-not-supported:flash");
-  });
-
   it("does not mutate the original snapshot", () => {
     const snap = makeSnapshot();
     const originalLocked = snap.state.isLocked;

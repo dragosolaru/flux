@@ -276,7 +276,7 @@ Then walks `scenario.steps` to find the step whose `startOffsetSeconds <= cycleO
 | `climateOn` | No | When omitted, climate state carries over from previous step |
 | `driverTempC` | No | Only applied when `climateOn = true` |
 
-The `vehicle` block in the scenario is a fallback default. When a vehicle's `vehicleSpec` is set (from `models.ts` at seed time), it overrides the scenario defaults for `batteryCapacityKwh`, `efficiencyKwhPer100km`, and charge rates. This makes the same scenario drive correctly for a 60 kWh Renault and a 107 kWh Mercedes.
+The `vehicle` block in the scenario is a fallback default. When a vehicle's `vehicleSpec` is set (from `models.ts` at seed time), it overrides the scenario defaults for `batteryCapacityKwh`, `efficiencyKwhPer100km`, and charge rates. This makes the same scenario drive correctly for a 75 kWh Model 3 and a 100 kWh Model X.
 
 ### Session boundary detection
 

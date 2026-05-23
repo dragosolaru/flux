@@ -2,19 +2,11 @@ import { describe, it, expect } from "vitest";
 import { BRANDS, BRAND_KEYS, getBrand } from "../registry";
 import type { BrandKey } from "../types";
 
-const EXPECTED_BRANDS: BrandKey[] = [
-  "tesla",
-  "bmw",
-  "polestar",
-  "mercedes",
-  "vw",
-  "hyundai",
-  "renault",
-];
+const EXPECTED_BRANDS: BrandKey[] = ["tesla"];
 
 describe("brand registry", () => {
-  it("exposes exactly 7 brands", () => {
-    expect(BRAND_KEYS).toHaveLength(7);
+  it("exposes exactly 1 brand (Tesla MVP)", () => {
+    expect(BRAND_KEYS).toHaveLength(1);
   });
 
   it("exposes all expected brand keys", () => {
@@ -47,6 +39,7 @@ describe("brand registry", () => {
 
   it("getBrand returns null for unknown brands", () => {
     expect(getBrand("fiat")).toBeNull();
+    expect(getBrand("bmw")).toBeNull();
     expect(getBrand("")).toBeNull();
   });
 });
@@ -115,24 +108,5 @@ describe("Tesla profile", () => {
 
   it("has unlimited history retention", () => {
     expect(BRANDS.tesla.capabilities.history.retention).toBe("unlimited");
-  });
-});
-
-describe("Renault profile (most restricted)", () => {
-  it("does not expose cell voltages or sentry", () => {
-    const t = BRANDS.renault.capabilities.telemetry;
-    expect(t.cellVoltages).toBe(false);
-    expect(t.sentryMode).toBe(false);
-    expect(t.frunkOpen).toBe(false);
-  });
-
-  it("does not support honk or flash", () => {
-    const c = BRANDS.renault.capabilities.commands;
-    expect(c.honk).toBe(false);
-    expect(c.flash).toBe(false);
-  });
-
-  it("has 7-day history retention", () => {
-    expect(BRANDS.renault.capabilities.history.retention).toBe("7days");
   });
 });

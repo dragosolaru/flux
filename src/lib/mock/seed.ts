@@ -8,13 +8,7 @@ import type { VehicleState } from "@/types/vehicle";
 
 // Brand-specific version strings for software card
 const SOFTWARE_VERSIONS: Record<BrandKey, string> = {
-  tesla:    "2025.14.3",
-  bmw:      "07/2025",
-  polestar: "P2.8.1",
-  mercedes: "EQ-OS 3.1.0",
-  vw:       "3.5.0",
-  hyundai:  "25W13",
-  renault:  "SYS-1.9",
+  tesla: "2025.14.3",
 };
 
 // Stable mock tire pressures (kPa) — ~35 psi nominal, slight rear increase for load

@@ -55,7 +55,7 @@ export async function GET() {
 }
 
 const addVehicleSchema = z.object({
-  brand: z.enum(["tesla", "bmw", "polestar", "mercedes", "vw", "hyundai", "renault"]),
+  brand: z.literal("tesla"),
   nickname: z.string().min(1).max(40),
   model: z.string().min(1).max(60).optional(),
   year: z.number().int().min(2010).max(2030).optional(),

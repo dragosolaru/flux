@@ -42,7 +42,7 @@ interface MockVehicleSnapshot {
 }
 ```
 
-`vehicleSpec` comes from `models.ts` at seed time and contains real WLTP figures for the specific model (e.g., Polestar 3 uses 111 kWh / 21 kWh/100km; Renault Megane uses 60 kWh / 16 kWh/100km). This overrides the scenario's built-in `vehicle` block so the same scenario produces accurate physics for different models.
+`vehicleSpec` comes from `models.ts` at seed time and contains real WLTP figures for the specific model (e.g., Tesla Model 3 uses 75 kWh / 16 kWh/100km; Model S uses 100 kWh / 20 kWh/100km). This overrides the scenario's built-in `vehicle` block so the same scenario produces accurate physics for different models.
 
 ---
 

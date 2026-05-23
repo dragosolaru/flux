@@ -13,15 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-const BRANDS = [
-  { value: "tesla",    label: "Tesla",         color: "border-red-400/50 bg-red-500/10 hover:bg-red-500/20 text-red-400",        models: ["Model 3", "Model Y", "Model S", "Model X"] },
-  { value: "bmw",      label: "BMW",           color: "border-blue-400/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400",    models: ["i4 eDrive35", "i4 M50", "iX xDrive40", "iX M60"] },
-  { value: "polestar", label: "Polestar",      color: "border-yellow-400/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400", models: ["Polestar 2", "Polestar 3"] },
-  { value: "mercedes", label: "Mercedes-EQ",   color: "border-slate-400/50 bg-slate-500/10 hover:bg-slate-500/20 text-slate-300",  models: ["EQE 300", "EQE 43 AMG", "EQS 450+"] },
-  { value: "vw",       label: "Volkswagen",    color: "border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400",       models: ["ID.3", "ID.4", "ID.5", "ID.7"] },
-  { value: "hyundai",  label: "Hyundai / Kia", color: "border-indigo-400/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400", models: ["Ioniq 5", "Ioniq 6", "EV6", "EV9"] },
-  { value: "renault",  label: "Renault",       color: "border-orange-400/50 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400", models: ["Megane E-Tech", "Scenic E-Tech"] },
-];
+const TESLA_MODELS = ["Model 3", "Model Y", "Model S", "Model X"];
 
 const SCENARIOS = [
   { value: "commuter",        label: "Daily Commuter",       desc: "9-to-5, home charging" },
@@ -30,7 +22,7 @@ const SCENARIOS = [
   { value: "vacation",        label: "Vacation",             desc: "Multi-day getaway" },
 ];
 
-type Step = "brand" | "details" | "success";
+type Step = "details" | "success";
 
 interface AddVehicleModalProps {
   trigger?: ReactNode;
@@ -47,9 +39,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
     if (isControlled) onOpenChange?.(val);
     else setInternalOpen(val);
   }
-  const [step, setStep] = useState<Step>("brand");
-  const [brand, setBrand] = useState("");
-  const [model, setModel] = useState("");
+  const [step, setStep] = useState<Step>("details");
+  const [model, setModel] = useState(TESLA_MODELS[0]);
   const [nickname, setNickname] = useState("");
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [scenario, setScenario] = useState("commuter");
@@ -60,12 +51,9 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const selectedBrand = BRANDS.find((b) => b.value === brand);
-
   function reset() {
-    setStep("brand");
-    setBrand("");
-    setModel("");
+    setStep("details");
+    setModel(TESLA_MODELS[0]);
     setNickname("");
     setYear(String(new Date().getFullYear()));
     setScenario("commuter");
@@ -88,7 +76,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brand,
+          brand: "tesla",
           nickname: nickname.trim(),
           model: model || undefined,
           year: parseInt(year) || undefined,
@@ -123,8 +111,6 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
       </Button>
     );
 
-  const stepIndex = step === "brand" ? 0 : step === "details" ? 1 : 2;
-
   return (
     <>
       {triggerEl}
@@ -139,31 +125,18 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
         >
           <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200">
             <CardHeader className="relative pb-3">
-              {/* Step indicator */}
-              {step !== "success" && (
-                <div className="mb-3 flex items-center gap-1.5">
-                  {["brand", "details"].map((s, i) => (
-                    <div
-                      key={s}
-                      className={cn(
-                        "h-1 flex-1 rounded-full transition-colors",
-                        i < stepIndex ? "bg-primary" : i === stepIndex ? "bg-primary" : "bg-muted",
-                        i < stepIndex && "opacity-60",
-                      )}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="mb-2 flex items-center gap-2">
+                <BrandLogo brand="tesla" className="size-6 text-red-400" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tesla</span>
+              </div>
 
               <CardTitle className="pr-8">
-                {step === "brand" ? "Choose your brand" :
-                 step === "details" ? `${selectedBrand?.label ?? ""} — vehicle details` :
-                 "Vehicle added!"}
+                {step === "details" ? "Add your Tesla" : "Vehicle added!"}
               </CardTitle>
               <CardDescription>
-                {step === "brand" ? "Which manufacturer is your EV?" :
-                 step === "details" ? "Name your car and pick a driving scenario." :
-                 "Your new vehicle is ready in the garage."}
+                {step === "details"
+                  ? "Pick model & nickname. Live integration requires Tesla account pairing (next step)."
+                  : "Your new vehicle is ready in the garage."}
               </CardDescription>
 
               <button
@@ -176,26 +149,6 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
             </CardHeader>
 
             <CardContent>
-              {step === "brand" && (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                  {BRANDS.map((b) => (
-                    <button
-                      key={b.value}
-                      type="button"
-                      onClick={() => { setBrand(b.value); setModel(b.models[0] ?? ""); setStep("details"); }}
-                      className={cn(
-                        "flex flex-col items-start rounded-xl border p-4 text-left transition-all",
-                        b.color,
-                      )}
-                    >
-                      <BrandLogo brand={b.value} className="mb-2 size-8" />
-                      <span className="text-sm font-semibold leading-tight">{b.label}</span>
-                      <span className="mt-0.5 text-xs text-muted-foreground">{b.models.length} models</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {step === "details" && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1.5">
@@ -206,7 +159,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setModel(e.target.value)}
                       className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                     >
-                      {selectedBrand?.models.map((m) => (
+                      {TESLA_MODELS.map((m) => (
                         <option key={m} value={m}>{m}</option>
                       ))}
                     </select>
@@ -240,7 +193,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Driving scenario</Label>
+                    <Label>Driving scenario (mock data)</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {SCENARIOS.map((s) => (
                         <button
@@ -267,14 +220,9 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                     </p>
                   )}
 
-                  <div className="flex gap-2 pt-1">
-                    <Button type="button" variant="outline" onClick={() => setStep("brand")} className="flex-1">
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={loading} className="flex-1">
-                      {loading ? "Adding…" : "Add vehicle"}
-                    </Button>
-                  </div>
+                  <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? "Adding…" : "Add vehicle"}
+                  </Button>
                 </form>
               )}
 
@@ -286,7 +234,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   <div>
                     <p className="text-lg font-semibold">{nickname}</p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedBrand?.label} · {model} · {year}
+                      Tesla · {model} · {year}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Scenario: {SCENARIOS.find((s) => s.value === scenario)?.label}
