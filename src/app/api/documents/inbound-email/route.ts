@@ -1,15 +1,16 @@
 /**
  * Inbound email webhook — compatible with:
- *   - Cloudmailin (JSON body)
+ *   - Cloudmailin (JSON body or multipart)
  *   - Mailgun (multipart/form-data)
  *   - SendGrid Inbound Parse (multipart/form-data)
  *
  * Vehicle identification (in order of precedence):
  *   1. To address sub-address: local+slug-shortid@domain
  *   2. Subject line contains vehicle nickname (case-insensitive)
+ *   3. Sender email matches a registered user's email → their first active vehicle
  *
  * Env vars needed:
- *   EMAIL_WEBHOOK_SECRET         — shared secret (?secret= query param)
+ *   EMAIL_WEBHOOK_SECRET            — shared secret (?secret= query param)
  *   NEXT_PUBLIC_CLOUDMAILIN_ADDRESS — e.g. 2b31b9c101b11f6682f3@cloudmailin.net
  */
 
@@ -19,7 +20,7 @@ import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SHORT_ID_RE = /[a-f0-9]{8}$/i; // last 8 hex chars of slug-shortid format
+const SHORT_ID_RE = /[a-f0-9]{8}$/i;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 interface EmailAttachment {
@@ -28,14 +29,18 @@ interface EmailAttachment {
   buffer: Buffer;
 }
 
+interface ParsedEmail {
+  to: string;
+  from: string;
+  subject: string;
+  attachments: EmailAttachment[];
+}
+
 function extractVehicleIdFromAddress(toHeader: string): { type: "uuid"; id: string } | { type: "shortId"; id: string } | null {
-  // Matches both flux+slug-shortid@domain and cloudmailinid+slug-shortid@cloudmailin.net
   const match = toHeader.match(/\+([^@+\s]+)@/i);
   if (!match) return null;
   const candidate = match[1];
-  // Format 1: full UUID (e.g. flux+f793064e-b685-475e-a557-efb3f1ab18ee@)
   if (UUID_RE.test(candidate)) return { type: "uuid", id: candidate };
-  // Format 2: slug-shortid (e.g. flux+black-panther-f793064e@)
   const shortMatch = candidate.match(SHORT_ID_RE);
   if (shortMatch) return { type: "shortId", id: shortMatch[0].toLowerCase() };
   return null;
@@ -61,6 +66,41 @@ async function findVehicleByNickname(
   return null;
 }
 
+async function findVehicleBySenderEmail(
+  fromEmail: string,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+): Promise<{ id: string; user_id: string } | null> {
+  if (!fromEmail) return null;
+
+  const email = fromEmail.replace(/.*<(.+)>/, "$1").trim().toLowerCase();
+
+  // Find the Supabase auth user with this email
+  const { data: authList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const authUser = authList?.users.find(
+    (u: { email?: string }) => u.email?.toLowerCase() === email,
+  );
+  if (!authUser) return null;
+
+  // Get their active vehicles (prefer one vehicle → unambiguous)
+  const { data: vehicles } = await supabase
+    .from("vehicles")
+    .select("id, user_id")
+    .eq("user_id", authUser.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(2);
+
+  if (!vehicles || vehicles.length === 0) return null;
+
+  // If they have exactly one vehicle, use it; if multiple, can't determine which
+  if (vehicles.length === 1) {
+    return { id: (vehicles[0] as { id: string; user_id: string }).id, user_id: authUser.id };
+  }
+
+  // Multiple vehicles — caller should use subaddress; return first as best guess
+  return { id: (vehicles[0] as { id: string; user_id: string }).id, user_id: authUser.id };
+}
+
 interface CloudmailinBody {
   headers?: Record<string, string>;
   envelope?: { to?: string; from?: string };
@@ -69,21 +109,17 @@ interface CloudmailinBody {
     file_name?: string;
     content_type?: string;
     size?: number;
-    content?: string; // base64
+    content?: string;
     disposition?: string;
   }>;
 }
 
-async function parseCloudmailinEmail(request: Request): Promise<{
-  to: string;
-  subject: string;
-  attachments: EmailAttachment[];
-}> {
+async function parseCloudmailinEmail(request: Request): Promise<ParsedEmail> {
   const body = await request.json() as CloudmailinBody;
   const headers = body.headers ?? {};
 
-  // headers.To has the full address including +subaddress; envelope.to has just the base
   const to = headers.To ?? headers.to ?? body.envelope?.to ?? "";
+  const from = headers.From ?? headers.from ?? body.envelope?.from ?? "";
   const subject = headers.Subject ?? headers.subject ?? "";
 
   const attachments: EmailAttachment[] = [];
@@ -96,44 +132,31 @@ async function parseCloudmailinEmail(request: Request): Promise<{
     attachments.push({ filename: att.file_name ?? "attachment", mimeType, buffer });
   }
 
-  return { to, subject, attachments };
+  return { to, from, subject, attachments };
 }
 
-async function parseMultipartEmail(request: Request): Promise<{
-  to: string;
-  subject: string;
-  attachments: EmailAttachment[];
-}> {
+async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
   const formData = await request.formData();
 
-  const to = (formData.get("To") as string | null)
-    ?? (formData.get("to") as string | null)
-    ?? "";
-  const subject = (formData.get("Subject") as string | null)
-    ?? (formData.get("subject") as string | null)
-    ?? "";
+  const to = (formData.get("To") as string | null) ?? (formData.get("to") as string | null) ?? "";
+  const from = (formData.get("From") as string | null) ?? (formData.get("from") as string | null) ?? "";
+  const subject = (formData.get("Subject") as string | null) ?? (formData.get("subject") as string | null) ?? "";
 
   const attachments: EmailAttachment[] = [];
-
-  // Mailgun sends attachments as attachment-1, attachment-2, ...
-  // SendGrid sends them as attachments (JSON array of filenames) + file fields
   for (const [key, value] of formData.entries()) {
     if (!(value instanceof File)) continue;
     if (!key.startsWith("attachment") && key !== "file") continue;
-
     const mimeType = value.type || "application/octet-stream";
     if (!isSupportedMimeType(mimeType)) continue;
     if (value.size > MAX_ATTACHMENT_BYTES) continue;
-
     const buffer = Buffer.from(await value.arrayBuffer());
     attachments.push({ filename: value.name, mimeType, buffer });
   }
 
-  return { to, subject, attachments };
+  return { to, from, subject, attachments };
 }
 
 export async function POST(request: Request) {
-  // Simple shared-secret auth — check header or query param
   const secret = process.env.EMAIL_WEBHOOK_SECRET;
   if (secret) {
     const headerSecret = request.headers.get("x-webhook-secret")
@@ -143,7 +166,7 @@ export async function POST(request: Request) {
     }
   }
 
-  let parsed: { to: string; subject: string; attachments: EmailAttachment[] };
+  let parsed: ParsedEmail;
   try {
     const ct = request.headers.get("content-type") ?? "";
     parsed = ct.includes("application/json")
@@ -159,19 +182,15 @@ export async function POST(request: Request) {
 
   const supabase = createSupabaseAdminClient();
 
-  // Identify vehicle
-  const addressResult = extractVehicleIdFromAddress(parsed.to);
   let vehicleId: string | null = null;
   let userId: string | null = null;
 
+  // 1. Vehicle ID from To address subaddress
+  const addressResult = extractVehicleIdFromAddress(parsed.to);
   if (addressResult) {
-    let query;
-    if (addressResult.type === "uuid") {
-      query = supabase.from("vehicles").select("id, user_id").eq("id", addressResult.id).eq("is_active", true).single();
-    } else {
-      // shortId: first 8 hex chars of UUID (no dashes) → match against id::text
-      query = supabase.from("vehicles").select("id, user_id").ilike("id", `${addressResult.id}%`).eq("is_active", true).single();
-    }
+    const query = addressResult.type === "uuid"
+      ? supabase.from("vehicles").select("id, user_id").eq("id", addressResult.id).eq("is_active", true).single()
+      : supabase.from("vehicles").select("id, user_id").ilike("id", `${addressResult.id}%`).eq("is_active", true).single();
     const { data: v } = await query;
     if (v) {
       vehicleId = (v as { id: string; user_id: string }).id;
@@ -179,12 +198,16 @@ export async function POST(request: Request) {
     }
   }
 
+  // 2. Vehicle nickname in subject
   if (!vehicleId) {
     const found = await findVehicleByNickname(parsed.subject, supabase);
-    if (found) {
-      vehicleId = found.id;
-      userId = found.user_id;
-    }
+    if (found) { vehicleId = found.id; userId = found.user_id; }
+  }
+
+  // 3. Sender email → registered user → their vehicle
+  if (!vehicleId && parsed.from) {
+    const found = await findVehicleBySenderEmail(parsed.from, supabase);
+    if (found) { vehicleId = found.id; userId = found.user_id; }
   }
 
   const createdIds: string[] = [];
@@ -198,15 +221,9 @@ export async function POST(request: Request) {
 
     const { error: uploadErr } = await supabase.storage
       .from("documents")
-      .upload(storagePath, attachment.buffer, {
-        contentType: attachment.mimeType,
-        upsert: false,
-      });
+      .upload(storagePath, attachment.buffer, { contentType: attachment.mimeType, upsert: false });
 
-    if (uploadErr) {
-      skipped.push(attachment.filename);
-      continue;
-    }
+    if (uploadErr) { skipped.push(attachment.filename); continue; }
 
     const { data: doc, error: insertErr } = await supabase
       .from("documents")
@@ -222,10 +239,7 @@ export async function POST(request: Request) {
       .select("id")
       .single();
 
-    if (insertErr || !doc) {
-      skipped.push(attachment.filename);
-      continue;
-    }
+    if (insertErr || !doc) { skipped.push(attachment.filename); continue; }
 
     createdIds.push((doc as { id: string }).id);
 

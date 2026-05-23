@@ -4,7 +4,7 @@
 
 **Direction (post-pivot, 2026-05-17):** mock-first, multi-brand. Every supported brand runs against a Tier-3 stateful simulator. Real OEM integrations return brand-by-brand, gated by `LIVE_INTEGRATIONS`. The original Tesla Fleet API code stays in-tree but dormant.
 
-See `docs/SCOPE.md` for the product story, `docs/ARCHITECTURE.md` for engineering rationale, and `openspec/changes/pivot-mock-first-platform/` for the formal change record.
+See `docs/ARCHITECTURE.md` for engineering rationale, `docs/SYSTEMS.md` for infrastructure setup, and `docs/COST-INTELLIGENCE.md` for the AI document parsing system.
 
 ---
 
@@ -40,6 +40,7 @@ See `docs/BRANDS.md` for the per-brand capability matrix.
 - **Capability masking** — UI components gate on `caps.telemetry.*` / `caps.commands.*`, never on brand identity. Unsupported features hide entirely, not disabled.
 - **Scenario player** — 4 scripted scenarios (`commuter`, `road-trip`, `weekend-errands`, `vacation`) make idle accounts look alive. Scenarios cycle on a fixed anchor (`2026-01-01T00:00:00Z`).
 - **History tracking** — charging sessions and trips derived from motion-state transitions, stored in `charging_sessions` and `trips` tables with real calculated values.
+- **Cost Intelligence** — Claude Vision parses uploaded or emailed energy bills and charger receipts. Extracts kWh, cost, provider; converts currencies via BNR; attributes home-bill costs proportionally using charging history; links public receipts to the nearest charging session.
 - **Tariff providers** — mock Tibber/Octopus/aWATTar with 24h price curves, cheapest-window highlight, smart-charge recommendations.
 - **Multi-vehicle UX** — `/garage` as default landing with fleet totals; `/dashboard?v=<id>` for deep card view; vehicle switcher in top nav.
 - **Mock disclosure** — `MOCK` chip per card, global "Demo mode" banner when all-mock, `/about-data` transparency page.
@@ -58,7 +59,8 @@ See `docs/BRANDS.md` for the per-brand capability matrix.
 | UI | shadcn/ui (hand-written) + Tailwind CSS v4 |
 | Simulator | `src/lib/mock/` — pure tick engine + scenario JSON |
 | Brand registry | `src/lib/brands/` — profiles + capability maps |
-| Specs | OpenSpec under `openspec/` |
+| AI parsing | Claude Vision (`claude-sonnet-4-6`) via `@anthropic-ai/sdk` |
+| Email ingest | Cloudmailin webhook → `POST /api/documents/inbound-email` |
 | Deploy | Vercel (serverless) |
 
 > This is Next.js **16**, not 15. Read `node_modules/next/dist/docs/` before writing Next-specific code. APIs, conventions, and file structure differ from earlier versions.

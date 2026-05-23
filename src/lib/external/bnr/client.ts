@@ -2,6 +2,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BNRRates } from "./types";
 
 const BNR_URL = "https://www.bnr.ro/nbrfxrates.xml";
+const BNR_REVALIDATE_SECONDS = 3600;
+const BNR_MAX_FALLBACK_DAYS = 5;
 
 function parseBNRXml(xml: string): BNRRates {
   const dateMatch = xml.match(/<Date>(\d{4}-\d{2}-\d{2})<\/Date>/);
@@ -23,7 +25,7 @@ function parseBNRXml(xml: string): BNRRates {
 }
 
 async function fetchBNRRates(): Promise<BNRRates> {
-  const res = await fetch(BNR_URL, { next: { revalidate: 3600 } });
+  const res = await fetch(BNR_URL, { next: { revalidate: BNR_REVALIDATE_SECONDS } });
   if (!res.ok) throw new Error(`BNR fetch failed: ${res.status}`);
   const xml = await res.text();
   return parseBNRXml(xml);
@@ -49,7 +51,7 @@ export async function getExchangeRate(
 
   // Try fetching for requested date; BNR may not publish on weekends/holidays
   // so we try up to 5 previous days
-  for (let offset = 0; offset <= 5; offset++) {
+  for (let offset = 0; offset <= BNR_MAX_FALLBACK_DAYS; offset++) {
     const tryDate = new Date(date);
     tryDate.setDate(tryDate.getDate() - offset);
     const tryDateStr = tryDate.toISOString().slice(0, 10);

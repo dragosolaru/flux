@@ -1,0 +1,2 @@
+export const SIGNED_URL_TTL_SECONDS = 3600;
+export const HOME_BILL_DEFAULT_PERIOD_DAYS = 30;

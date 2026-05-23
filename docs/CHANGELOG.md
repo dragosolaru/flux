@@ -1,58 +1,76 @@
 # Changelog
 
-All notable changes to Flux are documented here.
-Format: [Version] — Date · Description
+All notable changes to Flux, newest first.
+
+---
 
 ## [Unreleased]
 
+### 2026-05-23 — Documentation overhaul + code cleanup
+
+- Rewrote all docs as KISS: 8 focused files replacing scattered, outdated content
+- New `docs/SYSTEMS.md` — Vercel, Supabase, Cloudmailin, Anthropic, Google OAuth, BNR setup and reconfiguration guide
+- New `docs/COST-INTELLIGENCE.md` — AI document parsing pipeline, attribution math, email inbound, database schema
+- New `docs/ROADMAP.md` — replaces NEXT-STEPS.md; clean table format
+- Renamed `VEHICLE-CONNECTION-USER-JOURNEY.md` → `VEHICLE-CONNECTION.md`
+- Removed `RESUME-PROMPT.md` (outdated branch references), `SCOPE.md` (folded into README), `NEXT-STEPS.md` (replaced by ROADMAP)
+- Extracted magic numbers to named constants:
+  - `SIGNED_URL_TTL_SECONDS`, `HOME_BILL_DEFAULT_PERIOD_DAYS` → `src/lib/costs/constants.ts`
+  - `BNR_REVALIDATE_SECONDS`, `BNR_MAX_FALLBACK_DAYS` → `src/lib/external/bnr/client.ts`
+- Email webhook: added third vehicle-identification fallback (sender email → registered user → their vehicle), so emails sent without subaddress still associate correctly when the sender is a known user
+
+### 2026-05-22 — Cost Intelligence fixes
+
+- Document preview: signed URLs (1-hour TTL) generated server-side, view button in document cards
+- Friendly error messages for Anthropic API failures (credits, invalid key, rate limit, overloaded)
+- Cloudmailin support: JSON + multipart auto-detection, generic subaddress parsing, `NEXT_PUBLIC_CLOUDMAILIN_ADDRESS` env var for per-vehicle addresses
+- Email address format: `cloudmailinid+slug-shortid@cloudmailin.net` replaces broken `flux+uuid@vercel-domain`
+
+### 2026-05-21 — Cost Intelligence: AI document parsing
+
+- `POST /api/documents` — file upload, Claude Vision parsing, fire-and-forget processing
+- `GET /api/documents` — document list with status, signed view URLs
+- `POST /api/documents/inbound-email` — webhook for email attachment ingestion (Mailgun/SendGrid/Cloudmailin)
+- `GET /api/costs` — aggregation: total cost RON, home/public split, monthly trend, cost/km, petrol comparison
+- Claude Vision extraction prompt (Romanian) with per-field confidence scores
+- BNR exchange rate client with Supabase cache and weekend fallback
+- Home bill attribution: vehicle's share via charging session history
+- Public receipt session matching: ±15-minute tolerance
+- Cost dashboard UI: KPI cards, monthly bar chart, petrol comparison
+- `DocumentStatusCard`: status icons, edit form, error display
+- `DocumentUploadZone`: drag-and-drop
+- Supabase migration `006_cost_intelligence.sql`: `documents`, `energy_costs`, `exchange_rates` tables
+
+---
+
 ### 2026-05-18 — Phase 13: documentation
 
-- Added `docs/BRANDS.md` — per-brand capability matrix table covering all 31 telemetry fields, 18 commands, history settings, and model specs (WLTP figures) for all 7 brands. Sourced directly from `src/lib/brands/*/profile.ts` and `src/lib/brands/models.ts`.
-- Added `docs/SIMULATOR.md` — complete Tier-3 engine guide: `tick()` algorithm, `applyCommand()` capability gate, physics per motion state (driving drain, charging gain, climate drain), CYCLE_ANCHOR time model, scenario JSON format with full field reference, session boundary detection, seed process, and scenario authoring guide.
-- Rewrote `README.md` to reflect mock-first multi-brand platform: what it is, 7 supported brands with models, key features, tech stack, local setup steps, env var table, project structure.
-- Expanded `docs/ARCHITECTURE.md` with: brand registry pattern (file layout, BrandProfile shape, API dispatcher flow), VehicleState superset + capability mask, full Tier-3 simulator section (tick algorithm, applyChunk physics per state, applyCommand, scenario system, CYCLE_ANCHOR, session boundary detection), database schema overview for all 4 mock tables, tariff provider abstraction, multi-vehicle UX routes.
-- Updated `docs/SCOPE.md` MVP section to reflect completed phases 1–6.
-- Replaced `docs/NEXT-STEPS.md` with remaining phases 7–14 from the OpenSpec task list.
+- Added `docs/BRANDS.md`, `docs/SIMULATOR.md`
+- Rewrote `README.md`, `docs/SCOPE.md`, `docs/ARCHITECTURE.md`
+- Added `docs/NEXT-STEPS.md` with phases 7–14
 
-### 2026-05-17 — Pivot to mock-first multi-brand platform
+### 2026-05-17 — Pivot to mock-first multi-brand
 
-- Direction change: Flux abandons "Tesla-only, real API" as the MVP shape and adopts a **mock-first, multi-brand** posture. Every brand is implemented against a Tier-3 stateful simulator; live integrations come back brand-by-brand later, gated by the `LIVE_INTEGRATIONS` env flag.
-- Scaffolded OpenSpec (`openspec/`) with the formal change proposal `pivot-mock-first-platform`, including proposal, design, tasks, and 8 capability spec deltas (vehicle-platform, mock-simulator, fleet-management, energy-tariffs, charging-network-discovery, weather-and-range, trip-planning, mock-disclosure). The change passes `openspec validate --strict`.
-- Documented the new direction in `docs/SCOPE.md`, `docs/NEXT-STEPS.md`, `docs/ARCHITECTURE.md`, and `README.md`. Tesla HTTP Proxy plan in the previous `NEXT-STEPS.md` is paused (not deleted; the `tesla-proxy/` scaffold stays in the tree).
-- 7 supported brands targeted (Tesla, BMW, Polestar, Mercedes-EQ, VW-ID, Hyundai/Kia, Renault), chosen for EU market share and to validate the capability-driven UI across distinct capability profiles.
-- Beyond-OEM data layers planned and specced (mocked): energy tariffs, charging-network discovery, weather + range derating, trip planning.
+- 7 supported brands (Tesla, BMW, Polestar, Mercedes-EQ, VW-ID, Hyundai/Kia, Renault), all mock
+- Brand registry pattern: `src/lib/brands/` with `BrandProfile`, `BrandCapabilities`, per-brand `profile.ts`
+- Tier-3 stateful simulator: `tick(snapshot, now, brand)`, 4 scenarios, physics per motion state
+- Capability-driven UI: components gate on `useBrandCapabilities()`
+- Multi-vehicle UX: `/garage` as default, `/dashboard?v=<id>` for deep view
+- Energy tariffs, charging-network discovery, weather derating, trip planning (all mock)
+- Mock disclosure: `MOCK` chip, global demo banner, `/about-data` page
+- Migrations `002_mock_platform.sql` through `005_audit_fixes.sql`
 
-### 2026-05-16 — Live Tesla integration (now superseded by mock-first)
+### 2026-05-16 — Live Tesla integration (dormant since pivot)
 
-- Provisioned the live environment end-to-end: Supabase project + migration,
-  Google OAuth credentials, Tesla developer app, Vercel deployment on
-  `flux-alpha-three.vercel.app`.
-- Registered Flux as a Tesla EU partner (`partner_accounts` POST) and exposed
-  the EC P-256 command-signing public key at
-  `/.well-known/appspecific/com.tesla.3p.public-key.pem` via a route handler.
-- Virtual Key paired with the first user's vehicle (Model 3, 2023).
-- Defensive parsing of `vehicle_data` so partially-asleep cars don't crash the
-  dashboard; auto wake-on-408 with one retry.
-- `/api/tesla/command` returns `412 VCP_REQUIRED` for cars that require Tesla's
-  Vehicle Command Protocol. UI surfaces a dedicated toast and a dismissible
-  banner explaining the limitation.
-- Scaffolded `tesla-proxy/` (Dockerfile + fly.toml + entrypoint) for the
-  upcoming Tesla HTTP Proxy deployment on Fly.io. Flux already routes commands
-  through `TESLA_PROXY_BASE_URL` when set; otherwise falls back to Tesla
-  direct (legacy REST, works for pre-2021 cars).
-- Documented the next-session plan in `docs/NEXT-STEPS.md`.
+- Tesla Fleet API: OAuth 2.0 + PKCE, multi-region probe (EU/NA/CN)
+- AES-256-GCM token encryption at rest
+- Virtual Key pairing, `tesla-proxy/` scaffold for VCP command signing
+- Auto wake-on-408, defensive partial-data parsing
 
-## [0.1.0] — 2026-05-16 · Initial scaffold
+## [0.1.0] — 2026-05-16
 
-- Project initialized: **Flux by DAO Lab**
-- Next.js 16 (App Router) + TypeScript strict, Tailwind CSS v4
-- Auth.js v5 — Google OAuth + email/password (Credentials provider backed by Supabase)
-- Supabase Postgres schema: `profiles`, `vehicles`, `tesla_tokens`, `vehicle_snapshots` with Row Level Security
-- Tesla Fleet API integration: OAuth 2.0 + PKCE, multi-region probe (EU / NA / CN), encrypted-at-rest tokens (AES-256-GCM), in-place refresh
-- Dashboard page: live vehicle card with SVG battery gauge, stats grid (range, odometer, climate), quick commands (lock, climate, horn, flash)
-- Charging page: live status card, charge-limit slider, scheduled-charging stub, recent-session history
-- Settings page: account info, vehicle disconnect, danger-zone account deletion
-- shadcn/ui primitives (hand-written: button, card, input, label, skeleton, slider, switch, separator, avatar, sonner)
-- TanStack Query v5 with 30s polling on vehicle state and mutation-triggered invalidation
-- `next-themes` for dark/light mode toggle (dark-first)
-- Documentation: SCOPE, ARCHITECTURE (with implementation decisions), README
+- Next.js 16 App Router + TypeScript strict + Tailwind v4
+- Auth.js v5: Google OAuth + email/password (Credentials backed by Supabase)
+- Supabase Postgres with RLS: `profiles`, `vehicles`, `tesla_tokens`, `vehicle_snapshots`
+- TanStack Query v5: 30s polling, mutation-triggered invalidation
+- shadcn/ui primitives (hand-written), dark-first theme

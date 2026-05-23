@@ -4,6 +4,7 @@ import { getExchangeRate } from "@/lib/external/bnr/client";
 import { attributeHomeBill } from "./attribution";
 import { matchChargingSession } from "./session-matcher";
 import type { Document, ParsedDocument } from "@/types/costs";
+import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 
 const CONFIDENCE_THRESHOLD = 0.7;
 
@@ -51,7 +52,7 @@ export async function processDocument(documentId: string): Promise<void> {
     let periodEnd: Date;
 
     if (parsed.document_type === "home_bill") {
-      periodStart = parsed.period_start ? new Date(parsed.period_start) : new Date(Date.now() - 30 * 86400_000);
+      periodStart = parsed.period_start ? new Date(parsed.period_start) : new Date(Date.now() - HOME_BILL_DEFAULT_PERIOD_DAYS * 86_400_000);
       periodEnd = parsed.period_end ? new Date(parsed.period_end) : new Date();
 
       if (doc.vehicle_id) {

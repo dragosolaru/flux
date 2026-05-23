@@ -5,8 +5,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
+import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_BYTES = 10 * 1024 * 1024;
 
 const GetQuerySchema = z.object({
   vehicleId: z.string().uuid(),
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
     (documents ?? []).map(async (doc: { storage_path: string } & Record<string, unknown>) => {
       const { data: signed } = await supabase.storage
         .from("documents")
-        .createSignedUrl(doc.storage_path, 3600);
+        .createSignedUrl(doc.storage_path, SIGNED_URL_TTL_SECONDS);
       return { ...doc, view_url: signed?.signedUrl ?? null };
     }),
   );

@@ -1,8 +1,8 @@
 # ARCHITECTURE — Flux
 
-> **Post-pivot note (2026-05-17).** This document describes both the **current direction** (mock-first, multi-brand, capability-driven UI, Tier-3 simulator) and the **preserved legacy** (real Tesla integration that stays in-tree behind a feature flag). When two sections appear to disagree, the post-pivot sections (§Brand registry, §Tier-3 simulator, §Capability-driven UI, §External-data abstraction) are authoritative; the original Tesla-specific sections describe code that remains in the repo but is gated by `LIVE_INTEGRATIONS`. The formal source of truth for what changes is `openspec/changes/pivot-mock-first-platform/`.
+> Source of truth: the code. This document explains the *why* behind key decisions. For system configuration see `docs/SYSTEMS.md`. For Cost Intelligence internals see `docs/COST-INTELLIGENCE.md`.
 
-## DAO Lab engineering standards
+## Engineering standards
 
 This codebase demonstrates the patterns DAO Lab applies in every client project:
 
@@ -433,31 +433,9 @@ The original Tesla code (OAuth + PKCE + region probe + token refresh + AES-256-G
 - `tesla-proxy/` (Dockerfile + fly.toml) stays; README marked "currently dormant."
 - `/connect/tesla` and `/api/tesla/*` routes return `410 Gone` when `tesla` is not in `LIVE_INTEGRATIONS`.
 
-### Reactivation procedure (Phase 0.2 roadmap)
-
-1. Set `LIVE_INTEGRATIONS=tesla` in Vercel env.
-2. Deploy `tesla-proxy/` on Fly.io per the original NEXT-STEPS plan.
-3. Set `TESLA_PROXY_BASE_URL` on Vercel.
-4. "Add real Tesla" CTA reappears in onboarding.
-5. Existing mock Tesla vehicles can be converted to live by re-OAuth and flipping `data_source = 'live'`.
+See `docs/VEHICLE-CONNECTION.md` for reactivation steps and the full OAuth flow.
 
 ---
-
-## Tesla OAuth flow (legacy, reactivates under LIVE_INTEGRATIONS)
-
-```
- Browser  → GET /api/tesla/connect
-         ← set HttpOnly cookies (pkce_verifier, state)
-         ← 302 redirect to auth.tesla.com
-
- user authenticates with Tesla
-
- Tesla   → 302 /api/tesla/callback?code=…&state=…
-         → validate state + exchange code (PKCE)
-         → probe regions (EU / NA / CN)
-         → AES-256-GCM encrypt + persist tokens
-         → 302 /dashboard
-```
 
 ## TanStack Query polling strategy
 
@@ -501,3 +479,29 @@ Advancing state on every read (rather than a background job) keeps the infrastru
 ### 7. Disconnect ≠ revoke (legacy Tesla)
 
 `DELETE /api/vehicles/:id` removes the local row and cascades the tokens. It does not call Tesla's token revocation endpoint. The encrypted tokens are destroyed locally, so access is functionally gone from Flux's side.
+
+### 8. Document processing is fire-and-forget
+
+`POST /api/documents` uploads the file, inserts a `pending` row, and returns `202` immediately. `processDocument(id)` runs async (`.catch()` updates the row to `error` on failure). This keeps the upload response fast regardless of Claude Vision latency (~2–5s per document).
+
+### 9. Cost attribution fallback
+
+When a home bill covers a period with no charging sessions in history (e.g. first upload, or mock data date mismatch), attribution returns `sessionCount = 0`. Rather than storing `cost_ron = 0`, the processor stores the full bill cost and flags the document as `needs_review`. The user can then edit the value manually.
+
+---
+
+## Cost Intelligence
+
+See `docs/COST-INTELLIGENCE.md` for full detail. Summary of modules:
+
+| Module | Path | Role |
+|---|---|---|
+| Document parser | `src/lib/ai/document-parser.ts` | Claude Vision API call + Zod validation |
+| Extraction prompt | `src/lib/ai/prompts/document-extraction.ts` | Romanian prompt + MIME type list |
+| Processor | `src/lib/costs/processor.ts` | Pipeline: parse → convert → attribute → insert |
+| Attribution | `src/lib/costs/attribution.ts` | Home bill → vehicle kWh fraction |
+| Session matcher | `src/lib/costs/session-matcher.ts` | Public receipt → nearest charging session |
+| BNR client | `src/lib/external/bnr/client.ts` | Exchange rate with Supabase cache |
+| Document API | `src/app/api/documents/route.ts` | Upload + list with signed URLs |
+| Email webhook | `src/app/api/documents/inbound-email/route.ts` | Cloudmailin/Mailgun/SendGrid inbound |
+| Cost API | `src/app/api/costs/route.ts` | Aggregation + monthly trend |
