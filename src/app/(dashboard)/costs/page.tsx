@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
-import { userInboxAddress } from "@/lib/costs/user-email";
+import { vehicleInboxAddress } from "@/lib/costs/vehicle-email";
 import { CostsClient } from "./costs-client";
 
 interface PageProps {
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function CostsPage({ searchParams }: PageProps) {
   const session = await auth();
-  if (!session?.user?.email) redirect("/login");
+  if (!session?.user) redirect("/login");
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) redirect("/login");
@@ -51,7 +51,7 @@ export default async function CostsPage({ searchParams }: PageProps) {
     <CostsClient
       vehicleId={v.id}
       vehicleName={vehicleName}
-      vehicleEmail={userInboxAddress(session.user.email)}
+      vehicleEmail={vehicleInboxAddress(v.id)}
     />
   );
 }
