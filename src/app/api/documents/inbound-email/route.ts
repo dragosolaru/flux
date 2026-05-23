@@ -168,8 +168,16 @@ interface CloudmailinBody {
 
 async function parseCloudmailinEmail(request: Request): Promise<ParsedEmail> {
   const body = await request.json() as CloudmailinBody;
-  const headers = body.headers ?? {};
 
+  // Log raw structure to see exactly what Cloudmailin sends
+  console.log("[inbound-email] cloudmailin body keys", Object.keys(body));
+  console.log("[inbound-email] cloudmailin envelope", body.envelope);
+  console.log("[inbound-email] cloudmailin headers type+keys",
+    typeof body.headers,
+    Array.isArray(body.headers) ? "IS_ARRAY" : Object.keys(body.headers ?? {}),
+  );
+
+  const headers = body.headers ?? {};
   const to = headers.To ?? headers.to ?? body.envelope?.to ?? "";
   const from = headers.From ?? headers.from ?? body.envelope?.from ?? "";
   const subject = headers.Subject ?? headers.subject ?? "";
