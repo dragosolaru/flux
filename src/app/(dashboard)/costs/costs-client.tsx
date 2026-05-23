@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Mail, Receipt } from "lucide-react";
+import { Check, Copy, Inbox, Loader2, Mail, Receipt } from "lucide-react";
 import { DocumentUploadZone } from "@/components/costs/DocumentUploadZone";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
 import { CostDashboard } from "@/components/costs/CostDashboard";
-import { useDocuments, useUploadDocument, useEditDocument } from "@/hooks/useDocuments";
+import { Button } from "@/components/ui/button";
+import {
+  useDocuments,
+  useUploadDocument,
+  useEditDocument,
+  useRecoverDocuments,
+} from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +74,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { data: costs, isLoading: costsLoading } = useCosts(vehicleId);
   const { mutateAsync: upload, isPending: uploading } = useUploadDocument(vehicleId);
   const { mutate: editDocument } = useEditDocument(vehicleId);
+  const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
 
   async function handleUpload(file: File) {
     await upload(file);
@@ -86,6 +93,23 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
         <h2 className="text-sm font-semibold">Adaugă document</h2>
         <DocumentUploadZone onUpload={handleUpload} disabled={uploading} />
         <EmailInbox email={vehicleEmail} />
+
+        <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <Inbox className="size-3.5" />
+            Lipsesc documente trimise pe email?
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => recover()}
+            disabled={recovering}
+          >
+            {recovering && <Loader2 className="size-3 animate-spin" />}
+            {recoverResult ? `Recuperate: ${recoverResult.recovered}` : "Recuperează"}
+          </Button>
+        </div>
       </div>
 
       {!docsLoading && documents && documents.length > 0 && (

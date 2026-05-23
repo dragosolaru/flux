@@ -133,11 +133,15 @@ Webhook URL: `POST /api/documents/inbound-email?secret=<EMAIL_WEBHOOK_SECRET>`
 
 ### Vehicle identification (priority order)
 
-1. `+subaddress` in To header: `cloudmailinid+black-panther-f793064e@cloudmailin.net`
-2. Vehicle nickname in Subject line (case-insensitive)
-3. Sender email matches a registered user → their first active vehicle
+1. `+subaddress` matches a vehicle short ID (8 hex chars) → that vehicle
+2. `+subaddress` matches a user's email local part → user's first active vehicle
+3. Sender email matches a registered user → user's first active vehicle
+4. Subject contains a vehicle nickname → that vehicle
 
-Unmatched documents go to `unmatched/` in Storage and are stored with `status = needs_review` and no `vehicle_id`.
+Per-user address (primary UX): `cloudmailinid+dragosandreiolaru@cloudmailin.net`  
+Per-vehicle address (legacy): `cloudmailinid+f793064e@cloudmailin.net`
+
+Unmatched documents go to `unmatched/` in Storage with `user_id = '00000000-…'` and `vehicle_id = null`. The user can claim them via `POST /api/documents/recover` (button in `/costs`).
 
 ### Supported providers
 

@@ -2,40 +2,16 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { userInboxAddress } from "@/lib/costs/user-email";
 import { CostsClient } from "./costs-client";
 
 interface PageProps {
   searchParams: Promise<{ v?: string }>;
 }
 
-function vehicleEmailAddress(vehicleId: string, nickname: string): string {
-  const slug = nickname
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 20);
-  const shortId = vehicleId.replace(/-/g, "").slice(0, 8);
-  const subAddress = `${slug}-${shortId}`;
-
-  // Cloudmailin: 2b31b9c101b11f6682f3@cloudmailin.net → 2b31b9c101b11f6682f3+slug-shortid@cloudmailin.net
-  const cloudmailin = process.env.NEXT_PUBLIC_CLOUDMAILIN_ADDRESS;
-  if (cloudmailin) {
-    const atIdx = cloudmailin.indexOf("@");
-    if (atIdx > 0) {
-      const local = cloudmailin.slice(0, atIdx);
-      const domain = cloudmailin.slice(atIdx + 1);
-      return `${local}+${subAddress}@${domain}`;
-    }
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://flux.vercel.app";
-  const domain = appUrl.replace(/^https?:\/\//, "").split("/")[0];
-  return `flux+${subAddress}@${domain}`;
-}
-
 export default async function CostsPage({ searchParams }: PageProps) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user?.email) redirect("/login");
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) redirect("/login");
@@ -75,7 +51,7 @@ export default async function CostsPage({ searchParams }: PageProps) {
     <CostsClient
       vehicleId={v.id}
       vehicleName={vehicleName}
-      vehicleEmail={vehicleEmailAddress(v.id, vehicleName)}
+      vehicleEmail={userInboxAddress(session.user.email)}
     />
   );
 }

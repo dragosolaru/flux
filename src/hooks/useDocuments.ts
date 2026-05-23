@@ -38,6 +38,19 @@ export function useUploadDocument(vehicleId: string) {
   });
 }
 
+export function useRecoverDocuments(vehicleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch<{ recovered: number; vehicleId: string }>("/api/documents/recover", {
+      method: "POST",
+    }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
+      void qc.invalidateQueries({ queryKey: ["costs", vehicleId] });
+    },
+  });
+}
+
 export function useEditDocument(vehicleId: string) {
   const qc = useQueryClient();
   return useMutation({
