@@ -189,9 +189,33 @@ async function parseCloudmailinEmail(request: Request): Promise<ParsedEmail> {
 
 async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
   const formData = await request.formData();
-  const to = (formData.get("To") as string | null) ?? (formData.get("to") as string | null) ?? "";
-  const from = (formData.get("From") as string | null) ?? (formData.get("from") as string | null) ?? "";
-  const subject = (formData.get("Subject") as string | null) ?? (formData.get("subject") as string | null) ?? "";
+
+  // Log all field names so we can see exactly what Cloudmailin sends
+  const allKeys = [...formData.keys()];
+  console.log("[inbound-email] multipart keys", allKeys);
+
+  const to =
+    (formData.get("To") as string | null) ??
+    (formData.get("to") as string | null) ??
+    (formData.get("envelope[to]") as string | null) ??
+    (formData.get("headers[To]") as string | null) ??
+    (formData.get("headers[to]") as string | null) ??
+    "";
+
+  const from =
+    (formData.get("From") as string | null) ??
+    (formData.get("from") as string | null) ??
+    (formData.get("envelope[from]") as string | null) ??
+    (formData.get("headers[From]") as string | null) ??
+    (formData.get("headers[from]") as string | null) ??
+    "";
+
+  const subject =
+    (formData.get("Subject") as string | null) ??
+    (formData.get("subject") as string | null) ??
+    (formData.get("headers[Subject]") as string | null) ??
+    (formData.get("headers[subject]") as string | null) ??
+    "";
 
   const attachments: EmailAttachment[] = [];
   for (const [key, value] of formData.entries()) {
