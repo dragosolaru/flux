@@ -181,7 +181,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
-            {data.totalKm > 0 && data.petrolEquivalentCostRon > 0 ? (
+            {hasData && data.totalKm > 0 && data.petrolEquivalentCostRon > 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">
                   Benzină echivalent (7L/100km)
@@ -189,15 +189,19 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
                 <p className="text-lg font-bold text-muted-foreground line-through">
                   {fmtRon(data.petrolEquivalentCostRon)}
                 </p>
-                {savingsRon > 0 && (
+                {savingsRon > 0 ? (
                   <p className="text-sm font-semibold text-chart-2">
-                    Tu economisești {fmtRon(savingsRon)}
+                    Economisești {fmtRon(savingsRon)}
+                  </p>
+                ) : (
+                  <p className="text-sm font-semibold text-destructive">
+                    Cu {fmtRon(-savingsRon)} mai scump
                   </p>
                 )}
               </>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Înregistrează km parcurși pentru comparație
+                {hasData ? "Înregistrează km parcurși pentru comparație" : "Adaugă documente pentru comparație"}
               </p>
             )}
           </CardContent>

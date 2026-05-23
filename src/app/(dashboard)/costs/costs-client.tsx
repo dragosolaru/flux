@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Inbox, Loader2, Mail, Receipt } from "lucide-react";
 import { DocumentUploadZone } from "@/components/costs/DocumentUploadZone";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
@@ -13,6 +13,7 @@ import {
   useRecoverDocuments,
 } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 interface CostsClientProps {
@@ -70,11 +71,24 @@ function EmailInbox({ email }: { email: string }) {
 }
 
 export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
+  const qc = useQueryClient();
   const { data: documents, isLoading: docsLoading } = useDocuments(vehicleId);
   const { data: costs, isLoading: costsLoading } = useCosts(vehicleId);
   const { mutateAsync: upload, isPending: uploading } = useUploadDocument(vehicleId);
   const { mutate: editDocument } = useEditDocument(vehicleId);
   const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
+
+  // Invalidate costs when any document transitions out of pending/processing.
+  const prevHadPending = useRef(false);
+  useEffect(() => {
+    const hasPending = documents?.some(
+      (d) => d.status === "pending" || d.status === "processing",
+    ) ?? false;
+    if (prevHadPending.current && !hasPending) {
+      void qc.invalidateQueries({ queryKey: ["costs", vehicleId] });
+    }
+    prevHadPending.current = hasPending;
+  }, [documents, vehicleId, qc]);
 
   async function handleUpload(file: File) {
     await upload(file);
