@@ -17,6 +17,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
@@ -24,6 +25,18 @@ import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 const SHORT_ID_RE = /^[a-f0-9]{8}$/i;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
+
+function constantTimeEq(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
+
+function pickString(formData: FormData, key: string): string | null {
+  const v = formData.get(key);
+  return typeof v === "string" ? v : null;
+}
 
 interface EmailAttachment {
   filename: string;
@@ -181,24 +194,28 @@ async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
 
   // Cloudmailin "Multipart Normalized" uses bracket-notation fields.
   // Mailgun/SendGrid use flat To/From/Subject fields.
+  //
+  // headers[to] is the literal To: header (preserves +subaddress).
+  // envelope[to] is the SMTP RCPT TO and may be normalized by some MX servers
+  // (subaddress stripped). Prefer headers[to] first.
   const to =
-    (formData.get("envelope[to]") as string | null) ??
-    (formData.get("headers[to]") as string | null) ??
-    (formData.get("To") as string | null) ??
-    (formData.get("to") as string | null) ??
+    pickString(formData, "headers[to]") ??
+    pickString(formData, "envelope[to]") ??
+    pickString(formData, "To") ??
+    pickString(formData, "to") ??
     "";
 
   const from =
-    (formData.get("envelope[from]") as string | null) ??
-    (formData.get("headers[from]") as string | null) ??
-    (formData.get("From") as string | null) ??
-    (formData.get("from") as string | null) ??
+    pickString(formData, "headers[from]") ??
+    pickString(formData, "envelope[from]") ??
+    pickString(formData, "From") ??
+    pickString(formData, "from") ??
     "";
 
   const subject =
-    (formData.get("headers[subject]") as string | null) ??
-    (formData.get("Subject") as string | null) ??
-    (formData.get("subject") as string | null) ??
+    pickString(formData, "headers[subject]") ??
+    pickString(formData, "Subject") ??
+    pickString(formData, "subject") ??
     "";
 
   const attachments: EmailAttachment[] = [];
@@ -220,7 +237,7 @@ export async function POST(request: Request) {
   if (secret) {
     const headerSecret = request.headers.get("x-webhook-secret")
       ?? new URL(request.url).searchParams.get("secret");
-    if (headerSecret !== secret) {
+    if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
   }
@@ -243,6 +260,7 @@ export async function POST(request: Request) {
   const match = await resolveVehicle(parsed, supabase);
   const vehicleId = match?.vehicleId ?? null;
   const userId = match?.userId ?? null;
+  const senderEmail = extractEmailAddress(parsed.from) || null;
 
   const createdIds: string[] = [];
   const skipped: string[] = [];
@@ -268,6 +286,7 @@ export async function POST(request: Request) {
         storage_path: storagePath,
         mime_type: attachment.mimeType,
         original_filename: attachment.filename,
+        sender_email: senderEmail,
         status: vehicleId ? "pending" : "needs_review",
       })
       .select("id")
@@ -284,5 +303,6 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ created: createdIds, skipped, vehicleId, userId }, { status: 200 });
+  // Response intentionally minimal — no vehicleId/userId leak.
+  return NextResponse.json({ created: createdIds.length, skipped: skipped.length }, { status: 200 });
 }

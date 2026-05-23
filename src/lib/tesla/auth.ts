@@ -1,4 +1,4 @@
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes, createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 import { TESLA_AUTH_URL, TESLA_SCOPES, TESLA_TOKEN_URL } from "./constants";
 import type { TeslaTokenResponse } from "@/types/tesla";
@@ -14,8 +14,41 @@ export function generatePkcePair() {
   return { codeVerifier, codeChallenge };
 }
 
-export function generateState() {
-  return base64UrlEncode(randomBytes(24));
+/**
+ * OAuth state bound to the user ID via HMAC.
+ * Format: base64url(nonce):base64url(hmac(nonce + userId))
+ *
+ * The callback verifies the HMAC with the current session's userId — even if
+ * an attacker pre-seeded the state cookie, the HMAC won't match for a different
+ * user's session. Uses NEXTAUTH_SECRET as the HMAC key (already a startup
+ * requirement of the app).
+ */
+function stateSecret(): Buffer {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("NEXTAUTH_SECRET is required for OAuth state binding");
+  return Buffer.from(secret);
+}
+
+export function generateState(userId: string): string {
+  const nonce = randomBytes(24);
+  const hmac = createHmac("sha256", stateSecret())
+    .update(nonce)
+    .update(userId)
+    .digest();
+  return `${base64UrlEncode(nonce)}.${base64UrlEncode(hmac)}`;
+}
+
+export function verifyState(state: string, userId: string): boolean {
+  const parts = state.split(".");
+  if (parts.length !== 2) return false;
+  const nonce = base64UrlDecode(parts[0]);
+  const claimedHmac = base64UrlDecode(parts[1]);
+  const expectedHmac = createHmac("sha256", stateSecret())
+    .update(nonce)
+    .update(userId)
+    .digest();
+  if (claimedHmac.length !== expectedHmac.length) return false;
+  return timingSafeEqual(claimedHmac, expectedHmac);
 }
 
 export function buildTeslaAuthorizeUrl(params: {
@@ -97,4 +130,9 @@ function base64UrlEncode(buf: Buffer) {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
+}
+
+function base64UrlDecode(s: string): Buffer {
+  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+  return Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/") + pad, "base64");
 }

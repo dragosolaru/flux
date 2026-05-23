@@ -11,6 +11,10 @@ const SOFTWARE_VERSIONS: Record<BrandKey, string> = {
   tesla: "2025.14.3",
 };
 
+function softwareVersionFor(brand: string): string {
+  return SOFTWARE_VERSIONS[brand as BrandKey] ?? SOFTWARE_VERSIONS.tesla;
+}
+
 // Stable mock tire pressures (kPa) — ~35 psi nominal, slight rear increase for load
 const NOMINAL_TIRE_PRESSURES = {
   frontLeftKpa:  241,
@@ -79,7 +83,7 @@ export function createInitialSnapshot(
     isFrunkOpen: false,
     isSentryMode: false,
     isDashcamRecording: false,
-    softwareVersion: SOFTWARE_VERSIONS[brand],
+    softwareVersion: softwareVersionFor(brand),
     updateAvailable: false,
     updateVersionLabel: null,
     serviceDueAt: null,

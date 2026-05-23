@@ -8,6 +8,7 @@ import {
   generatePkcePair,
   generateState,
 } from "@/lib/tesla/auth";
+import { assertTeslaEncryptionKey } from "@/lib/tesla/tokens";
 
 export async function GET() {
   if (!isLiveEnabled("tesla")) {
@@ -27,8 +28,19 @@ export async function GET() {
     );
   }
 
+  // Fail fast if the encryption key is misconfigured — better to error here
+  // than half-way through OAuth callback after the user has authorized.
+  try {
+    assertTeslaEncryptionKey();
+  } catch (err) {
+    return NextResponse.json(
+      { message: err instanceof Error ? err.message : "Tesla encryption misconfigured" },
+      { status: 500 },
+    );
+  }
+
   const { codeVerifier, codeChallenge } = generatePkcePair();
-  const state = generateState();
+  const state = generateState(session.user.id);
 
   const cookieStore = await cookies();
   const cookieOpts = {
@@ -39,7 +51,8 @@ export async function GET() {
     maxAge: 60 * 10, // 10 minutes
   };
   cookieStore.set("tesla_pkce_verifier", codeVerifier, cookieOpts);
-  cookieStore.set("tesla_oauth_state", state, cookieOpts);
+  // We no longer need to persist state in a cookie — it's self-verifying via
+  // the HMAC against session.user.id. Keep verifier (PKCE requires it).
 
   const url = buildTeslaAuthorizeUrl({
     clientId,

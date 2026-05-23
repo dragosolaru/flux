@@ -51,8 +51,10 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
   ],
 };
 
-export function getModelSpec(brand: BrandKey, modelName: string | null): ModelSpec {
-  const models = BRAND_MODELS[brand];
+export function getModelSpec(brand: string, modelName: string | null): ModelSpec {
+  // Defensive: legacy DB rows may have brand keys no longer in the registry
+  // (e.g. 'bmw' after the Tesla-only refactor). Fall back to Tesla Model 3.
+  const models = BRAND_MODELS[brand as BrandKey] ?? BRAND_MODELS.tesla;
   return (
     models.find((m) => m.modelName === modelName) ??
     models[0]!

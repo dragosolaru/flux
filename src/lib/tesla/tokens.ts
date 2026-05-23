@@ -25,6 +25,15 @@ function getKey(): Buffer {
 }
 
 /**
+ * Validates the encryption key without performing any crypto operation.
+ * Call from OAuth entry points so misconfiguration fails the request before
+ * the user authorizes — rather than crashing in the callback after consent.
+ */
+export function assertTeslaEncryptionKey(): void {
+  getKey();
+}
+
+/**
  * Encrypts a token using AES-256-GCM. Output format: base64(iv:authTag:ciphertext).
  * IV is generated per-call and prepended to the output.
  */

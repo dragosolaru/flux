@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 interface CostsClientProps {
   vehicleId: string;
   vehicleName: string;
-  vehicleEmail: string;
+  vehicleEmail: string | null;
 }
 
 function EmailInbox({ email }: { email: string }) {
@@ -79,7 +79,12 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
 
   // Invalidate costs when any document transitions out of pending/processing.
+  // The ref is keyed implicitly to vehicleId; reset it when the user switches
+  // vehicles to avoid invalidating the new vehicle based on the old one's state.
   const prevHadPending = useRef(false);
+  useEffect(() => {
+    prevHadPending.current = false;
+  }, [vehicleId]);
   useEffect(() => {
     const hasPending = documents?.some(
       (d) => d.status === "pending" || d.status === "processing",
@@ -106,7 +111,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       <div className="space-y-3">
         <h2 className="text-sm font-semibold">Adaugă document</h2>
         <DocumentUploadZone onUpload={handleUpload} disabled={uploading} />
-        <EmailInbox email={vehicleEmail} />
+        {vehicleEmail && <EmailInbox email={vehicleEmail} />}
 
         <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">

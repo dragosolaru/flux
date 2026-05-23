@@ -42,7 +42,7 @@ export function useUploadDocument(vehicleId: string) {
 export function useRecoverDocuments(vehicleId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => apiFetch<{ recovered: number; vehicleId: string }>("/api/documents/recover", {
+    mutationFn: () => apiFetch<{ recovered: number }>("/api/documents/recover", {
       method: "POST",
     }),
     onSuccess: () => {

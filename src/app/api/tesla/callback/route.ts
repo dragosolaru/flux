@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { isLiveEnabled } from "@/lib/live-integrations";
-import { exchangeCodeForTokens } from "@/lib/tesla/auth";
+import { exchangeCodeForTokens, verifyState } from "@/lib/tesla/auth";
 import { fetchVehicleList } from "@/lib/tesla/api";
 import { encryptToken } from "@/lib/tesla/tokens";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -30,16 +30,17 @@ export async function GET(req: NextRequest) {
 
   const cookieStore = await cookies();
   const verifier = cookieStore.get("tesla_pkce_verifier")?.value;
-  const expectedState = cookieStore.get("tesla_oauth_state")?.value;
 
-  if (!verifier || !expectedState || expectedState !== state) {
+  // State is self-verifying — HMAC keyed to the current user's session ID.
+  // Even if an attacker pre-seeded cookies, the HMAC will not match for a
+  // different session. Comparison inside verifyState is constant-time.
+  if (!verifier || !verifyState(state, session.user.id)) {
     return NextResponse.redirect(
       new URL("/connect/tesla?error=state_mismatch", req.url),
     );
   }
 
   cookieStore.delete("tesla_pkce_verifier");
-  cookieStore.delete("tesla_oauth_state");
 
   let tokens;
   try {

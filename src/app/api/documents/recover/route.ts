@@ -1,11 +1,14 @@
 /**
  * Recovers unmatched email documents and assigns them to the current user's
- * first active vehicle. Used when an email arrived before the user had an
- * account, or when the From/To fields didn't allow automatic matching.
+ * first active vehicle.
  *
- * Security note: this assigns ANY unmatched document to the caller. Acceptable
- * for the current single-tenant pilot; tighten before opening to multiple users
- * (e.g. require a per-user claim token printed inside the email body).
+ * Access control:
+ *   Only documents whose stored sender_email matches the authenticated user's
+ *   verified email are eligible. Other unmatched documents stay in the
+ *   unmatched/ pool — they belong to someone else.
+ *
+ *   This prevents user B from claiming user A's documents when the inbound
+ *   webhook can't auto-resolve a vehicle from the To header.
  */
 
 import { NextResponse } from "next/server";
@@ -18,7 +21,11 @@ const UNMATCHED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 export async function POST() {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.email) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const userEmail = session.user.email.toLowerCase();
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
@@ -38,11 +45,13 @@ export async function POST() {
 
   const vehicleId = (vehicle as { id: string }).id;
 
+  // Only claim docs whose sender_email matches the current user's verified email.
   const { data: docs } = await supabase
     .from("documents")
     .select("id, storage_path, mime_type, original_filename")
     .eq("user_id", UNMATCHED_USER_ID)
-    .is("vehicle_id", null);
+    .is("vehicle_id", null)
+    .eq("sender_email", userEmail);
 
   if (!docs || docs.length === 0) {
     return NextResponse.json({ recovered: 0 });
@@ -64,8 +73,8 @@ export async function POST() {
       .upload(newPath, buffer, { contentType: doc.mime_type, upsert: false });
     if (uploadErr) continue;
 
-    await supabase.storage.from("documents").remove([oldPath]);
-
+    // DB update BEFORE removing the old file — if update fails we still have
+    // the original blob and can retry. Avoids orphan storage on partial failure.
     const { error: updateErr } = await supabase
       .from("documents")
       .update({
@@ -77,7 +86,13 @@ export async function POST() {
       })
       .eq("id", doc.id);
 
-    if (updateErr) continue;
+    if (updateErr) {
+      // Roll back the new file so we don't leak storage.
+      await supabase.storage.from("documents").remove([newPath]);
+      continue;
+    }
+
+    await supabase.storage.from("documents").remove([oldPath]);
 
     recovered.push(doc.id);
     processDocument(doc.id).catch((err: unknown) => {
@@ -85,5 +100,5 @@ export async function POST() {
     });
   }
 
-  return NextResponse.json({ recovered: recovered.length, vehicleId });
+  return NextResponse.json({ recovered: recovered.length });
 }

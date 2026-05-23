@@ -193,9 +193,13 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
                   <p className="text-sm font-semibold text-chart-2">
                     Economisești {fmtRon(savingsRon)}
                   </p>
-                ) : (
+                ) : savingsRon < 0 ? (
                   <p className="text-sm font-semibold text-destructive">
                     Cu {fmtRon(-savingsRon)} mai scump
+                  </p>
+                ) : (
+                  <p className="text-sm font-semibold text-muted-foreground">
+                    Cost echivalent
                   </p>
                 )}
               </>

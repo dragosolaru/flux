@@ -6,6 +6,28 @@ All notable changes to Flux, newest first.
 
 ## [Unreleased]
 
+### 2026-05-23 — Security hardening (code-review pass)
+
+Resolved 12 of the 15 findings from the post-refactor code review. The remaining 3 are low-severity (battery polling trade-off, full-UUID email format regression, partial-failure storage rollback handled but minor edge cases remain).
+
+**Critical:**
+- `/api/documents/recover` ACL bypass closed — now filters by `sender_email = session.user.email`. New `documents.sender_email` column populated by the inbound webhook (migration 007).
+- `EMAIL_WEBHOOK_SECRET` comparison switched to `crypto.timingSafeEqual` (was vulnerable to timing attack).
+- Tesla OAuth state now HMAC-bound to `session.user.id` (via NEXTAUTH_SECRET); verified with `timingSafeEqual`. Stops cross-user CSRF via pre-seeded cookies. State cookie is no longer needed (HMAC is self-verifying).
+
+**High:**
+- Webhook field priority swapped — `headers[to]` queried before `envelope[to]` (the SMTP envelope strips +subaddress on some MX relays).
+- Legacy non-Tesla vehicles auto-deactivated via migration 007 (`update vehicles set is_active=false where brand <> 'tesla'`); `getModelSpec` + `softwareVersionFor` now fall back to Tesla when registry lookup misses.
+- `vehicleInboxAddress` returns `null` when `NEXT_PUBLIC_CLOUDMAILIN_ADDRESS` is unset; UI hides the EmailInbox component instead of rendering an unroutable address.
+- Tesla token encryption key validated at OAuth entry via new `assertTeslaEncryptionKey()` — fail-fast before user authorizes.
+
+**Medium:**
+- Webhook response trimmed: no longer leaks `vehicleId`/`userId` (prevents sender enumeration if `EMAIL_WEBHOOK_SECRET` leaks).
+- `pickString` helper replaces unsafe `as string | null` cast on `FormData.get()` (would have crashed if Cloudmailin ever sent a File for that key).
+- Recover route now does DB update BEFORE storage removal — partial failure rolls back the new file instead of orphaning it.
+- `prevHadPending` ref in costs-client resets on vehicleId change (prevents stale cross-vehicle invalidation).
+- Cost dashboard: `savingsRon === 0` shows "Cost echivalent" instead of "Cu 0.00 lei mai scump".
+
 ### 2026-05-23 — Tesla-only MVP separation
 
 - Brand registry trimmed to Tesla only; BMW, Polestar, Mercedes-EQ, VW, Hyundai/Kia, Renault archived on branch `demo-brands-archive`
