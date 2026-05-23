@@ -1,24 +1,16 @@
 /**
- * Inbound email webhook — compatible with Mailgun, SendGrid Inbound Parse,
- * and any service that POSTs multipart/form-data with the fields below.
- *
- * Setup (choose one):
- *
- * A) Mailgun — go to Receiving → Create Route → Forward to:
- *    https://your-app.vercel.app/api/documents/inbound-email
- *    Set EMAIL_WEBHOOK_SECRET to your Mailgun webhook signing key.
- *
- * B) SendGrid Inbound Parse — Settings → Inbound Parse → Add Host & URL:
- *    https://your-app.vercel.app/api/documents/inbound-email
- *    Set EMAIL_WEBHOOK_SECRET to any random string and add it as a header check.
+ * Inbound email webhook — compatible with:
+ *   - Cloudmailin (JSON body)
+ *   - Mailgun (multipart/form-data)
+ *   - SendGrid Inbound Parse (multipart/form-data)
  *
  * Vehicle identification (in order of precedence):
- *   1. To address: flux+<vehicleId>@yourdomain.com  (UUID in + part)
+ *   1. To address sub-address: local+slug-shortid@domain
  *   2. Subject line contains vehicle nickname (case-insensitive)
  *
  * Env vars needed:
- *   EMAIL_WEBHOOK_SECRET — shared secret to verify webhook authenticity
- *   NEXT_PUBLIC_APP_URL  — your app URL (e.g. https://flux.vercel.app)
+ *   EMAIL_WEBHOOK_SECRET         — shared secret (?secret= query param)
+ *   NEXT_PUBLIC_CLOUDMAILIN_ADDRESS — e.g. 2b31b9c101b11f6682f3@cloudmailin.net
  */
 
 import { NextResponse } from "next/server";
@@ -37,7 +29,8 @@ interface EmailAttachment {
 }
 
 function extractVehicleIdFromAddress(toHeader: string): { type: "uuid"; id: string } | { type: "shortId"; id: string } | null {
-  const match = toHeader.match(/flux\+([^@\s]+)@/i);
+  // Matches both flux+slug-shortid@domain and cloudmailinid+slug-shortid@cloudmailin.net
+  const match = toHeader.match(/\+([^@+\s]+)@/i);
   if (!match) return null;
   const candidate = match[1];
   // Format 1: full UUID (e.g. flux+f793064e-b685-475e-a557-efb3f1ab18ee@)
@@ -66,6 +59,44 @@ async function findVehicleByNickname(
     }
   }
   return null;
+}
+
+interface CloudmailinBody {
+  headers?: Record<string, string>;
+  envelope?: { to?: string; from?: string };
+  plain?: string;
+  attachments?: Array<{
+    file_name?: string;
+    content_type?: string;
+    size?: number;
+    content?: string; // base64
+    disposition?: string;
+  }>;
+}
+
+async function parseCloudmailinEmail(request: Request): Promise<{
+  to: string;
+  subject: string;
+  attachments: EmailAttachment[];
+}> {
+  const body = await request.json() as CloudmailinBody;
+  const headers = body.headers ?? {};
+
+  // headers.To has the full address including +subaddress; envelope.to has just the base
+  const to = headers.To ?? headers.to ?? body.envelope?.to ?? "";
+  const subject = headers.Subject ?? headers.subject ?? "";
+
+  const attachments: EmailAttachment[] = [];
+  for (const att of body.attachments ?? []) {
+    if (!att.content) continue;
+    const mimeType = att.content_type ?? "application/octet-stream";
+    if (!isSupportedMimeType(mimeType)) continue;
+    const buffer = Buffer.from(att.content, "base64");
+    if (buffer.length > MAX_ATTACHMENT_BYTES) continue;
+    attachments.push({ filename: att.file_name ?? "attachment", mimeType, buffer });
+  }
+
+  return { to, subject, attachments };
 }
 
 async function parseMultipartEmail(request: Request): Promise<{
@@ -114,7 +145,10 @@ export async function POST(request: Request) {
 
   let parsed: { to: string; subject: string; attachments: EmailAttachment[] };
   try {
-    parsed = await parseMultipartEmail(request);
+    const ct = request.headers.get("content-type") ?? "";
+    parsed = ct.includes("application/json")
+      ? await parseCloudmailinEmail(request)
+      : await parseMultipartEmail(request);
   } catch {
     return NextResponse.json({ message: "Failed to parse email" }, { status: 400 });
   }
