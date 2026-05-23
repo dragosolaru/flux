@@ -103,16 +103,25 @@ async function findVehicleByNickname(subject: string, supabase: AdminClient): Pr
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
+  console.log("[inbound-email] resolveVehicle", {
+    to: parsed.to,
+    from: parsed.from,
+    subject: parsed.subject,
+    subaddress,
+    shortIdMatch: subaddress ? SHORT_ID_RE.test(subaddress) : false,
+  });
+
   // 1. Subaddress = vehicle short ID (8 hex chars — first segment of UUID)
   // UUID type in PostgreSQL doesn't support ilike; use range bounds instead.
   if (subaddress && SHORT_ID_RE.test(subaddress)) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("vehicles")
       .select("id, user_id")
       .gte("id", `${subaddress}-0000-0000-0000-000000000000`)
       .lte("id", `${subaddress}-ffff-ffff-ffff-ffffffffffff`)
       .eq("is_active", true)
       .single();
+    console.log("[inbound-email] step1 shortId", { subaddress, data: !!data, error: error?.message });
     if (data) {
       const v = data as { id: string; user_id: string };
       return { vehicleId: v.id, userId: v.user_id };
@@ -122,6 +131,7 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
   // 2. Subaddress = user email local part
   if (subaddress) {
     const userId = await findUserByEmailLocalPart(subaddress, supabase);
+    console.log("[inbound-email] step2 emailLocalPart", { subaddress, userId });
     if (userId) {
       const vehicleId = await firstActiveVehicle(userId, supabase);
       if (vehicleId) return { vehicleId, userId };
@@ -130,16 +140,17 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
 
   // 3. Sender email = registered user
   const senderEmail = extractEmailAddress(parsed.from);
-  if (senderEmail) {
-    const userId = await findUserByEmail(senderEmail, supabase);
-    if (userId) {
-      const vehicleId = await firstActiveVehicle(userId, supabase);
-      if (vehicleId) return { vehicleId, userId };
-    }
+  const userIdBySender = await findUserByEmail(senderEmail, supabase);
+  console.log("[inbound-email] step3 senderEmail", { senderEmail, userId: userIdBySender });
+  if (userIdBySender) {
+    const vehicleId = await firstActiveVehicle(userIdBySender, supabase);
+    if (vehicleId) return { vehicleId, userId: userIdBySender };
   }
 
   // 4. Vehicle nickname in subject
-  return findVehicleByNickname(parsed.subject, supabase);
+  const byNickname = await findVehicleByNickname(parsed.subject, supabase);
+  console.log("[inbound-email] step4 nickname", { found: !!byNickname });
+  return byNickname;
 }
 
 interface CloudmailinBody {
@@ -215,6 +226,13 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ message: "Failed to parse email" }, { status: 400 });
   }
+
+  console.log("[inbound-email] parsed", {
+    to: parsed.to,
+    from: parsed.from,
+    subject: parsed.subject,
+    attachments: parsed.attachments.map((a) => ({ filename: a.filename, mimeType: a.mimeType, size: a.buffer.length })),
+  });
 
   if (parsed.attachments.length === 0) {
     return NextResponse.json({ message: "No supported attachments found" }, { status: 200 });
