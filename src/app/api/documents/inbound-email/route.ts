@@ -103,12 +103,14 @@ async function findVehicleByNickname(subject: string, supabase: AdminClient): Pr
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
-  // 1. Subaddress = vehicle short ID (8 hex chars)
+  // 1. Subaddress = vehicle short ID (8 hex chars — first segment of UUID)
+  // UUID type in PostgreSQL doesn't support ilike; use range bounds instead.
   if (subaddress && SHORT_ID_RE.test(subaddress)) {
     const { data } = await supabase
       .from("vehicles")
       .select("id, user_id")
-      .ilike("id", `${subaddress}%`)
+      .gte("id", `${subaddress}-0000-0000-0000-000000000000`)
+      .lte("id", `${subaddress}-ffff-ffff-ffff-ffffffffffff`)
       .eq("is_active", true)
       .single();
     if (data) {
