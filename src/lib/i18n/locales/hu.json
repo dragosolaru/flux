@@ -151,7 +151,16 @@
 
   "commands": {
     "title": "Parancsok",
-    "subtitle": "Vezérelje távolról az autót."
+    "subtitle": "Vezérelje távolról az autót.",
+    "panel_title": "Gyors parancsok",
+    "lock": "Zárolás",
+    "unlock": "Feloldás",
+    "climate_on": "Klíma be",
+    "climate_off": "Klíma ki",
+    "honk": "Dudálás",
+    "flash": "Villogtatás",
+    "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
+    "sending": "Küldés…"
   },
 
   "garage": {

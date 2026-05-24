@@ -151,7 +151,16 @@
 
   "commands": {
     "title": "Befehle",
-    "subtitle": "Auto fernsteuern."
+    "subtitle": "Auto fernsteuern.",
+    "panel_title": "Schnellbefehle",
+    "lock": "Sperren",
+    "unlock": "Entsperren",
+    "climate_on": "Klimaanlage ein",
+    "climate_off": "Klimaanlage aus",
+    "honk": "Hupen",
+    "flash": "Lichter blinken",
+    "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
+    "sending": "Wird gesendet…"
   },
 
   "garage": {
