@@ -127,6 +127,20 @@
         "octopus-mock": "Octopus Energy (demo)",
         "awattar-mock": "aWATTar (demo)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Exportă datele mele",
+      "exporting": "Se exportă…",
+      "export_success": "Export descărcat",
+      "export_error": "Nu s-au putut exporta datele",
+      "delete_button": "Șterge contul",
+      "deleting": "Se șterge…",
+      "delete_success": "Cont șters",
+      "delete_error": "Nu s-a putut șterge contul",
+      "confirm_title": "Ștergi contul?",
+      "confirm_description": "Aceasta va șterge permanent contul tău Flux, toate mașinile, istoricul de încărcare, documentele și costurile. Acțiunea nu poate fi anulată.",
+      "confirm_cancel": "Anulează",
+      "confirm_delete": "Da, șterge contul meu"
     }
   },
 

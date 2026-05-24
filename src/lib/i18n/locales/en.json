@@ -127,6 +127,20 @@
         "octopus-mock": "Octopus Energy (demo)",
         "awattar-mock": "aWATTar (demo)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Export my data",
+      "exporting": "Exporting…",
+      "export_success": "Data export downloaded",
+      "export_error": "Could not export data",
+      "delete_button": "Delete account",
+      "deleting": "Deleting…",
+      "delete_success": "Account deleted",
+      "delete_error": "Could not delete account",
+      "confirm_title": "Delete your account?",
+      "confirm_description": "This will permanently delete your Flux account, all vehicles, charging history, documents, and costs. This action cannot be undone.",
+      "confirm_cancel": "Cancel",
+      "confirm_delete": "Yes, delete my account"
     }
   },
 
