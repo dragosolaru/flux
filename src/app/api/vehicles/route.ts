@@ -24,7 +24,7 @@ export async function GET() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("vehicles")
-    .select("id, brand, display_name, nickname, model, year, data_source")
+    .select("id, brand, display_name, nickname, model, year, data_source, virtual_key_paired")
     .eq("user_id", userId)
     .eq("is_active", true)
     .order("created_at", { ascending: true });
@@ -42,6 +42,7 @@ export async function GET() {
       model: string | null;
       year: number | null;
       data_source: string;
+      virtual_key_paired: boolean | null;
     }) => ({
       id: v.id,
       brand: v.brand,
@@ -50,6 +51,7 @@ export async function GET() {
       model: v.model ?? null,
       year: v.year ?? null,
       dataSource: v.data_source,
+      virtualKeyPaired: v.virtual_key_paired ?? false,
     })),
   );
 }

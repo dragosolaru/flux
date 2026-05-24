@@ -151,7 +151,16 @@
 
   "commands": {
     "title": "Comenzi",
-    "subtitle": "Controlează mașina ta de la distanță."
+    "subtitle": "Controlează mașina ta de la distanță.",
+    "panel_title": "Comenzi rapide",
+    "lock": "Blocare",
+    "unlock": "Deblocare",
+    "climate_on": "Climatizare pornită",
+    "climate_off": "Climatizare oprită",
+    "honk": "Claxon",
+    "flash": "Lumini",
+    "no_commands": "Nicio comandă disponibilă pentru această mașină.",
+    "sending": "Se trimite…"
   },
 
   "garage": {

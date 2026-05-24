@@ -151,7 +151,16 @@
 
   "commands": {
     "title": "Commands",
-    "subtitle": "Control your car remotely."
+    "subtitle": "Control your car remotely.",
+    "panel_title": "Quick commands",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "climate_on": "Climate on",
+    "climate_off": "Climate off",
+    "honk": "Honk",
+    "flash": "Flash lights",
+    "no_commands": "No commands available for this vehicle.",
+    "sending": "Sending…"
   },
 
   "garage": {

@@ -2,6 +2,7 @@
 
 import { Fan, Lock, Megaphone, Sparkles, Unlock } from "lucide-react";
 import type { ComponentType } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ interface CommandPanelProps {
 }
 
 export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
+  const t = useTranslations("commands");
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables } = useVehicleCommand();
 
@@ -35,30 +37,38 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const lockCmd: CommandName = state?.isLocked === false ? "lock" : "unlock";
   const stateLoaded = state != null;
 
+  // Compute translated labels at component level (not inside callbacks/conditions)
+  const labelLock = t("lock");
+  const labelUnlock = t("unlock");
+  const labelClimateOn = t("climate_on");
+  const labelClimateOff = t("climate_off");
+  const labelHonk = t("honk");
+  const labelFlash = t("flash");
+
   const buttons = [
     caps.commands.lock && caps.commands.unlock && {
       // While loading, show "Lock" label (defensive default) — button stays
       // disabled until state arrives so the action matches the label.
       cmd: stateLoaded ? lockCmd : "lock",
-      label: stateLoaded ? (lockCmd === "lock" ? "Lock" : "Unlock") : "Lock",
+      label: stateLoaded ? (lockCmd === "lock" ? labelLock : labelUnlock) : labelLock,
       icon: stateLoaded ? (lockCmd === "lock" ? Lock : Unlock) : Lock,
       inFlight: inFlight("lock") || inFlight("unlock"),
     },
     caps.commands.climateOn && caps.commands.climateOff && {
       cmd: climateCmd,
-      label: climateActive ? "Climate off" : "Climate on",
+      label: climateActive ? labelClimateOff : labelClimateOn,
       icon: Fan,
       inFlight: inFlight("climate_on") || inFlight("climate_off"),
     },
     caps.commands.honk && {
       cmd: "honk" as CommandName,
-      label: "Honk",
+      label: labelHonk,
       icon: Megaphone,
       inFlight: inFlight("honk"),
     },
     caps.commands.flash && {
       cmd: "flash" as CommandName,
-      label: "Flash",
+      label: labelFlash,
       icon: Sparkles,
       inFlight: inFlight("flash"),
     },
@@ -67,12 +77,12 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Quick commands</CardTitle>
+        <CardTitle className="text-base">{t("panel_title")}</CardTitle>
       </CardHeader>
       <CardContent>
         {buttons.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No commands available for this vehicle.
+            {t("no_commands")}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -88,7 +98,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
                 <Icon className="size-5" />
                 <span className="text-xs">{label}</span>
                 {fly && (
-                  <span className="text-[10px] text-muted-foreground">sending…</span>
+                  <span className="text-[10px] text-muted-foreground">{t("sending")}</span>
                 )}
               </Button>
             ))}
