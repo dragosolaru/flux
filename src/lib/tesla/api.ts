@@ -115,7 +115,7 @@ function mapVehicleData(
     timeToFullMinutes: charge?.time_to_full_charge != null
       ? Math.round(charge.time_to_full_charge * 60)
       : null,
-    batteryHealthPct: null,
+    batteryHealthPct: estimateSoH(charge, r.vin),
     cellVoltages: null,
     // drive / motion
     motionState: null,
@@ -190,6 +190,56 @@ export async function sendVehicleCommand(params: {
   }
 
   return (await res.json()) as TeslaCommandResponse;
+}
+
+/**
+ * Rated range (miles) for known Tesla models, keyed by the 4th VIN character
+ * (0-indexed position 3), which encodes the model/variant.
+ * Sources: EPA-rated range figures.
+ */
+const RATED_RANGE_BY_VIN_MODEL: Record<string, number> = {
+  // Model 3 Long Range
+  F: 358,
+  // Model Y Long Range
+  Y: 330,
+  // Model S
+  S: 405,
+  // Model X
+  X: 348,
+};
+
+const DEFAULT_RATED_RANGE_MILES = 330;
+
+/**
+ * Estimates State of Health (SoH) from charge_state telemetry.
+ *
+ * Formula:
+ *   estimated_full_range = battery_range / (battery_level / 100)
+ *   soh = (estimated_full_range / rated_range) × 100
+ *
+ * Only computed when battery_level > 15 to avoid noise at very low SOC.
+ * Result is clamped to [50, 105] and rounded to 1 decimal.
+ */
+function estimateSoH(
+  charge: import("@/types/tesla").TeslaChargeState | null,
+  vin: string | undefined,
+): number | null {
+  if (!charge) return null;
+  const { battery_level: soc, battery_range: rangeAtSoc } = charge;
+  if (soc == null || rangeAtSoc == null) return null;
+  if (soc <= 15) return null;
+
+  const estimatedFullRange = rangeAtSoc / (soc / 100);
+
+  // VIN character at index 3 identifies the model/variant.
+  const modelKey = vin?.[3]?.toUpperCase() ?? "";
+  const ratedRange =
+    RATED_RANGE_BY_VIN_MODEL[modelKey] ?? DEFAULT_RATED_RANGE_MILES;
+
+  const soh = (estimatedFullRange / ratedRange) * 100;
+
+  // Clamp to [50, 105] and round to 1 decimal.
+  return Math.round(Math.min(105, Math.max(50, soh)) * 10) / 10;
 }
 
 function mapChargingState(
