@@ -1,6 +1,7 @@
 "use client";
 
 import { Car, Fuel, Home, TrendingUp, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CostAggregation, MonthlyBucket } from "@/types/costs";
@@ -26,21 +27,23 @@ function fmtRon(n: number | null | undefined) {
 }
 
 function MonthlyCostChart({ months }: { months: MonthlyBucket[] }) {
+  const t = useTranslations("costs");
   if (months.length === 0) return null;
   const maxCost = Math.max(...months.map((m) => m.costRon), 1);
+  const rawMonths = t.raw("months");
+  const MONTH_NAMES = Array.isArray(rawMonths) ? rawMonths as string[] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           <TrendingUp className="size-4" />
-          Trend lunar
+          {t("chart_monthly_trend")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex h-28 items-end gap-1.5 pb-5">
           {months.slice(-12).map((m) => {
-            const MONTH_NAMES = ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"];
             const monthIdx = parseInt(m.month.slice(5)) - 1;
             const label = MONTH_NAMES[monthIdx] ?? m.month.slice(5);
             return (
@@ -65,6 +68,8 @@ function MonthlyCostChart({ months }: { months: MonthlyBucket[] }) {
 }
 
 export function CostDashboard({ data, isLoading }: CostDashboardProps) {
+  const t = useTranslations("costs");
+
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -92,7 +97,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <Car className="size-4" />
-              Cost per km
+              {t("kpi_cost_per_km")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
@@ -100,13 +105,13 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
               <>
                 <div className="flex justify-between text-sm">
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Home className="size-3" /> Acasă
+                    <Home className="size-3" /> {t("home")}
                   </span>
                   <span className="font-medium">{fmt(data.costPerKmHome, 3)} lei/km</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Zap className="size-3" /> Public
+                    <Zap className="size-3" /> {t("public")}
                   </span>
                   <span className="font-medium">{fmt(data.costPerKmPublic, 3)} lei/km</span>
                 </div>
@@ -118,7 +123,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
                 )}
               </>
             ) : (
-              <p className="text-xs text-muted-foreground">Adaugă documente pentru a vedea costul/km</p>
+              <p className="text-xs text-muted-foreground">{t("add_docs_hint")}</p>
             )}
           </CardContent>
         </Card>
@@ -128,7 +133,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <Home className="size-4" />
-              Acasă vs Public
+              {t("kpi_home_vs_public")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -150,7 +155,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">Fără date încă</p>
+              <p className="text-xs text-muted-foreground">{t("no_data")}</p>
             )}
           </CardContent>
         </Card>
@@ -160,7 +165,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <Zap className="size-4" />
-              Total energie
+              {t("kpi_total_energy")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
@@ -177,7 +182,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <Fuel className="size-4" />
-              vs Benzină
+              {t("kpi_vs_fuel")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">

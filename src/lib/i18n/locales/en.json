@@ -145,5 +145,18 @@
     "title": "Garage",
     "add_vehicle": "Add vehicle",
     "fleet_totals": "Fleet totals"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Cost per km",
+    "kpi_home_vs_public": "Home vs Public",
+    "kpi_total_energy": "Total energy",
+    "kpi_vs_fuel": "vs Fuel",
+    "chart_monthly_trend": "Monthly trend",
+    "no_data": "No data yet",
+    "add_docs_hint": "Add documents to see cost/km",
+    "home": "Home",
+    "public": "Public",
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   }
 }
