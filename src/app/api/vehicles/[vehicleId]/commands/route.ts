@@ -4,11 +4,13 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import { getBrand } from "@/lib/brands/registry";
+import { TESLA_COMMAND_MAP } from "@/lib/brands/tesla/command-map";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { applyCommand } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot, recordCommandEvent } from "@/lib/mock/persistence";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { sendVehicleCommand } from "@/lib/tesla/api";
 import type { CommandName } from "@/types/history";
 import type { BrandKey } from "@/lib/brands/types";
 
@@ -71,7 +73,30 @@ export async function POST(
 
   // Live path
   if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
-    return NextResponse.json({ message: "Live commands not yet wired for this brand" }, { status: 501 });
+    if (vehicle.brand !== "tesla" || !vehicle.tesla_vehicle_id) {
+      return NextResponse.json({ message: "Live commands not supported for this vehicle" }, { status: 501 });
+    }
+    const entry = TESLA_COMMAND_MAP[command];
+    if (!entry) {
+      return NextResponse.json({ message: "command-not-supported-live" }, { status: 400 });
+    }
+    try {
+      const result = await sendVehicleCommand({
+        vehicleId: vehicle.id,
+        teslaVehicleId: vehicle.tesla_vehicle_id,
+        command: entry.teslaCmd,
+        body: entry.buildBody(args),
+      });
+      await recordCommandEvent(vehicleId, command, args, result.response.result, result.response.reason || null);
+      return NextResponse.json({ success: result.response.result, result: result.response.reason });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Command failed";
+      await recordCommandEvent(vehicleId, command, args, false, msg).catch(() => null);
+      if (msg.includes("Vehicle Command Protocol required")) {
+        return NextResponse.json({ success: false, result: msg, code: "VCP_REQUIRED" }, { status: 412 });
+      }
+      return NextResponse.json({ success: false, result: msg }, { status: 502 });
+    }
   }
 
   // Mock path

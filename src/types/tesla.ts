@@ -85,4 +85,13 @@ export type TeslaCommand =
   | "flash_lights"
   | "auto_conditioning_start"
   | "auto_conditioning_stop"
-  | "set_charge_limit";
+  | "set_charge_limit"
+  | "set_charging_amps"
+  | "charge_start"
+  | "charge_stop"
+  | "charge_port_door_open"
+  | "charge_port_door_close"
+  | "window_control"
+  | "set_sentry_mode"
+  | "remote_start_drive"
+  | "set_temps";
