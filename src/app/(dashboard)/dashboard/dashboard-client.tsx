@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BatteryHealthCard } from "@/components/vehicle/BatteryHealthCard";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { FeatureGate } from "@/components/layout/FeatureGate";
 import { DoorsWindowsCard } from "@/components/vehicle/DoorsWindowsCard";
 import { ScoresCard } from "@/components/vehicle/ScoresCard";
 import { SentryDashcamCard } from "@/components/vehicle/SentryDashcamCard";
@@ -68,7 +69,9 @@ export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClie
 
           <div className="grid gap-4 md:grid-cols-2">
             <ChargingStatus state={data} isLoading={isLoading} />
-            <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
+            <FeatureGate capability="COMMANDS" fallback="null">
+              <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
+            </FeatureGate>
           </div>
 
           {/* Extended telemetry — each section gated on brand capability */}

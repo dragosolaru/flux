@@ -23,6 +23,7 @@ import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 
 const SHORT_ID_RE = /^[a-f0-9]{8}$/i;
+const FULL_UUID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -81,9 +82,11 @@ async function firstActiveVehicle(userId: string, supabase: AdminClient): Promis
 
 async function findUserByEmailLocalPart(localPart: string, supabase: AdminClient): Promise<string | null> {
   const { data: authList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  // Exact match only — normalization (strip dots/dashes) causes cross-user collisions
+  // (e.g. john.doe@ and johndoe@ both normalize to johndoe).
   const user = authList?.users.find(
     (u: { id: string; email?: string }) =>
-      u.email?.toLowerCase().split("@")[0].replace(/[^a-z0-9]/g, "") === localPart,
+      u.email?.toLowerCase().split("@")[0] === localPart,
   );
   return user?.id ?? null;
 }
@@ -117,7 +120,21 @@ async function findVehicleByNickname(subject: string, supabase: AdminClient): Pr
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
-  // 1. +subaddress = vehicle short ID (first 8 hex chars of UUID)
+  // 1a. +subaddress = full vehicle UUID (legacy format: flux+<full-uuid>@...)
+  if (subaddress && FULL_UUID_RE.test(subaddress)) {
+    const { data } = await supabase
+      .from("vehicles")
+      .select("id, user_id")
+      .eq("id", subaddress)
+      .eq("is_active", true)
+      .single();
+    if (data) {
+      const v = data as { id: string; user_id: string };
+      return { vehicleId: v.id, userId: v.user_id };
+    }
+  }
+
+  // 1b. +subaddress = vehicle short ID (first 8 hex chars of UUID)
   // Use range bounds — ilike doesn't work on PostgreSQL uuid columns.
   if (subaddress && SHORT_ID_RE.test(subaddress)) {
     const { data } = await supabase

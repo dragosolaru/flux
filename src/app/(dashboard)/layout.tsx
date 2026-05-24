@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { BottomNav } from "@/components/layout/BottomNav";
 import { MockGlobalBanner } from "@/components/layout/MockGlobalBanner";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
@@ -22,8 +23,9 @@ export default async function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <MockGlobalBanner />
-        <main className="flex-1 px-4 py-6 md:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 pb-24 md:px-8 md:pb-6">{children}</main>
       </div>
+      <BottomNav />
     </div>
   );
 }

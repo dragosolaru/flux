@@ -9,7 +9,8 @@ import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 const CONFIDENCE_THRESHOLD = 0.7;
 
 function averageConfidence(c: ParsedDocument["confidence"]): number {
-  const vals = Object.values(c);
+  const vals = Object.values(c).filter((v) => typeof v === "number");
+  if (vals.length === 0) return 0;
   return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 

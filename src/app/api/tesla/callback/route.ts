@@ -34,7 +34,10 @@ export async function GET(req: NextRequest) {
   // State is self-verifying — HMAC keyed to the current user's session ID.
   // Even if an attacker pre-seeded cookies, the HMAC will not match for a
   // different session. Comparison inside verifyState is constant-time.
-  if (!verifier || !verifyState(state, session.user.id)) {
+  // verifyState can throw if NEXTAUTH_SECRET is missing — treat as mismatch.
+  let stateValid = false;
+  try { stateValid = verifyState(state, session.user.id); } catch { stateValid = false; }
+  if (!verifier || !stateValid) {
     return NextResponse.redirect(
       new URL("/connect/tesla?error=state_mismatch", req.url),
     );

@@ -12,9 +12,10 @@ export function useDocuments(vehicleId: string) {
       const hasPending = query.state.data?.some(
         (d) => d.status === "pending" || d.status === "processing",
       );
-      // Fast poll when processing; slow poll always so email docs appear automatically.
+      // Fast poll when processing; slow poll so email docs appear automatically.
       return hasPending ? 3000 : 15000;
     },
+    refetchIntervalInBackground: false,
     staleTime: 5000,
   });
 }

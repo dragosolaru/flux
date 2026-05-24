@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import {
   Card,
@@ -7,6 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
+import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
+import { LocalePicker } from "@/components/settings/LocalePicker";
 import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
 import { auth } from "@/lib/auth";
@@ -20,6 +24,8 @@ export const metadata = {
 export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const t = await getTranslations();
 
   const supabase = createSupabaseAdminClient();
 
@@ -41,12 +47,30 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("settings.title")}</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Account</CardTitle>
-          <CardDescription>How you sign in to Flux.</CardDescription>
+          <CardTitle className="text-base">{t("settings.section.preferences")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <LocalePicker />
+          <CurrencyPicker />
+        </CardContent>
+      </Card>
+
+      <Card id="home-location">
+        <CardHeader>
+          <CardTitle className="text-base">{t("settings.section.location")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HomeLocationPicker />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("settings.section.account")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1.5 text-sm">
           <Row label="Name" value={session.user.name ?? "—"} />
@@ -78,9 +102,9 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="tariff">
         <CardHeader>
-          <CardTitle className="text-base">Energy tariff</CardTitle>
+          <CardTitle className="text-base">{t("settings.section.tariff")}</CardTitle>
           <CardDescription>
             Choose your electricity provider for price curves and smart-charge recommendations.
           </CardDescription>

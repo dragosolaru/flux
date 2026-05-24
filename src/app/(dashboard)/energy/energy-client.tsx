@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useState, type ChangeEvent } from "react";
+import { useCallback, type ChangeEvent } from "react";
 import { RefreshCw, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FeatureGate } from "@/components/layout/FeatureGate";
 import { PriceCurveChart } from "@/components/energy/PriceCurveChart";
 import { SmartChargeCard } from "@/components/energy/SmartChargeCard";
 import { apiFetch } from "@/lib/api-fetch";
+import { pageVariants } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
 interface TariffResponse extends TariffForecast {
@@ -59,7 +62,13 @@ export function EnergyClient() {
   const currentPrice = forecast?.currentPrice;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+    <FeatureGate capability="TARIFF">
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+        className="mx-auto flex max-w-5xl flex-col gap-4"
+      >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Energy</h1>
@@ -176,6 +185,7 @@ export function EnergyClient() {
 
       {/* Per-vehicle recommendations pulled from garage */}
       <SmartChargeCard forecast={forecast ?? null} />
-    </div>
+      </motion.div>
+    </FeatureGate>
   );
 }
