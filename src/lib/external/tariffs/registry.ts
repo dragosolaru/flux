@@ -1,4 +1,5 @@
 import type { TariffProvider } from "./types";
+import { tibber } from "./providers/tibber";
 import { tibberMock } from "./providers/tibber-mock";
 import { octopusMock } from "./providers/octopus-mock";
 import { awattarMock } from "./providers/awattar-mock";
@@ -13,6 +14,8 @@ export const TARIFF_PROVIDERS: Record<string, TariffProvider> = {
   "eon-ro":         eonRo,
   "enel-ro":        enelRo,
   "hidroelectrica": hidroelectrica,
+  // Real international providers (unlock hasTariff = true)
+  "tibber":         tibber,
   // Mock providers for demo/testing
   "tibber-mock":    tibberMock,
   "octopus-mock":   octopusMock,
