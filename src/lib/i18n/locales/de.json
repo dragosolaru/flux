@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Laden…",
+    "error": "Fehler",
+    "retry": "Erneut versuchen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "continue": "Weiter",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "refresh": "Aktualisieren",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "soon": "Bald"
+  },
+
+  "app": {
+    "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."
+  },
+
+  "nav": {
+    "section": {
+      "car": "Auto",
+      "money": "Geld & Energie",
+      "planning": "Planung"
+    },
+    "dashboard": "Dashboard",
+    "charging": "Laden",
+    "commands": "Befehle",
+    "costs": "Kosten",
+    "energy": "Energie & Tarife",
+    "charging_map": "Ladestation-Karte",
+    "trip": "Reiseplaner",
+    "settings": "Einstellungen",
+    "about": "Info",
+    "more": "Mehr",
+    "mobile": {
+      "car": "Auto",
+      "charging": "Laden",
+      "costs": "Kosten",
+      "energy": "Energie",
+      "more": "Mehr"
+    },
+    "indicator": {
+      "tooltip": {
+        "vehicle": "Fahrzeug hinzufügen zum Entsperren",
+        "live": "Tesla verbinden für Echtdaten",
+        "tariff": "Energietarif konfigurieren",
+        "commands": "Virtual Key für Befehle einrichten"
+      }
+    }
+  },
+
+  "mock_banner": {
+    "title": "Simulierte Daten",
+    "subtitle": "Tesla verbinden für Echtdaten",
+    "cta": "Tesla verbinden"
+  },
+
+  "empty_states": {
+    "no_vehicle": {
+      "title": "Füge dein erstes Auto hinzu",
+      "subtitle": "Verbinde deinen Tesla, um SOC, Reichweite und Ladestatus zu sehen.",
+      "cta": "Tesla hinzufügen"
+    },
+    "no_live": {
+      "title": "Echtdaten direkt vom Auto",
+      "subtitle": "Tesla verbinden für live SOC, Reichweite, Standort und Laden.",
+      "cta": "Tesla verbinden"
+    },
+    "no_tariff": {
+      "title": "Wir wissen wann Laden am günstigsten ist",
+      "subtitle": "Konfiguriere deinen Energieanbieter und wir zeigen dir die optimale Stunde basierend auf deinem echten Tarif.",
+      "cta": "Tarif konfigurieren"
+    },
+    "no_commands": {
+      "title": "Auto vom Browser steuern",
+      "subtitle": "Koppele deinen Virtual Key und sende Befehle: Klima, Sperren, Laden, Fenster.",
+      "cta": "Virtual Key einrichten"
+    }
+  },
+
+  "onboarding": {
+    "title": "Willkommen bei Flux",
+    "subtitle": "Kosten verwalten, deinen Tesla überwachen und steuern — alles an einem Ort.",
+    "cta_primary": "Tesla verbinden",
+    "cta_secondary": "Mit Demo-Daten erkunden"
+  },
+
+  "settings": {
+    "title": "Einstellungen",
+    "section": {
+      "preferences": "Präferenzen",
+      "location": "Standort",
+      "tariff": "Energietarif",
+      "account": "Konto"
+    },
+    "locale": {
+      "label": "Sprache",
+      "description": "Ändere die Sprache der Benutzeroberfläche."
+    },
+    "currency": {
+      "label": "Anzeigewährung",
+      "description": "Alle Beträge werden in deine bevorzugte Währung umgerechnet."
+    },
+    "home_location": {
+      "label": "Heimatadresse",
+      "description": "Wird verwendet, um Heimladesitzungen zu identifizieren und die Kosten genau zu berechnen.",
+      "placeholder": "Musterstraße 1, Berlin",
+      "verify": "Überprüfen",
+      "verifying": "Wird überprüft…",
+      "verified": "Adresse bestätigt",
+      "error": "Adresse nicht gefunden. Überprüfe die Schreibweise."
+    }
+  },
+
+  "ingest": {
+    "title": "Beleg hinzufügen",
+    "subtitle": "Sende einen Beleg von einem beliebigen Netzwerk — Renovatio, IONITY, MOL, Petrom — wir verarbeiten ihn automatisch.",
+    "option": {
+      "upload": {
+        "label": "Foto",
+        "description": "Hochladen"
+      },
+      "email": {
+        "label": "E-Mail",
+        "description": "Senden an"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Bald"
+      }
+    }
+  },
+
+  "commands": {
+    "title": "Befehle",
+    "subtitle": "Auto fernsteuern."
+  },
+
+  "garage": {
+    "title": "Garage",
+    "add_vehicle": "Fahrzeug hinzufügen",
+    "fleet_totals": "Flottenübersicht"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Kosten pro km",
+    "kpi_home_vs_public": "Zuhause vs Öffentlich",
+    "kpi_total_energy": "Gesamtenergie",
+    "kpi_vs_fuel": "vs Kraftstoff",
+    "chart_monthly_trend": "Monatlicher Trend",
+    "no_data": "Noch keine Daten",
+    "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
+    "home": "Zuhause",
+    "public": "Öffentlich",
+    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Betöltés…",
+    "error": "Hiba",
+    "retry": "Próbálja újra",
+    "save": "Mentés",
+    "cancel": "Mégse",
+    "close": "Bezárás",
+    "continue": "Folytatás",
+    "delete": "Törlés",
+    "edit": "Szerkesztés",
+    "back": "Vissza",
+    "next": "Következő",
+    "refresh": "Frissítés",
+    "copy": "Másolás",
+    "copied": "Másolva",
+    "soon": "Hamarosan"
+  },
+
+  "app": {
+    "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."
+  },
+
+  "nav": {
+    "section": {
+      "car": "Az autóm",
+      "money": "Pénz & energia",
+      "planning": "Tervezés"
+    },
+    "dashboard": "Dashboard",
+    "charging": "Töltés",
+    "commands": "Parancsok",
+    "costs": "Költségek",
+    "energy": "Energia & díjszabás",
+    "charging_map": "Töltőállomás-térkép",
+    "trip": "Útitervező",
+    "settings": "Beállítások",
+    "about": "Névjegy",
+    "more": "Több",
+    "mobile": {
+      "car": "Az autóm",
+      "charging": "Töltés",
+      "costs": "Költségek",
+      "energy": "Energia",
+      "more": "Több"
+    },
+    "indicator": {
+      "tooltip": {
+        "vehicle": "Adjon hozzá járművet a feloldáshoz",
+        "live": "Tesla csatlakoztatása valós adatokért",
+        "tariff": "Konfigurálja az energiadíjat",
+        "commands": "Állítsa be a Virtual Key-t a parancsokhoz"
+      }
+    }
+  },
+
+  "mock_banner": {
+    "title": "Szimulált adatok",
+    "subtitle": "Tesla csatlakoztatása valós adatokért",
+    "cta": "Tesla csatlakoztatása"
+  },
+
+  "empty_states": {
+    "no_vehicle": {
+      "title": "Adja hozzá az első autóját",
+      "subtitle": "Csatlakoztassa Tesla-ját az SOC, hatótáv és töltési állapot megtekintéséhez.",
+      "cta": "Tesla hozzáadása"
+    },
+    "no_live": {
+      "title": "Valós adatok közvetlenül az autóból",
+      "subtitle": "Tesla csatlakoztatása élő SOC, hatótáv, helyszín és töltési adatokért.",
+      "cta": "Tesla csatlakoztatása"
+    },
+    "no_tariff": {
+      "title": "Tudjuk, mikor a legolcsóbb a töltés",
+      "subtitle": "Konfigurálja az energiaszolgáltatóját, és megmutatjuk az optimális időpontot a valós tarifa alapján.",
+      "cta": "Díjszabás konfigurálása"
+    },
+    "no_commands": {
+      "title": "Vezérelje az autót a böngészőből",
+      "subtitle": "Párosítsa a Virtual Key-t és küldjön parancsokat: klíma, zárolás, töltés, ablakok.",
+      "cta": "Virtual Key beállítása"
+    }
+  },
+
+  "onboarding": {
+    "title": "Üdvözli a Flux",
+    "subtitle": "Kezelje a költségeket, figyelje és vezérelje Tesla-ját — mindent egy helyen.",
+    "cta_primary": "Tesla csatlakoztatása",
+    "cta_secondary": "Fedezze fel demóadatokkal"
+  },
+
+  "settings": {
+    "title": "Beállítások",
+    "section": {
+      "preferences": "Preferenciák",
+      "location": "Helyszín",
+      "tariff": "Energiadíj",
+      "account": "Fiók"
+    },
+    "locale": {
+      "label": "Nyelv",
+      "description": "Módosítsa a felület nyelvét."
+    },
+    "currency": {
+      "label": "Megjelenítési pénznem",
+      "description": "Minden összeg az Ön által preferált pénznemre kerül átváltásra."
+    },
+    "home_location": {
+      "label": "Otthoni cím",
+      "description": "Az otthoni töltési munkamenetek azonosítására és a pontos költségszámításhoz használatos.",
+      "placeholder": "Példa utca 1, Budapest",
+      "verify": "Ellenőrzés",
+      "verifying": "Ellenőrzés…",
+      "verified": "Cím megerősítve",
+      "error": "A cím nem található. Ellenőrizze a helyesírást."
+    }
+  },
+
+  "ingest": {
+    "title": "Bizonylat hozzáadása",
+    "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
+    "option": {
+      "upload": {
+        "label": "Fotó",
+        "description": "Feltöltés"
+      },
+      "email": {
+        "label": "E-mail",
+        "description": "Küldés ide"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Hamarosan"
+      }
+    }
+  },
+
+  "commands": {
+    "title": "Parancsok",
+    "subtitle": "Vezérelje távolról az autót."
+  },
+
+  "garage": {
+    "title": "Garázs",
+    "add_vehicle": "Jármű hozzáadása",
+    "fleet_totals": "Flotta összesítő"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Költség km-enként",
+    "kpi_home_vs_public": "Otthon vs Nyilvános",
+    "kpi_total_energy": "Összes energia",
+    "kpi_vs_fuel": "vs Üzemanyag",
+    "chart_monthly_trend": "Havi trend",
+    "no_data": "Még nincs adat",
+    "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
+    "home": "Otthon",
+    "public": "Nyilvános",
+    "months": ["jan", "feb", "már", "ápr", "máj", "jún", "júl", "aug", "szep", "okt", "nov", "dec"]
+  }
+}

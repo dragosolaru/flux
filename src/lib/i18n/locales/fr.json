@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Chargement…",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "continue": "Continuer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "refresh": "Actualiser",
+    "copy": "Copier",
+    "copied": "Copié",
+    "soon": "Bientôt"
+  },
+
+  "app": {
+    "tagline": "Gérez votre Tesla — coûts, recharge, commandes."
+  },
+
+  "nav": {
+    "section": {
+      "car": "Ma voiture",
+      "money": "Argent & énergie",
+      "planning": "Planification"
+    },
+    "dashboard": "Tableau de bord",
+    "charging": "Recharge",
+    "commands": "Commandes",
+    "costs": "Coûts",
+    "energy": "Énergie & tarifs",
+    "charging_map": "Carte des bornes",
+    "trip": "Planificateur de trajet",
+    "settings": "Paramètres",
+    "about": "À propos",
+    "more": "Plus",
+    "mobile": {
+      "car": "Ma voiture",
+      "charging": "Recharge",
+      "costs": "Coûts",
+      "energy": "Énergie",
+      "more": "Plus"
+    },
+    "indicator": {
+      "tooltip": {
+        "vehicle": "Ajoutez un véhicule pour déverrouiller",
+        "live": "Connectez Tesla pour des données en direct",
+        "tariff": "Configurez votre tarif énergétique",
+        "commands": "Configurez la clé virtuelle pour les commandes"
+      }
+    }
+  },
+
+  "mock_banner": {
+    "title": "Données simulées",
+    "subtitle": "Connectez Tesla pour des données réelles",
+    "cta": "Connecter Tesla"
+  },
+
+  "empty_states": {
+    "no_vehicle": {
+      "title": "Ajoutez votre première voiture",
+      "subtitle": "Connectez votre Tesla pour voir le SOC, l'autonomie et l'état de charge.",
+      "cta": "Ajouter Tesla"
+    },
+    "no_live": {
+      "title": "Données réelles, directement de votre voiture",
+      "subtitle": "Connectez Tesla pour le SOC en direct, l'autonomie, la localisation et la recharge.",
+      "cta": "Connecter Tesla"
+    },
+    "no_tariff": {
+      "title": "Nous savons quand charger est le moins cher",
+      "subtitle": "Configurez votre fournisseur d'énergie et nous vous indiquerons l'heure optimale selon votre tarif réel.",
+      "cta": "Configurer le tarif"
+    },
+    "no_commands": {
+      "title": "Contrôlez votre voiture depuis le navigateur",
+      "subtitle": "Associez votre clé virtuelle et envoyez des commandes : climatisation, verrouillage, charge, vitres.",
+      "cta": "Configurer la clé virtuelle"
+    }
+  },
+
+  "onboarding": {
+    "title": "Bienvenue sur Flux",
+    "subtitle": "Gérez les coûts, surveillez et contrôlez votre Tesla — tout en un seul endroit.",
+    "cta_primary": "Connecter Tesla",
+    "cta_secondary": "Explorer avec les données démo"
+  },
+
+  "settings": {
+    "title": "Paramètres",
+    "section": {
+      "preferences": "Préférences",
+      "location": "Localisation",
+      "tariff": "Tarif énergétique",
+      "account": "Compte"
+    },
+    "locale": {
+      "label": "Langue",
+      "description": "Changer la langue de l'interface."
+    },
+    "currency": {
+      "label": "Devise d'affichage",
+      "description": "Tous les montants sont convertis dans votre devise préférée."
+    },
+    "home_location": {
+      "label": "Adresse domicile",
+      "description": "Utilisée pour identifier les sessions de charge à domicile et calculer précisément le coût.",
+      "placeholder": "1 rue de la Paix, Paris",
+      "verify": "Vérifier",
+      "verifying": "Vérification…",
+      "verified": "Adresse vérifiée",
+      "error": "Adresse introuvable. Vérifiez l'orthographe."
+    }
+  },
+
+  "ingest": {
+    "title": "Ajouter un reçu",
+    "subtitle": "Envoyez un reçu de n'importe quel réseau — Renovatio, IONITY, MOL, Petrom — nous le traiterons automatiquement.",
+    "option": {
+      "upload": {
+        "label": "Photo",
+        "description": "Télécharger"
+      },
+      "email": {
+        "label": "E-mail",
+        "description": "Envoyer à"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Bientôt"
+      }
+    }
+  },
+
+  "commands": {
+    "title": "Commandes",
+    "subtitle": "Contrôlez votre voiture à distance."
+  },
+
+  "garage": {
+    "title": "Garage",
+    "add_vehicle": "Ajouter un véhicule",
+    "fleet_totals": "Totaux de la flotte"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Coût par km",
+    "kpi_home_vs_public": "Domicile vs Public",
+    "kpi_total_energy": "Énergie totale",
+    "kpi_vs_fuel": "vs Carburant",
+    "chart_monthly_trend": "Tendance mensuelle",
+    "no_data": "Aucune donnée",
+    "add_docs_hint": "Ajoutez des documents pour voir coût/km",
+    "home": "Domicile",
+    "public": "Public",
+    "months": ["jan.", "fév.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+  }
+}
