@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -44,6 +44,14 @@ export function ChargingClient({
   const { mutate, isPending } = useVehicleCommand();
   const { data: caps } = useCapabilities();
   const syncMutation = useChargingHistorySync(vehicleId);
+
+  const hasSyncedRef = useRef(false);
+  useEffect(() => {
+    if (caps?.hasLiveVehicle && !hasSyncedRef.current) {
+      hasSyncedRef.current = true;
+      syncMutation.mutate();
+    }
+  }, [caps?.hasLiveVehicle]); // eslint-disable-line
 
   const [limit, setLimit] = useState<number>(data?.chargeLimit ?? 80);
   const [scheduled, setScheduled] = useState(false);

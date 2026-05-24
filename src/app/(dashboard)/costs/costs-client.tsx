@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Inbox, Loader2, Receipt } from "lucide-react";
+import { Download, Inbox, Loader2, Receipt } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
 import { CostDashboard } from "@/components/costs/CostDashboard";
 import { IngestCard } from "@/components/costs/IngestCard";
@@ -24,6 +25,7 @@ interface CostsClientProps {
 }
 
 export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
+  const t = useTranslations("costs");
   const qc = useQueryClient();
   const { data: documents, isLoading: docsLoading } = useDocuments(vehicleId);
   const { data: costs, isLoading: costsLoading } = useCosts(vehicleId);
@@ -59,9 +61,21 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       animate="visible"
       className="mx-auto flex max-w-5xl flex-col gap-6"
     >
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Costuri</h1>
-        <p className="text-sm text-muted-foreground">{vehicleName}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("page_title")}</h1>
+          <p className="text-sm text-muted-foreground">{vehicleName}</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+        >
+          <a href={`/api/costs/export?vehicleId=${vehicleId}`} download>
+            <Download className="size-4" />
+            {t("export_csv")}
+          </a>
+        </Button>
       </div>
 
       <CostDashboard data={costs} isLoading={costsLoading} />
@@ -72,7 +86,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
         <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">
             <Inbox className="size-3.5" />
-            Lipsesc documente trimise pe email?
+            {t("missing_email_docs")}
           </span>
           <Button
             variant="ghost"
@@ -82,7 +96,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
             disabled={recovering}
           >
             {recovering && <Loader2 className="size-3 animate-spin" />}
-            {recoverResult ? `Recuperate: ${recoverResult.recovered}` : "Recuperează"}
+            {recoverResult ? t("recovered", { count: recoverResult.recovered }) : t("recover")}
           </Button>
         </div>
       </motion.div>
@@ -105,8 +119,8 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       {!docsLoading && (!documents || documents.length === 0) && (
         <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
           <Receipt className="size-10 opacity-30" />
-          <p className="text-sm">Niciun document încă.</p>
-          <p className="text-xs">Uploadează prima factură sau bon pentru a vedea costurile.</p>
+          <p className="text-sm">{t("no_docs_title")}</p>
+          <p className="text-xs">{t("no_docs_hint")}</p>
         </div>
       )}
     </motion.div>

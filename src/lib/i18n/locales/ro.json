@@ -170,6 +170,13 @@
     "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
     "home": "Acasă",
     "public": "Public",
-    "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"]
+    "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"],
+    "page_title": "Costuri",
+    "no_docs_title": "Niciun document încă.",
+    "no_docs_hint": "Uploadează prima factură sau bon pentru a vedea costurile.",
+    "missing_email_docs": "Lipsesc documente trimise pe email?",
+    "recover": "Recuperează",
+    "recovered": "Recuperate: {count}",
+    "export_csv": "Export CSV"
   }
 }

@@ -170,6 +170,13 @@
     "add_docs_hint": "Add documents to see cost/km",
     "home": "Home",
     "public": "Public",
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "page_title": "Costs",
+    "no_docs_title": "No documents yet.",
+    "no_docs_hint": "Upload your first bill or receipt to see costs.",
+    "missing_email_docs": "Missing email documents?",
+    "recover": "Recover",
+    "recovered": "Recovered: {count}",
+    "export_csv": "Export CSV"
   }
 }
