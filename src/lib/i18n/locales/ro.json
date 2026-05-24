@@ -145,5 +145,18 @@
     "title": "Garaj",
     "add_vehicle": "Adaugă mașină",
     "fleet_totals": "Totaluri flotă"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Cost per km",
+    "kpi_home_vs_public": "Acasă vs Public",
+    "kpi_total_energy": "Total energie",
+    "kpi_vs_fuel": "vs Benzină",
+    "chart_monthly_trend": "Trend lunar",
+    "no_data": "Fără date încă",
+    "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
+    "home": "Acasă",
+    "public": "Public",
+    "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"]
   }
 }
