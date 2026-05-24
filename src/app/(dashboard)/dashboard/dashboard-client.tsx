@@ -36,7 +36,13 @@ export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClie
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{vehicleName}</h1>
-          <p className="text-sm text-muted-foreground">Refreshes every 30s</p>
+          <p className="text-sm text-muted-foreground">
+            {data?.dataSource === "live" ? (
+              <><span className="font-medium text-chart-2">Live</span> · updates every 30s</>
+            ) : (
+              "Demo data · updates every 30s"
+            )}
+          </p>
         </div>
         <Button
           variant="ghost"
