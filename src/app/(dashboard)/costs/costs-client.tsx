@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { Download, Inbox, Loader2, Receipt } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -51,7 +52,12 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   }, [documents, vehicleId, qc]);
 
   async function handleUpload(file: File) {
-    await upload(file);
+    try {
+      await upload(file);
+      toast.success("Document adăugat — se procesează…");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload eșuat");
+    }
   }
 
   return (
