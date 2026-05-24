@@ -114,6 +114,19 @@
       "verifying": "Se verifică…",
       "verified": "Adresă verificată",
       "error": "Nu am putut găsi adresa. Verifică ortografia."
+    },
+    "tariff": {
+      "label": "Furnizor energie",
+      "description": "Selectează furnizorul tău de energie electrică pentru prețuri și recomandări precise.",
+      "providers": {
+        "electrica-ro": "Electrica Furnizare",
+        "eon-ro": "E.ON Energie România (ToU)",
+        "enel-ro": "Enel Energie Muntenia",
+        "hidroelectrica": "Hidroelectrica Energie",
+        "tibber-mock": "Tibber (demo)",
+        "octopus-mock": "Octopus Energy (demo)",
+        "awattar-mock": "aWATTar (demo)"
+      }
     }
   },
 
