@@ -1,99 +1,149 @@
 {
-  "common.loading": "Loading…",
-  "common.error": "Something went wrong",
-  "common.retry": "Try again",
-  "common.save": "Save",
-  "common.cancel": "Cancel",
-  "common.close": "Close",
-  "common.continue": "Continue",
-  "common.delete": "Delete",
-  "common.edit": "Edit",
-  "common.back": "Back",
-  "common.next": "Next",
-  "common.refresh": "Refresh",
-  "common.copy": "Copy",
-  "common.copied": "Copied",
-  "common.soon": "Soon",
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "continue": "Continue",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "copied": "Copied",
+    "soon": "Soon"
+  },
 
-  "app.tagline": "Manage your Tesla — costs, charging, commands.",
+  "app": {
+    "tagline": "Manage your Tesla — costs, charging, commands."
+  },
 
-  "nav.section.car": "Car",
-  "nav.section.money": "Money & energy",
-  "nav.section.planning": "Planning",
-  "nav.dashboard": "Dashboard",
-  "nav.charging": "Charging",
-  "nav.commands": "Commands",
-  "nav.costs": "Costs",
-  "nav.energy": "Energy & tariffs",
-  "nav.charging_map": "Charging map",
-  "nav.trip": "Trip planner",
-  "nav.settings": "Settings",
-  "nav.about": "About",
-  "nav.more": "More",
+  "nav": {
+    "section": {
+      "car": "Car",
+      "money": "Money & energy",
+      "planning": "Planning"
+    },
+    "dashboard": "Dashboard",
+    "charging": "Charging",
+    "commands": "Commands",
+    "costs": "Costs",
+    "energy": "Energy & tariffs",
+    "charging_map": "Charging map",
+    "trip": "Trip planner",
+    "settings": "Settings",
+    "about": "About",
+    "more": "More",
+    "mobile": {
+      "car": "Car",
+      "charging": "Charging",
+      "costs": "Costs",
+      "energy": "Energy",
+      "more": "More"
+    },
+    "indicator": {
+      "tooltip": {
+        "vehicle": "Add a vehicle to unlock",
+        "live": "Connect Tesla for live data",
+        "tariff": "Configure your energy tariff",
+        "commands": "Set up Virtual Key for commands"
+      }
+    }
+  },
 
-  "nav.mobile.car": "Car",
-  "nav.mobile.charging": "Charging",
-  "nav.mobile.costs": "Costs",
-  "nav.mobile.energy": "Energy",
-  "nav.mobile.more": "More",
+  "mock_banner": {
+    "title": "Simulated data",
+    "subtitle": "Connect Tesla for real data",
+    "cta": "Connect Tesla"
+  },
 
-  "nav.indicator.tooltip.vehicle": "Add a vehicle to unlock",
-  "nav.indicator.tooltip.live": "Connect Tesla for live data",
-  "nav.indicator.tooltip.tariff": "Configure your energy tariff",
-  "nav.indicator.tooltip.commands": "Set up Virtual Key for commands",
+  "empty_states": {
+    "no_vehicle": {
+      "title": "Add your first car",
+      "subtitle": "Connect your Tesla to see SOC, range, and charging status.",
+      "cta": "Add Tesla"
+    },
+    "no_live": {
+      "title": "Real data, straight from your car",
+      "subtitle": "Connect Tesla for live SOC, range, location, and charging.",
+      "cta": "Connect Tesla"
+    },
+    "no_tariff": {
+      "title": "We know when charging is cheapest",
+      "subtitle": "Configure your energy supplier and we'll tell you the optimal hour based on your real tariff.",
+      "cta": "Configure tariff"
+    },
+    "no_commands": {
+      "title": "Control your car from your browser",
+      "subtitle": "Pair your Virtual Key and send commands: climate, lock, charge, windows.",
+      "cta": "Set up Virtual Key"
+    }
+  },
 
-  "mock_banner.title": "Simulated data",
-  "mock_banner.subtitle": "Connect Tesla for real data",
-  "mock_banner.cta": "Connect Tesla",
+  "onboarding": {
+    "title": "Welcome to Flux",
+    "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
+    "cta_primary": "Connect Tesla",
+    "cta_secondary": "Explore with demo data"
+  },
 
-  "empty_states.no_vehicle.title": "Add your first car",
-  "empty_states.no_vehicle.subtitle": "Connect your Tesla to see SOC, range, and charging status.",
-  "empty_states.no_vehicle.cta": "Add Tesla",
-  "empty_states.no_live.title": "Real data, straight from your car",
-  "empty_states.no_live.subtitle": "Connect Tesla for live SOC, range, location, and charging.",
-  "empty_states.no_live.cta": "Connect Tesla",
-  "empty_states.no_tariff.title": "We know when charging is cheapest",
-  "empty_states.no_tariff.subtitle": "Configure your energy supplier and we'll tell you the optimal hour based on your real tariff.",
-  "empty_states.no_tariff.cta": "Configure tariff",
-  "empty_states.no_commands.title": "Control your car from your browser",
-  "empty_states.no_commands.subtitle": "Pair your Virtual Key and send commands: climate, lock, charge, windows.",
-  "empty_states.no_commands.cta": "Set up Virtual Key",
+  "settings": {
+    "title": "Settings",
+    "section": {
+      "preferences": "Preferences",
+      "location": "Location",
+      "tariff": "Energy tariff",
+      "account": "Account"
+    },
+    "locale": {
+      "label": "Language",
+      "description": "Change the interface language."
+    },
+    "currency": {
+      "label": "Display currency",
+      "description": "All amounts are converted to your preferred currency."
+    },
+    "home_location": {
+      "label": "Home address",
+      "description": "Used to identify home charging sessions and accurately calculate cost.",
+      "placeholder": "123 Example St, Bucharest",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "verified": "Address verified",
+      "error": "Couldn't find that address. Check the spelling."
+    }
+  },
 
-  "onboarding.title": "Welcome to Flux",
-  "onboarding.subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
-  "onboarding.cta_primary": "Connect Tesla",
-  "onboarding.cta_secondary": "Explore with demo data",
+  "ingest": {
+    "title": "Add receipt",
+    "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
+    "option": {
+      "upload": {
+        "label": "Photo",
+        "description": "Upload"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Send to"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "description": "Soon"
+      }
+    }
+  },
 
-  "settings.title": "Settings",
-  "settings.section.preferences": "Preferences",
-  "settings.section.location": "Location",
-  "settings.section.tariff": "Energy tariff",
-  "settings.section.account": "Account",
-  "settings.locale.label": "Language",
-  "settings.locale.description": "Change the interface language.",
-  "settings.currency.label": "Display currency",
-  "settings.currency.description": "All amounts are converted to your preferred currency.",
-  "settings.home_location.label": "Home address",
-  "settings.home_location.description": "Used to identify home charging sessions and accurately calculate cost.",
-  "settings.home_location.placeholder": "123 Example St, Bucharest",
-  "settings.home_location.verify": "Verify",
-  "settings.home_location.verifying": "Verifying…",
-  "settings.home_location.verified": "Address verified",
-  "settings.home_location.error": "Couldn't find that address. Check the spelling.",
+  "commands": {
+    "title": "Commands",
+    "subtitle": "Control your car remotely."
+  },
 
-  "ingest.title": "Add receipt",
-  "ingest.subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
-  "ingest.option.upload.label": "Photo",
-  "ingest.option.upload.description": "Upload",
-  "ingest.option.email.label": "Email",
-  "ingest.option.email.description": "Send to",
-  "ingest.option.whatsapp.label": "WhatsApp",
-  "ingest.option.whatsapp.description": "Soon",
-
-  "commands.title": "Commands",
-  "commands.subtitle": "Control your car remotely.",
-
-  "garage.title": "Garage",
-  "garage.add_vehicle": "Add vehicle",
-  "garage.fleet_totals": "Fleet totals"
+  "garage": {
+    "title": "Garage",
+    "add_vehicle": "Add vehicle",
+    "fleet_totals": "Fleet totals"
+  }
 }
