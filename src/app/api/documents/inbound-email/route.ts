@@ -16,7 +16,7 @@
  *   NEXT_PUBLIC_CLOUDMAILIN_ADDRESS — e.g. abc123@cloudmailin.net
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { processDocument } from "@/lib/costs/processor";
@@ -314,9 +314,9 @@ export async function POST(request: Request) {
     createdIds.push((doc as { id: string }).id);
 
     if (vehicleId) {
-      processDocument((doc as { id: string }).id).catch((err: unknown) => {
+      after(processDocument((doc as { id: string }).id).catch((err: unknown) => {
         console.error("[inbound-email processDocument]", (doc as { id: string }).id, err);
-      });
+      }));
     }
   }
 

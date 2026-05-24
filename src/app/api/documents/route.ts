@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -127,10 +127,9 @@ export async function POST(request: Request) {
 
   if (insertErr || !doc) return NextResponse.json({ message: insertErr?.message ?? "Insert failed" }, { status: 500 });
 
-  // Fire-and-forget — do not await
-  processDocument(doc.id).catch((err: unknown) => {
+  after(processDocument(doc.id).catch((err: unknown) => {
     console.error("[processDocument]", doc.id, err);
-  });
+  }));
 
   return NextResponse.json({ id: doc.id, status: "pending" }, { status: 202 });
 }
