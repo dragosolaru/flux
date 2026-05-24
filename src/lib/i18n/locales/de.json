@@ -114,6 +114,19 @@
       "verifying": "Wird überprüft…",
       "verified": "Adresse bestätigt",
       "error": "Adresse nicht gefunden. Überprüfe die Schreibweise."
+    },
+    "tariff": {
+      "label": "Energieanbieter",
+      "description": "Wähle deinen Stromanbieter für genaue Preise und Empfehlungen.",
+      "providers": {
+        "electrica-ro": "Electrica Furnizare",
+        "eon-ro": "E.ON Energie România (ToU)",
+        "enel-ro": "Enel Energie Muntenia",
+        "hidroelectrica": "Hidroelectrica Energie",
+        "tibber-mock": "Tibber (Demo)",
+        "octopus-mock": "Octopus Energy (Demo)",
+        "awattar-mock": "aWATTar (Demo)"
+      }
     }
   },
 
@@ -157,6 +170,13 @@
     "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
     "home": "Zuhause",
     "public": "Öffentlich",
-    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+    "page_title": "Kosten",
+    "no_docs_title": "Noch keine Dokumente.",
+    "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
+    "missing_email_docs": "E-Mail-Dokumente fehlen?",
+    "recover": "Wiederherstellen",
+    "recovered": "Wiederhergestellt: {count}",
+    "export_csv": "CSV exportieren"
   }
 }
