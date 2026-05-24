@@ -151,7 +151,16 @@
 
   "commands": {
     "title": "Commandes",
-    "subtitle": "Contrôlez votre voiture à distance."
+    "subtitle": "Contrôlez votre voiture à distance.",
+    "panel_title": "Commandes rapides",
+    "lock": "Verrouiller",
+    "unlock": "Déverrouiller",
+    "climate_on": "Climatisation activée",
+    "climate_off": "Climatisation désactivée",
+    "honk": "Klaxon",
+    "flash": "Flasher les phares",
+    "no_commands": "Aucune commande disponible pour ce véhicule.",
+    "sending": "Envoi en cours…"
   },
 
   "garage": {
