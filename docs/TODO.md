@@ -6,182 +6,159 @@ _Last updated: 2026-05-24_
 
 ## 🔴 Critical / Blockers
 
-Items that prevent basic app functionality for real users.
-
 ### 1. Tesla VCP proxy — Vehicle Command Protocol for post-2021 cars
-Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (HTTP 412) on every Model 3/Y/S/X built after mid-2021. The `CommandsLimitedBanner` warns users but there is no working path. The code in `src/lib/tesla/api.ts` already branches on `TESLA_PROXY_BASE_URL`; the `tesla-http-proxy` Go binary just needs to be deployed (Fly.io) and the env var set.
-- **Effort:** `[L]`
+Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (HTTP 412) on every Model 3/Y/S/X built after mid-2021. The code in `src/lib/tesla/api.ts` already branches on `TESLA_PROXY_BASE_URL`; the `tesla-http-proxy` Go binary needs to be deployed on Fly.io and the env var set.
+- **Effort:** `[L]` — infra only, no code changes needed
 
-### 2. No real tariff providers — Energy page is mock-only
-All three tariff providers (`tibber-mock`, `octopus-mock`, `awattar-mock`) are fabricated price curves. `hasTariff` in the capabilities check returns `false` for any `-mock` provider, so the Energy page is behind a feature gate for all real users. No real Tibber/Octopus/Romanian supplier integration exists.
-- **Effort:** `[L]`
-
-### 3. Smoke / E2E test suite is missing
-No Playwright (or equivalent) tests exist. The ROADMAP marks "Playwright smoke tests" as TODO. Any regression (auth, add vehicle, upload doc) goes undetected in CI.
+### 2. Smoke / E2E test suite is missing
+No Playwright tests exist. Any regression (auth, add vehicle, upload doc) goes undetected in CI.
 - **Effort:** `[M]`
-
-### 4. `virtual_key_paired` is never set to `true`
-`hasCommandsReady` depends on `virtual_key_paired = true` in the `vehicles` table, but there is no UI flow or API endpoint to set this flag after a user pairs Flux as a Tesla Virtual Key. Commands will remain gated even after the VCP proxy is deployed.
-- **Effort:** `[S]`
-
-### 5. i18n config lists only `ro` + `en` — de/hu/fr are broken
-`src/lib/i18n/config.ts` only defines `ro` and `en`. No locale JSON files exist for German, Hungarian, French, or other currencies mentioned in the product brief. Any user with a browser set to one of those languages falls back to Romanian silently.
-- **Effort:** `[M]` per locale
 
 ---
 
 ## 🟡 High Priority — Next Sprint
 
-High-value features or partial implementations that need to be completed.
-
-### 6. Real Tibber API integration (live tariff prices)
-Replace `tibber-mock` with a real Tibber GraphQL client (`POST /graphql` with personal token). The `TariffProvider` interface in `src/lib/external/tariffs/types.ts` is already the right shape. Adding a real provider would flip `hasTariff = true` for those users and unlock the Energy page + Smart Charge recommendations.
+### 3. Real Tibber API integration (live tariff prices)
+Replace `tibber-mock` with a real Tibber GraphQL client. The `TariffProvider` interface is the right shape; adding a real provider flips `hasTariff = true` and unlocks the Energy page for Tibber users.
 - **Effort:** `[M]`
 
-### 7. Romanian tariff providers (Enel, E.ON, Electrica)
-The product is Romania-first but there are no Romanian energy suppliers in the tariff registry. Spot pricing is not available from RO suppliers; a flat/ToU rate model with user-defined peak/off-peak times would be the practical approach.
-- **Effort:** `[L]`
-
-### 8. WhatsApp OCR ingest via Twilio webhook
-`IngestCard` shows a WhatsApp icon / CTA but there is no Twilio webhook endpoint. The existing Cloudmailin email pipeline (`/api/documents/inbound-email`) already does the OCR heavy lifting; a new `/api/documents/inbound-whatsapp` route needs to accept Twilio Media, store to Supabase Storage, then call the same `processDocument` pipeline.
+### 4. WhatsApp OCR ingest via Twilio webhook
+`IngestCard` shows a WhatsApp CTA but there is no webhook. The email pipeline already does the heavy lifting; a new route `/api/documents/inbound-whatsapp` needs to accept Twilio Media and call `processDocument`.
 - **Effort:** `[M]`
 
-### 9. VehicleCard image / avatar is absent
-`VehicleCard` and `VehicleListCard` render brand name text but no vehicle silhouette or image. A static SVG per brand/model would noticeably improve the garage and dashboard UX.
+### 5. VehicleCard image / avatar is absent
+`VehicleCard` and `VehicleListCard` render brand name text but no vehicle silhouette or image. A static SVG per Tesla model (Model 3, Y, S, X) would noticeably improve garage and dashboard UX.
 - **Effort:** `[S]`
 
-### 10. Computed trip metrics: Wh/km, cost/km, trip cost
-The `CostDashboard` shows `costPerKmHome/Public/Blended` (already computed in `src/app/api/costs/route.ts`) but efficiency metrics (Wh/km) are not displayed anywhere. The data to compute them exists (`total_kwh`, odometer from vehicle state) but the UI surface and any aggregation query are missing.
+### 6. Computed trip metrics: Wh/km display
+`CostDashboard` shows cost/km but efficiency (Wh/km) is not displayed anywhere. The data exists (`total_kwh`, odometer snapshots); only the UI surface and KPI aggregation are missing.
 - **Effort:** `[M]`
 
-### 11. State of Health (SoH) estimate for Tesla
-`BatteryHealthCard` exists and renders `batteryHealthPct`, but the live Tesla API response maps `batteryHealthPct = null` (see `src/lib/tesla/api.ts` line ~100). Tesla does not expose SoH directly; it must be estimated from `battery_range / rated_range`. The estimation logic and DB persistence are both missing.
+### 7. State of Health (SoH) estimate for Tesla
+`BatteryHealthCard` renders `batteryHealthPct` but the live Tesla mapping returns `null`. Tesla does not expose SoH directly; estimate from `battery_range / rated_range`. Estimation logic + DB persistence both missing.
 - **Effort:** `[M]`
 
-### 12. Tesla charging history sync — no automatic scheduling
-`useChargingHistorySync` triggers a manual sync button. There is no background job or server-side cron that auto-syncs after each charging session ends. Users who forget to press the button will have gaps in their charging history.
+### 8. Tesla charging history sync — no automatic scheduling
+`useChargingHistorySync` is manual (button). No background job or cron auto-syncs after each session ends. Users who forget will have gaps.
 - **Effort:** `[M]`
 
-### 13. CommandPanel has no i18n — hardcoded English strings
-`CommandPanel.tsx` uses raw English strings (`"Lock"`, `"Unlock"`, `"Climate off"`, `"Climate on"`, `"Honk"`, `"Flash"`, `"sending…"`). The i18n key namespace `commands` exists in `en.json`/`ro.json` but only has `title` and `subtitle`. Button labels need to be added.
-- **Effort:** `[S]`
-
-### 14. Costs page title and empty states are hardcoded in Romanian
-`costs-client.tsx` has `<h1>Costuri</h1>` and Romanian empty state strings directly in JSX with no `useTranslations`. This is inconsistent with the rest of the app.
-- **Effort:** `[S]`
+### 9. Smart charge — auto-start via Tesla command
+`SmartChargeCard` shows a recommendation but has no "Schedule now" button that sends `set_scheduled_charging` to the Tesla API.
+- **Effort:** `[M]`
 
 ---
 
 ## 🟢 Medium Priority
 
-Good-to-have improvements and competitive differentiators.
-
-### 15. Trip planner uses mock routing and mock weather
-`mockRouter.computeRoute()` does straight-line Haversine math; `mockWeather` returns a fixed snapshot. Replacing routing with OSRM/GraphHopper and weather with Open-Meteo (both free tiers) would make trip plans credible.
+### 10. Trip planner uses mock routing and mock weather
+`mockRouter.computeRoute()` does Haversine math; `mockWeather` returns a fixed snapshot. Replace with OSRM/GraphHopper (routing) and Open-Meteo (weather) — both free tiers.
 - **Effort:** `[L]`
 
-### 16. Charging map uses static hardcoded stations (~50)
-`stations.ts` is a hardcoded array of ~50 European stations. Integrating OpenChargeMap API (free, 300k+ POIs) or the Chargetrip API would make the map genuinely useful for trip planning.
+### 11. Charging map uses static hardcoded stations (~50)
+Integrate OpenChargeMap API (free, 300k+ POIs) to replace the hardcoded array.
 - **Effort:** `[L]`
 
-### 17. Vehicle simulator scenarios are fixed (no user control)
-Users can pick a scenario when adding a mock vehicle, but cannot change it afterward. Adding a scenario switcher in Settings or the Garage card would improve demo usability.
+### 12. Vehicle simulator scenario switcher
+Users can pick a scenario when adding a mock vehicle but cannot change it afterwards. A scenario switcher in Settings or the Garage card would improve demo usability.
 - **Effort:** `[S]`
 
-### 18. Cost export (CSV / PDF)
-There is no export feature for `energy_costs`. A simple CSV download endpoint (`/api/costs/export?vehicleId=…`) would be a meaningful differentiator vs. the Tesla app.
+### 13. Smart charge multi-vehicle coordinator
+`SmartChargeCard` renders each vehicle independently. For users with two EVs on one circuit, recommendations should be staggered to avoid overloading.
+- **Effort:** `[M]`
+
+### 14. Charging map availability disclaimer
+Availability is simulated (deterministic pseudo-random). A "Simulated availability" disclaimer would improve trust without requiring a real OCPI feed.
 - **Effort:** `[S]`
 
-### 19. Smart charge — auto-start via Tesla command
-`SmartChargeCard` shows a recommendation but there is no "Schedule now" button that sends a `set_scheduled_charging` command to the Tesla API. The recommendation is informational only.
+### 15. PWA / home screen installability
+No `manifest.webmanifest`, no service worker. The mobile BottomNav exists but users cannot add Flux to their home screen as an app icon.
 - **Effort:** `[M]`
 
-### 20. Multi-vehicle smart charge coordinator
-`SmartChargeCard` renders each vehicle independently. If a user has two EVs sharing a home charger (single-phase circuit), recommendations should be staggered to avoid overloading. This is a pure computation change in `computeSmartCharge`.
-- **Effort:** `[M]`
-
-### 21. Charging map availability is simulated, not real
-`availability.ts` uses a deterministic pseudo-random occupancy model keyed to station ID + 2-minute epoch. It looks live but is entirely synthetic. Even a simple "last updated" disclaimer would improve trust.
-- **Effort:** `[S]` (add disclaimer) / `[XL]` (real OCPI feed)
-
-### 22. PWA / home screen installability
-No `manifest.webmanifest`, no service worker, no offline support. The mobile-first BottomNav exists but users cannot add Flux to their home screen as an app icon.
-- **Effort:** `[M]`
-
-### 23. In-app notifications for charging events
-No push notification or in-app alert fires when charging completes or when the cheap tariff window opens. Tesla's API can report state changes; pairing that with a push notification would be a meaningful differentiator.
+### 16. In-app notifications for charging events
+No push notification fires when charging completes or when the cheap tariff window opens.
 - **Effort:** `[L]`
 
-### 24. Settings page is partially i18n'd — section titles use hardcoded English
-Settings page has `"Vehicles"`, `"Account"` etc. hardcoded in JSX. These need `t("settings.section.vehicles")` keys.
-- **Effort:** `[S]`
+### 17. GDPR data export and account deletion
+`DangerZone` in settings only disconnects vehicle. A full "download my data" + "delete my account" flow is needed before EU public launch.
+- **Effort:** `[M]`
 
-### 25. Non-Tesla brand support is archived
-The codebase only has `tesla` in the brands registry (`src/lib/brands/registry.ts`). BMW, Polestar, etc. are on an archived branch. Adding even one more real brand (BMW ConnectedDrive) would broaden the market.
-- **Effort:** `[XL]`
+### 18. Rate limiting and abuse protection
+No rate limiting on document upload, OCR, or Tesla command proxy routes. Add per-user limits via Upstash Redis or Vercel Edge Middleware.
+- **Effort:** `[M]`
 
 ---
 
 ## ⚪ Planned / Future
 
-Long-term items, monetization, infra.
-
-### 26. Subscription model (Stripe)
-No Stripe integration exists. The product vision calls for a freemium tier (1 mock vehicle free) and Pro ~€4.99/month (live Tesla + full features). Needs: Stripe Checkout, webhook handler, `subscription_tier` column in `users`, capability checks updated to respect tier.
+### 19. Subscription model (Stripe)
+Freemium (1 mock vehicle free) + Pro ~€4.99/month. Needs Stripe Checkout, webhook handler, `subscription_tier` column, capability checks updated.
 - **Effort:** `[XL]`
 
-### 27. iOS/Android native wrapper or web widget
-The mobile web app is good but a React Native / Expo wrapper would enable background battery refresh, widgets, and CarPlay. Alternatively, iOS WidgetKit via a small SwiftUI widget calling the existing `/api/vehicles/[id]/state` endpoint.
+### 20. iOS/Android native wrapper or web widget
+React Native / Expo wrapper for background battery refresh, widgets, CarPlay. Or iOS WidgetKit via SwiftUI calling `/api/vehicles/[id]/state`.
 - **Effort:** `[XL]`
 
-### 28. Real-time vehicle telemetry via Tesla Fleet Telemetry
-Currently the app polls `/vehicle_data` every 30 seconds via the REST API. Tesla's Fleet Telemetry (WebSocket streaming) provides sub-second updates with much lower wake-up cost for sleeping cars. Requires Tesla Fleet API approval.
+### 21. Real-time vehicle telemetry via Tesla Fleet Telemetry
+Currently polls every 30s. Tesla Fleet Telemetry WebSocket provides sub-second updates. Requires Tesla Fleet API approval.
 - **Effort:** `[XL]`
 
-### 29. Home energy monitoring integration (Shelly, Fronius, SolarEdge)
-The cost attribution model attributes EV charging proportionally from home bills. An MQTT/API integration with a smart home energy monitor would give precise kWh-per-session attribution without OCR guesswork.
+### 22. Home energy monitoring (Shelly, Fronius, SolarEdge)
+MQTT/API integration for precise kWh-per-session attribution without OCR guesswork.
 - **Effort:** `[XL]`
 
-### 30. GDPR data export and account deletion
-There is a `DangerZone` component in settings but only disconnect-vehicle logic. A full GDPR "download my data" and "delete my account" flow is needed before a public launch in the EU.
-- **Effort:** `[M]`
+### 23. Non-Tesla brand support
+BMW ConnectedDrive or Polestar as a second brand in the registry.
+- **Effort:** `[XL]`
 
-### 31. Rate limiting and abuse protection
-No rate limiting exists on the document upload, OCR (`/api/documents`), or Tesla command proxy routes. Anthropic API calls and Tesla API calls both have cost/rate implications. Add per-user limits via Upstash Redis or Vercel Edge Middleware.
-- **Effort:** `[M]`
-
-### 32. Admin / analytics dashboard
-No way to see aggregate usage, OCR error rates, or top-used features. A simple Supabase-backed admin page (behind a role check) or PostHog integration would help prioritize future work.
+### 24. Admin / analytics dashboard
+PostHog or a Supabase-backed admin page to track OCR error rates and feature usage.
 - **Effort:** `[M]`
 
 ---
 
-## ✅ Recently Completed
+## ✅ Completed
 
-What was finished in the current development sprint.
+### Core platform
+- Auth — NextAuth v5 + Supabase session bridge, Google OAuth + email/password
+- Mock vehicle simulator — tick-based engine, 4 scenarios, multi-step interpolation
+- Tesla OAuth (PKCE) — state binding, CSRF protection, token encryption at rest
+- Tesla live vehicle data — `fetchVehicleData` polling every 30s, wake-up retry
+- Vehicle commands — mock + live Tesla wiring via `TESLA_COMMAND_MAP`; 18 command types
+- VCP error surfacing — HTTP 412 + `CommandsLimitedBanner`
+- Capability model — `NONE→VEHICLE→LIVE→TARIFF→COMMANDS` ladder + `FeatureGate`
+- Mobile bottom nav — `BottomNav` + `SlideUpMenu`
+- Dark/light theme — `next-themes`
 
-- **Auth** — NextAuth + Supabase session bridge, Google OAuth
-- **Mock vehicle simulator** — tick-based engine, 4 scenarios (commuter, road-trip, weekend, vacation), multi-step interpolation
-- **Tesla OAuth (PKCE)** — state binding, CSRF protection, token encryption at rest (`TESLA_TOKEN_ENCRYPTION_KEY`)
-- **Tesla live vehicle data** — `fetchVehicleData` polling every 30s, wake-up retry on 408, full state mapping
-- **Vehicle commands** — mock command dispatch + live Tesla wiring via command-map; `door_lock`, `door_unlock`, `honk_horn`, `flash_lights`, `auto_conditioning_start/stop`, `set_charge_limit`
-- **VCP error surfacing** — HTTP 412 + `VCP_REQUIRED` code returned to UI; `CommandsLimitedBanner` explains the situation
-- **Capability model** — `NONE→VEHICLE→LIVE→TARIFF→COMMANDS` ladder; `FeatureGate` component + `CapabilityEmptyState`
-- **Mobile bottom nav** — `BottomNav` + `SlideUpMenu` for mobile-first navigation
-- **i18n** — next-intl v4, `ro`/`en` locales, cookie-based switching (de/hu/fr mentioned in brief but not implemented)
-- **Multi-currency** — RON/EUR/USD/GBP/CHF/NOK/SEK/DKK/HUF via `CurrencyPicker`; BNR exchange rate client
-- **BatteryGauge** — animated SVG arc gauge
-- **Settings** — locale picker, currency picker, home location (Nominatim geocoding), tariff provider picker
-- **OCR pipeline** — file upload → Supabase Storage → Anthropic Claude → `documents` table (migration 006)
-- **Email ingest** — Cloudmailin webhook → `inbound-email` route → same OCR pipeline
-- **Cost aggregation** — `energy_costs`, cost/km (home / public / blended), petrol comparison
-- **Home bill attribution** — proportional EV kWh attribution from home energy bills (`src/lib/costs/attribution.ts`)
-- **SmartChargeCard** — cheapest window recommendations using mock tariff data
-- **PriceCurveChart** — 24h tariff bar chart with current hour + cheapest window highlighted
-- **Tesla charging history sync** — `POST /api/vehicles/[vehicleId]/charging-history` + manual sync button
-- **CostDashboard** — monthly trend chart, home vs public split, petrol equivalent comparison
-- **Trip planner** — mock routing (Haversine), weather derating, charging stop insertion, multi-vehicle comparison
-- **Charging map** — Leaflet map with ~50 hardcoded EU stations, mock availability, network/kW filters
-- **Security audit** — 17 findings resolved (migrations 005, 007; RLS policies, token encryption, CSRF)
-- **DB migrations 001–009** — initial schema through charging session uniqueness constraint
-- **Dark/light theme** — `next-themes`, toggle in TopBar dropdown
+### i18n & UX
+- next-intl v4 — nested JSON, `ro`/`en`/`de`/`hu`/`fr` locales (121 keys each)
+- Multi-currency — RON/EUR/USD/GBP/CHF/NOK/SEK/DKK/HUF via `CurrencyPicker`; BNR rate client
+- CommandPanel i18n — all button labels via `t("commands.*")`
+- Costs page i18n — title, empty states, export button
+
+### Money & energy
+- OCR pipeline — upload → Supabase Storage → Anthropic Claude → `documents` table
+- Email ingest — Cloudmailin webhook → same OCR pipeline (`after()` for Vercel lifecycle)
+- Cost aggregation — cost/km home/public/blended, petrol comparison
+- Home bill attribution — proportional EV kWh from bills
+- SmartChargeCard — cheapest window recommendation
+- PriceCurveChart — 24h tariff bar chart
+- Romanian tariff providers — Electrica, E.ON ToU, Enel, Hidroelectrica (4 real providers)
+- CSV export — `/api/costs/export?vehicleId=…`
+- Upload visual feedback — spinner + "Se încarcă…" during upload
+
+### Vehicle & charging
+- Tesla charging history sync — manual sync button + `POST /api/vehicles/[id]/charging-history`
+- CostDashboard — monthly trend, home vs public split, petrol equivalent
+- Virtual Key flow — `virtual_key_paired` badge + "Mark as paired" button in `VehicleListCard`
+- Dashboard live indicators — "Live" badge, odometer, location tile, "Demo data" vs "Live · 30s"
+- StatsGrid — combined temp tile (interior + exterior), odometer, location
+
+### Planning
+- Trip planner — mock routing (Haversine), weather derating, charging stop insertion
+- Charging map — Leaflet + ~50 EU stations, mock availability, network/kW filters
+
+### Settings & infra
+- Settings page — locale, currency, home location (Nominatim), tariff provider
+- Security audit — 17 findings resolved (migrations 005, 007; RLS policies, token encryption, CSRF)
+- DB migrations 001–010 — initial schema through `sender_email` column
+- `SCHEMA_FULL.sql` — consolidated idempotent schema for all 14 tables
