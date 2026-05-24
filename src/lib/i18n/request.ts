@@ -18,6 +18,6 @@ async function resolveLocale(): Promise<Locale> {
 
 export default getRequestConfig(async () => {
   const locale = await resolveLocale();
-  const messages = (await import(`./locales/${locale}.json`)).default as Record<string, string>;
+  const messages = (await import(`./locales/${locale}.json`)).default;
   return { locale, messages };
 });
