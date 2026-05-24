@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
@@ -22,6 +22,14 @@ export const metadata: Metadata = {
   title: "Flux — EV Management",
   description:
     "Flux by DAO Lab. A multi-brand EV management platform — dashboard, commands, and charging insights.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#09090b",
 };
 
 export default async function RootLayout({
