@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { MockChip } from "./MockChip";
+import { VehicleModelImage } from "./VehicleModelImage";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVirtualKeyPair } from "@/hooks/useVirtualKeyPair";
@@ -116,6 +117,13 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
                 </div>
               )}
             </div>
+
+            {vehicle.model && (
+              <VehicleModelImage
+                model={vehicle.model}
+                className="hidden w-[80px] shrink-0 text-muted-foreground/35 sm:block"
+              />
+            )}
 
             <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
           </CardContent>

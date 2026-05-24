@@ -24,9 +24,10 @@ interface DashboardClientProps {
   vehicleId: string;
   vehicleName: string;
   brand: BrandKey;
+  model?: string;
 }
 
-export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand, model }: DashboardClientProps) {
   const { data, isLoading, isFetching, error, refetch } = useVehicle(vehicleId);
   const caps = useBrandCapabilities(brand);
   const t = caps?.telemetry;
@@ -70,7 +71,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClie
         </Card>
       ) : (
         <>
-          <VehicleCard state={data} isLoading={isLoading} />
+          <VehicleCard state={data} isLoading={isLoading} model={model} />
           {data && <StatsGrid state={data} />}
 
           <div className="grid gap-4 md:grid-cols-2">

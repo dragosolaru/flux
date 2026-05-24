@@ -4,6 +4,7 @@ import { Lock, MapPin, Unlock } from "lucide-react";
 
 import { BatteryGauge } from "./BatteryGauge";
 import { MockChip } from "./MockChip";
+import { VehicleModelImage } from "./VehicleModelImage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,10 @@ import type { VehicleState } from "@/types/vehicle";
 interface VehicleCardProps {
   state: VehicleState | undefined;
   isLoading: boolean;
+  model?: string;
 }
 
-export function VehicleCard({ state, isLoading }: VehicleCardProps) {
+export function VehicleCard({ state, isLoading, model }: VehicleCardProps) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
@@ -75,6 +77,15 @@ export function VehicleCard({ state, isLoading }: VehicleCardProps) {
             </>
           )}
         </div>
+
+        {model && !isLoading && state && (
+          <div className="hidden shrink-0 items-center justify-center md:flex">
+            <VehicleModelImage
+              model={model}
+              className="w-[120px] text-muted-foreground/40"
+            />
+          </div>
+        )}
 
         <div className="flex items-end justify-center">
           {isLoading || !state ? (

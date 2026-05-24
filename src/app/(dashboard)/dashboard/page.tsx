@@ -21,7 +21,7 @@ export default async function DashboardPage({
   const supabase = createSupabaseAdminClient();
   const { data: vehicle } = await supabase
     .from("vehicles")
-    .select("id, display_name, brand, nickname")
+    .select("id, display_name, brand, nickname, model")
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .eq("is_active", true)
@@ -34,6 +34,7 @@ export default async function DashboardPage({
       vehicleId={vehicle.id}
       vehicleName={vehicle.nickname ?? vehicle.display_name}
       brand={vehicle.brand as BrandKey}
+      model={vehicle.model ?? undefined}
     />
   );
 }
