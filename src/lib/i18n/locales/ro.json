@@ -136,7 +136,8 @@
     "option": {
       "upload": {
         "label": "Foto",
-        "description": "Upload"
+        "description": "Upload",
+        "uploading": "Se încarcă…"
       },
       "email": {
         "label": "Email",

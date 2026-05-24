@@ -87,7 +87,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       <CostDashboard data={costs} isLoading={costsLoading} />
 
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
-        <IngestCard email={vehicleEmail} onUpload={handleUpload} disabled={uploading} />
+        <IngestCard email={vehicleEmail} onUpload={handleUpload} disabled={uploading} uploading={uploading} />
 
         <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">

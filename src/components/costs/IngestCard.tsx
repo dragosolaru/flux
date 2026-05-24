@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, Copy, Mail, MessageCircle } from "lucide-react";
+import { Camera, Check, Copy, Loader2, Mail, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -13,9 +13,10 @@ interface IngestCardProps {
   email: string | null;
   onUpload: (file: File) => Promise<void> | void;
   disabled?: boolean;
+  uploading?: boolean;
 }
 
-export function IngestCard({ email, onUpload, disabled }: IngestCardProps) {
+export function IngestCard({ email, onUpload, disabled, uploading }: IngestCardProps) {
   const t = useTranslations();
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
@@ -58,9 +59,13 @@ export function IngestCard({ email, onUpload, disabled }: IngestCardProps) {
             />
 
             <Option
-              icon={<Camera className="size-5" />}
+              icon={
+                uploading
+                  ? <Loader2 className="size-5 animate-spin" />
+                  : <Camera className="size-5" />
+              }
               label={t("ingest.option.upload.label")}
-              hint={t("ingest.option.upload.description")}
+              hint={uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
               onClick={pickFile}
               disabled={disabled}
               hovered={hoveredKey === "upload"}

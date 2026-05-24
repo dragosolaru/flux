@@ -136,7 +136,8 @@
     "option": {
       "upload": {
         "label": "Photo",
-        "description": "Télécharger"
+        "description": "Télécharger",
+        "uploading": "Envoi en cours…"
       },
       "email": {
         "label": "E-mail",
