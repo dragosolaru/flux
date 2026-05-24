@@ -292,7 +292,11 @@ export async function POST(request: Request) {
       .from("documents")
       .upload(storagePath, attachment.buffer, { contentType: attachment.mimeType, upsert: false });
 
-    if (uploadErr) { skipped.push(attachment.filename); continue; }
+    if (uploadErr) {
+      console.error("[inbound-email] storage upload failed:", uploadErr.message, { storagePath });
+      skipped.push(attachment.filename);
+      continue;
+    }
 
     const { data: doc, error: insertErr } = await supabase
       .from("documents")
@@ -309,7 +313,11 @@ export async function POST(request: Request) {
       .select("id")
       .single();
 
-    if (insertErr || !doc) { skipped.push(attachment.filename); continue; }
+    if (insertErr || !doc) {
+      console.error("[inbound-email] document insert failed:", insertErr?.message, { userId, vehicleId });
+      skipped.push(attachment.filename);
+      continue;
+    }
 
     createdIds.push((doc as { id: string }).id);
 

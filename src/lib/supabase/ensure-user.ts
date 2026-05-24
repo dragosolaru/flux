@@ -23,7 +23,14 @@ export async function ensureSupabaseUserId(
 ): Promise<string | null> {
   const rawId = session.user?.id;
 
-  if (rawId && UUID_RE.test(rawId)) return rawId;
+  if (rawId && UUID_RE.test(rawId)) {
+    // Verify the UUID actually exists in auth.users — NextAuth v5 can generate
+    // its own UUID for OAuth sessions that never matches a Supabase auth entry.
+    const supabase = createSupabaseAdminClient();
+    const { data: existing } = await supabase.auth.admin.getUserById(rawId);
+    if (existing.user) return rawId;
+    // UUID not in auth.users — fall through to email-based resolution below.
+  }
 
   const email = session.user?.email;
   if (!email) return null;
