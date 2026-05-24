@@ -11,6 +11,7 @@ export interface VehicleListItem {
   model: string | null;
   year: number | null;
   dataSource: "mock" | "live";
+  virtualKeyPaired: boolean;
 }
 
 export function useVehicles() {

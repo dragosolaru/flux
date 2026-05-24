@@ -8,9 +8,11 @@ import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { Button } from "@/components/ui/button";
 import { MockChip } from "./MockChip";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
+import { useVirtualKeyPair } from "@/hooks/useVirtualKeyPair";
 import type { VehicleListItem } from "@/hooks/useVehicles";
 
 const BRAND_COLORS: Record<string, string> = {
@@ -30,6 +32,7 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
   const brandLabel = BRAND_LABEL[vehicle.brand] ?? vehicle.brand;
   const [confirming, setConfirming] = useState(false);
   const qc = useQueryClient();
+  const virtualKeyPair = useVirtualKeyPair(vehicle.id);
 
   const remove = useMutation({
     mutationFn: () => apiFetch(`/api/vehicles/${vehicle.id}`, { method: "DELETE" }),
@@ -90,6 +93,28 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
               <div className="mt-0.5 truncate text-sm text-muted-foreground">
                 {[brandLabel, vehicle.model, vehicle.year].filter(Boolean).join(" · ")}
               </div>
+              {vehicle.dataSource === "live" && (
+                <div className="mt-1">
+                  {vehicle.virtualKeyPaired ? (
+                    <span className="inline-flex items-center rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400">
+                      Virtual Key ✓
+                    </span>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-2 py-0.5 text-xs"
+                      disabled={virtualKeyPair.isPending}
+                      onClick={(e: MouseEvent<HTMLButtonElement>) => {
+                        e.preventDefault();
+                        virtualKeyPair.mutate(true);
+                      }}
+                    >
+                      Mark Virtual Key as paired
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
