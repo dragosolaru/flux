@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Inbox, Loader2, Mail, Receipt } from "lucide-react";
-import { DocumentUploadZone } from "@/components/costs/DocumentUploadZone";
+import { useEffect, useRef } from "react";
+import { Inbox, Loader2, Receipt } from "lucide-react";
+import { motion } from "framer-motion";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
 import { CostDashboard } from "@/components/costs/CostDashboard";
+import { IngestCard } from "@/components/costs/IngestCard";
 import { Button } from "@/components/ui/button";
 import {
   useDocuments,
@@ -14,60 +15,12 @@ import {
 } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { pageVariants, staggerContainer } from "@/lib/animations/variants";
 
 interface CostsClientProps {
   vehicleId: string;
   vehicleName: string;
   vehicleEmail: string | null;
-}
-
-function EmailInbox({ email }: { email: string }) {
-  const [copied, setCopied] = useState(false);
-
-  function copy() {
-    void navigator.clipboard.writeText(email).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  // Split into local@domain for nicer display
-  const [local, domain] = email.split("@");
-
-  return (
-    <div className="rounded-lg border bg-muted/30 px-4 py-3">
-      <div className="flex items-start gap-3">
-        <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Trimite pe email</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Fotografiezi o factură sau bon și trimiți la adresa de mai jos — apare automat aici.
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="min-w-0 flex-1 overflow-hidden rounded-md border bg-background px-2.5 py-1.5">
-              <p className="truncate text-xs font-mono leading-none">
-                <span className="text-foreground">{local}</span>
-                <span className="text-muted-foreground">@{domain}</span>
-              </p>
-            </div>
-            <button
-              onClick={copy}
-              className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors",
-                copied
-                  ? "border-chart-2/40 bg-chart-2/10 text-chart-2"
-                  : "hover:bg-muted",
-              )}
-            >
-              {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-              {copied ? "Copiat!" : "Copiază"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
@@ -100,7 +53,12 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <motion.div
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+      className="mx-auto flex max-w-5xl flex-col gap-6"
+    >
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Costuri</h1>
         <p className="text-sm text-muted-foreground">{vehicleName}</p>
@@ -108,10 +66,8 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
 
       <CostDashboard data={costs} isLoading={costsLoading} />
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold">Adaugă document</h2>
-        <DocumentUploadZone onUpload={handleUpload} disabled={uploading} />
-        {vehicleEmail && <EmailInbox email={vehicleEmail} />}
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
+        <IngestCard email={vehicleEmail} onUpload={handleUpload} disabled={uploading} />
 
         <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">
@@ -129,7 +85,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
             {recoverResult ? `Recuperate: ${recoverResult.recovered}` : "Recuperează"}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {!docsLoading && documents && documents.length > 0 && (
         <div className="space-y-2">
@@ -153,6 +109,6 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
           <p className="text-xs">Uploadează prima factură sau bon pentru a vedea costurile.</p>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
