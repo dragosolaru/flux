@@ -2,6 +2,9 @@
 
 import { useState, type ChangeEvent } from "react";
 
+import { RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +17,8 @@ import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { useCapabilities } from "@/hooks/useCapabilities";
+import { useChargingHistorySync } from "@/hooks/useChargingHistorySync";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 
@@ -37,6 +42,8 @@ export function ChargingClient({
 }: ChargingClientProps) {
   const { data, isLoading } = useVehicle(vehicleId);
   const { mutate, isPending } = useVehicleCommand();
+  const { data: caps } = useCapabilities();
+  const syncMutation = useChargingHistorySync(vehicleId);
 
   const [limit, setLimit] = useState<number>(data?.chargeLimit ?? 80);
   const [scheduled, setScheduled] = useState(false);
@@ -131,10 +138,36 @@ export function ChargingClient({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Recent charging sessions</CardTitle>
-          <CardDescription>
-            Snapshots captured while charging was active.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Recent charging sessions</CardTitle>
+              <CardDescription>
+                Snapshots captured while charging was active.
+              </CardDescription>
+            </div>
+            {caps?.hasLiveVehicle && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={syncMutation.isPending}
+                onClick={() => {
+                  syncMutation.mutate(undefined, {
+                    onSuccess: (result) => {
+                      toast.success(`Synced ${result.synced} sessions`);
+                    },
+                  });
+                }}
+              >
+                <RefreshCw
+                  className={syncMutation.isPending ? "animate-spin" : ""}
+                  size={14}
+                />
+                <span className="ml-1">
+                  {syncMutation.isPending ? "Syncing…" : "Sync from Tesla"}
+                </span>
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {history.length === 0 ? (
