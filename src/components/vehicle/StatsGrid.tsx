@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { Gauge, Snowflake, Thermometer, Wind } from "lucide-react";
+import { Gauge, MapPin, Snowflake, Thermometer, Wind } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { VehicleState } from "@/types/vehicle";
@@ -11,6 +11,28 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ state }: StatsGridProps) {
+  // Temperature tile: show both interior + exterior when both exist
+  const tempTile = (() => {
+    if (state.interiorTempC != null && state.exteriorTempC != null) {
+      return {
+        label: "Temperature",
+        value: `${state.interiorTempC.toFixed(0)}°C in / ${state.exteriorTempC.toFixed(0)}°C out`,
+        icon: Thermometer,
+      };
+    }
+    if (state.interiorTempC != null) {
+      return { label: "Interior", value: `${state.interiorTempC.toFixed(1)} °C`, icon: Thermometer };
+    }
+    if (state.exteriorTempC != null) {
+      return {
+        label: "Exterior",
+        value: `${state.exteriorTempC.toFixed(1)} °C`,
+        icon: state.exteriorTempC < 5 ? Snowflake : Wind,
+      };
+    }
+    return null;
+  })();
+
   const stats = [
     state.batteryRangeKm != null && {
       label: "Range",
@@ -22,15 +44,11 @@ export function StatsGrid({ state }: StatsGridProps) {
       value: `${Math.round(state.odometerKm).toLocaleString()} km`,
       icon: Gauge,
     },
-    state.interiorTempC != null && {
-      label: "Interior",
-      value: `${state.interiorTempC.toFixed(1)} °C`,
-      icon: Thermometer,
-    },
-    state.exteriorTempC != null && {
-      label: "Exterior",
-      value: `${state.exteriorTempC.toFixed(1)} °C`,
-      icon: state.exteriorTempC < 5 ? Snowflake : Wind,
+    tempTile,
+    state.latitude != null && state.longitude != null && {
+      label: "Location",
+      value: `📍 ${state.latitude.toFixed(3)}, ${state.longitude.toFixed(3)}`,
+      icon: MapPin,
     },
   ].filter(Boolean) as { label: string; value: string; icon: ComponentType<{ className?: string }> }[];
 
