@@ -117,10 +117,25 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
+        "tibber": "Tibber",
         "tibber-mock": "Tibber (demó)",
         "octopus-mock": "Octopus Energy (demó)",
         "awattar-mock": "aWATTar (demó)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Adataim exportálása",
+      "exporting": "Exportálás…",
+      "export_success": "Adatexport letöltve",
+      "export_error": "Nem sikerült exportálni",
+      "delete_button": "Fiók törlése",
+      "deleting": "Törlés…",
+      "delete_success": "Fiók törölve",
+      "delete_error": "Nem sikerült törölni a fiókot",
+      "confirm_title": "Fiók törlése?",
+      "confirm_description": "Ez véglegesen törli a Flux fiókodat, az összes járművet, töltési előzményt, dokumentumot és költséget. Ez a művelet nem vonható vissza.",
+      "confirm_cancel": "Mégse",
+      "confirm_delete": "Igen, töröld a fiókot"
     }
   },
   "ingest": {

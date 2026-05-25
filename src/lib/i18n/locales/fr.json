@@ -117,10 +117,25 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
+        "tibber": "Tibber",
         "tibber-mock": "Tibber (démo)",
         "octopus-mock": "Octopus Energy (démo)",
         "awattar-mock": "aWATTar (démo)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Exporter mes données",
+      "exporting": "Export en cours…",
+      "export_success": "Export téléchargé",
+      "export_error": "Échec de l'export",
+      "delete_button": "Supprimer mon compte",
+      "deleting": "Suppression…",
+      "delete_success": "Compte supprimé",
+      "delete_error": "Impossible de supprimer le compte",
+      "confirm_title": "Supprimer votre compte ?",
+      "confirm_description": "Cela supprimera définitivement votre compte Flux, tous les véhicules, l'historique de charge, les documents et les coûts. Cette action est irréversible.",
+      "confirm_cancel": "Annuler",
+      "confirm_delete": "Oui, supprimer mon compte"
     }
   },
   "ingest": {
