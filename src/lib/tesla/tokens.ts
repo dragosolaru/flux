@@ -61,9 +61,11 @@ export function decryptToken(encrypted: string): string {
 /**
  * Returns a valid access token for the given vehicle, refreshing if needed.
  * Updates the DB in place when a refresh occurs.
+ * userId is required for ownership verification (defense-in-depth).
  */
 export async function getValidAccessToken(
   vehicleId: string,
+  userId: string,
 ): Promise<{ accessToken: string; region: string }> {
   const supabase = createSupabaseAdminClient();
 
@@ -71,6 +73,7 @@ export async function getValidAccessToken(
     .from("vehicles")
     .select("id, tesla_region")
     .eq("id", vehicleId)
+    .eq("user_id", userId)
     .single();
   if (vehErr || !vehicle) throw new Error("Vehicle not found");
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import { getBrand } from "@/lib/brands/registry";
 import { TESLA_COMMAND_MAP } from "@/lib/brands/tesla/command-map";
@@ -19,6 +20,7 @@ const VALID_COMMANDS: CommandName[] = [
   "honk", "flash", "set_charge_limit", "set_charge_amps",
   "start_charging", "stop_charging", "open_charge_port", "close_charge_port",
   "vent_windows", "close_windows", "activate_sentry", "deactivate_sentry", "remote_start",
+  "schedule_charging", "schedule_departure", "precondition_max",
 ];
 
 const bodySchema = z.object({
@@ -36,6 +38,16 @@ export async function POST(
   }
 
   const { vehicleId } = await params;
+  if (!z.string().uuid().safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
+
+  if (!checkRateLimit(session.user.id, "commands", 30)) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Try again later." },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
 
   const body = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
@@ -83,6 +95,7 @@ export async function POST(
     try {
       const result = await sendVehicleCommand({
         vehicleId: vehicle.id,
+        userId: session.user.id,
         teslaVehicleId: vehicle.tesla_vehicle_id,
         command: entry.teslaCmd,
         body: entry.buildBody(args),

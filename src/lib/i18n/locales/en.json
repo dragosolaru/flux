@@ -186,6 +186,31 @@
     "missing_email_docs": "Missing email documents?",
     "recover": "Recover",
     "recovered": "Recovered: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "kpi_wh_per_km": "Efficiency"
+  },
+  "energy": {
+    "smart_charge_title": "Smart charging",
+    "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
+    "schedule_btn": "Schedule",
+    "scheduled": "Scheduled ✓",
+    "start_at": "Start at",
+    "save": "save",
+    "now": "Now",
+    "optimal": "Optimal",
+    "to_target": "to target"
+  },
+  "departure": {
+    "title": "Departure & Preconditioning",
+    "departure_label": "Scheduled departure",
+    "departure_hint": "The car will warm the battery and cabin before you leave.",
+    "schedule_btn": "Schedule",
+    "scheduling": "Scheduling…",
+    "scheduled": "Scheduled ✓",
+    "precondition_label": "Precondition now",
+    "precondition_hint": "Warms the battery for faster DC charging. Ideal before a Supercharger.",
+    "precondition_btn": "Precondition battery",
+    "preconditioning": "Activating…",
+    "preconditioned": "Active ✓"
   }
 }

@@ -65,7 +65,10 @@ export type CommandName =
   | "close_windows"
   | "activate_sentry"
   | "deactivate_sentry"
-  | "remote_start";
+  | "remote_start"
+  | "schedule_charging"
+  | "schedule_departure"
+  | "precondition_max";
 
 export interface CommandEvent {
   id: string;

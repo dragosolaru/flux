@@ -186,6 +186,31 @@
     "missing_email_docs": "Documents e-mail manquants ?",
     "recover": "Récupérer",
     "recovered": "Récupéré : {count}",
-    "export_csv": "Exporter CSV"
+    "export_csv": "Exporter CSV",
+    "kpi_wh_per_km": "Efficacité"
+  },
+  "energy": {
+    "smart_charge_title": "Charge intelligente",
+    "smart_charge_hint": "Affiché uniquement pour les véhicules branchés en dessous de leur limite de charge.",
+    "schedule_btn": "Planifier",
+    "scheduled": "Planifié ✓",
+    "start_at": "Démarrer à",
+    "save": "économiser",
+    "now": "Maintenant",
+    "optimal": "Optimal",
+    "to_target": "jusqu'à l'objectif"
+  },
+  "departure": {
+    "title": "Départ & Préconditionnement",
+    "departure_label": "Départ planifié",
+    "departure_hint": "La voiture réchauffe la batterie et l'habitacle avant votre départ.",
+    "schedule_btn": "Planifier",
+    "scheduling": "Planification…",
+    "scheduled": "Planifié ✓",
+    "precondition_label": "Préconditionner maintenant",
+    "precondition_hint": "Réchauffe la batterie pour une charge DC plus rapide. Idéal avant un Superchargeur.",
+    "precondition_btn": "Préconditionner la batterie",
+    "preconditioning": "Activation…",
+    "preconditioned": "Actif ✓"
   }
 }

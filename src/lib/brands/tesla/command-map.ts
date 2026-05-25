@@ -37,4 +37,24 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   activate_sentry:   { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: true }) },
   deactivate_sentry: { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: false }) },
   remote_start:      { teslaCmd: "remote_start_drive",     buildBody: () => undefined },
+  schedule_charging: {
+    teslaCmd: "set_scheduled_charging",
+    buildBody: (args) => ({ enable: true, time: Number(args?.time ?? 0) }),
+  },
+  schedule_departure: {
+    teslaCmd: "set_scheduled_departure",
+    buildBody: (args) => ({
+      enable: true,
+      departure_time: Number(args?.time ?? 480),
+      preconditioning_enabled: true,
+      preconditioning_weekdays_only: false,
+      off_peak_charging_enabled: args?.offPeak ?? false,
+      off_peak_charging_weekdays_only: false,
+      end_off_peak_time: 360,
+    }),
+  },
+  precondition_max: {
+    teslaCmd: "set_preconditioning_max",
+    buildBody: (args) => ({ on: args?.on !== false }),
+  },
 };

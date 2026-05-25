@@ -59,6 +59,9 @@ export const teslaProfile: BrandProfile = {
       activateSentry: true,
       deactivateSentry: true,
       remoteStart: true,
+      scheduleCharging: true,
+      scheduleDeparture: true,
+      preconditionMax: true,
     },
     history: {
       chargingSessions: true,

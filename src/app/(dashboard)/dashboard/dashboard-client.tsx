@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BatteryHealthCard } from "@/components/vehicle/BatteryHealthCard";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { DepartureCard } from "@/components/vehicle/DepartureCard";
 import { FeatureGate } from "@/components/layout/FeatureGate";
 import { DoorsWindowsCard } from "@/components/vehicle/DoorsWindowsCard";
 import { ScoresCard } from "@/components/vehicle/ScoresCard";
@@ -24,9 +25,10 @@ interface DashboardClientProps {
   vehicleId: string;
   vehicleName: string;
   brand: BrandKey;
+  model?: string;
 }
 
-export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand, model }: DashboardClientProps) {
   const { data, isLoading, isFetching, error, refetch } = useVehicle(vehicleId);
   const caps = useBrandCapabilities(brand);
   const t = caps?.telemetry;
@@ -79,6 +81,10 @@ export function DashboardClient({ vehicleId, vehicleName, brand }: DashboardClie
               <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
             </FeatureGate>
           </div>
+
+          <FeatureGate capability="COMMANDS" fallback="null">
+            <DepartureCard vehicleId={vehicleId} />
+          </FeatureGate>
 
           {/* Extended telemetry — each section gated on brand capability */}
           {/* Weather + derated range */}

@@ -53,7 +53,8 @@ export function LoginForm({ mode }: LoginFormProps) {
       toast.error("Invalid email or password");
       return;
     }
-    router.replace(callbackUrl);
+    const safeUrl = callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
+    router.replace(safeUrl);
     router.refresh();
   }
 

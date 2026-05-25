@@ -25,4 +25,7 @@ export const COMMAND_CAP_MAP: Record<CommandName, keyof CommandCapabilities> = {
   activate_sentry:   "activateSentry",
   deactivate_sentry: "deactivateSentry",
   remote_start:      "remoteStart",
+  schedule_charging:  "scheduleCharging",
+  schedule_departure: "scheduleDeparture",
+  precondition_max:   "preconditionMax",
 };

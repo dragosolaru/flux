@@ -186,6 +186,31 @@
     "missing_email_docs": "Lipsesc documente trimise pe email?",
     "recover": "Recuperează",
     "recovered": "Recuperate: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "kpi_wh_per_km": "Eficiență"
+  },
+  "energy": {
+    "smart_charge_title": "Încărcare inteligentă",
+    "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",
+    "schedule_btn": "Programează",
+    "scheduled": "Programat ✓",
+    "start_at": "Pornește la",
+    "save": "economisești",
+    "now": "Acum",
+    "optimal": "Optim",
+    "to_target": "până la țintă"
+  },
+  "departure": {
+    "title": "Plecare & Preconditionare",
+    "departure_label": "Plecare programată",
+    "departure_hint": "Mașina va încălzi bateria și habitaclul înainte să pleci.",
+    "schedule_btn": "Programează",
+    "scheduling": "Se programează…",
+    "scheduled": "Programat ✓",
+    "precondition_label": "Preconditionează acum",
+    "precondition_hint": "Încălzește bateria pentru încărcare DC mai rapidă. Ideal înainte de un Supercharger.",
+    "precondition_btn": "Preconditionează bateria",
+    "preconditioning": "Se activează…",
+    "preconditioned": "Activ ✓"
   }
 }

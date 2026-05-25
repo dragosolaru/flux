@@ -12,7 +12,7 @@
  *   4. Subject contains vehicle nickname     → that vehicle
  *
  * Env vars:
- *   EMAIL_WEBHOOK_SECRET            — shared secret (?secret= query param)
+ *   EMAIL_WEBHOOK_SECRET            — shared secret (x-webhook-secret header)
  *   NEXT_PUBLIC_CLOUDMAILIN_ADDRESS — e.g. abc123@cloudmailin.net
  */
 
@@ -100,12 +100,13 @@ async function findUserByEmail(email: string, supabase: AdminClient): Promise<st
   return user?.id ?? null;
 }
 
-async function findVehicleByNickname(subject: string, supabase: AdminClient): Promise<VehicleMatch | null> {
+async function findVehicleByNickname(subject: string, supabase: AdminClient, userId: string): Promise<VehicleMatch | null> {
   if (!subject) return null;
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("id, user_id, nickname")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("user_id", userId);
   if (!vehicles) return null;
 
   const lowerSubject = subject.toLowerCase();
@@ -161,16 +162,22 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
 
   // 3. Sender email = registered user
   const senderEmail = extractEmailAddress(parsed.from);
+  let resolvedUserId: string | null = null;
   if (senderEmail) {
-    const userId = await findUserByEmail(senderEmail, supabase);
-    if (userId) {
-      const vehicleId = await firstActiveVehicle(userId, supabase);
-      if (vehicleId) return { vehicleId, userId };
+    resolvedUserId = await findUserByEmail(senderEmail, supabase);
+    if (resolvedUserId) {
+      const vehicleId = await firstActiveVehicle(resolvedUserId, supabase);
+      if (vehicleId) return { vehicleId, userId: resolvedUserId };
     }
   }
 
-  // 4. Vehicle nickname in subject
-  return findVehicleByNickname(parsed.subject, supabase);
+  // 4. Vehicle nickname in subject — only if we resolved a user from steps 2-3.
+  // Without a known user, an unscoped search would allow From-header spoofing
+  // to attribute documents to any user's vehicle.
+  if (resolvedUserId) {
+    return findVehicleByNickname(parsed.subject, supabase, resolvedUserId);
+  }
+  return null;
 }
 
 interface CloudmailinJsonBody {
@@ -251,12 +258,14 @@ async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
 
 export async function POST(request: Request) {
   const secret = process.env.EMAIL_WEBHOOK_SECRET;
-  if (secret) {
-    const headerSecret = request.headers.get("x-webhook-secret")
-      ?? new URL(request.url).searchParams.get("secret");
-    if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+  // Fail closed: if the secret is not configured the endpoint is disabled entirely.
+  // Set EMAIL_WEBHOOK_SECRET in your environment to enable inbound email processing.
+  if (!secret) {
+    return NextResponse.json({ message: "Webhook not configured" }, { status: 503 });
+  }
+  const headerSecret = request.headers.get("x-webhook-secret");
+  if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   let parsed: ParsedEmail;

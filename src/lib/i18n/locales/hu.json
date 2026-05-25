@@ -186,6 +186,31 @@
     "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
     "recover": "Visszaállítás",
     "recovered": "Visszaállítva: {count}",
-    "export_csv": "CSV exportálása"
+    "export_csv": "CSV exportálása",
+    "kpi_wh_per_km": "Hatékonyság"
+  },
+  "energy": {
+    "smart_charge_title": "Okos töltés",
+    "smart_charge_hint": "Csak a töltési határuk alatt lévő csatlakoztatott járművekre jelenik meg.",
+    "schedule_btn": "Ütemezés",
+    "scheduled": "Ütemezve ✓",
+    "start_at": "Indítás:",
+    "save": "megtakarítás",
+    "now": "Most",
+    "optimal": "Optimális",
+    "to_target": "a célhoz"
+  },
+  "departure": {
+    "title": "Indulás & Előkészítés",
+    "departure_label": "Tervezett indulás",
+    "departure_hint": "Az autó felmelegíti az akkumulátort és a kabint indulás előtt.",
+    "schedule_btn": "Ütemezés",
+    "scheduling": "Ütemezés…",
+    "scheduled": "Ütemezve ✓",
+    "precondition_label": "Azonnali előkészítés",
+    "precondition_hint": "Felmelegíti az akkumulátort a gyorsabb DC töltéshez. Ideális Supercharger előtt.",
+    "precondition_btn": "Akkumulátor előkészítése",
+    "preconditioning": "Aktiválás…",
+    "preconditioned": "Aktív ✓"
   }
 }

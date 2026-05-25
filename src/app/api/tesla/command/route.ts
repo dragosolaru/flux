@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     const result = await sendVehicleCommand({
       vehicleId: vehicle.id,
+      userId: session.user.id,
       teslaVehicleId: vehicle.tesla_vehicle_id,
       command: parsed.data.command,
       body: parsed.data.params,

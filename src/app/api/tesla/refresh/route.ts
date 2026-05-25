@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await getValidAccessToken(vehicle.id);
+    await getValidAccessToken(vehicle.id, session.user.id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Refresh failed";

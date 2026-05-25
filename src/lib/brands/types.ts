@@ -78,6 +78,9 @@ export interface CommandCapabilities {
   activateSentry: boolean;
   deactivateSentry: boolean;
   remoteStart: boolean;
+  scheduleCharging: boolean;
+  scheduleDeparture: boolean;
+  preconditionMax: boolean;
 }
 
 export type HistoryRetention =
