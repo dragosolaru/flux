@@ -1,5 +1,5 @@
 export type DocumentSource = "upload" | "email";
-export type DocumentType = "home_bill" | "public_receipt" | "unknown";
+export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
 export interface Document {
@@ -45,12 +45,14 @@ export interface EnergyCost {
 
 export interface ParsedDocument {
   document_type: DocumentType;
+  has_non_electricity_items: boolean;
   provider_name: string | null;
   period_start: string | null;
   period_end: string | null;
   session_timestamp: string | null;
   total_kwh: number | null;
   price_per_kwh: number | null;
+  electricity_cost: number | null;
   cost_total: number | null;
   currency: string;
   charger_network: string | null;
