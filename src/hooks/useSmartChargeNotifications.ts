@@ -36,7 +36,6 @@ export function useSmartChargeNotifications(vehicleId: string) {
     const isWindowOpen = currentHour === forecast.cheapestWindowStart;
 
     if (isWindowOpen && !prevWindowOpenRef.current) {
-      // Only show if vehicle is plugged but not actively charging at cheapest rate
       const state = vehicleState?.chargingState;
       const shouldNotify =
         state === "stopped" ||
