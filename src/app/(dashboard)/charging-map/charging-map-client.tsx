@@ -1,51 +1,64 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
-import type { ChargingStation, NetworkId, PlugType, StationAvailability } from "@/lib/external/charging-networks/types";
-import type { NetworkMeta } from "@/lib/external/charging-networks/types";
+import type { ChargingStation } from "@/app/api/charging-stations/route";
+
+export type { ChargingStation };
 
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
-export interface StationWithMeta extends ChargingStation {
-  networkMeta: NetworkMeta;
-  availability: StationAvailability | null;
+// Default centre: central Europe
+const DEFAULT_LAT = 48.5;
+const DEFAULT_LNG = 14.0;
+
+interface UserLocation {
+  lat: number;
+  lng: number;
 }
 
-const NETWORKS: { id: string; label: string }[] = [
-  { id: "all",      label: "All networks" },
-  { id: "ionity",   label: "Ionity" },
-  { id: "tesla-sc", label: "Tesla SC" },
-  { id: "enbw",     label: "EnBW" },
-  { id: "allego",   label: "Allego" },
-  { id: "fastned",  label: "Fastned" },
-];
+function useUserLocation() {
+  const [location, setLocation] = useState<UserLocation>({
+    lat: DEFAULT_LAT,
+    lng: DEFAULT_LNG,
+  });
 
-const KW_PRESETS = [
-  { label: "Any", value: 0 },
-  { label: "≥50 kW", value: 50 },
-  { label: "≥150 kW", value: 150 },
-  { label: "≥300 kW", value: 300 },
-];
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // Permission denied or unavailable — keep default
+      },
+    );
+  }, []);
+
+  return location;
+}
 
 export function ChargingMapClient() {
-  const [network, setNetwork] = useState("all");
-  const [minKw, setMinKw] = useState(0);
-  const [selected, setSelected] = useState<StationWithMeta | null>(null);
+  const [selected, setSelected] = useState<ChargingStation | null>(null);
+  const location = useUserLocation();
 
-  const { data: stations = [], isLoading } = useQuery({
-    queryKey: ["charging-map", network, minKw],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (network !== "all") params.set("network", network);
-      if (minKw > 0) params.set("minKw", String(minKw));
-      return apiFetch<StationWithMeta[]>(`/api/charging-map?${params}`);
-    },
-    staleTime: 2 * 60 * 1000,
+  const {
+    data: stations = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["charging-stations", location.lat, location.lng],
+    queryFn: () =>
+      apiFetch<ChargingStation[]>(
+        `/api/charging-stations?lat=${location.lat}&lng=${location.lng}`,
+      ),
+    staleTime: 300_000, // 5 minutes
   });
 
   return (
@@ -53,42 +66,12 @@ export function ChargingMapClient() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Charging Map</h1>
         <p className="text-sm text-muted-foreground">
-          {stations.length} stations · mock data
+          {isLoading
+            ? "Loading stations…"
+            : isError
+              ? "Could not load stations"
+              : `${stations.length} stations near you`}
         </p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <div className="flex gap-1">
-          {NETWORKS.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => setNetwork(n.id)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                network === n.id
-                  ? "bg-primary text-primary-foreground"
-                  : "border hover:bg-muted"
-              }`}
-            >
-              {n.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-1">
-          {KW_PRESETS.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setMinKw(p.value)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                minKw === p.value
-                  ? "bg-primary text-primary-foreground"
-                  : "border hover:bg-muted"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -97,12 +80,20 @@ export function ChargingMapClient() {
           <Card className="overflow-hidden">
             <div className="h-[500px]">
               {isLoading ? (
-                <div className="flex h-full items-center justify-center bg-muted">
-                  <div className="text-sm text-muted-foreground">Loading map…</div>
+                <Skeleton className="h-full w-full rounded-none" />
+              ) : isError ? (
+                <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted">
+                  <p className="text-sm font-medium text-destructive">
+                    Failed to load stations
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {error instanceof Error ? error.message : "Unknown error"}
+                  </p>
                 </div>
               ) : (
                 <StationMap
                   stations={stations}
+                  center={location}
                   selected={selected}
                   onSelect={setSelected}
                 />
@@ -117,44 +108,29 @@ export function ChargingMapClient() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">{selected.name}</CardTitle>
-                <div
-                  className="inline-block rounded px-2 py-0.5 text-xs font-medium text-white"
-                  style={{ background: selected.networkMeta.color }}
-                >
-                  {selected.networkMeta.displayName}
-                </div>
+                {selected.town && (
+                  <p className="text-sm text-muted-foreground">{selected.town}</p>
+                )}
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max power</span>
-                  <span className="font-medium">{selected.maxKw} kW</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Available stalls</span>
-                  <span className={`font-medium ${
-                    (selected.availability?.availableStalls ?? 0) > 0
-                      ? "text-chart-2"
-                      : "text-destructive"
-                  }`}>
-                    {selected.availability?.availableStalls ?? "?"} / {selected.totalStalls}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Price</span>
                   <span className="font-medium">
-                    {selected.priceEurKwh != null
-                      ? `€${selected.priceEurKwh}/kWh`
-                      : "Subscription"}
+                    {selected.maxPowerKw != null ? `${selected.maxPowerKw} kW` : "Unknown"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Plugs</span>
-                  <span className="font-medium">{selected.plugTypes.join(", ")}</span>
+                  <span className="text-muted-foreground">Connectors</span>
+                  <span className="font-medium">{selected.connectorCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium text-right">
-                    {selected.addressCity}, {selected.addressCountry}
+                  <span className="text-muted-foreground">Status</span>
+                  <span
+                    className={`font-medium ${
+                      selected.isOperational ? "text-chart-2" : "text-destructive"
+                    }`}
+                  >
+                    {selected.isOperational ? "Operational" : "Out of service"}
                   </span>
                 </div>
                 <button
