@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { LocateFixed } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
@@ -13,9 +15,9 @@ export type { ChargingStation };
 
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
-// Default centre: central Europe
-const DEFAULT_LAT = 48.5;
-const DEFAULT_LNG = 14.0;
+// Default centre: Romania (Bucharest)
+const DEFAULT_LAT = 44.4268;
+const DEFAULT_LNG = 26.1025;
 
 interface UserLocation {
   lat: number;
@@ -27,25 +29,31 @@ function useUserLocation() {
     lat: DEFAULT_LAT,
     lng: DEFAULT_LNG,
   });
+  const [locating, setLocating] = useState(false);
 
-  useEffect(() => {
+  const locate = useCallback(() => {
     if (!navigator.geolocation) return;
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
       },
-      () => {
-        // Permission denied or unavailable — keep default
-      },
+      () => setLocating(false),
+      { timeout: 8000 },
     );
   }, []);
 
-  return location;
+  useEffect(() => {
+    locate();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { location, locate, locating };
 }
 
 export function ChargingMapClient() {
   const [selected, setSelected] = useState<ChargingStation | null>(null);
-  const location = useUserLocation();
+  const { location, locate, locating } = useUserLocation();
 
   const {
     data: stations = [],
@@ -58,20 +66,26 @@ export function ChargingMapClient() {
       apiFetch<ChargingStation[]>(
         `/api/charging-stations?lat=${location.lat}&lng=${location.lng}`,
       ),
-    staleTime: 300_000, // 5 minutes
+    staleTime: 300_000,
   });
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Charging Map</h1>
-        <p className="text-sm text-muted-foreground">
-          {isLoading
-            ? "Loading stations…"
-            : isError
-              ? "Could not load stations"
-              : `${stations.length} stations near you`}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Charging Map</h1>
+          <p className="text-sm text-muted-foreground">
+            {isLoading
+              ? "Loading stations…"
+              : isError
+                ? "Could not load stations"
+                : `${stations.length} stations near you`}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={locate} disabled={locating} className="shrink-0">
+          <LocateFixed className={`size-4 mr-1.5 ${locating ? "animate-pulse" : ""}`} />
+          {locating ? "Locating…" : "My location"}
+        </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
