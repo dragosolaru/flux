@@ -19,6 +19,7 @@ import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { WeatherRangeCard } from "@/components/vehicle/WeatherRangeCard";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
+import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import type { BrandKey } from "@/lib/brands/types";
 
 interface DashboardClientProps {
@@ -35,6 +36,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <VehicleNotifications vehicleId={vehicleId} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{vehicleName}</h1>
