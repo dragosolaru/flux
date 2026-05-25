@@ -1,6 +1,6 @@
 # Flux — Product TODO
 
-_Last updated: 2026-05-24_
+_Last updated: 2026-05-25_
 
 ---
 
@@ -24,9 +24,9 @@ No Playwright (or equivalent) tests exist. The ROADMAP marks "Playwright smoke t
 `hasCommandsReady` depends on `virtual_key_paired = true` in the `vehicles` table, but there is no UI flow or API endpoint to set this flag after a user pairs Flux as a Tesla Virtual Key. Commands will remain gated even after the VCP proxy is deployed.
 - **Effort:** `[S]`
 
-### 5. i18n config lists only `ro` + `en` — de/hu/fr are broken
-`src/lib/i18n/config.ts` only defines `ro` and `en`. No locale JSON files exist for German, Hungarian, French, or other currencies mentioned in the product brief. Any user with a browser set to one of those languages falls back to Romanian silently.
-- **Effort:** `[M]` per locale
+### 5. ~~i18n config lists only `ro` + `en` — de/hu/fr are broken~~ ✅ DONE
+~~`src/lib/i18n/config.ts` only defines `ro` and `en`. No locale JSON files exist for German, Hungarian, French, or other currencies mentioned in the product brief. Any user with a browser set to one of those languages falls back to Romanian silently.~~
+`de`, `hu`, `fr` locale files added with all namespaces. All 5 locales now complete.
 
 ---
 
@@ -34,29 +34,29 @@ No Playwright (or equivalent) tests exist. The ROADMAP marks "Playwright smoke t
 
 High-value features or partial implementations that need to be completed.
 
-### 6. Real Tibber API integration (live tariff prices)
-Replace `tibber-mock` with a real Tibber GraphQL client (`POST /graphql` with personal token). The `TariffProvider` interface in `src/lib/external/tariffs/types.ts` is already the right shape. Adding a real provider would flip `hasTariff = true` for those users and unlock the Energy page + Smart Charge recommendations.
-- **Effort:** `[M]`
+### 6. ~~Real Tibber API integration (live tariff prices)~~ ✅ DONE
+~~Replace `tibber-mock` with a real Tibber GraphQL client.~~
+Real Tibber GraphQL provider added in `src/lib/external/tariffs/providers/tibber.ts`. Set `TIBBER_TOKEN` env var to enable. 1-hour in-memory cache.
 
-### 7. Romanian tariff providers (Enel, E.ON, Electrica)
-The product is Romania-first but there are no Romanian energy suppliers in the tariff registry. Spot pricing is not available from RO suppliers; a flat/ToU rate model with user-defined peak/off-peak times would be the practical approach.
-- **Effort:** `[L]`
+### 7. ~~Romanian tariff providers (Enel, E.ON, Electrica)~~ ✅ DONE
+~~The product is Romania-first but there are no Romanian energy suppliers in the tariff registry.~~
+Added: Electrica Furnizare, E.ON Energie România (ToU), Enel Energie Muntenia, Hidroelectrica. All with real rate structures.
 
 ### 8. WhatsApp OCR ingest via Twilio webhook
 `IngestCard` shows a WhatsApp icon / CTA but there is no Twilio webhook endpoint. The existing Cloudmailin email pipeline (`/api/documents/inbound-email`) already does the OCR heavy lifting; a new `/api/documents/inbound-whatsapp` route needs to accept Twilio Media, store to Supabase Storage, then call the same `processDocument` pipeline.
 - **Effort:** `[M]`
 
-### 9. VehicleCard image / avatar is absent
-`VehicleCard` and `VehicleListCard` render brand name text but no vehicle silhouette or image. A static SVG per brand/model would noticeably improve the garage and dashboard UX.
-- **Effort:** `[S]`
+### 9. ~~VehicleCard image / avatar is absent~~ ✅ DONE
+~~`VehicleCard` and `VehicleListCard` render brand name text but no vehicle silhouette or image.~~
+`VehicleModelImage` component added with inline SVG silhouettes for Model 3, Y, S, X, Cybertruck + generic fallback. Uses `currentColor` for theme compatibility.
 
-### 10. Computed trip metrics: Wh/km, cost/km, trip cost
-The `CostDashboard` shows `costPerKmHome/Public/Blended` (already computed in `src/app/api/costs/route.ts`) but efficiency metrics (Wh/km) are not displayed anywhere. The data to compute them exists (`total_kwh`, odometer from vehicle state) but the UI surface and any aggregation query are missing.
-- **Effort:** `[M]`
+### 10. ~~Computed trip metrics: Wh/km, cost/km, trip cost~~ ✅ DONE
+~~Efficiency metrics (Wh/km) are not displayed anywhere.~~
+`kpi_wh_per_km` added to costs API + CostDashboard. Formula: `(totalKwh * 1000) / totalKm`.
 
-### 11. State of Health (SoH) estimate for Tesla
-`BatteryHealthCard` exists and renders `batteryHealthPct`, but the live Tesla API response maps `batteryHealthPct = null` (see `src/lib/tesla/api.ts` line ~100). Tesla does not expose SoH directly; it must be estimated from `battery_range / rated_range`. The estimation logic and DB persistence are both missing.
-- **Effort:** `[M]`
+### 11. ~~State of Health (SoH) estimate for Tesla~~ ✅ DONE
+~~Tesla does not expose SoH directly; it must be estimated from `battery_range / rated_range`.~~
+SoH estimated as `(battery_range / rated_range) × 100`, clamped to [50, 105]%. Populated in `fetchVehicleData`.
 
 ### 12. Tesla charging history sync — no automatic scheduling
 `useChargingHistorySync` triggers a manual sync button. There is no background job or server-side cron that auto-syncs after each charging session ends. Users who forget to press the button will have gaps in their charging history.
@@ -92,9 +92,9 @@ Users can pick a scenario when adding a mock vehicle, but cannot change it after
 There is no export feature for `energy_costs`. A simple CSV download endpoint (`/api/costs/export?vehicleId=…`) would be a meaningful differentiator vs. the Tesla app.
 - **Effort:** `[S]`
 
-### 19. Smart charge — auto-start via Tesla command
-`SmartChargeCard` shows a recommendation but there is no "Schedule now" button that sends a `set_scheduled_charging` command to the Tesla API. The recommendation is informational only.
-- **Effort:** `[M]`
+### 19. ~~Smart charge — auto-start via Tesla command~~ ✅ DONE
+~~`SmartChargeCard` shows a recommendation but there is no "Schedule now" button.~~
+Schedule button added. Sends `schedule_charging` → Tesla `set_scheduled_charging`. Shows confirmation state for 10s.
 
 ### 20. Multi-vehicle smart charge coordinator
 `SmartChargeCard` renders each vehicle independently. If a user has two EVs sharing a home charger (single-phase circuit), recommendations should be staggered to avoid overloading. This is a pure computation change in `computeSmartCharge`.
@@ -104,9 +104,9 @@ There is no export feature for `energy_costs`. A simple CSV download endpoint (`
 `availability.ts` uses a deterministic pseudo-random occupancy model keyed to station ID + 2-minute epoch. It looks live but is entirely synthetic. Even a simple "last updated" disclaimer would improve trust.
 - **Effort:** `[S]` (add disclaimer) / `[XL]` (real OCPI feed)
 
-### 22. PWA / home screen installability
-No `manifest.webmanifest`, no service worker, no offline support. The mobile-first BottomNav exists but users cannot add Flux to their home screen as an app icon.
-- **Effort:** `[M]`
+### 22. ~~PWA / home screen installability~~ ✅ DONE
+~~No `manifest.webmanifest`, no service worker, no offline support.~~
+`manifest.webmanifest` added at `/public/manifest.webmanifest` with icons, theme color, display:standalone. `<link rel="manifest">` in root layout.
 
 ### 23. In-app notifications for charging events
 No push notification or in-app alert fires when charging completes or when the cheap tariff window opens. Tesla's API can report state changes; pairing that with a push notification would be a meaningful differentiator.
@@ -142,13 +142,13 @@ Currently the app polls `/vehicle_data` every 30 seconds via the REST API. Tesla
 The cost attribution model attributes EV charging proportionally from home bills. An MQTT/API integration with a smart home energy monitor would give precise kWh-per-session attribution without OCR guesswork.
 - **Effort:** `[XL]`
 
-### 30. GDPR data export and account deletion
-There is a `DangerZone` component in settings but only disconnect-vehicle logic. A full GDPR "download my data" and "delete my account" flow is needed before a public launch in the EU.
-- **Effort:** `[M]`
+### 30. ~~GDPR data export and account deletion~~ ✅ DONE
+~~A full GDPR "download my data" and "delete my account" flow is needed before a public launch in the EU.~~
+`GET /api/user/export` → JSON download of all user data. `DELETE /api/user` → ordered cascade delete + `auth.admin.deleteUser`. Settings danger zone UI with confirmation dialog.
 
-### 31. Rate limiting and abuse protection
-No rate limiting exists on the document upload, OCR (`/api/documents`), or Tesla command proxy routes. Anthropic API calls and Tesla API calls both have cost/rate implications. Add per-user limits via Upstash Redis or Vercel Edge Middleware.
-- **Effort:** `[M]`
+### 31. ~~Rate limiting and abuse protection~~ ✅ DONE (in-memory)
+~~No rate limiting exists on the document upload, OCR, or Tesla command proxy routes.~~
+In-memory sliding window rate limiter at `src/lib/rate-limit.ts`. Applied to: uploads (10/hr), commands (30/hr), state polling (120/hr), charging-history (20/hr), auth/register (5/hr per IP). ⚠️ Not shared across Vercel instances — migrate to Upstash Redis before scale.
 
 ### 32. Admin / analytics dashboard
 No way to see aggregate usage, OCR error rates, or top-used features. A simple Supabase-backed admin page (behind a role check) or PostHog integration would help prioritize future work.
@@ -182,6 +182,19 @@ What was finished in the current development sprint.
 - **CostDashboard** — monthly trend chart, home vs public split, petrol equivalent comparison
 - **Trip planner** — mock routing (Haversine), weather derating, charging stop insertion, multi-vehicle comparison
 - **Charging map** — Leaflet map with ~50 hardcoded EU stations, mock availability, network/kW filters
-- **Security audit** — 17 findings resolved (migrations 005, 007; RLS policies, token encryption, CSRF)
+- **Security audit (2nd pass)** — 6 new findings resolved: open redirect, email IDOR, webhook secret header-only, `getValidAccessToken` userId ownership, rate limits on state/history routes, scoped nickname search
+- **Security audit (1st pass)** — 17 findings resolved (migrations 005, 007; RLS policies, token encryption, CSRF)
+- **DepartureCard** — scheduled departure (Tesla `set_scheduled_departure`) + precondition-now (Tesla `set_preconditioning_max`), gated on COMMANDS capability
+- **Battery preconditioning commands** — `schedule_charging`, `schedule_departure`, `precondition_max` in type system, command map, Tesla API, mock engine
+- **Real Tibber API** — `TIBBER_TOKEN` env var, 1-hour cache, unlocks Energy page
+- **Romanian tariff providers** — Electrica, E.ON ToU, Enel, Hidroelectrica
+- **Tesla SVG silhouettes** — `VehicleModelImage` with Model 3/Y/S/X/Cybertruck inline SVGs
+- **GDPR export/delete** — `GET /api/user/export` + `DELETE /api/user` + Settings danger zone
+- **PWA manifest** — `manifest.webmanifest` + `<link rel="manifest">` in root layout
+- **SoH estimate** — `battery_range / rated_range × 100`, clamped [50, 105]%
+- **Wh/km efficiency KPI** — `kpi_wh_per_km` in costs API + CostDashboard
+- **Smart charge schedule button** — sends `schedule_charging` command to Tesla
+- **Rate limiting** — in-memory sliding window, 4 routes covered
+- **i18n de/hu/fr** — German, Hungarian, French locale files with all namespaces
 - **DB migrations 001–009** — initial schema through charging session uniqueness constraint
 - **Dark/light theme** — `next-themes`, toggle in TopBar dropdown
