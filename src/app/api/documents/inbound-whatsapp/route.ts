@@ -1,24 +1,3 @@
-/**
- * Inbound WhatsApp webhook — Twilio format.
- *
- * Twilio sends a POST with application/x-www-form-urlencoded:
- *   From:               whatsapp:+40712345678
- *   To:                 whatsapp:+14155238886
- *   Body:               message text (e.g. vehicle nickname)
- *   NumMedia:           number of attached media files
- *   MediaUrl0, ...:     URLs to media files (authenticated via Basic auth)
- *   MediaContentType0, ...: content types
- *
- * Vehicle identification (priority order):
- *   1. Body text contains vehicle nickname → that vehicle
- *   2. First active vehicle of any user (single-user fallback)
- *
- * Env vars:
- *   TWILIO_WEBHOOK_SECRET  — shared secret (x-twilio-signature header)
- *   TWILIO_ACCOUNT_SID     — for Basic auth when downloading media
- *   TWILIO_AUTH_TOKEN      — for Basic auth when downloading media
- */
-
 import { NextResponse, after } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -46,18 +25,6 @@ function constantTimeEq(a: string, b: string): boolean {
 function pickString(formData: FormData, key: string): string | null {
   const v = formData.get(key);
   return typeof v === "string" ? v : null;
-}
-
-async function firstActiveVehicle(userId: string, supabase: AdminClient): Promise<string | null> {
-  const { data } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-  return data ? (data as { id: string }).id : null;
 }
 
 async function findVehicleByNickname(bodyText: string, supabase: AdminClient): Promise<VehicleMatch | null> {
@@ -91,11 +58,8 @@ async function firstVehicleAnyUser(supabase: AdminClient): Promise<VehicleMatch 
 }
 
 async function resolveVehicle(bodyText: string, supabase: AdminClient): Promise<VehicleMatch | null> {
-  // 1. Body text contains a vehicle nickname
   const byNickname = await findVehicleByNickname(bodyText, supabase);
   if (byNickname) return byNickname;
-
-  // 2. Single-user/single-vehicle fallback
   return firstVehicleAnyUser(supabase);
 }
 
