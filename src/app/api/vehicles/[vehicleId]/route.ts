@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+
+const uuidSchema = z.string().uuid();
 
 export async function PATCH(
   req: Request,
@@ -12,6 +15,9 @@ export async function PATCH(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   const { vehicleId } = await params;
+  if (!uuidSchema.safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
   const body = await req.json().catch(() => ({}));
 
   // Only allow updating virtual_key_paired via this endpoint
@@ -46,6 +52,9 @@ export async function DELETE(
   }
 
   const { vehicleId } = await params;
+  if (!uuidSchema.safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
   const supabase = createSupabaseAdminClient();
 
   const { error } = await supabase

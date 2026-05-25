@@ -38,6 +38,9 @@ export async function POST(
   }
 
   const { vehicleId } = await params;
+  if (!z.string().uuid().safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
 
   if (!checkRateLimit(session.user.id, "commands", 30)) {
     return NextResponse.json(

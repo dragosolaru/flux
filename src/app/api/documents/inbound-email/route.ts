@@ -251,12 +251,15 @@ async function parseMultipartEmail(request: Request): Promise<ParsedEmail> {
 
 export async function POST(request: Request) {
   const secret = process.env.EMAIL_WEBHOOK_SECRET;
-  if (secret) {
-    const headerSecret = request.headers.get("x-webhook-secret")
-      ?? new URL(request.url).searchParams.get("secret");
-    if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+  // Fail closed: if the secret is not configured the endpoint is disabled entirely.
+  // Set EMAIL_WEBHOOK_SECRET in your environment to enable inbound email processing.
+  if (!secret) {
+    return NextResponse.json({ message: "Webhook not configured" }, { status: 503 });
+  }
+  const headerSecret = request.headers.get("x-webhook-secret")
+    ?? new URL(request.url).searchParams.get("secret");
+  if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   let parsed: ParsedEmail;
@@ -283,7 +286,10 @@ export async function POST(request: Request) {
   const skipped: string[] = [];
 
   for (const attachment of parsed.attachments) {
-    const ext = attachment.filename.split(".").pop() ?? "bin";
+    // Sanitize the extension: keep only alphanumeric chars to prevent path-separator
+    // injection (e.g. a filename without a dot would otherwise become the whole ext).
+    const rawExt = attachment.filename.split(".").pop() ?? "bin";
+    const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10) || "bin";
     const storagePath = vehicleId && userId
       ? `${userId}/${vehicleId}/${crypto.randomUUID()}.${ext}`
       : `unmatched/${crypto.randomUUID()}.${ext}`;

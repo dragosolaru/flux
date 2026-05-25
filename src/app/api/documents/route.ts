@@ -109,7 +109,9 @@ export async function POST(request: Request) {
 
   if (!vehicle) return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
 
-  const ext = file.name.split(".").pop() ?? "bin";
+  // Sanitize extension: keep only alphanumeric chars to prevent path-separator injection.
+  const rawExt = file.name.split(".").pop() ?? "bin";
+  const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10) || "bin";
   const storagePath = `${userId}/${vehicleId}/${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 

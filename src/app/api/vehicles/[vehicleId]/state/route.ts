@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
@@ -21,6 +22,9 @@ export async function GET(
   }
 
   const { vehicleId } = await params;
+  if (!z.string().uuid().safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
   const supabase = createSupabaseAdminClient();
 
   const { data: vehicle, error: vehErr } = await supabase

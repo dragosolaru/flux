@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 
+const uuidSchema = z.string().uuid();
+
 const PatchSchema = z.object({
   cost_ron: z.number().positive().optional(),
   total_kwh: z.number().positive().optional(),
@@ -18,6 +20,9 @@ export async function GET(
   { params }: { params: Promise<{ documentId: string }> },
 ) {
   const { documentId } = await params;
+  if (!uuidSchema.safeParse(documentId).success) {
+    return NextResponse.json({ message: "Invalid documentId" }, { status: 400 });
+  }
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
@@ -43,6 +48,9 @@ export async function PATCH(
   { params }: { params: Promise<{ documentId: string }> },
 ) {
   const { documentId } = await params;
+  if (!uuidSchema.safeParse(documentId).success) {
+    return NextResponse.json({ message: "Invalid documentId" }, { status: 400 });
+  }
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 

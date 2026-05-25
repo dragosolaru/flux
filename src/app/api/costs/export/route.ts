@@ -54,7 +54,13 @@ export async function GET(request: Request) {
   );
 
   const csv = [headers.join(","), ...csvRows].join("\n");
-  const filename = `flux-costs-${(vehicle as { display_name: string }).display_name.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
+  // Strip any characters that could break the quoted Content-Disposition filename value.
+  // RFC 6266 allows most characters inside double quotes except '"' and '\'.
+  const safeName = (vehicle as { display_name: string }).display_name
+    .replace(/[^\w\s\-]/g, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 64);
+  const filename = `flux-costs-${safeName}-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {
     headers: {
