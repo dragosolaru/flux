@@ -21,11 +21,12 @@ function baseUrl(region: string): string {
 
 export async function fetchTeslaChargingHistory(params: {
   vehicleId: string;       // our internal UUID
+  userId: string;
   teslaVehicleId: number;
   pageNo?: number;
   pageSize?: number;
 }): Promise<TeslaChargingSession[]> {
-  const { accessToken, region } = await getValidAccessToken(params.vehicleId);
+  const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
   const pageNo = params.pageNo ?? 0;
   const pageSize = params.pageSize ?? 50;
 

@@ -50,10 +50,11 @@ async function wakeVehicle(params: {
 
 export async function fetchVehicleData(params: {
   vehicleId: string;
+  userId: string;
   teslaVehicleId: number;
   displayName: string;
 }): Promise<VehicleState> {
-  const { accessToken, region } = await getValidAccessToken(params.vehicleId);
+  const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
 
   const url = `${baseUrl(region)}/api/1/vehicles/${params.teslaVehicleId}/vehicle_data?endpoints=${encodeURIComponent(TESLA_VEHICLE_DATA_ENDPOINTS)}`;
 
@@ -159,11 +160,12 @@ function mapVehicleData(
 
 export async function sendVehicleCommand(params: {
   vehicleId: string;
+  userId: string;
   teslaVehicleId: number;
   command: TeslaCommand;
   body?: Record<string, unknown>;
 }): Promise<TeslaCommandResponse> {
-  const { accessToken, region } = await getValidAccessToken(params.vehicleId);
+  const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
 
   // For Model 3/Y/S/X post-2021 Tesla requires command signing via the
   // Vehicle Command Protocol. We delegate that to a self-hosted proxy

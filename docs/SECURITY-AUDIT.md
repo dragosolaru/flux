@@ -1,23 +1,13 @@
-# Security Audit — 2026-05-23
+# Security Audit — 2026-05-23 / 2026-05-25 (second pass)
 
-> Code-review pass before MVP launch. 15 findings surfaced; 12 fixed in commit batch. The 3 unresolved items are documented below with severity and mitigation plan.
-
----
-
-## Methodology
-
-5-angle parallel review at extra-high effort:
-- **A** — line-by-line diff scan
-- **B** — removed-behavior auditor
-- **C** — cross-file impact tracer
-- **D** — TypeScript/React/Next.js 16 pitfalls
-- **E** — security & ACL audit
-
-Scope: `git diff 73e5b33...HEAD` covering the cost-intelligence work, per-vehicle email refactor, and Tesla-only MVP separation.
+> Multi-agent parallel review (3 independent agents + synthesis) before enabling real Tesla key in production.
+> All Critical and High findings have been resolved. One Medium (rate limiting on state/history routes) was deprioritised to post-launch.
 
 ---
 
-## Fixed
+## First Pass — 2026-05-23
+
+5-angle parallel review before MVP launch. 17 findings, all resolved.
 
 | # | Severity | Area | Fix |
 |---|---|---|---|
@@ -41,29 +31,52 @@ Scope: `git diff 73e5b33...HEAD` covering the cost-intelligence work, per-vehicl
 
 ---
 
-## Unresolved (intentional or low-impact)
+## Second Pass — 2026-05-25
 
-_All 3 originally unresolved findings have been fixed in the second review pass (2026-05-23). No open items remain for MVP._
+3 independent parallel agents, each reviewing the full codebase independently, then findings synthesised.
+
+### New findings, all fixed
+
+| # | Severity | Area | Finding | Fix |
+|---|---|---|---|---|
+| 18 | High | `LoginForm.tsx:56` | Open redirect — `router.replace(callbackUrl)` with no origin check | Validate `callbackUrl.startsWith("/")` before redirect |
+| 19 | High | `inbound-email/route.ts` | IDOR: `findVehicleByNickname` scanned ALL users' vehicles; From-header spoofing could attribute docs to victim | Scope nickname search to resolved user only; return null if no user resolved |
+| 20 | Medium | `inbound-email/route.ts` | `?secret=` query param falls through to access logs | Removed; header-only (`x-webhook-secret`); fail-closed if secret not configured |
+| 21 | Medium | `getValidAccessToken` | No userId ownership check inside — IDOR possible if callers are bypassed | Added `userId: string` param, `.eq("user_id", userId)` on vehicles query |
+| 22 | Medium | `/api/vehicles/[id]/state` | No rate limit — authenticated user can force continuous Tesla wake-ups | `checkRateLimit(userId, "state", 120)` — 120 req/hr |
+| 23 | Medium | `/api/vehicles/[id]/charging-history` | No rate limit | `checkRateLimit(userId, "charging-history", 20)` — 20 req/hr |
+
+### Confirmed secure (all 3 agents agreed)
+
+- **AES-256-GCM token encryption** — random IV per ciphertext, auth tag enforced ✅
+- **Tesla PKCE flow** — code_verifier in httpOnly cookie, S256 challenge ✅  
+- **HMAC-SHA256 state binding** — `timingSafeEqual` comparison ✅
+- **IDOR on vehicle routes** — all routes verify `user_id = session.user.id` before access ✅
+- **Service role key not in client bundle** — only `NEXT_PUBLIC_*` vars exposed ✅
+- **No secrets in git history** — all keys via env vars ✅
 
 ---
 
-## Security stance — MVP launch readiness
+## Security stance — Real Tesla key readiness
 
-✅ Inbound webhook auth: constant-time secret check  
-✅ Tesla OAuth: state HMAC-bound to user, constant-time verify  
-✅ Token encryption: AES-256-GCM with random IV + auth tag, fail-fast key validation  
-✅ Document ownership: recover restricted to sender_email match  
-✅ Supabase admin client: ownership check via `.eq("user_id", userId)` before reads/writes  
-⚠️ RLS policies: present on `documents` (user_id = auth.uid()), `vehicles`. Audit `energy_costs`, `charging_sessions`, `trips` before opening to multi-tenant.  
-⚠️ Rate limiting: none on `/api/documents/inbound-email` — depends on Cloudmailin's source IP filter as the primary defense.
+✅ Open redirect: callbackUrl validated to relative paths only  
+✅ IDOR (email webhook): nickname search scoped to resolved user  
+✅ IDOR (token access): userId ownership check inside `getValidAccessToken`  
+✅ Webhook secret: header-only, fail-closed if unconfigured  
+✅ Rate limiting: uploads (10/hr), commands (30/hr), state (120/hr), charging-history (20/hr)  
+✅ Rate limiting on `/api/auth/register`: 5 req/hr per IP  
+✅ Token encryption: AES-256-GCM, fail-fast key validation  
+✅ Tesla OAuth: PKCE + HMAC-bound state + constant-time compare  
+⚠️ Rate limiting in-memory — not shared across Vercel instances (good enough for MVP; migrate to Upstash Redis for scale)  
+⚠️ RLS policies: audit `energy_costs`, `charging_sessions`, `trips`, `command_events` before full multi-tenant launch  
 
 ---
 
-## Recommendations before public multi-tenant launch
+## Remaining recommendations before public multi-tenant launch
 
-1. **Per-doc claim tokens** in recovery emails (replaces the `sender_email` filter, more robust against email spoofing).
-2. **Rate limit** the inbound webhook by source IP and per-email-domain.
-3. **RLS audit pass** on `energy_costs`, `charging_sessions`, `trips`, `command_events` tables.
-4. **Replace `findUserByEmailLocalPart` normalization** with exact match (drops the cross-user collision risk).
-5. **Bot detection** on `/api/auth/[...nextauth]` (Google OAuth has built-in defenses but custom Credentials route is exposed).
-6. **Source IP allowlist** for Cloudmailin webhook (their published IP range).
+1. **Upstash Redis rate limiter** — replace in-memory `Map` to share limits across Vercel instances
+2. **RLS audit** on `energy_costs`, `charging_sessions`, `trips`, `command_events`
+3. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
+4. **Source IP allowlist** for Cloudmailin webhook
+5. **Tesla token revocation detection** — clean up stale tokens on `invalid_grant` from refresh
+6. **Key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`

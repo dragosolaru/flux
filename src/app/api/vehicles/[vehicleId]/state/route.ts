@@ -49,6 +49,7 @@ export async function GET(
       try {
         const state = await fetchVehicleData({
           vehicleId: vehicle.id,
+          userId: session.user.id,
           teslaVehicleId: vehicle.tesla_vehicle_id,
           displayName: vehicle.display_name,
         });

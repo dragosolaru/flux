@@ -42,6 +42,7 @@ export async function POST(
   try {
     const sessions = await fetchTeslaChargingHistory({
       vehicleId: vehicle.id,
+      userId: session.user.id,
       teslaVehicleId: vehicle.tesla_vehicle_id,
     });
 

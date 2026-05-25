@@ -95,6 +95,7 @@ export async function POST(
     try {
       const result = await sendVehicleCommand({
         vehicleId: vehicle.id,
+        userId: session.user.id,
         teslaVehicleId: vehicle.tesla_vehicle_id,
         command: entry.teslaCmd,
         body: entry.buildBody(args),

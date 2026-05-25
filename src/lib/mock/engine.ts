@@ -292,6 +292,9 @@ export function applyCommand(
     case "activate_sentry":   state.isSentryMode = true;   break;
     case "deactivate_sentry": state.isSentryMode = false;  break;
     case "remote_start":      break;
+    case "schedule_charging":  break; // no mock state mutation needed
+    case "schedule_departure": break; // no mock state mutation needed
+    case "precondition_max":   break; // no mock state mutation needed
   }
 
   return { ...snapshot, state };
