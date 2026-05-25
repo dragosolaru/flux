@@ -29,7 +29,7 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ vehicleId, vehicleName, brand, model }: DashboardClientProps) {
-  const { data, isLoading, isFetching, error, refetch } = useVehicle(vehicleId);
+  const { data, isLoading, isFetching, isError, error, refetch } = useVehicle(vehicleId);
   const caps = useBrandCapabilities(brand);
   const t = caps?.telemetry;
 
@@ -76,13 +76,13 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           {data && <StatsGrid state={data} />}
 
           <div className="grid gap-4 md:grid-cols-2">
-            <ChargingStatus state={data} isLoading={isLoading} />
+            <ChargingStatus state={data} isLoading={isLoading} isError={isError} />
             <FeatureGate capability="COMMANDS" fallback="null">
               <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
             </FeatureGate>
           </div>
 
-          <FeatureGate capability="COMMANDS" fallback="null">
+          <FeatureGate capability="LIVE" fallback="null">
             <DepartureCard vehicleId={vehicleId} />
           </FeatureGate>
 

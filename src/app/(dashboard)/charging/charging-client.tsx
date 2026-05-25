@@ -40,7 +40,7 @@ export function ChargingClient({
   vehicleName,
   history,
 }: ChargingClientProps) {
-  const { data, isLoading } = useVehicle(vehicleId);
+  const { data, isLoading, isError } = useVehicle(vehicleId);
   const { mutate, isPending } = useVehicleCommand();
   const { data: caps } = useCapabilities();
   const syncMutation = useChargingHistorySync(vehicleId);
@@ -74,7 +74,7 @@ export function ChargingClient({
         <p className="text-sm text-muted-foreground">{vehicleName}</p>
       </div>
 
-      <ChargingStatus state={data} isLoading={isLoading} />
+      <ChargingStatus state={data} isLoading={isLoading} isError={isError} />
 
       <Card>
         <CardHeader>
@@ -85,8 +85,10 @@ export function ChargingClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isLoading || !data ? (
+          {isLoading ? (
             <Skeleton className="h-6 w-full" />
+          ) : !data ? (
+            <p className="text-sm text-muted-foreground">Could not load charge limit.</p>
           ) : (
             <>
               <div className="flex items-center justify-between text-sm">

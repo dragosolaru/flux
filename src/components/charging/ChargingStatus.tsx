@@ -10,21 +10,24 @@ import type { VehicleState } from "@/types/vehicle";
 interface ChargingStatusProps {
   state: VehicleState | undefined;
   isLoading: boolean;
+  isError?: boolean;
 }
 
-export function ChargingStatus({ state, isLoading }: ChargingStatusProps) {
+export function ChargingStatus({ state, isLoading, isError }: ChargingStatusProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Charging</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading || !state ? (
+        {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-5 w-32" />
             <Skeleton className="h-4 w-48" />
             <Skeleton className="h-2 w-full" />
           </div>
+        ) : isError || !state ? (
+          <p className="text-sm text-muted-foreground">Could not load charging status.</p>
         ) : (
           <>
             <div className="mb-3 flex items-center gap-3">
