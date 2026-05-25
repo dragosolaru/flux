@@ -203,5 +203,18 @@
     "now": "Most",
     "optimal": "Optimális",
     "to_target": "a célhoz"
+  },
+  "departure": {
+    "title": "Indulás & Előkészítés",
+    "departure_label": "Tervezett indulás",
+    "departure_hint": "Az autó felmelegíti az akkumulátort és a kabint indulás előtt.",
+    "schedule_btn": "Ütemezés",
+    "scheduling": "Ütemezés…",
+    "scheduled": "Ütemezve ✓",
+    "precondition_label": "Azonnali előkészítés",
+    "precondition_hint": "Felmelegíti az akkumulátort a gyorsabb DC töltéshez. Ideális Supercharger előtt.",
+    "precondition_btn": "Akkumulátor előkészítése",
+    "preconditioning": "Aktiválás…",
+    "preconditioned": "Aktív ✓"
   }
 }

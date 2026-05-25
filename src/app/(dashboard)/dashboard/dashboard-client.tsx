@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BatteryHealthCard } from "@/components/vehicle/BatteryHealthCard";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { DepartureCard } from "@/components/vehicle/DepartureCard";
 import { FeatureGate } from "@/components/layout/FeatureGate";
 import { DoorsWindowsCard } from "@/components/vehicle/DoorsWindowsCard";
 import { ScoresCard } from "@/components/vehicle/ScoresCard";
@@ -80,6 +81,10 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
               <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
             </FeatureGate>
           </div>
+
+          <FeatureGate capability="COMMANDS" fallback="null">
+            <DepartureCard vehicleId={vehicleId} />
+          </FeatureGate>
 
           {/* Extended telemetry — each section gated on brand capability */}
           {/* Weather + derated range */}

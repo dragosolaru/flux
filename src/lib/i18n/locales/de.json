@@ -203,5 +203,18 @@
     "now": "Jetzt",
     "optimal": "Optimal",
     "to_target": "bis Ziel"
+  },
+  "departure": {
+    "title": "Abfahrt & Vorkonditionierung",
+    "departure_label": "Geplante Abfahrt",
+    "departure_hint": "Das Auto wärmt Batterie und Innenraum vor der Abfahrt auf.",
+    "schedule_btn": "Planen",
+    "scheduling": "Wird geplant…",
+    "scheduled": "Geplant ✓",
+    "precondition_label": "Jetzt vorkonditionieren",
+    "precondition_hint": "Wärmt die Batterie für schnelleres DC-Laden. Ideal vor einem Supercharger.",
+    "precondition_btn": "Batterie vorkonditionieren",
+    "preconditioning": "Wird aktiviert…",
+    "preconditioned": "Aktiv ✓"
   }
 }

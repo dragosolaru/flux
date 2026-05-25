@@ -206,6 +206,20 @@
     "export_csv": "Export CSV"
   },
 
+  "departure": {
+    "title": "Plecare & Preconditionare",
+    "departure_label": "Plecare programată",
+    "departure_hint": "Mașina va încălzi bateria și habitaclul înainte să pleci.",
+    "schedule_btn": "Programează",
+    "scheduling": "Se programează…",
+    "scheduled": "Programat ✓",
+    "precondition_label": "Preconditionează acum",
+    "precondition_hint": "Încălzește bateria pentru încărcare DC mai rapidă. Ideal înainte de un Supercharger.",
+    "precondition_btn": "Preconditionează bateria",
+    "preconditioning": "Se activează…",
+    "preconditioned": "Activ ✓"
+  },
+
   "energy": {
     "smart_charge_title": "Încărcare inteligentă",
     "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",

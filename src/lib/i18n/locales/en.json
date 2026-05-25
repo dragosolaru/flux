@@ -206,6 +206,20 @@
     "export_csv": "Export CSV"
   },
 
+  "departure": {
+    "title": "Departure & Preconditioning",
+    "departure_label": "Scheduled departure",
+    "departure_hint": "The car will warm the battery and cabin before you leave.",
+    "schedule_btn": "Schedule",
+    "scheduling": "Scheduling…",
+    "scheduled": "Scheduled ✓",
+    "precondition_label": "Precondition now",
+    "precondition_hint": "Warms the battery for faster DC charging. Ideal before heading to a Supercharger.",
+    "precondition_btn": "Precondition battery",
+    "preconditioning": "Activating…",
+    "preconditioned": "Active ✓"
+  },
+
   "energy": {
     "smart_charge_title": "Smart charge",
     "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
