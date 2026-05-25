@@ -16,11 +16,9 @@
     "copied": "Másolva",
     "soon": "Hamarosan"
   },
-
   "app": {
     "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."
   },
-
   "nav": {
     "section": {
       "car": "Az autóm",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Szimulált adatok",
     "subtitle": "Tesla csatlakoztatása valós adatokért",
     "cta": "Tesla csatlakoztatása"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Adja hozzá az első autóját",
@@ -82,14 +78,12 @@
       "cta": "Virtual Key beállítása"
     }
   },
-
   "onboarding": {
     "title": "Üdvözli a Flux",
     "subtitle": "Kezelje a költségeket, figyelje és vezérelje Tesla-ját — mindent egy helyen.",
     "cta_primary": "Tesla csatlakoztatása",
     "cta_secondary": "Fedezze fel demóadatokkal"
   },
-
   "settings": {
     "title": "Beállítások",
     "section": {
@@ -129,7 +123,6 @@
       }
     }
   },
-
   "ingest": {
     "title": "Bizonylat hozzáadása",
     "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
@@ -149,7 +142,6 @@
       }
     }
   },
-
   "commands": {
     "title": "Parancsok",
     "subtitle": "Vezérelje távolról az autót.",
@@ -163,13 +155,11 @@
     "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
     "sending": "Küldés…"
   },
-
   "garage": {
     "title": "Garázs",
     "add_vehicle": "Jármű hozzáadása",
     "fleet_totals": "Flotta összesítő"
   },
-
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",
     "kpi_home_vs_public": "Otthon vs Nyilvános",
@@ -180,13 +170,38 @@
     "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
     "home": "Otthon",
     "public": "Nyilvános",
-    "months": ["jan", "feb", "már", "ápr", "máj", "jún", "júl", "aug", "szep", "okt", "nov", "dec"],
+    "months": [
+      "jan",
+      "feb",
+      "már",
+      "ápr",
+      "máj",
+      "jún",
+      "júl",
+      "aug",
+      "szep",
+      "okt",
+      "nov",
+      "dec"
+    ],
     "page_title": "Költségek",
     "no_docs_title": "Még nincsenek dokumentumok.",
     "no_docs_hint": "Töltse fel az első számláját vagy bizonylatát a költségek megtekintéséhez.",
     "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
     "recover": "Visszaállítás",
     "recovered": "Visszaállítva: {count}",
-    "export_csv": "CSV exportálása"
+    "export_csv": "CSV exportálása",
+    "kpi_wh_per_km": "Hatékonyság"
+  },
+  "energy": {
+    "smart_charge_title": "Okos töltés",
+    "smart_charge_hint": "Csak a töltési határuk alatt lévő csatlakoztatott járművekre jelenik meg.",
+    "schedule_btn": "Ütemezés",
+    "scheduled": "Ütemezve ✓",
+    "start_at": "Indítás:",
+    "save": "megtakarítás",
+    "now": "Most",
+    "optimal": "Optimális",
+    "to_target": "a célhoz"
   }
 }

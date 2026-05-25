@@ -16,11 +16,9 @@
     "copied": "Copié",
     "soon": "Bientôt"
   },
-
   "app": {
     "tagline": "Gérez votre Tesla — coûts, recharge, commandes."
   },
-
   "nav": {
     "section": {
       "car": "Ma voiture",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Données simulées",
     "subtitle": "Connectez Tesla pour des données réelles",
     "cta": "Connecter Tesla"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Ajoutez votre première voiture",
@@ -82,14 +78,12 @@
       "cta": "Configurer la clé virtuelle"
     }
   },
-
   "onboarding": {
     "title": "Bienvenue sur Flux",
     "subtitle": "Gérez les coûts, surveillez et contrôlez votre Tesla — tout en un seul endroit.",
     "cta_primary": "Connecter Tesla",
     "cta_secondary": "Explorer avec les données démo"
   },
-
   "settings": {
     "title": "Paramètres",
     "section": {
@@ -129,7 +123,6 @@
       }
     }
   },
-
   "ingest": {
     "title": "Ajouter un reçu",
     "subtitle": "Envoyez un reçu de n'importe quel réseau — Renovatio, IONITY, MOL, Petrom — nous le traiterons automatiquement.",
@@ -149,7 +142,6 @@
       }
     }
   },
-
   "commands": {
     "title": "Commandes",
     "subtitle": "Contrôlez votre voiture à distance.",
@@ -163,13 +155,11 @@
     "no_commands": "Aucune commande disponible pour ce véhicule.",
     "sending": "Envoi en cours…"
   },
-
   "garage": {
     "title": "Garage",
     "add_vehicle": "Ajouter un véhicule",
     "fleet_totals": "Totaux de la flotte"
   },
-
   "costs": {
     "kpi_cost_per_km": "Coût par km",
     "kpi_home_vs_public": "Domicile vs Public",
@@ -180,13 +170,38 @@
     "add_docs_hint": "Ajoutez des documents pour voir coût/km",
     "home": "Domicile",
     "public": "Public",
-    "months": ["jan.", "fév.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+    "months": [
+      "jan.",
+      "fév.",
+      "mars",
+      "avr.",
+      "mai",
+      "juin",
+      "juil.",
+      "août",
+      "sept.",
+      "oct.",
+      "nov.",
+      "déc."
+    ],
     "page_title": "Coûts",
     "no_docs_title": "Aucun document pour l'instant.",
     "no_docs_hint": "Téléchargez votre première facture ou reçu pour voir les coûts.",
     "missing_email_docs": "Documents e-mail manquants ?",
     "recover": "Récupérer",
     "recovered": "Récupéré : {count}",
-    "export_csv": "Exporter CSV"
+    "export_csv": "Exporter CSV",
+    "kpi_wh_per_km": "Efficacité"
+  },
+  "energy": {
+    "smart_charge_title": "Charge intelligente",
+    "smart_charge_hint": "Affiché uniquement pour les véhicules branchés en dessous de leur limite de charge.",
+    "schedule_btn": "Planifier",
+    "scheduled": "Planifié ✓",
+    "start_at": "Démarrer à",
+    "save": "économiser",
+    "now": "Maintenant",
+    "optimal": "Optimal",
+    "to_target": "jusqu'à l'objectif"
   }
 }

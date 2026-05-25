@@ -74,6 +74,7 @@ export interface CostAggregation {
   costPerKmHome: number | null;
   costPerKmPublic: number | null;
   costPerKmBlended: number | null;
+  whPerKm: number | null;
   monthlyTrend: MonthlyBucket[];
 }
 

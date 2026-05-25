@@ -94,4 +94,7 @@ export type TeslaCommand =
   | "window_control"
   | "set_sentry_mode"
   | "remote_start_drive"
-  | "set_temps";
+  | "set_temps"
+  | "set_scheduled_charging"
+  | "set_scheduled_departure"
+  | "set_preconditioning_max";

@@ -189,6 +189,7 @@
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Home vs Public",
     "kpi_total_energy": "Total energy",
+    "kpi_wh_per_km": "Efficiency",
     "kpi_vs_fuel": "vs Fuel",
     "chart_monthly_trend": "Monthly trend",
     "no_data": "No data yet",
@@ -203,5 +204,17 @@
     "recover": "Recover",
     "recovered": "Recovered: {count}",
     "export_csv": "Export CSV"
+  },
+
+  "energy": {
+    "smart_charge_title": "Smart charge",
+    "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
+    "schedule_btn": "Schedule",
+    "scheduled": "Scheduled ✓",
+    "start_at": "Start at",
+    "save": "save",
+    "now": "Now",
+    "optimal": "Optimal",
+    "to_target": "to target"
   }
 }

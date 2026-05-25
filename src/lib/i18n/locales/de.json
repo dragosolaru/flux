@@ -16,11 +16,9 @@
     "copied": "Kopiert",
     "soon": "Bald"
   },
-
   "app": {
     "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."
   },
-
   "nav": {
     "section": {
       "car": "Auto",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Simulierte Daten",
     "subtitle": "Tesla verbinden für Echtdaten",
     "cta": "Tesla verbinden"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Füge dein erstes Auto hinzu",
@@ -82,14 +78,12 @@
       "cta": "Virtual Key einrichten"
     }
   },
-
   "onboarding": {
     "title": "Willkommen bei Flux",
     "subtitle": "Kosten verwalten, deinen Tesla überwachen und steuern — alles an einem Ort.",
     "cta_primary": "Tesla verbinden",
     "cta_secondary": "Mit Demo-Daten erkunden"
   },
-
   "settings": {
     "title": "Einstellungen",
     "section": {
@@ -129,7 +123,6 @@
       }
     }
   },
-
   "ingest": {
     "title": "Beleg hinzufügen",
     "subtitle": "Sende einen Beleg von einem beliebigen Netzwerk — Renovatio, IONITY, MOL, Petrom — wir verarbeiten ihn automatisch.",
@@ -149,7 +142,6 @@
       }
     }
   },
-
   "commands": {
     "title": "Befehle",
     "subtitle": "Auto fernsteuern.",
@@ -163,13 +155,11 @@
     "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
     "sending": "Wird gesendet…"
   },
-
   "garage": {
     "title": "Garage",
     "add_vehicle": "Fahrzeug hinzufügen",
     "fleet_totals": "Flottenübersicht"
   },
-
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",
     "kpi_home_vs_public": "Zuhause vs Öffentlich",
@@ -180,13 +170,38 @@
     "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
     "home": "Zuhause",
     "public": "Öffentlich",
-    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+    "months": [
+      "Jan",
+      "Feb",
+      "Mär",
+      "Apr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Dez"
+    ],
     "page_title": "Kosten",
     "no_docs_title": "Noch keine Dokumente.",
     "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
     "missing_email_docs": "E-Mail-Dokumente fehlen?",
     "recover": "Wiederherstellen",
     "recovered": "Wiederhergestellt: {count}",
-    "export_csv": "CSV exportieren"
+    "export_csv": "CSV exportieren",
+    "kpi_wh_per_km": "Effizienz"
+  },
+  "energy": {
+    "smart_charge_title": "Intelligentes Laden",
+    "smart_charge_hint": "Nur für angeschlossene Fahrzeuge unterhalb des Ladelimits angezeigt.",
+    "schedule_btn": "Planen",
+    "scheduled": "Geplant ✓",
+    "start_at": "Start um",
+    "save": "sparen",
+    "now": "Jetzt",
+    "optimal": "Optimal",
+    "to_target": "bis Ziel"
   }
 }

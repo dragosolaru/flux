@@ -189,6 +189,7 @@
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Acasă vs Public",
     "kpi_total_energy": "Total energie",
+    "kpi_wh_per_km": "Eficiență",
     "kpi_vs_fuel": "vs Benzină",
     "chart_monthly_trend": "Trend lunar",
     "no_data": "Fără date încă",
@@ -203,5 +204,17 @@
     "recover": "Recuperează",
     "recovered": "Recuperate: {count}",
     "export_csv": "Export CSV"
+  },
+
+  "energy": {
+    "smart_charge_title": "Încărcare inteligentă",
+    "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",
+    "schedule_btn": "Programează",
+    "scheduled": "Programat ✓",
+    "start_at": "Pornește la",
+    "save": "economisești",
+    "now": "Acum",
+    "optimal": "Optim",
+    "to_target": "până la țintă"
   }
 }

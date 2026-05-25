@@ -22,7 +22,10 @@ export const COMMAND_CAP_MAP: Record<CommandName, keyof CommandCapabilities> = {
   close_charge_port: "closeChargePort",
   vent_windows:      "ventWindows",
   close_windows:     "closeWindows",
-  activate_sentry:   "activateSentry",
-  deactivate_sentry: "deactivateSentry",
-  remote_start:      "remoteStart",
+  activate_sentry:    "activateSentry",
+  deactivate_sentry:  "deactivateSentry",
+  remote_start:       "remoteStart",
+  schedule_charging:  "scheduleCharging",
+  schedule_departure: "scheduleDeparture",
+  precondition_max:   "preconditionMax",
 };

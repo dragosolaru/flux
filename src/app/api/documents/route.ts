@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
@@ -64,6 +65,13 @@ export async function POST(request: Request) {
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  if (!checkRateLimit(userId, "uploads", 10)) {
+    return NextResponse.json(
+      { message: "Upload limit reached (10/hour). Try again later." },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
 
   let formData: FormData;
   try {

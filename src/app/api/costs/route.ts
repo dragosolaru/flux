@@ -110,6 +110,7 @@ export async function GET(request: Request) {
     costPerKmHome: totalKm > 0 && homeCostRon > 0 ? homeCostRon / totalKm : null,
     costPerKmPublic: totalKm > 0 && publicCostRon > 0 ? publicCostRon / totalKm : null,
     costPerKmBlended: totalKm > 0 && totalCostRon > 0 ? totalCostRon / totalKm : null,
+    whPerKm: totalKm > 0 && totalKwh > 0 ? (totalKwh * 1000) / totalKm : null,
     monthlyTrend,
     petrolEquivalentCostRon: PETROL_COST_PER_KM * totalKm,
     totalKm,

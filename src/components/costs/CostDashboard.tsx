@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Fuel, Home, TrendingUp, Zap } from "lucide-react";
+import { Car, Fuel, Gauge, Home, TrendingUp, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -91,7 +91,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
   return (
     <div className="space-y-3">
       {/* KPI grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {/* Cost per km */}
         <Card>
           <CardHeader className="pb-1">
@@ -212,6 +212,26 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
               <p className="text-xs text-muted-foreground">
                 {hasData ? "Înregistrează km parcurși pentru comparație" : "Adaugă documente pentru comparație"}
               </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Eficiență Wh/km */}
+        <Card>
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Gauge className="size-4" />
+              {t("kpi_wh_per_km")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {data.whPerKm != null ? (
+              <>
+                <p className="text-2xl font-bold">{fmt(data.whPerKm, 0)}</p>
+                <p className="text-xs text-muted-foreground">Wh/km</p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("no_data")}</p>
             )}
           </CardContent>
         </Card>
