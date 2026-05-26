@@ -10,6 +10,7 @@ const EMPTY_CONTEXT: CapabilityContext = {
   hasLiveVehicle: false,
   hasTariff: false,
   hasCommandsReady: false,
+  hasProSubscription: false,
 };
 
 export async function GET() {
@@ -21,7 +22,7 @@ export async function GET() {
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicles }, { data: settings }] = await Promise.all([
+  const [{ data: vehicles }, { data: settings }, { data: profile }] = await Promise.all([
     supabase
       .from("vehicles")
       .select("id, data_source, virtual_key_paired")
@@ -32,6 +33,11 @@ export async function GET() {
       .select("tariff_provider")
       .eq("user_id", userId)
       .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", userId)
+      .single(),
   ]);
 
   const vehicleRows = (vehicles ?? []) as Array<{
@@ -47,6 +53,8 @@ export async function GET() {
     ?.tariff_provider ?? null;
   const hasRealTariff = tariffProvider != null && !tariffProvider.endsWith("-mock");
 
+  const subscriptionTier = (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
+
   const ctx: CapabilityContext = {
     hasVehicle: vehicleRows.length > 0,
     hasLiveVehicle: vehicleRows.some((v) => v.data_source === "live"),
@@ -54,6 +62,7 @@ export async function GET() {
     hasCommandsReady: vehicleRows.some(
       (v) => v.data_source === "live" && v.virtual_key_paired,
     ),
+    hasProSubscription: subscriptionTier === "pro",
   };
 
   return NextResponse.json(ctx);

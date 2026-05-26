@@ -76,6 +76,11 @@
       "title": "Auto vom Browser steuern",
       "subtitle": "Koppele deinen Virtual Key und sende Befehle: Klima, Sperren, Laden, Fenster.",
       "cta": "Virtual Key einrichten"
+    },
+    "no_pro": {
+      "title": "Pro-Funktionen freischalten",
+      "subtitle": "Upgrade auf Pro für unbegrenzte Fahrzeuge, OCR, Batteriezustand und mehr.",
+      "cta": "Auf Pro upgraden"
     }
   },
   "onboarding": {
@@ -90,7 +95,8 @@
       "preferences": "Präferenzen",
       "location": "Standort",
       "tariff": "Energietarif",
-      "account": "Konto"
+      "account": "Konto",
+      "subscription": "Abonnement"
     },
     "locale": {
       "label": "Sprache",
@@ -231,5 +237,15 @@
     "precondition_btn": "Batterie vorkonditionieren",
     "preconditioning": "Wird aktiviert…",
     "preconditioned": "Aktiv ✓"
+  },
+  "billing": {
+    "free_plan": "Kostenloser Plan",
+    "pro_plan": "Flux Pro",
+    "free_description": "1 Fahrzeug, 3 Dokumente/Monat.",
+    "pro_description": "Unbegrenzte Fahrzeuge und Dokumente, KI-Funktionen aktiviert.",
+    "upgrade_cta": "Auf Pro upgraden — €4,99/Monat",
+    "manage": "Abonnement verwalten",
+    "see_all": "Alle Funktionen ansehen →",
+    "upgrade_hint": "Pro beinhaltet: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustand-Tracking, wöchentliche E-Mail."
   }
 }

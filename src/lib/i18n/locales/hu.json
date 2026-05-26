@@ -76,6 +76,11 @@
       "title": "Vezérelje az autót a böngészőből",
       "subtitle": "Párosítsa a Virtual Key-t és küldjön parancsokat: klíma, zárolás, töltés, ablakok.",
       "cta": "Virtual Key beállítása"
+    },
+    "no_pro": {
+      "title": "Pro funkciók feloldása",
+      "subtitle": "Váltson Próra a korlátlan járművek, OCR, akkumulátor-állapot és egyebek érdekében.",
+      "cta": "Váltás Próra"
     }
   },
   "onboarding": {
@@ -90,7 +95,8 @@
       "preferences": "Preferenciák",
       "location": "Helyszín",
       "tariff": "Energiadíj",
-      "account": "Fiók"
+      "account": "Fiók",
+      "subscription": "Előfizetés"
     },
     "locale": {
       "label": "Nyelv",
@@ -231,5 +237,15 @@
     "precondition_btn": "Akkumulátor előkészítése",
     "preconditioning": "Aktiválás…",
     "preconditioned": "Aktív ✓"
+  },
+  "billing": {
+    "free_plan": "Ingyenes csomag",
+    "pro_plan": "Flux Pro",
+    "free_description": "1 jármű, 3 dokumentum/hónap.",
+    "pro_description": "Korlátlan járművek és dokumentumok, AI funkciók engedélyezve.",
+    "upgrade_cta": "Váltás Próra — €4,99/hó",
+    "manage": "Előfizetés kezelése",
+    "see_all": "Összes funkció megtekintése →",
+    "upgrade_hint": "Pro tartalmaz: korlátlan járművek, korlátlan OCR, akkumulátor-állapot követés, heti e-mail összefoglaló."
   }
 }

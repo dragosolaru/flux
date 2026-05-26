@@ -7,6 +7,7 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
+import { canUploadDocument } from "@/lib/subscription";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -108,6 +109,11 @@ export async function POST(request: Request) {
     .single();
 
   if (!vehicle) return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
+
+  const uploadCheck = await canUploadDocument(userId);
+  if (!uploadCheck.allowed) {
+    return NextResponse.json({ message: uploadCheck.message }, { status: 402 });
+  }
 
   // Sanitize extension: keep only alphanumeric chars to prevent path-separator injection.
   const rawExt = file.name.split(".").pop() ?? "bin";

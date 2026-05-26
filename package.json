@@ -40,6 +40,7 @@
     "react-dom": "19.2.4",
     "react-leaflet": "^4.2.1",
     "sonner": "^2.0.7",
+    "stripe": "^22.1.1",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

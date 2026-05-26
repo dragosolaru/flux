@@ -8,6 +8,7 @@ import { saveSnapshot } from "@/lib/mock/persistence";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
+import { canAddVehicle } from "@/lib/subscription";
 
 // GET /api/vehicles — list all active vehicles for the current user
 export async function GET() {
@@ -96,6 +97,11 @@ export async function POST(req: NextRequest) {
   const scenario = scenarios.find((s) => s.id === scenarioId) ?? scenarios[0]!;
 
   const supabase = createSupabaseAdminClient();
+
+  const vehicleCheck = await canAddVehicle(userId);
+  if (!vehicleCheck.allowed) {
+    return NextResponse.json({ message: vehicleCheck.message }, { status: 402 });
+  }
 
   const { data: vehicle, error: insertErr } = await supabase
     .from("vehicles")

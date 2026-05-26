@@ -10,6 +10,7 @@ const EMPTY: CapabilityContext = {
   hasLiveVehicle: false,
   hasTariff: false,
   hasCommandsReady: false,
+  hasProSubscription: false,
 };
 
 export function useCapabilities() {

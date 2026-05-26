@@ -16,11 +16,9 @@
     "copied": "Copied",
     "soon": "Soon"
   },
-
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."
   },
-
   "nav": {
     "section": {
       "car": "Car",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Simulated data",
     "subtitle": "Connect Tesla for real data",
     "cta": "Connect Tesla"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Add your first car",
@@ -80,23 +76,27 @@
       "title": "Control your car from your browser",
       "subtitle": "Pair your Virtual Key and send commands: climate, lock, charge, windows.",
       "cta": "Set up Virtual Key"
+    },
+    "no_pro": {
+      "title": "Unlock Pro features",
+      "subtitle": "Upgrade to Pro for unlimited vehicles, OCR, battery health tracking, and more.",
+      "cta": "Upgrade to Pro"
     }
   },
-
   "onboarding": {
     "title": "Welcome to Flux",
     "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
     "cta_primary": "Connect Tesla",
     "cta_secondary": "Explore with demo data"
   },
-
   "settings": {
     "title": "Settings",
     "section": {
       "preferences": "Preferences",
       "location": "Location",
       "tariff": "Energy tariff",
-      "account": "Account"
+      "account": "Account",
+      "subscription": "Subscription"
     },
     "locale": {
       "label": "Language",
@@ -144,7 +144,6 @@
       "confirm_delete": "Yes, delete my account"
     }
   },
-
   "ingest": {
     "title": "Add receipt",
     "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
@@ -164,7 +163,6 @@
       }
     }
   },
-
   "commands": {
     "title": "Commands",
     "subtitle": "Control your car remotely.",
@@ -178,13 +176,11 @@
     "no_commands": "No commands available for this vehicle.",
     "sending": "Sending…"
   },
-
   "garage": {
     "title": "Garage",
     "add_vehicle": "Add vehicle",
     "fleet_totals": "Fleet totals"
   },
-
   "costs": {
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Home vs Public",
@@ -196,7 +192,20 @@
     "add_docs_hint": "Add documents to see cost/km",
     "home": "Home",
     "public": "Public",
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "months": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "page_title": "Costs",
     "no_docs_title": "No documents yet.",
     "no_docs_hint": "Upload your first bill or receipt to see costs.",
@@ -205,7 +214,6 @@
     "recovered": "Recovered: {count}",
     "export_csv": "Export CSV"
   },
-
   "departure": {
     "title": "Departure & Preconditioning",
     "departure_label": "Scheduled departure",
@@ -219,7 +227,6 @@
     "preconditioning": "Activating…",
     "preconditioned": "Active ✓"
   },
-
   "energy": {
     "smart_charge_title": "Smart charge",
     "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
@@ -230,5 +237,15 @@
     "now": "Now",
     "optimal": "Optimal",
     "to_target": "to target"
+  },
+  "billing": {
+    "free_plan": "Free plan",
+    "pro_plan": "Flux Pro",
+    "free_description": "1 vehicle, 3 documents/month.",
+    "pro_description": "Unlimited vehicles and documents, AI features enabled.",
+    "upgrade_cta": "Upgrade to Pro — €4.99/mo",
+    "manage": "Manage subscription",
+    "see_all": "See all features →",
+    "upgrade_hint": "Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest."
   }
 }

@@ -16,6 +16,8 @@ import { TariffProviderPicker } from "./tariff-provider-picker";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { DEFAULT_PROVIDER_ID, listProviders } from "@/lib/external/tariffs/registry";
+import { UpgradeButton } from "@/components/billing/UpgradeButton";
+import { ManageSubscriptionButton } from "@/components/billing/ManageSubscriptionButton";
 
 export const metadata = {
   title: "Settings · Flux",
@@ -29,7 +31,7 @@ export default async function SettingsPage() {
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicles }, { data: userSettings }] = await Promise.all([
+  const [{ data: vehicles }, { data: userSettings }, { data: profile }] = await Promise.all([
     supabase
       .from("vehicles")
       .select("id, display_name, brand, model, data_source")
@@ -40,7 +42,14 @@ export default async function SettingsPage() {
       .select("tariff_provider")
       .eq("user_id", session.user.id)
       .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", session.user.id)
+      .single(),
   ]);
+
+  const subscriptionTier = ((profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free") as "free" | "pro";
 
   const activeProvider = userSettings?.tariff_provider ?? DEFAULT_PROVIDER_ID;
   const providers = listProviders().map((p) => ({ id: p.id, displayName: p.displayName }));
@@ -111,6 +120,40 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
+        </CardContent>
+      </Card>
+
+      <Card id="billing">
+        <CardHeader>
+          <CardTitle className="text-base">Subscription</CardTitle>
+          <CardDescription>
+            Manage your Flux plan and billing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">
+                {subscriptionTier === "pro" ? "Flux Pro" : "Free plan"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {subscriptionTier === "pro"
+                  ? "Unlimited vehicles and documents, AI features enabled."
+                  : "1 vehicle, 3 documents/month."}
+              </p>
+            </div>
+            {subscriptionTier === "pro" ? (
+              <ManageSubscriptionButton />
+            ) : (
+              <UpgradeButton size="sm" label="Upgrade to Pro — €4.99/mo" />
+            )}
+          </div>
+          {subscriptionTier === "free" && (
+            <p className="text-xs text-muted-foreground">
+              Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest.{" "}
+              <a href="/pricing" className="underline underline-offset-2">See all features →</a>
+            </p>
+          )}
         </CardContent>
       </Card>
 

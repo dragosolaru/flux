@@ -76,6 +76,11 @@
       "title": "Contrôlez votre voiture depuis le navigateur",
       "subtitle": "Associez votre clé virtuelle et envoyez des commandes : climatisation, verrouillage, charge, vitres.",
       "cta": "Configurer la clé virtuelle"
+    },
+    "no_pro": {
+      "title": "Débloquez les fonctionnalités Pro",
+      "subtitle": "Passez à Pro pour des véhicules illimités, l'OCR, le suivi de la batterie et plus.",
+      "cta": "Passer à Pro"
     }
   },
   "onboarding": {
@@ -90,7 +95,8 @@
       "preferences": "Préférences",
       "location": "Localisation",
       "tariff": "Tarif énergétique",
-      "account": "Compte"
+      "account": "Compte",
+      "subscription": "Abonnement"
     },
     "locale": {
       "label": "Langue",
@@ -231,5 +237,15 @@
     "precondition_btn": "Préconditionner la batterie",
     "preconditioning": "Activation…",
     "preconditioned": "Actif ✓"
+  },
+  "billing": {
+    "free_plan": "Plan gratuit",
+    "pro_plan": "Flux Pro",
+    "free_description": "1 véhicule, 3 documents/mois.",
+    "pro_description": "Véhicules et documents illimités, fonctionnalités IA activées.",
+    "upgrade_cta": "Passer à Pro — €4,99/mois",
+    "manage": "Gérer l'abonnement",
+    "see_all": "Voir toutes les fonctionnalités →",
+    "upgrade_hint": "Pro inclut : véhicules illimités, OCR illimité, suivi de la santé de la batterie, résumé hebdomadaire."
   }
 }
