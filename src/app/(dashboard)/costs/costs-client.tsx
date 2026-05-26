@@ -13,6 +13,7 @@ import {
   useDocuments,
   useUploadDocument,
   useEditDocument,
+  useDeleteDocument,
   useRecoverDocuments,
 } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
@@ -32,6 +33,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { data: costs, isLoading: costsLoading } = useCosts(vehicleId);
   const { mutateAsync: upload, isPending: uploading } = useUploadDocument(vehicleId);
   const { mutate: editDocument } = useEditDocument(vehicleId);
+  const { mutate: deleteDocument } = useDeleteDocument(vehicleId);
   const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
 
   // Invalidate costs when any document transitions out of pending/processing.
@@ -116,6 +118,12 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
                 key={doc.id}
                 doc={doc}
                 onEdit={(id, updates) => editDocument({ documentId: id, updates })}
+                onDelete={(id) => {
+                  deleteDocument(id, {
+                    onSuccess: () => toast.success("Document șters"),
+                    onError: () => toast.error("Nu s-a putut șterge documentul"),
+                  });
+                }}
               />
             ))}
           </div>

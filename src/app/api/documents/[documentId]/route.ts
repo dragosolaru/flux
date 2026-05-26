@@ -65,7 +65,7 @@ export async function PATCH(
 
   const { data: doc } = await supabase
     .from("documents")
-    .select("id")
+    .select("id, vehicle_id, parsed_json")
     .eq("id", documentId)
     .eq("user_id", userId)
     .single();
@@ -80,17 +80,86 @@ export async function PATCH(
   if (parsed.data.period_start !== undefined) updates.period_start = parsed.data.period_start;
   if (parsed.data.period_end !== undefined) updates.period_end = parsed.data.period_end;
 
-  const { error } = await supabase
+  // Check if an energy_cost record already exists for this document
+  const { data: existing } = await supabase
     .from("energy_costs")
-    .update(updates)
-    .eq("document_id", documentId);
+    .select("id")
+    .eq("document_id", documentId)
+    .maybeSingle();
 
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  if (existing) {
+    const { error } = await supabase
+      .from("energy_costs")
+      .update(updates)
+      .eq("document_id", documentId);
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  } else if ((doc as { vehicle_id: string | null }).vehicle_id && (parsed.data.cost_ron || parsed.data.total_kwh)) {
+    // Non-electricity doc manually confirmed — create energy_cost record
+    const today = new Date().toISOString().slice(0, 10);
+    const pj = (doc as { parsed_json: Record<string, unknown> | null }).parsed_json;
+    const vehicleId = (doc as { vehicle_id: string }).vehicle_id;
+    await supabase.from("energy_costs").insert({
+      document_id: documentId,
+      vehicle_id: vehicleId,
+      document_type: "home_bill",
+      period_start: parsed.data.period_start ?? (pj?.period_start as string | null) ?? today,
+      period_end: parsed.data.period_end ?? (pj?.period_end as string | null) ?? today,
+      total_kwh: parsed.data.total_kwh ?? null,
+      vehicle_kwh_attributed: parsed.data.total_kwh ?? null,
+      original_amount: parsed.data.cost_ron ?? 0,
+      original_currency: "RON",
+      exchange_rate: 1,
+      cost_ron: parsed.data.cost_ron ?? 0,
+      is_manually_edited: true,
+    });
+  }
 
   await supabase
     .from("documents")
     .update({ status: "done" })
     .eq("id", documentId);
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ documentId: string }> },
+) {
+  const { documentId } = await params;
+  if (!uuidSchema.safeParse(documentId).success) {
+    return NextResponse.json({ message: "Invalid documentId" }, { status: 400 });
+  }
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  const supabase = createSupabaseAdminClient();
+
+  const { data: doc } = await supabase
+    .from("documents")
+    .select("id, storage_path")
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!doc) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  const storagePath = (doc as { storage_path: string | null }).storage_path;
+  if (storagePath) {
+    await supabase.storage.from("documents").remove([storagePath]);
+  }
+
+  // Delete document — energy_costs cascade via FK (on delete cascade)
+  const { error } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", documentId)
+    .eq("user_id", userId);
+
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }
