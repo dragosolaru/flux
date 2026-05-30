@@ -226,39 +226,6 @@
     "add_vehicle": "Adaugă mașină",
     "fleet_totals": "Totaluri flotă"
   },
-  "costs": {
-    "kpi_cost_per_km": "Cost per km",
-    "kpi_home_vs_public": "Acasă vs Public",
-    "kpi_total_energy": "Total energie",
-    "kpi_wh_per_km": "Eficiență",
-    "kpi_vs_fuel": "vs Benzină",
-    "chart_monthly_trend": "Trend lunar",
-    "no_data": "Fără date încă",
-    "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
-    "home": "Acasă",
-    "public": "Public",
-    "months": [
-      "ian",
-      "feb",
-      "mar",
-      "apr",
-      "mai",
-      "iun",
-      "iul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec"
-    ],
-    "page_title": "Costuri",
-    "no_docs_title": "Niciun document încă.",
-    "no_docs_hint": "Uploadează prima factură sau bon pentru a vedea costurile.",
-    "missing_email_docs": "Lipsesc documente trimise pe email?",
-    "recover": "Recuperează",
-    "recovered": "Recuperate: {count}",
-    "export_csv": "Export CSV"
-  },
   "departure": {
     "title": "Plecare & Preconditionare",
     "departure_label": "Plecare programată",
@@ -316,5 +283,51 @@
     "pricing_teaser_title": "Începe gratuit, upgradează când ai nevoie de mai mult.",
     "pricing_teaser_desc": "Planul gratuit acoperă un vehicul și trei documente OCR pe lună. Pro este €4.99 / lună pentru totul nelimitat.",
     "pricing_teaser_cta": "Vezi prețuri"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Cost per km",
+    "kpi_home_vs_public": "Acasă vs Public",
+    "kpi_total_energy": "Total energie",
+    "kpi_wh_per_km": "Eficiență",
+    "kpi_vs_fuel": "vs Benzină",
+    "chart_monthly_trend": "Trend lunar",
+    "no_data": "Fără date încă",
+    "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
+    "home": "Acasă",
+    "public": "Public",
+    "blended": "Medie",
+    "km_driven": "km parcurși",
+    "fuel_equivalent_label": "Benzină echivalent (7L/100km)",
+    "fuel_saving": "Economisești {amount}",
+    "fuel_more_expensive": "Cu {amount} mai scump",
+    "fuel_equivalent_cost": "Cost echivalent",
+    "fuel_register_km": "Înregistrează km parcurși pentru comparație",
+    "fuel_add_docs": "Adaugă documente pentru comparație",
+    "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"],
+    "page_title": "Costuri",
+    "no_docs_title": "Niciun document încă.",
+    "no_docs_hint": "Uploadează prima factură sau bon pentru a vedea costurile.",
+    "missing_email_docs": "Lipsesc documente trimise pe email?",
+    "recover": "Recuperează",
+    "recovered": "Recuperate: {count}",
+    "export_csv": "Export CSV"
+  },
+
+  "errorPage": {
+    "heading": "Ceva a mers greșit",
+    "description": "A apărut o eroare neașteptată. Poți încerca din nou sau să te întorci la dashboard.",
+    "retry": "Încearcă din nou",
+    "back_to_dashboard": "Înapoi la dashboard"
+  },
+
+  "notFoundPage": {
+    "heading": "Pagina nu a fost găsită",
+    "description": "Pagina căutată nu există sau a fost mutată.",
+    "back_to_dashboard": "Înapoi la dashboard"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Disponibilitatea stațiilor este simulată în scop demo."
   }
 }

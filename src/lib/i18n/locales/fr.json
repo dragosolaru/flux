@@ -226,39 +226,6 @@
     "add_vehicle": "Ajouter un véhicule",
     "fleet_totals": "Totaux de la flotte"
   },
-  "costs": {
-    "kpi_cost_per_km": "Coût par km",
-    "kpi_home_vs_public": "Domicile vs Public",
-    "kpi_total_energy": "Énergie totale",
-    "kpi_vs_fuel": "vs Carburant",
-    "chart_monthly_trend": "Tendance mensuelle",
-    "no_data": "Aucune donnée",
-    "add_docs_hint": "Ajoutez des documents pour voir coût/km",
-    "home": "Domicile",
-    "public": "Public",
-    "months": [
-      "jan.",
-      "fév.",
-      "mars",
-      "avr.",
-      "mai",
-      "juin",
-      "juil.",
-      "août",
-      "sept.",
-      "oct.",
-      "nov.",
-      "déc."
-    ],
-    "page_title": "Coûts",
-    "no_docs_title": "Aucun document pour l'instant.",
-    "no_docs_hint": "Téléchargez votre première facture ou reçu pour voir les coûts.",
-    "missing_email_docs": "Documents e-mail manquants ?",
-    "recover": "Récupérer",
-    "recovered": "Récupéré : {count}",
-    "export_csv": "Exporter CSV",
-    "kpi_wh_per_km": "Efficacité"
-  },
   "energy": {
     "smart_charge_title": "Charge intelligente",
     "smart_charge_hint": "Affiché uniquement pour les véhicules branchés en dessous de leur limite de charge.",
@@ -316,5 +283,51 @@
     "pricing_teaser_title": "Commencez gratuitement, passez à Pro quand vous en avez besoin.",
     "pricing_teaser_desc": "Le plan gratuit couvre un véhicule et trois documents OCR par mois. Pro est à €4,99 / mois pour tout illimité.",
     "pricing_teaser_cta": "Voir les tarifs"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Coût par km",
+    "kpi_home_vs_public": "Domicile vs Public",
+    "kpi_total_energy": "Énergie totale",
+    "kpi_wh_per_km": "Efficacité",
+    "kpi_vs_fuel": "vs Carburant",
+    "chart_monthly_trend": "Tendance mensuelle",
+    "no_data": "Aucune donnée",
+    "add_docs_hint": "Ajoutez des documents pour voir coût/km",
+    "home": "Domicile",
+    "public": "Public",
+    "blended": "Moyenne",
+    "km_driven": "km parcourus",
+    "fuel_equivalent_label": "Équivalent essence (7L/100km)",
+    "fuel_saving": "Vous économisez {amount}",
+    "fuel_more_expensive": "{amount} plus cher",
+    "fuel_equivalent_cost": "Coût équivalent",
+    "fuel_register_km": "Enregistrez les km parcourus pour comparer",
+    "fuel_add_docs": "Ajoutez des documents pour comparer",
+    "months": ["jan.", "fév.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+    "page_title": "Coûts",
+    "no_docs_title": "Aucun document pour l'instant.",
+    "no_docs_hint": "Téléchargez votre première facture ou reçu pour voir les coûts.",
+    "missing_email_docs": "Documents e-mail manquants ?",
+    "recover": "Récupérer",
+    "recovered": "Récupéré : {count}",
+    "export_csv": "Exporter CSV"
+  },
+
+  "errorPage": {
+    "heading": "Une erreur s'est produite",
+    "description": "Une erreur inattendue s'est produite. Vous pouvez réessayer ou revenir au tableau de bord.",
+    "retry": "Réessayer",
+    "back_to_dashboard": "Retour au tableau de bord"
+  },
+
+  "notFoundPage": {
+    "heading": "Page introuvable",
+    "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "back_to_dashboard": "Retour au tableau de bord"
+  },
+
+  "chargingMap": {
+    "disclaimer": "La disponibilité des bornes est simulée à des fins de démonstration."
   }
 }

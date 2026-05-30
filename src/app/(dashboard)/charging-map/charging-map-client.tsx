@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LocateFixed } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,7 @@ function useUserLocation() {
 }
 
 export function ChargingMapClient() {
+  const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<ChargingStation | null>(null);
   const { location, locate, locating } = useUserLocation();
 
@@ -86,6 +88,8 @@ export function ChargingMapClient() {
           {locating ? "Locating…" : "My location"}
         </Button>
       </div>
+
+      <p className="text-xs text-muted-foreground/70">{t("disclaimer")}</p>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Map */}

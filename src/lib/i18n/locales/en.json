@@ -237,6 +237,14 @@
     "add_docs_hint": "Add documents to see cost/km",
     "home": "Home",
     "public": "Public",
+    "blended": "Blended",
+    "km_driven": "km driven",
+    "fuel_equivalent_label": "Petrol equivalent (7L/100km)",
+    "fuel_saving": "You save {amount}",
+    "fuel_more_expensive": "{amount} more expensive",
+    "fuel_equivalent_cost": "Equivalent cost",
+    "fuel_register_km": "Log km driven to compare",
+    "fuel_add_docs": "Add documents to compare",
     "months": [
       "Jan",
       "Feb",
@@ -316,5 +324,22 @@
     "pricing_teaser_title": "Start free, upgrade when you need more.",
     "pricing_teaser_desc": "Free plan covers one vehicle and three OCR documents per month. Pro is €4.99 / month for unlimited everything.",
     "pricing_teaser_cta": "View pricing"
+  },
+
+  "errorPage": {
+    "heading": "Something went wrong",
+    "description": "An unexpected error occurred. You can try again or go back to the dashboard.",
+    "retry": "Try again",
+    "back_to_dashboard": "Back to dashboard"
+  },
+
+  "notFoundPage": {
+    "heading": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "back_to_dashboard": "Back to dashboard"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Charging availability is simulated for demo purposes."
   }
 }

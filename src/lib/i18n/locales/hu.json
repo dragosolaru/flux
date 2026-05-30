@@ -226,39 +226,6 @@
     "add_vehicle": "Jármű hozzáadása",
     "fleet_totals": "Flotta összesítő"
   },
-  "costs": {
-    "kpi_cost_per_km": "Költség km-enként",
-    "kpi_home_vs_public": "Otthon vs Nyilvános",
-    "kpi_total_energy": "Összes energia",
-    "kpi_vs_fuel": "vs Üzemanyag",
-    "chart_monthly_trend": "Havi trend",
-    "no_data": "Még nincs adat",
-    "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
-    "home": "Otthon",
-    "public": "Nyilvános",
-    "months": [
-      "jan",
-      "feb",
-      "már",
-      "ápr",
-      "máj",
-      "jún",
-      "júl",
-      "aug",
-      "szep",
-      "okt",
-      "nov",
-      "dec"
-    ],
-    "page_title": "Költségek",
-    "no_docs_title": "Még nincsenek dokumentumok.",
-    "no_docs_hint": "Töltse fel az első számláját vagy bizonylatát a költségek megtekintéséhez.",
-    "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
-    "recover": "Visszaállítás",
-    "recovered": "Visszaállítva: {count}",
-    "export_csv": "CSV exportálása",
-    "kpi_wh_per_km": "Hatékonyság"
-  },
   "energy": {
     "smart_charge_title": "Okos töltés",
     "smart_charge_hint": "Csak a töltési határuk alatt lévő csatlakoztatott járművekre jelenik meg.",
@@ -316,5 +283,51 @@
     "pricing_teaser_title": "Kezdje ingyen, frissítsen amikor szükséges.",
     "pricing_teaser_desc": "Az ingyenes csomag egy járművet és havi három OCR-dokumentumot tartalmaz. A Pro €4,99 / hó korlátlan mindenért.",
     "pricing_teaser_cta": "Árak megtekintése"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Költség km-enként",
+    "kpi_home_vs_public": "Otthon vs Nyilvános",
+    "kpi_total_energy": "Összes energia",
+    "kpi_wh_per_km": "Hatékonyság",
+    "kpi_vs_fuel": "vs Üzemanyag",
+    "chart_monthly_trend": "Havi trend",
+    "no_data": "Még nincs adat",
+    "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
+    "home": "Otthon",
+    "public": "Nyilvános",
+    "blended": "Átlag",
+    "km_driven": "megtett km",
+    "fuel_equivalent_label": "Benzin egyenérték (7L/100km)",
+    "fuel_saving": "Megtakarítás: {amount}",
+    "fuel_more_expensive": "{amount} drágább",
+    "fuel_equivalent_cost": "Egyenértékű költség",
+    "fuel_register_km": "Rögzítse a megtett km-t az összehasonlításhoz",
+    "fuel_add_docs": "Adjon hozzá dokumentumokat az összehasonlításhoz",
+    "months": ["jan", "feb", "már", "ápr", "máj", "jún", "júl", "aug", "szep", "okt", "nov", "dec"],
+    "page_title": "Költségek",
+    "no_docs_title": "Még nincsenek dokumentumok.",
+    "no_docs_hint": "Töltse fel az első számláját vagy bizonylatát a költségek megtekintéséhez.",
+    "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
+    "recover": "Visszaállítás",
+    "recovered": "Visszaállítva: {count}",
+    "export_csv": "CSV exportálása"
+  },
+
+  "errorPage": {
+    "heading": "Valami hiba történt",
+    "description": "Váratlan hiba lépett fel. Megpróbálhatja újra, vagy visszatérhet a dashboardra.",
+    "retry": "Próbálja újra",
+    "back_to_dashboard": "Vissza a dashboardra"
+  },
+
+  "notFoundPage": {
+    "heading": "Az oldal nem található",
+    "description": "A keresett oldal nem létezik vagy áthelyezték.",
+    "back_to_dashboard": "Vissza a dashboardra"
+  },
+
+  "chargingMap": {
+    "disclaimer": "A töltési elérhetőség demó célokra szimulált."
   }
 }

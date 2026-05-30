@@ -117,7 +117,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
                 </div>
                 {data.costPerKmBlended != null && (
                   <div className="flex justify-between border-t pt-1 text-sm">
-                    <span className="text-muted-foreground">Medie</span>
+                    <span className="text-muted-foreground">{t("blended")}</span>
                     <span className="font-semibold">{fmt(data.costPerKmBlended, 3)} lei/km</span>
                   </div>
                 )}
@@ -140,8 +140,8 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
             {splitHomePct != null ? (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{splitHomePct}% acasă</span>
-                  <span>{100 - splitHomePct}% public</span>
+                  <span>{splitHomePct}% {t("home")}</span>
+                  <span>{100 - splitHomePct}% {t("public")}</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
@@ -172,7 +172,7 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
             <p className="text-2xl font-bold">{fmtRon(data.totalCostRon)}</p>
             <p className="text-xs text-muted-foreground">{fmt(data.totalKwh, 1)} kWh total</p>
             {data.totalKm > 0 && (
-              <p className="text-xs text-muted-foreground">{Math.round(data.totalKm)} km parcurși</p>
+              <p className="text-xs text-muted-foreground">{Math.round(data.totalKm)} {t("km_driven")}</p>
             )}
           </CardContent>
         </Card>
@@ -189,28 +189,28 @@ export function CostDashboard({ data, isLoading }: CostDashboardProps) {
             {hasData && data.totalKm > 0 && data.petrolEquivalentCostRon > 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Benzină echivalent (7L/100km)
+                  {t("fuel_equivalent_label")}
                 </p>
                 <p className="text-lg font-bold text-muted-foreground line-through">
                   {fmtRon(data.petrolEquivalentCostRon)}
                 </p>
                 {savingsRon > 0 ? (
                   <p className="text-sm font-semibold text-chart-2">
-                    Economisești {fmtRon(savingsRon)}
+                    {t("fuel_saving", { amount: fmtRon(savingsRon) })}
                   </p>
                 ) : savingsRon < 0 ? (
                   <p className="text-sm font-semibold text-destructive">
-                    Cu {fmtRon(-savingsRon)} mai scump
+                    {t("fuel_more_expensive", { amount: fmtRon(-savingsRon) })}
                   </p>
                 ) : (
                   <p className="text-sm font-semibold text-muted-foreground">
-                    Cost echivalent
+                    {t("fuel_equivalent_cost")}
                   </p>
                 )}
               </>
             ) : (
               <p className="text-xs text-muted-foreground">
-                {hasData ? "Înregistrează km parcurși pentru comparație" : "Adaugă documente pentru comparație"}
+                {hasData ? t("fuel_register_km") : t("fuel_add_docs")}
               </p>
             )}
           </CardContent>

@@ -226,39 +226,6 @@
     "add_vehicle": "Fahrzeug hinzufügen",
     "fleet_totals": "Flottenübersicht"
   },
-  "costs": {
-    "kpi_cost_per_km": "Kosten pro km",
-    "kpi_home_vs_public": "Zuhause vs Öffentlich",
-    "kpi_total_energy": "Gesamtenergie",
-    "kpi_vs_fuel": "vs Kraftstoff",
-    "chart_monthly_trend": "Monatlicher Trend",
-    "no_data": "Noch keine Daten",
-    "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
-    "home": "Zuhause",
-    "public": "Öffentlich",
-    "months": [
-      "Jan",
-      "Feb",
-      "Mär",
-      "Apr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Okt",
-      "Nov",
-      "Dez"
-    ],
-    "page_title": "Kosten",
-    "no_docs_title": "Noch keine Dokumente.",
-    "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
-    "missing_email_docs": "E-Mail-Dokumente fehlen?",
-    "recover": "Wiederherstellen",
-    "recovered": "Wiederhergestellt: {count}",
-    "export_csv": "CSV exportieren",
-    "kpi_wh_per_km": "Effizienz"
-  },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
     "smart_charge_hint": "Nur für angeschlossene Fahrzeuge unterhalb des Ladelimits angezeigt.",
@@ -316,5 +283,51 @@
     "pricing_teaser_title": "Kostenlos starten, upgraden wenn nötig.",
     "pricing_teaser_desc": "Der kostenlose Plan umfasst ein Fahrzeug und drei OCR-Dokumente pro Monat. Pro ist €4,99 / Monat für alles unbegrenzt.",
     "pricing_teaser_cta": "Preise anzeigen"
+  },
+
+  "costs": {
+    "kpi_cost_per_km": "Kosten pro km",
+    "kpi_home_vs_public": "Zuhause vs Öffentlich",
+    "kpi_total_energy": "Gesamtenergie",
+    "kpi_wh_per_km": "Effizienz",
+    "kpi_vs_fuel": "vs Kraftstoff",
+    "chart_monthly_trend": "Monatlicher Trend",
+    "no_data": "Noch keine Daten",
+    "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
+    "home": "Zuhause",
+    "public": "Öffentlich",
+    "blended": "Durchschnitt",
+    "km_driven": "km gefahren",
+    "fuel_equivalent_label": "Benzin-Äquivalent (7L/100km)",
+    "fuel_saving": "Du sparst {amount}",
+    "fuel_more_expensive": "{amount} teurer",
+    "fuel_equivalent_cost": "Gleichwertige Kosten",
+    "fuel_register_km": "Gefahrene km erfassen zum Vergleich",
+    "fuel_add_docs": "Dokumente hinzufügen zum Vergleich",
+    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+    "page_title": "Kosten",
+    "no_docs_title": "Noch keine Dokumente.",
+    "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
+    "missing_email_docs": "E-Mail-Dokumente fehlen?",
+    "recover": "Wiederherstellen",
+    "recovered": "Wiederhergestellt: {count}",
+    "export_csv": "CSV exportieren"
+  },
+
+  "errorPage": {
+    "heading": "Etwas ist schiefgelaufen",
+    "description": "Ein unerwarteter Fehler ist aufgetreten. Du kannst es erneut versuchen oder zum Dashboard zurückkehren.",
+    "retry": "Erneut versuchen",
+    "back_to_dashboard": "Zurück zum Dashboard"
+  },
+
+  "notFoundPage": {
+    "heading": "Seite nicht gefunden",
+    "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "back_to_dashboard": "Zurück zum Dashboard"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Die Ladeverfügbarkeit ist für Demo-Zwecke simuliert."
   }
 }
