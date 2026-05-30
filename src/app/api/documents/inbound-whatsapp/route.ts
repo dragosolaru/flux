@@ -11,8 +11,15 @@ const FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
 function constantTimeEq(a: string, b: string): boolean {
   const aBuf = Buffer.from(a);
   const bBuf = Buffer.from(b);
-  if (aBuf.length !== bBuf.length) return false;
-  return timingSafeEqual(aBuf, bBuf);
+  const len = Math.max(aBuf.length, bBuf.length);
+  const paddedA = Buffer.alloc(len);
+  const paddedB = Buffer.alloc(len);
+  aBuf.copy(paddedA);
+  bBuf.copy(paddedB);
+  // Always run timingSafeEqual before checking length so the comparison
+  // takes constant time regardless of whether the lengths match.
+  const equal = timingSafeEqual(paddedA, paddedB);
+  return equal && aBuf.length === bBuf.length;
 }
 
 function pickString(formData: FormData, key: string): string | null {

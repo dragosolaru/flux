@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const uuidSchema = z.string().uuid();
 
@@ -57,6 +58,10 @@ export async function PATCH(
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
 
+  if (!await checkRateLimit(userId, "doc-patch", 30)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
+
   const body = await request.json() as unknown;
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ message: parsed.error.message }, { status: 400 });
@@ -94,10 +99,19 @@ export async function PATCH(
       .eq("document_id", documentId);
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   } else if ((doc as { vehicle_id: string | null }).vehicle_id && (parsed.data.cost_ron || parsed.data.total_kwh)) {
-    // Non-electricity doc manually confirmed — create energy_cost record
+    // Non-electricity doc manually confirmed — create energy_cost record.
+    // Re-verify vehicle ownership even though document is already scoped to userId,
+    // to ensure the vehicle_id FK is still valid and belongs to this user.
     const today = new Date().toISOString().slice(0, 10);
     const pj = (doc as { parsed_json: Record<string, unknown> | null }).parsed_json;
     const vehicleId = (doc as { vehicle_id: string }).vehicle_id;
+    const { data: ownedVehicle } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("id", vehicleId)
+      .eq("user_id", userId)
+      .single();
+    if (!ownedVehicle) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     await supabase.from("energy_costs").insert({
       document_id: documentId,
       vehicle_id: vehicleId,
@@ -135,6 +149,10 @@ export async function DELETE(
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  if (!await checkRateLimit(userId, "doc-delete", 20)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
 
   const supabase = createSupabaseAdminClient();
 

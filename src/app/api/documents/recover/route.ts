@@ -16,6 +16,7 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const UNMATCHED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -29,6 +30,10 @@ export async function POST() {
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  if (!await checkRateLimit(userId, "doc-recover", 10)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
 
   const supabase = createSupabaseAdminClient();
 

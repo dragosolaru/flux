@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const QuerySchema = z.object({ vehicleId: z.string().uuid() });
 
@@ -12,6 +13,10 @@ export async function GET(request: Request) {
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  if (!await checkRateLimit(userId, "csv-export", 10)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
 
   const { searchParams } = new URL(request.url);
   const parsed = QuerySchema.safeParse({ vehicleId: searchParams.get("vehicleId") });
@@ -48,7 +53,12 @@ export async function GET(request: Request) {
       r.original_amount, r.original_currency, r.cost_ron,
       r.provider_name, r.charger_network, r.location_name, r.created_at,
     ]
-      .map((v) => (v == null ? "" : String(v).replace(/"/g, '""')))
+      .map((v) => {
+        const s = v == null ? "" : String(v).replace(/"/g, '""');
+        // Guard against CSV formula injection (Excel/LibreOffice execute cells
+        // starting with = + - @ as formulas when opened).
+        return /^[=+\-@]/.test(s) ? `'${s}` : s;
+      })
       .map((v) => `"${v}"`)
       .join(","),
   );

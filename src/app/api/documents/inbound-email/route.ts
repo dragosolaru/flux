@@ -21,6 +21,7 @@ import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SHORT_ID_RE = /^[a-f0-9]{8}$/i;
 const FULL_UUID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -30,8 +31,15 @@ const FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
 function constantTimeEq(a: string, b: string): boolean {
   const aBuf = Buffer.from(a);
   const bBuf = Buffer.from(b);
-  if (aBuf.length !== bBuf.length) return false;
-  return timingSafeEqual(aBuf, bBuf);
+  const len = Math.max(aBuf.length, bBuf.length);
+  const paddedA = Buffer.alloc(len);
+  const paddedB = Buffer.alloc(len);
+  aBuf.copy(paddedA);
+  bBuf.copy(paddedB);
+  // Always run timingSafeEqual before checking length so the comparison
+  // takes constant time regardless of whether the lengths match.
+  const equal = timingSafeEqual(paddedA, paddedB);
+  return equal && aBuf.length === bBuf.length;
 }
 
 function pickString(formData: FormData, key: string): string | null {
@@ -262,11 +270,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "No supported attachments found" }, { status: 200 });
   }
 
+  // Rate-limit per sender address to prevent storage exhaustion via webhook flooding.
+  const senderEmail = extractEmailAddress(parsed.from) || null;
+  if (senderEmail) {
+    const allowed = await checkRateLimit(senderEmail, "email-ingest", 20);
+    if (!allowed) return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
+
   const supabase = createSupabaseAdminClient();
   const match = await resolveVehicle(parsed, supabase);
   const vehicleId = match?.vehicleId ?? null;
   const userId = match?.userId ?? null;
-  const senderEmail = extractEmailAddress(parsed.from) || null;
 
   const createdIds: string[] = [];
   const skipped: string[] = [];
