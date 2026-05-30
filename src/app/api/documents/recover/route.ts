@@ -93,11 +93,13 @@ export async function POST() {
 
     if (updateErr) {
       // Roll back the new file so we don't leak storage.
-      await supabase.storage.from("documents").remove([newPath]);
+      const { error: rollbackErr } = await supabase.storage.from("documents").remove([newPath]);
+      if (rollbackErr) console.error("[storage.remove]", newPath, rollbackErr.message);
       continue;
     }
 
-    await supabase.storage.from("documents").remove([oldPath]);
+    const { error: cleanupErr } = await supabase.storage.from("documents").remove([oldPath]);
+    if (cleanupErr) console.error("[storage.remove]", oldPath, cleanupErr.message);
 
     recovered.push(doc.id);
     processDocument(doc.id).catch((err: unknown) => {

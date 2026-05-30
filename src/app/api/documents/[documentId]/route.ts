@@ -167,7 +167,8 @@ export async function DELETE(
 
   const storagePath = (doc as { storage_path: string | null }).storage_path;
   if (storagePath) {
-    await supabase.storage.from("documents").remove([storagePath]);
+    const { error: storageErr } = await supabase.storage.from("documents").remove([storagePath]);
+    if (storageErr) console.error("[storage.remove]", storagePath, storageErr.message);
   }
 
   // Delete document — energy_costs cascade via FK (on delete cascade)

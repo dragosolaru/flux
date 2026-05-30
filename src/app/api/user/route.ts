@@ -44,7 +44,8 @@ export async function DELETE() {
       .map((d) => d.storage_path)
       .filter(Boolean);
     if (paths.length > 0) {
-      await supabase.storage.from("documents").remove(paths);
+      const { error: storageErr } = await supabase.storage.from("documents").remove(paths);
+      if (storageErr) console.error("[storage.remove]", paths, storageErr.message);
     }
   }
 
@@ -57,7 +58,8 @@ export async function DELETE() {
     const orphanPaths = storageFiles.map(
       (f: { name: string }) => `${userId}/${f.name}`,
     );
-    await supabase.storage.from("documents").remove(orphanPaths);
+    const { error: orphanErr } = await supabase.storage.from("documents").remove(orphanPaths);
+    if (orphanErr) console.error("[storage.remove]", orphanPaths, orphanErr.message);
   }
 
   await supabase.from("documents").delete().eq("user_id", userId);
