@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
 
-  if (!checkRateLimit(userId, "uploads", 10)) {
+  if (!(await checkRateLimit(userId, "uploads", 10))) {
     return NextResponse.json(
       { message: "Upload limit reached (10/hour). Try again later." },
       { status: 429, headers: { "Retry-After": "3600" } },

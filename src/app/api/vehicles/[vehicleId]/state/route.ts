@@ -27,7 +27,7 @@ export async function GET(
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
 
-  if (!checkRateLimit(session.user.id, "state", 120)) {
+  if (!(await checkRateLimit(session.user.id, "state", 120))) {
     return NextResponse.json(
       { message: "Too many requests" },
       { status: 429, headers: { "Retry-After": "60" } },

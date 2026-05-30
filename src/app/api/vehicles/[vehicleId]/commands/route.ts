@@ -42,7 +42,7 @@ export async function POST(
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
 
-  if (!checkRateLimit(session.user.id, "commands", 30)) {
+  if (!(await checkRateLimit(session.user.id, "commands", 30))) {
     return NextResponse.json(
       { message: "Rate limit exceeded. Try again later." },
       { status: 429, headers: { "Retry-After": "3600" } },

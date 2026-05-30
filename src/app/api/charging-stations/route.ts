@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const allowed = checkRateLimit(session.user.id, "charging-map", 60);
+  const allowed = await checkRateLimit(session.user.id, "charging-map", 60);
   if (!allowed) {
     return NextResponse.json({ message: "Rate limit exceeded" }, { status: 429 });
   }

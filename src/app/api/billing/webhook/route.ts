@@ -23,6 +23,19 @@ export async function POST(request: Request) {
 
   const supabase = createSupabaseAdminClient();
 
+  // Idempotency: record the event id; if it already exists, this is a retry
+  // or replay — acknowledge without re-applying the state change.
+  const { error: dedupeErr } = await supabase
+    .from("stripe_events")
+    .insert({ id: event.id, type: event.type });
+  if (dedupeErr) {
+    // Unique-violation = already processed. Any other error: fail so Stripe retries.
+    if (dedupeErr.code === "23505") {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    return NextResponse.json({ message: "Ledger write failed" }, { status: 500 });
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;

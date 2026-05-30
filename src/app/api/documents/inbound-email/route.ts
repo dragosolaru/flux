@@ -242,8 +242,8 @@ export async function POST(request: Request) {
   if (!secret) {
     return NextResponse.json({ message: "Webhook not configured" }, { status: 503 });
   }
-  const headerSecret = request.headers.get("x-webhook-secret")
-    ?? new URL(request.url).searchParams.get("secret");
+  // Header-only — a ?secret= query param would leak into access logs / proxies.
+  const headerSecret = request.headers.get("x-webhook-secret");
   if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   const rawFrom = pickString(formData, "From") ?? "";
   const fromPhone = rawFrom.replace(/^whatsapp:/i, "");
 
-  if (!checkRateLimit(fromPhone || "unknown", "whatsapp-ingest", 10)) {
+  if (!(await checkRateLimit(fromPhone || "unknown", "whatsapp-ingest", 10))) {
     return new NextResponse("Rate limit exceeded", { status: 429 });
   }
 

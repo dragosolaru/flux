@@ -12,7 +12,7 @@ const bodySchema = z.object({
 export async function POST(req: NextRequest) {
   // Rate-limit registrations by IP to prevent account-creation spam.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip, "register", 5)) {
+  if (!(await checkRateLimit(ip, "register", 5))) {
     return NextResponse.json(
       { message: "Too many requests. Try again later." },
       { status: 429, headers: { "Retry-After": "3600" } },
