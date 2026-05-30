@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Tooling/vendored dirs that are not app source.
+    ".agents/**",
+    ".claude/**",
   ]),
   {
     // Underscore-prefixed identifiers are intentionally unused (e.g. interface
