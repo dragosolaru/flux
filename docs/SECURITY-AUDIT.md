@@ -72,11 +72,46 @@
 
 ---
 
+## Third Pass — 2026-05-30
+
+3 independent parallel agents re-audited the full codebase after the Stripe billing
+work. This pass found that **several second-pass fixes were not present in the code**
+— the audit log had drifted from the implementation. Treat earlier "resolved" claims
+as unverified; the table below reflects code actually inspected and re-fixed.
+
+### Findings, all fixed this pass
+
+| # | Severity | Area | Finding | Fix |
+|---|---|---|---|---|
+| 24 | Blocker | `inbound-whatsapp` | Static-secret check could never match a real Twilio signature (broken auth) | Real HMAC-SHA1 `X-Twilio-Signature` validation keyed by `TWILIO_AUTH_TOKEN` |
+| 25 | Blocker | `inbound-whatsapp` | `firstVehicleAnyUser` + global nickname scan injected docs into an arbitrary user's vehicle | Removed; media routes to unmatched pool (no cross-tenant attribution) |
+| 26 | Blocker | `inbound-email` | Step-4 nickname fallback scanned ALL users' vehicles (finding #19 was never actually applied) | Removed; only trusted subaddress/sender-email signals attribute |
+| 27 | High | `/api/account` | Orphan DELETE route used raw session id (no `ensureSupabaseUserId`) — could delete wrong `auth.users` row | Route deleted; `/api/user` is the canonical deletion path |
+| 28 | High | `state`, `charging-history` | Rate limits #22/#23 were never actually applied | Re-added: state 120/hr, charging-history 20/hr |
+| 29 | High | `/api/user` | Deletes on `energy_costs`/`command_events`/`charging_sessions` used a non-existent `user_id` column — erasure silently no-op (relied on cascade) | Delete by `vehicle_id` |
+| 30 | Medium | `billing/checkout`, `billing/portal` | Attacker-controlled `Origin` header used for Stripe redirect URLs | Use server-side `NEXTAUTH_URL` |
+
+### Still open (tracked, not yet done)
+
+| # | Severity | Area | Finding |
+|---|---|---|---|
+| 31 | Medium | `billing/webhook` | No idempotency/ordering guard — retried/out-of-order Stripe events can flip tier. Needs a `stripe_events(id pk)` dedupe table |
+| 32 | Medium | `inbound-email` | `?secret=` query-param fallback still present (finding #20 not applied) — should be header-only |
+| 33 | Medium | `tesla/command`, `tesla/refresh` | Legacy live routes lack rate limits + own command allowlist; supersede with `/api/vehicles/[id]/commands` or delete |
+| 34 | Low | `costs/export` | CSV cells not guarded against `= + - @` formula injection |
+
+---
+
 ## Remaining recommendations before public multi-tenant launch
 
-1. **Upstash Redis rate limiter** — replace in-memory `Map` to share limits across Vercel instances
-2. **RLS audit** on `energy_costs`, `charging_sessions`, `trips`, `command_events`
-3. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
-4. **Source IP allowlist** for Cloudmailin webhook
-5. **Tesla token revocation detection** — clean up stale tokens on `invalid_grant` from refresh
-6. **Key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`
+1. **Upstash Redis rate limiter** — replace in-memory `Map` (per-instance, resets on cold start; currently undermines the `register` brute-force limit too)
+2. **Stripe webhook idempotency** (finding #31)
+3. **RLS audit** on `energy_costs`, `charging_sessions`, `trips`, `command_events`
+4. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
+5. **WhatsApp phone→user registration** — required before WhatsApp ingest can safely auto-attribute (currently unmatched-pool only)
+6. **Remove `?secret=` query fallback** on inbound-email (finding #32)
+7. **Tesla token revocation detection** + **key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`
+
+> Process note: keep this document in lockstep with the code. The second pass marked
+> #19/#20/#22/#23 resolved while the fixes were absent — always re-grep the code before
+> trusting a "resolved" row.
