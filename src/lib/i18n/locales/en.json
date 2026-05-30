@@ -247,5 +247,10 @@
     "manage": "Manage subscription",
     "see_all": "See all features →",
     "upgrade_hint": "Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest."
+  },
+  "battery_health": {
+    "title": "Battery degradation",
+    "collecting": "Collecting data — the trend appears after a few days of use.",
+    "latest": "months"
   }
 }

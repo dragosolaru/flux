@@ -247,5 +247,10 @@
     "manage": "Gérer l'abonnement",
     "see_all": "Voir toutes les fonctionnalités →",
     "upgrade_hint": "Pro inclut : véhicules illimités, OCR illimité, suivi de la santé de la batterie, résumé hebdomadaire."
+  },
+  "battery_health": {
+    "title": "Dégradation batterie",
+    "collecting": "Collecte de données — la tendance apparaît après quelques jours.",
+    "latest": "mois"
   }
 }

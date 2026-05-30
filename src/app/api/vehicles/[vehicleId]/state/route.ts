@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
@@ -9,6 +9,7 @@ import { isLiveEnabled } from "@/lib/live-integrations";
 import { tick } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
 import { createInitialSnapshot } from "@/lib/mock/seed";
+import { recordBatteryHealth } from "@/lib/battery-health";
 import { fetchVehicleData } from "@/lib/tesla/api";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BrandKey } from "@/lib/brands/types";
@@ -62,6 +63,12 @@ export async function GET(
           teslaVehicleId: vehicle.tesla_vehicle_id,
           displayName: vehicle.display_name,
         });
+        if (state.batteryHealthPct != null) {
+          const soh = state.batteryHealthPct;
+          after(recordBatteryHealth(supabase, vehicle.id, soh).catch((err: unknown) => {
+            console.error("[recordBatteryHealth]", vehicle.id, err);
+          }));
+        }
         return NextResponse.json(state);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Live fetch failed";
@@ -88,5 +95,13 @@ export async function GET(
   await saveSnapshot(vehicleId, prev, next);
 
   const maskedState = applyCapabilityMask(next.state, profile.capabilities.telemetry);
+
+  if (maskedState.batteryHealthPct != null) {
+    const soh = maskedState.batteryHealthPct;
+    after(recordBatteryHealth(supabase, vehicleId, soh).catch((err: unknown) => {
+      console.error("[recordBatteryHealth]", vehicleId, err);
+    }));
+  }
+
   return NextResponse.json(maskedState);
 }

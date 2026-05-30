@@ -247,5 +247,10 @@
     "manage": "Abonnement verwalten",
     "see_all": "Alle Funktionen ansehen →",
     "upgrade_hint": "Pro beinhaltet: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustand-Tracking, wöchentliche E-Mail."
+  },
+  "battery_health": {
+    "title": "Batteriedegradation",
+    "collecting": "Daten werden gesammelt — der Trend erscheint nach einigen Tagen.",
+    "latest": "Monate"
   }
 }

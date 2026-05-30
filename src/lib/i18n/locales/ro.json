@@ -247,5 +247,10 @@
     "manage": "Gestionează abonamentul",
     "see_all": "Vezi toate funcțiile →",
     "upgrade_hint": "Pro include: vehicule nelimitate, OCR nelimitat, urmărirea stării bateriei, rezumat săptămânal."
+  },
+  "battery_health": {
+    "title": "Degradare baterie",
+    "collecting": "Se colectează date — tendința apare după câteva zile de utilizare.",
+    "latest": "luni"
   }
 }

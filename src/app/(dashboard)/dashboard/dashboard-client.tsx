@@ -5,6 +5,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BatteryHealthCard } from "@/components/vehicle/BatteryHealthCard";
+import { BatteryDegradationChart } from "@/components/vehicle/BatteryDegradationChart";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
 import { DepartureCard } from "@/components/vehicle/DepartureCard";
@@ -124,6 +125,12 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
                   cellVoltages={data.cellVoltages}
                   showCells={t.cellVoltages}
                 />
+              )}
+
+              {t.batteryHealthPct && (
+                <FeatureGate capability="PRO" fallback="null">
+                  <BatteryDegradationChart vehicleId={vehicleId} />
+                </FeatureGate>
               )}
 
               {t.softwareVersion && (

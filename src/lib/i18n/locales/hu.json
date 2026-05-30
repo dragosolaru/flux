@@ -247,5 +247,10 @@
     "manage": "Előfizetés kezelése",
     "see_all": "Összes funkció megtekintése →",
     "upgrade_hint": "Pro tartalmaz: korlátlan járművek, korlátlan OCR, akkumulátor-állapot követés, heti e-mail összefoglaló."
+  },
+  "battery_health": {
+    "title": "Akkumulátor-romlás",
+    "collecting": "Adatgyűjtés — a trend néhány nap használat után jelenik meg.",
+    "latest": "hónap"
   }
 }
