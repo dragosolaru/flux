@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const origin = request.headers.get("origin") ?? "https://flux.daolab.io";
-  const portalSession = await stripe.billingPortal.sessions.create({
+  const portalSession = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: `${origin}/settings`,
   });

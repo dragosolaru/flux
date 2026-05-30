@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 
@@ -37,6 +37,8 @@ export async function POST(request: Request) {
     .single();
 
   let customerId = (profile as { stripe_customer_id: string | null } | null)?.stripe_customer_id;
+
+  const stripe = getStripe();
 
   if (!customerId) {
     const customer = await stripe.customers.create({
