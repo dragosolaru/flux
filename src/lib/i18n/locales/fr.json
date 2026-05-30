@@ -259,5 +259,23 @@
     "title": "Dégradation batterie",
     "collecting": "Collecte de données — la tendance apparaît après quelques jours.",
     "latest": "mois"
+  },
+  "landing": {
+    "hero_headline": "Connaissez le vrai coût de votre véhicule électrique.",
+    "hero_subheadline": "Flux suit les coûts énergétiques de votre Tesla, les sessions de charge et planifie la recharge selon votre tarif roumain réel — pour toujours payer moins.",
+    "hero_cta": "Commencer gratuitement",
+    "hero_cta_pricing": "Voir les tarifs",
+    "features_title": "Tout ce dont votre VE a besoin.",
+    "feature_ocr_title": "OCR des factures d'énergie",
+    "feature_ocr_desc": "Photographiez une facture d'électricité et Flux en extrait automatiquement les kWh, le coût et le fournisseur — sans saisie manuelle.",
+    "feature_tariff_title": "Tarifs roumains réels",
+    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux connaît vos tarifs exacts et calcule le coût de recharge à domicile au centime près.",
+    "feature_smart_title": "Planification intelligente de la recharge",
+    "feature_smart_desc": "Nous lisons la courbe de prix de votre tarif et vous indiquons l'heure la moins chère pour recharger. Un tap pour planifier.",
+    "feature_i18n_title": "Votre langue, votre devise",
+    "feature_i18n_desc": "Disponible en roumain, anglais, allemand, français et hongrois. Coûts affichés en RON, EUR ou votre devise préférée.",
+    "pricing_teaser_title": "Commencez gratuitement, passez à Pro quand vous en avez besoin.",
+    "pricing_teaser_desc": "Le plan gratuit couvre un véhicule et trois documents OCR par mois. Pro est à €4,99 / mois pour tout illimité.",
+    "pricing_teaser_cta": "Voir les tarifs"
   }
 }

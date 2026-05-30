@@ -259,5 +259,23 @@
     "title": "Degradare baterie",
     "collecting": "Se colectează date — tendința apare după câteva zile de utilizare.",
     "latest": "luni"
+  },
+  "landing": {
+    "hero_headline": "Știi cât te costă cu adevărat mașina electrică?",
+    "hero_subheadline": "Flux urmărește costurile de energie ale Tesla-ului tău, sesiunile de încărcare și programează încărcarea pe tariful tău real din România — ca să plătești mai puțin mereu.",
+    "hero_cta": "Începe gratuit",
+    "hero_cta_pricing": "Vezi prețuri",
+    "features_title": "Tot ce are nevoie mașina ta electrică.",
+    "feature_ocr_title": "OCR pentru facturi de energie",
+    "feature_ocr_desc": "Fotografiază orice factură de curent și Flux extrage automat kWh, costul și furnizorul — fără introducere manuală.",
+    "feature_tariff_title": "Tarife românești reale",
+    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux cunoaște tarifele tale exacte și calculează costul încărcării acasă la bănuț.",
+    "feature_smart_title": "Programare inteligentă a încărcării",
+    "feature_smart_desc": "Citim curba de prețuri a tarifului tău și îți spunem cea mai ieftină oră să încarci. Un tap pentru programare.",
+    "feature_i18n_title": "Limba ta, moneda ta",
+    "feature_i18n_desc": "Disponibil în română, engleză, germană, franceză și maghiară. Costuri afișate în RON, EUR sau moneda preferată.",
+    "pricing_teaser_title": "Începe gratuit, upgradează când ai nevoie de mai mult.",
+    "pricing_teaser_desc": "Planul gratuit acoperă un vehicul și trei documente OCR pe lună. Pro este €4.99 / lună pentru totul nelimitat.",
+    "pricing_teaser_cta": "Vezi prețuri"
   }
 }

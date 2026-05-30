@@ -259,5 +259,23 @@
     "title": "Batteriedegradation",
     "collecting": "Daten werden gesammelt — der Trend erscheint nach einigen Tagen.",
     "latest": "Monate"
+  },
+  "landing": {
+    "hero_headline": "Kenne die echten Kosten deines Elektrofahrzeugs.",
+    "hero_subheadline": "Flux verfolgt die Energiekosten deines Tesla, Ladesitzungen und plant das Laden nach deinem echten rumänischen Tarif — damit du immer weniger zahlst.",
+    "hero_cta": "Kostenlos starten",
+    "hero_cta_pricing": "Preise ansehen",
+    "features_title": "Alles, was dein E-Auto braucht.",
+    "feature_ocr_title": "OCR für Energierechnungen",
+    "feature_ocr_desc": "Fotografiere eine Stromrechnung und Flux extrahiert automatisch kWh, Kosten und Anbieter — keine manuelle Eingabe.",
+    "feature_tariff_title": "Echte rumänische Tarife",
+    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux kennt deine genauen Tarife und berechnet die Heimladekosten auf den Cent genau.",
+    "feature_smart_title": "Intelligente Ladezeitplanung",
+    "feature_smart_desc": "Wir lesen deine Tarifpreiskurve und sagen dir die günstigste Stunde zum Laden. Ein Tipp zum Planen.",
+    "feature_i18n_title": "Deine Sprache, deine Währung",
+    "feature_i18n_desc": "Verfügbar auf Rumänisch, Englisch, Deutsch, Französisch und Ungarisch. Kosten in RON, EUR oder deiner bevorzugten Währung.",
+    "pricing_teaser_title": "Kostenlos starten, upgraden wenn nötig.",
+    "pricing_teaser_desc": "Der kostenlose Plan umfasst ein Fahrzeug und drei OCR-Dokumente pro Monat. Pro ist €4,99 / Monat für alles unbegrenzt.",
+    "pricing_teaser_cta": "Preise anzeigen"
   }
 }

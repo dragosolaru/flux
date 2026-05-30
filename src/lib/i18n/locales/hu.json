@@ -259,5 +259,23 @@
     "title": "Akkumulátor-romlás",
     "collecting": "Adatgyűjtés — a trend néhány nap használat után jelenik meg.",
     "latest": "hónap"
+  },
+  "landing": {
+    "hero_headline": "Tudja, mennyibe kerül valójában az elektromos autó?",
+    "hero_subheadline": "A Flux nyomon követi Tesla-ja energiaköltségeit, töltési munkameneteit, és az ön valódi romániai tarifa alapján ütemezi a töltést — hogy mindig kevesebbet fizessen.",
+    "hero_cta": "Ingyenes kezdés",
+    "hero_cta_pricing": "Árak megtekintése",
+    "features_title": "Minden, amire az elektromos autójának szüksége van.",
+    "feature_ocr_title": "OCR energiaszámlákhoz",
+    "feature_ocr_desc": "Fényképezze le bármelyik villanyszámlát, és a Flux automatikusan kinyeri a kWh-t, a költséget és a szolgáltatót — kézi bevitel nélkül.",
+    "feature_tariff_title": "Valódi romániai tarifák",
+    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — a Flux ismeri pontos tarifáit, és fillérre kiszámolja az otthoni töltés költségét.",
+    "feature_smart_title": "Intelligens töltésütemezés",
+    "feature_smart_desc": "Beolvassuk az ön tarifájának árgörbéjét, és megmondjuk a legolcsóbb töltési időpontot. Egy koppintás az ütemezéshez.",
+    "feature_i18n_title": "Az ön nyelve, az ön pénzneme",
+    "feature_i18n_desc": "Elérhető románul, angolul, németül, franciául és magyarul. Költségek RON-ban, EUR-ban vagy a kívánt pénznemben.",
+    "pricing_teaser_title": "Kezdje ingyen, frissítsen amikor szükséges.",
+    "pricing_teaser_desc": "Az ingyenes csomag egy járművet és havi három OCR-dokumentumot tartalmaz. A Pro €4,99 / hó korlátlan mindenért.",
+    "pricing_teaser_cta": "Árak megtekintése"
   }
 }
