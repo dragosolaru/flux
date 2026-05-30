@@ -11,6 +11,7 @@ import {
 import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
 import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
+import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
 import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
 import { auth } from "@/lib/auth";
@@ -72,8 +73,9 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">{t("settings.section.location")}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <HomeLocationPicker />
+          <WhatsAppPhonePicker />
         </CardContent>
       </Card>
 

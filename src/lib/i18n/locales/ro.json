@@ -142,6 +142,12 @@
       "confirm_description": "Aceasta va șterge permanent contul tău Flux, toate mașinile, istoricul de încărcare, documentele și costurile. Acțiunea nu poate fi anulată.",
       "confirm_cancel": "Anulează",
       "confirm_delete": "Da, șterge contul meu"
+    },
+    "whatsapp": {
+      "label": "Număr WhatsApp",
+      "description": "Înregistrează-ți numărul de WhatsApp ca să trimiți bonuri prin WhatsApp. Vor fi atribuite automat contului tău.",
+      "save": "Salvează",
+      "invalid": "Folosește format internațional, ex. +40712345678."
     }
   },
   "ingest": {

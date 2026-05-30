@@ -14,6 +14,7 @@ interface PreferencesResponse {
   homeAddress: string | null;
   homeLat: number | null;
   homeLng: number | null;
+  whatsappPhone: string | null;
 }
 
 const DEFAULT_PREFS: PreferencesResponse = {
@@ -22,7 +23,11 @@ const DEFAULT_PREFS: PreferencesResponse = {
   homeAddress: null,
   homeLat: null,
   homeLng: null,
+  whatsappPhone: null,
 };
+
+// E.164: leading + and 7–15 digits.
+const E164 = /^\+[1-9]\d{6,14}$/;
 
 const PatchSchema = z.object({
   locale: z.string().refine(isLocale).optional(),
@@ -30,6 +35,7 @@ const PatchSchema = z.object({
   homeAddress: z.string().min(3).max(500).nullable().optional(),
   homeLat: z.number().gte(-90).lte(90).nullable().optional(),
   homeLng: z.number().gte(-180).lte(180).nullable().optional(),
+  whatsappPhone: z.string().regex(E164).nullable().optional(),
 });
 
 export async function GET() {
@@ -42,7 +48,7 @@ export async function GET() {
   const supabase = createSupabaseAdminClient();
   const { data } = await supabase
     .from("profiles")
-    .select("locale, display_currency, home_address, home_lat, home_lng")
+    .select("locale, display_currency, home_address, home_lat, home_lng, whatsapp_phone")
     .eq("id", userId)
     .maybeSingle();
 
@@ -52,6 +58,7 @@ export async function GET() {
     home_address: string | null;
     home_lat: number | null;
     home_lng: number | null;
+    whatsapp_phone: string | null;
   } | null;
 
   return NextResponse.json({
@@ -60,6 +67,7 @@ export async function GET() {
     homeAddress: row?.home_address ?? null,
     homeLat: row?.home_lat ?? null,
     homeLng: row?.home_lng ?? null,
+    whatsappPhone: row?.whatsapp_phone ?? null,
   } satisfies PreferencesResponse);
 }
 
@@ -90,6 +98,7 @@ export async function PATCH(request: Request) {
   if (parsed.data.homeAddress !== undefined) updates.home_address = parsed.data.homeAddress;
   if (parsed.data.homeLat !== undefined) updates.home_lat = parsed.data.homeLat;
   if (parsed.data.homeLng !== undefined) updates.home_lng = parsed.data.homeLng;
+  if (parsed.data.whatsappPhone !== undefined) updates.whatsapp_phone = parsed.data.whatsappPhone;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ message: "No updates" }, { status: 400 });

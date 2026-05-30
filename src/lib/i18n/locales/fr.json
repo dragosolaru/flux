@@ -142,6 +142,12 @@
       "confirm_description": "Cela supprimera définitivement votre compte Flux, tous les véhicules, l'historique de charge, les documents et les coûts. Cette action est irréversible.",
       "confirm_cancel": "Annuler",
       "confirm_delete": "Oui, supprimer mon compte"
+    },
+    "whatsapp": {
+      "label": "Numéro WhatsApp",
+      "description": "Enregistrez votre numéro WhatsApp pour envoyer des reçus via WhatsApp. Ils seront automatiquement attribués à votre compte.",
+      "save": "Enregistrer",
+      "invalid": "Utilisez le format international, ex. +40712345678."
     }
   },
   "ingest": {

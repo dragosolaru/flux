@@ -142,6 +142,12 @@
       "confirm_description": "Ez véglegesen törli a Flux fiókodat, az összes járművet, töltési előzményt, dokumentumot és költséget. Ez a művelet nem vonható vissza.",
       "confirm_cancel": "Mégse",
       "confirm_delete": "Igen, töröld a fiókot"
+    },
+    "whatsapp": {
+      "label": "WhatsApp-szám",
+      "description": "Regisztráld a WhatsApp-számodat, hogy nyugtákat küldhess WhatsAppon. Automatikusan a fiókodhoz rendelődnek.",
+      "save": "Mentés",
+      "invalid": "Nemzetközi formátumot használj, pl. +40712345678."
     }
   },
   "ingest": {

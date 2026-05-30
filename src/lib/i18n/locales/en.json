@@ -142,6 +142,12 @@
       "confirm_description": "This will permanently delete your Flux account, all vehicles, charging history, documents, and costs. This action cannot be undone.",
       "confirm_cancel": "Cancel",
       "confirm_delete": "Yes, delete my account"
+    },
+    "whatsapp": {
+      "label": "WhatsApp number",
+      "description": "Register your WhatsApp number to send receipts via WhatsApp. They'll be attributed to your account automatically.",
+      "save": "Save",
+      "invalid": "Use international format, e.g. +40712345678."
     }
   },
   "ingest": {

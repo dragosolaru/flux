@@ -10,6 +10,7 @@ export interface UserPreferences {
   homeAddress: string | null;
   homeLat: number | null;
   homeLng: number | null;
+  whatsappPhone: string | null;
 }
 
 const DEFAULT_PREFS: UserPreferences = {
@@ -18,6 +19,7 @@ const DEFAULT_PREFS: UserPreferences = {
   homeAddress: null,
   homeLat: null,
   homeLng: null,
+  whatsappPhone: null,
 };
 
 export function usePreferences() {

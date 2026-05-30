@@ -142,6 +142,12 @@
       "confirm_description": "Dadurch werden dein Flux-Konto, alle Fahrzeuge, der Ladeverlauf, Dokumente und Kosten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirm_cancel": "Abbrechen",
       "confirm_delete": "Ja, Konto löschen"
+    },
+    "whatsapp": {
+      "label": "WhatsApp-Nummer",
+      "description": "Registriere deine WhatsApp-Nummer, um Belege per WhatsApp zu senden. Sie werden automatisch deinem Konto zugeordnet.",
+      "save": "Speichern",
+      "invalid": "Internationales Format verwenden, z. B. +40712345678."
     }
   },
   "ingest": {

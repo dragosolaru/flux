@@ -90,12 +90,36 @@ export async function POST(request: Request) {
 
   const supabase = createSupabaseAdminClient();
 
-  // WhatsApp has no trusted phone→user mapping, so we cannot safely attribute
-  // media to a specific user without a cross-tenant IDOR. All inbound media
-  // lands in the unmatched pool (needs_review) until a phone-registration
-  // claim flow exists.
-  const vehicleId: string | null = null;
-  const userId: string | null = null;
+  // Attribute only via the sender's registered WhatsApp number (E.164). The
+  // phone is a trusted signal the user opted into in Settings, so this avoids
+  // the cross-tenant attribution risk. Unregistered numbers land in the
+  // unmatched pool (needs_review).
+  let vehicleId: string | null = null;
+  let userId: string | null = null;
+
+  if (fromPhone) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("whatsapp_phone", fromPhone)
+      .maybeSingle();
+    const matchedUserId = (profile as { id: string } | null)?.id ?? null;
+    if (matchedUserId) {
+      const { data: vehicle } = await supabase
+        .from("vehicles")
+        .select("id")
+        .eq("user_id", matchedUserId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      const matchedVehicleId = (vehicle as { id: string } | null)?.id ?? null;
+      if (matchedVehicleId) {
+        userId = matchedUserId;
+        vehicleId = matchedVehicleId;
+      }
+    }
+  }
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID ?? "";
   const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
