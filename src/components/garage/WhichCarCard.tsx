@@ -4,7 +4,6 @@ import { useState, type ChangeEvent } from "react";
 import { Car, Trophy } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api-fetch";
 import { getModelSpec } from "@/lib/brands/models";

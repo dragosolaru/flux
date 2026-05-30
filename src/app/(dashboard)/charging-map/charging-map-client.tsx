@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LocateFixed } from "lucide-react";
 
@@ -44,10 +44,9 @@ function useUserLocation() {
     );
   }, []);
 
-  useEffect(() => {
-    locate();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
+  // No auto-locate on mount: the map already centres on Bucharest, and an
+  // unsolicited geolocation prompt on page load is poor UX. The user triggers
+  // locate() explicitly via the "My location" button.
   return { location, locate, locating };
 }
 

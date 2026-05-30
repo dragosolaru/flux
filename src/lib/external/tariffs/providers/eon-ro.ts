@@ -1,4 +1,4 @@
-import type { HourlyPrice, TariffProvider } from "../types";
+import type { TariffProvider } from "../types";
 
 // E.ON Duo ToU tariff (approx. 2025 prices)
 const PEAK_EUR_KWH     = 0.172; // ~0.86 RON/kWh, 07:00–23:00

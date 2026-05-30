@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { TirePressures } from "@/types/vehicle";
 
-const NOMINAL_KPA = 240; // ~2.4 bar / ~35 psi
 const WARN_LOW_KPA = 210;
 const WARN_HIGH_KPA = 280;
 

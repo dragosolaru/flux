@@ -11,7 +11,6 @@ import type { VehicleState } from "@/types/vehicle";
 
 // kWh per 100km for average ICE (petrol) → CO₂: ~2.31 kg/litre, ~8 l/100km
 const ICE_CO2_KG_PER_100KM = 0.184; // kg CO₂ per km
-const EV_CO2_KG_PER_KWH = 0.04;     // EU average grid ~400g CO₂/kWh → per km
 
 function StatRow({ icon: Icon, label, value, note }: {
   icon: ComponentType<{ className?: string }>;

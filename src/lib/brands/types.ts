@@ -111,8 +111,7 @@ export interface BrandCapabilities {
 // Adapter — pure function mapping raw brand API output to VehicleState
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type BrandAdapter = (raw: any) => Partial<VehicleState>;
+export type BrandAdapter = (raw: unknown) => Partial<VehicleState>;
 
 // ---------------------------------------------------------------------------
 // Brand profile
