@@ -1,5 +1,5 @@
 import { NextResponse, after } from "next/server";
-import { timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
@@ -7,13 +7,6 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024;
 const FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
-
-type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
-
-interface VehicleMatch {
-  vehicleId: string;
-  userId: string;
-}
 
 function constantTimeEq(a: string, b: string): boolean {
   const aBuf = Buffer.from(a);
@@ -27,50 +20,36 @@ function pickString(formData: FormData, key: string): string | null {
   return typeof v === "string" ? v : null;
 }
 
-async function findVehicleByNickname(bodyText: string, supabase: AdminClient): Promise<VehicleMatch | null> {
-  if (!bodyText) return null;
-  const { data: vehicles } = await supabase
-    .from("vehicles")
-    .select("id, user_id, nickname")
-    .eq("is_active", true);
-  if (!vehicles) return null;
-
-  const lower = bodyText.toLowerCase();
-  for (const v of vehicles as { id: string; user_id: string; nickname: string | null }[]) {
-    if (v.nickname && lower.includes(v.nickname.toLowerCase())) {
-      return { vehicleId: v.id, userId: v.user_id };
-    }
+/**
+ * Validate Twilio's X-Twilio-Signature. Twilio signs HMAC-SHA1 of
+ * (full URL + each POST param key+value, sorted by key) keyed by the
+ * account Auth Token, base64-encoded. A static shared secret is NOT a
+ * valid Twilio signature, so we compute the real HMAC and compare.
+ */
+function validateTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>,
+): boolean {
+  let data = url;
+  for (const key of Object.keys(params).sort()) {
+    data += key + params[key];
   }
-  return null;
-}
-
-async function firstVehicleAnyUser(supabase: AdminClient): Promise<VehicleMatch | null> {
-  const { data } = await supabase
-    .from("vehicles")
-    .select("id, user_id")
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-  if (!data) return null;
-  const v = data as { id: string; user_id: string };
-  return { vehicleId: v.id, userId: v.user_id };
-}
-
-async function resolveVehicle(bodyText: string, supabase: AdminClient): Promise<VehicleMatch | null> {
-  const byNickname = await findVehicleByNickname(bodyText, supabase);
-  if (byNickname) return byNickname;
-  return firstVehicleAnyUser(supabase);
+  const expected = createHmac("sha1", authToken)
+    .update(Buffer.from(data, "utf-8"))
+    .digest("base64");
+  return constantTimeEq(expected, signature);
 }
 
 export async function POST(request: Request) {
-  const secret = process.env.TWILIO_WEBHOOK_SECRET;
-  if (!secret) {
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!authToken) {
     return new NextResponse("Webhook not configured", { status: 503 });
   }
 
-  const headerSecret = request.headers.get("x-twilio-signature");
-  if (!headerSecret || !constantTimeEq(headerSecret, secret)) {
+  const signature = request.headers.get("x-twilio-signature");
+  if (!signature) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
@@ -79,6 +58,17 @@ export async function POST(request: Request) {
     formData = await request.formData();
   } catch {
     return new NextResponse("Failed to parse form body", { status: 400 });
+  }
+
+  // Twilio signs the exact public URL it called. Behind proxies the runtime
+  // request URL can differ, so prefer the explicitly configured webhook URL.
+  const params: Record<string, string> = {};
+  for (const [k, v] of formData.entries()) {
+    if (typeof v === "string") params[k] = v;
+  }
+  const signedUrl = process.env.TWILIO_WEBHOOK_URL ?? request.url;
+  if (!validateTwilioSignature(authToken, signature, signedUrl, params)) {
+    return new NextResponse("Unauthorized", { status: 401 });
   }
 
   const rawFrom = pickString(formData, "From") ?? "";
@@ -98,14 +88,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const bodyText = pickString(formData, "Body") ?? "";
   const supabase = createSupabaseAdminClient();
-  const match = await resolveVehicle(bodyText, supabase);
-  const vehicleId = match?.vehicleId ?? null;
-  const userId = match?.userId ?? null;
+
+  // WhatsApp has no trusted phone→user mapping, so we cannot safely attribute
+  // media to a specific user without a cross-tenant IDOR. All inbound media
+  // lands in the unmatched pool (needs_review) until a phone-registration
+  // claim flow exists.
+  const vehicleId: string | null = null;
+  const userId: string | null = null;
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID ?? "";
-  const authToken = process.env.TWILIO_AUTH_TOKEN ?? "";
   const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
 
   const createdIds: string[] = [];

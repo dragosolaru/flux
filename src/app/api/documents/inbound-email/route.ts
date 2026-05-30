@@ -100,23 +100,6 @@ async function findUserByEmail(email: string, supabase: AdminClient): Promise<st
   return user?.id ?? null;
 }
 
-async function findVehicleByNickname(subject: string, supabase: AdminClient): Promise<VehicleMatch | null> {
-  if (!subject) return null;
-  const { data: vehicles } = await supabase
-    .from("vehicles")
-    .select("id, user_id, nickname")
-    .eq("is_active", true);
-  if (!vehicles) return null;
-
-  const lowerSubject = subject.toLowerCase();
-  for (const v of vehicles as { id: string; user_id: string; nickname: string | null }[]) {
-    if (v.nickname && lowerSubject.includes(v.nickname.toLowerCase())) {
-      return { vehicleId: v.id, userId: v.user_id };
-    }
-  }
-  return null;
-}
-
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
@@ -169,8 +152,11 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
     }
   }
 
-  // 4. Vehicle nickname in subject
-  return findVehicleByNickname(parsed.subject, supabase);
+  // No trusted signal matched. Do NOT fall back to scanning vehicle nicknames
+  // across all users — that is a cross-tenant IDOR (a spoofed sender could
+  // attribute a document to a victim's vehicle). Unmatched mail lands in the
+  // FALLBACK_USER_ID pool and is claimable via the sender_email recovery flow.
+  return null;
 }
 
 interface CloudmailinJsonBody {

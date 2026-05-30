@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
 import { getBrand } from "@/lib/brands/registry";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { tick } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
@@ -25,6 +26,14 @@ export async function GET(
   if (!z.string().uuid().safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
+
+  if (!checkRateLimit(session.user.id, "state", 120)) {
+    return NextResponse.json(
+      { message: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
 
   const { data: vehicle, error: vehErr } = await supabase

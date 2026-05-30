@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       .eq("id", userId);
   }
 
-  const origin = request.headers.get("origin") ?? "https://flux.daolab.io";
+  const origin = process.env.NEXTAUTH_URL ?? "https://flux.daolab.io";
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",

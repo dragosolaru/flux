@@ -4,7 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 
-export async function POST(request: Request) {
+export async function POST() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "No active subscription" }, { status: 404 });
   }
 
-  const origin = request.headers.get("origin") ?? "https://flux.daolab.io";
+  const origin = process.env.NEXTAUTH_URL ?? "https://flux.daolab.io";
   const portalSession = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: `${origin}/settings`,
