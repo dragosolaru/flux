@@ -87,7 +87,44 @@
     "title": "Üdvözli a Flux",
     "subtitle": "Kezelje a költségeket, figyelje és vezérelje Tesla-ját — mindent egy helyen.",
     "cta_primary": "Tesla csatlakoztatása",
-    "cta_secondary": "Fedezze fel demóadatokkal"
+    "cta_secondary": "Fedezze fel demóadatokkal",
+    "add_vehicle": {
+      "title": "Tesla hozzáadása",
+      "title_success": "Jármű hozzáadva!",
+      "description": "Válassza ki a modellt és a becenevet. Az élő integrációhoz Tesla-fiók összekapcsolása szükséges (következő lépés).",
+      "description_success": "Az új járműve készen áll a garázsban.",
+      "field_model": "Modell",
+      "field_nickname": "Becenév",
+      "field_nickname_placeholder": "pl. Fekete Párduc",
+      "field_year": "Évjárat",
+      "field_scenario": "Vezetési forgatókönyv (szimulált adatok)",
+      "submit": "Jármű hozzáadása",
+      "submitting": "Hozzáadás…",
+      "error_nickname_required": "A becenév megadása kötelező",
+      "btn_add_another": "Újabb hozzáadása",
+      "btn_view_vehicle": "Jármű megtekintése",
+      "upgrade_title": "Ingyenes csomag korlátja elérve",
+      "upgrade_description": "Az ingyenes csomag 1 járművet tartalmaz. Váltson Próra a korlátlan járművekért.",
+      "upgrade_cta": "Váltás Próra a korlátlan járművekért"
+    },
+    "scenarios": {
+      "commuter": {
+        "label": "Napi ingázó",
+        "desc": "9-17, otthoni töltés"
+      },
+      "weekend-errands": {
+        "label": "Hétvégi bevásárlás",
+        "desc": "Rövid városi utak"
+      },
+      "road-trip": {
+        "label": "Hosszú út",
+        "desc": "Nagy távolság DC megállókkal"
+      },
+      "vacation": {
+        "label": "Nyaralás",
+        "desc": "Többnapos kirándulás"
+      }
+    }
   },
   "settings": {
     "title": "Beállítások",
@@ -153,6 +190,8 @@
   "ingest": {
     "title": "Bizonylat hozzáadása",
     "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
+    "free_tier_usage": "{used} / {max} feltöltés felhasználva ezen a hónapon",
+    "upgrade_cta": "Váltás Próra a korlátlan feltöltésért",
     "option": {
       "upload": {
         "label": "Fotó",

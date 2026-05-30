@@ -87,7 +87,44 @@
     "title": "Bienvenue sur Flux",
     "subtitle": "Gérez les coûts, surveillez et contrôlez votre Tesla — tout en un seul endroit.",
     "cta_primary": "Connecter Tesla",
-    "cta_secondary": "Explorer avec les données démo"
+    "cta_secondary": "Explorer avec les données démo",
+    "add_vehicle": {
+      "title": "Ajouter votre Tesla",
+      "title_success": "Véhicule ajouté !",
+      "description": "Choisissez le modèle et le surnom. L'intégration en direct nécessite la liaison du compte Tesla (étape suivante).",
+      "description_success": "Votre nouveau véhicule est prêt dans le garage.",
+      "field_model": "Modèle",
+      "field_nickname": "Surnom",
+      "field_nickname_placeholder": "ex. Panthère Noire",
+      "field_year": "Année",
+      "field_scenario": "Scénario de conduite (données simulées)",
+      "submit": "Ajouter le véhicule",
+      "submitting": "Ajout en cours…",
+      "error_nickname_required": "Le surnom est obligatoire",
+      "btn_add_another": "Ajouter un autre",
+      "btn_view_vehicle": "Voir le véhicule",
+      "upgrade_title": "Limite du plan gratuit atteinte",
+      "upgrade_description": "Votre plan gratuit inclut 1 véhicule. Passez à Pro pour des véhicules illimités.",
+      "upgrade_cta": "Passer à Pro pour des véhicules illimités"
+    },
+    "scenarios": {
+      "commuter": {
+        "label": "Navetteur quotidien",
+        "desc": "9h-17h, chargement à domicile"
+      },
+      "weekend-errands": {
+        "label": "Courses du week-end",
+        "desc": "Courts trajets en ville"
+      },
+      "road-trip": {
+        "label": "Road Trip",
+        "desc": "Longue distance avec arrêts DC"
+      },
+      "vacation": {
+        "label": "Vacances",
+        "desc": "Escapade de plusieurs jours"
+      }
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -153,6 +190,8 @@
   "ingest": {
     "title": "Ajouter un reçu",
     "subtitle": "Envoyez un reçu de n'importe quel réseau — Renovatio, IONITY, MOL, Petrom — nous le traiterons automatiquement.",
+    "free_tier_usage": "{used} / {max} téléchargements utilisés ce mois-ci",
+    "upgrade_cta": "Passer à Pro pour des téléchargements illimités",
     "option": {
       "upload": {
         "label": "Photo",

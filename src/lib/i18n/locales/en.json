@@ -87,7 +87,44 @@
     "title": "Welcome to Flux",
     "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
     "cta_primary": "Connect Tesla",
-    "cta_secondary": "Explore with demo data"
+    "cta_secondary": "Explore with demo data",
+    "add_vehicle": {
+      "title": "Add your Tesla",
+      "title_success": "Vehicle added!",
+      "description": "Pick model & nickname. Live integration requires Tesla account pairing (next step).",
+      "description_success": "Your new vehicle is ready in the garage.",
+      "field_model": "Model",
+      "field_nickname": "Nickname",
+      "field_nickname_placeholder": "e.g. Black Panther",
+      "field_year": "Year",
+      "field_scenario": "Driving scenario (mock data)",
+      "submit": "Add vehicle",
+      "submitting": "Adding…",
+      "error_nickname_required": "Nickname is required",
+      "btn_add_another": "Add another",
+      "btn_view_vehicle": "View vehicle",
+      "upgrade_title": "Free plan limit reached",
+      "upgrade_description": "Your free plan includes 1 vehicle. Upgrade to Pro to add unlimited vehicles.",
+      "upgrade_cta": "Upgrade to Pro for unlimited vehicles"
+    },
+    "scenarios": {
+      "commuter": {
+        "label": "Daily Commuter",
+        "desc": "9-to-5, home charging"
+      },
+      "weekend-errands": {
+        "label": "Weekend Errands",
+        "desc": "Short city trips"
+      },
+      "road-trip": {
+        "label": "Road Trip",
+        "desc": "Long distance with DC stops"
+      },
+      "vacation": {
+        "label": "Vacation",
+        "desc": "Multi-day getaway"
+      }
+    }
   },
   "settings": {
     "title": "Settings",
@@ -153,6 +190,8 @@
   "ingest": {
     "title": "Add receipt",
     "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
+    "free_tier_usage": "{used} / {max} uploads used this month",
+    "upgrade_cta": "Upgrade to Pro for unlimited uploads",
     "option": {
       "upload": {
         "label": "Photo",

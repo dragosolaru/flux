@@ -87,7 +87,44 @@
     "title": "Bine ai venit în Flux",
     "subtitle": "Gestionează costurile, monitorizează și controlează-ți Tesla — totul într-un singur loc.",
     "cta_primary": "Conectează Tesla",
-    "cta_secondary": "Explorează cu date demo"
+    "cta_secondary": "Explorează cu date demo",
+    "add_vehicle": {
+      "title": "Adaugă Tesla-ul tău",
+      "title_success": "Mașina adăugată!",
+      "description": "Alege modelul și porecla. Integrarea live necesită conectarea contului Tesla (pasul următor).",
+      "description_success": "Noua ta mașină este gata în garaj.",
+      "field_model": "Model",
+      "field_nickname": "Poreclă",
+      "field_nickname_placeholder": "ex. Pantera Neagră",
+      "field_year": "An",
+      "field_scenario": "Scenariu de condus (date simulate)",
+      "submit": "Adaugă mașina",
+      "submitting": "Se adaugă…",
+      "error_nickname_required": "Porecla este obligatorie",
+      "btn_add_another": "Adaugă alta",
+      "btn_view_vehicle": "Vezi mașina",
+      "upgrade_title": "Limita planului gratuit atinsă",
+      "upgrade_description": "Planul tău gratuit include 1 mașină. Treci la Pro pentru mașini nelimitate.",
+      "upgrade_cta": "Treci la Pro pentru mașini nelimitate"
+    },
+    "scenarios": {
+      "commuter": {
+        "label": "Navetist zilnic",
+        "desc": "9-17, încărcare acasă"
+      },
+      "weekend-errands": {
+        "label": "Comisioane de weekend",
+        "desc": "Scurte drumuri în oraș"
+      },
+      "road-trip": {
+        "label": "Road Trip",
+        "desc": "Distanțe lungi cu opriri DC"
+      },
+      "vacation": {
+        "label": "Vacanță",
+        "desc": "Excursie de mai multe zile"
+      }
+    }
   },
   "settings": {
     "title": "Setări",
@@ -153,6 +190,8 @@
   "ingest": {
     "title": "Adaugă bon",
     "subtitle": "Trimite bonul de la orice rețea — Renovatio, IONITY, MOL, Petrom — și îl procesăm automat.",
+    "free_tier_usage": "{used} / {max} upload-uri folosite luna aceasta",
+    "upgrade_cta": "Treci la Pro pentru upload-uri nelimitate",
     "option": {
       "upload": {
         "label": "Foto",

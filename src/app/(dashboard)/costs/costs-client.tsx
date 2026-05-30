@@ -17,6 +17,7 @@ import {
   useRecoverDocuments,
 } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { useQueryClient } from "@tanstack/react-query";
 import { pageVariants, staggerContainer } from "@/lib/animations/variants";
 
@@ -35,6 +36,13 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { mutate: editDocument } = useEditDocument(vehicleId);
   const { mutate: deleteDocument } = useDeleteDocument(vehicleId);
   const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
+  const { data: capabilities } = useCapabilities();
+
+  const now = new Date();
+  const docsThisMonth = documents?.filter((d) => {
+    const created = new Date(d.created_at);
+    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
+  }).length ?? 0;
 
   // Invalidate costs when any document transitions out of pending/processing.
   // The ref is keyed implicitly to vehicleId; reset it when the user switches
@@ -89,7 +97,14 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       <CostDashboard data={costs} isLoading={costsLoading} />
 
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
-        <IngestCard email={vehicleEmail} onUpload={handleUpload} disabled={uploading} uploading={uploading} />
+        <IngestCard
+          email={vehicleEmail}
+          onUpload={handleUpload}
+          disabled={uploading}
+          uploading={uploading}
+          hasProSubscription={capabilities?.hasProSubscription}
+          docsThisMonth={docsThisMonth}
+        />
 
         <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">

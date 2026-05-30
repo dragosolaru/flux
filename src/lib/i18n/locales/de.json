@@ -87,7 +87,44 @@
     "title": "Willkommen bei Flux",
     "subtitle": "Kosten verwalten, deinen Tesla überwachen und steuern — alles an einem Ort.",
     "cta_primary": "Tesla verbinden",
-    "cta_secondary": "Mit Demo-Daten erkunden"
+    "cta_secondary": "Mit Demo-Daten erkunden",
+    "add_vehicle": {
+      "title": "Deinen Tesla hinzufügen",
+      "title_success": "Fahrzeug hinzugefügt!",
+      "description": "Modell und Spitzname auswählen. Live-Integration erfordert die Kopplung des Tesla-Kontos (nächster Schritt).",
+      "description_success": "Dein neues Fahrzeug ist bereit in der Garage.",
+      "field_model": "Modell",
+      "field_nickname": "Spitzname",
+      "field_nickname_placeholder": "z. B. Schwarzer Panther",
+      "field_year": "Baujahr",
+      "field_scenario": "Fahrszenario (simulierte Daten)",
+      "submit": "Fahrzeug hinzufügen",
+      "submitting": "Wird hinzugefügt…",
+      "error_nickname_required": "Spitzname ist erforderlich",
+      "btn_add_another": "Weiteres hinzufügen",
+      "btn_view_vehicle": "Fahrzeug anzeigen",
+      "upgrade_title": "Limit des kostenlosen Plans erreicht",
+      "upgrade_description": "Dein kostenloser Plan enthält 1 Fahrzeug. Upgrade auf Pro für unbegrenzte Fahrzeuge.",
+      "upgrade_cta": "Auf Pro upgraden für unbegrenzte Fahrzeuge"
+    },
+    "scenarios": {
+      "commuter": {
+        "label": "Täglicher Pendler",
+        "desc": "9-17 Uhr, Laden zuhause"
+      },
+      "weekend-errands": {
+        "label": "Wochenendeinkäufe",
+        "desc": "Kurze Stadtfahrten"
+      },
+      "road-trip": {
+        "label": "Road Trip",
+        "desc": "Lange Strecken mit DC-Stopps"
+      },
+      "vacation": {
+        "label": "Urlaub",
+        "desc": "Mehrtägiger Ausflug"
+      }
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -153,6 +190,8 @@
   "ingest": {
     "title": "Beleg hinzufügen",
     "subtitle": "Sende einen Beleg von einem beliebigen Netzwerk — Renovatio, IONITY, MOL, Petrom — wir verarbeiten ihn automatisch.",
+    "free_tier_usage": "{used} / {max} Uploads diesen Monat verwendet",
+    "upgrade_cta": "Auf Pro upgraden für unbegrenzte Uploads",
     "option": {
       "upload": {
         "label": "Foto",

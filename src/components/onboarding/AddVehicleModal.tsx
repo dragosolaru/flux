@@ -4,23 +4,22 @@ import { cloneElement, isValidElement, useEffect, useState, type ChangeEvent, ty
 import type { ReactElement, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, PlusCircle, X } from "lucide-react";
+import { CheckCircle2, Lock, PlusCircle, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UpgradeButton } from "@/components/billing/UpgradeButton";
+import { useCapabilities } from "@/hooks/useCapabilities";
+import { useVehicles } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
 
 const TESLA_MODELS = ["Model 3", "Model Y", "Model S", "Model X"];
-
-const SCENARIOS = [
-  { value: "commuter",        label: "Daily Commuter",       desc: "9-to-5, home charging" },
-  { value: "weekend-errands", label: "Weekend Errands",      desc: "Short city trips" },
-  { value: "road-trip",       label: "Road Trip",            desc: "Long distance with DC stops" },
-  { value: "vacation",        label: "Vacation",             desc: "Multi-day getaway" },
-];
+const SCENARIO_VALUES = ["commuter", "weekend-errands", "road-trip", "vacation"] as const;
+type ScenarioValue = typeof SCENARIO_VALUES[number];
 
 type Step = "details" | "success";
 
@@ -31,6 +30,8 @@ interface AddVehicleModalProps {
 }
 
 export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }: AddVehicleModalProps) {
+  const t = useTranslations("onboarding");
+
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -39,17 +40,24 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
     if (isControlled) onOpenChange?.(val);
     else setInternalOpen(val);
   }
+
   const [step, setStep] = useState<Step>("details");
   const [model, setModel] = useState(TESLA_MODELS[0]);
   const [nickname, setNickname] = useState("");
   const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [scenario, setScenario] = useState("commuter");
+  const [scenario, setScenario] = useState<ScenarioValue>("commuter");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [createdId, setCreatedId] = useState("");
 
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: capabilities } = useCapabilities();
+  const { data: vehicles } = useVehicles();
+
+  const isFreeTierBlocked =
+    capabilities?.hasProSubscription === false &&
+    (vehicles?.length ?? 0) >= 1;
 
   function reset() {
     setStep("details");
@@ -68,7 +76,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!nickname.trim()) { setError("Nickname is required"); return; }
+    if (!nickname.trim()) { setError(t("add_vehicle.error_nickname_required")); return; }
     setLoading(true);
     setError("");
     try {
@@ -107,7 +115,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
     : (
       <Button onClick={() => setOpen(true)}>
         <PlusCircle className="mr-2 size-4" />
-        Add vehicle
+        {t("add_vehicle.submit")}
       </Button>
     );
 
@@ -119,7 +127,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Add vehicle"
+          aria-label={t("add_vehicle.title")}
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
@@ -131,12 +139,12 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
               </div>
 
               <CardTitle className="pr-8">
-                {step === "details" ? "Add your Tesla" : "Vehicle added!"}
+                {step === "details" ? t("add_vehicle.title") : t("add_vehicle.title_success")}
               </CardTitle>
               <CardDescription>
                 {step === "details"
-                  ? "Pick model & nickname. Live integration requires Tesla account pairing (next step)."
-                  : "Your new vehicle is ready in the garage."}
+                  ? t("add_vehicle.description")
+                  : t("add_vehicle.description_success")}
               </CardDescription>
 
               <button
@@ -149,10 +157,21 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
             </CardHeader>
 
             <CardContent>
-              {step === "details" && (
+              {step === "details" && isFreeTierBlocked && (
+                <div className="flex flex-col items-center gap-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+                  <Lock className="size-8 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-semibold">{t("add_vehicle.upgrade_title")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t("add_vehicle.upgrade_description")}</p>
+                  </div>
+                  <UpgradeButton label={t("add_vehicle.upgrade_cta")} className="w-full" />
+                </div>
+              )}
+
+              {step === "details" && !isFreeTierBlocked && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="model">Model</Label>
+                    <Label htmlFor="model">{t("add_vehicle.field_model")}</Label>
                     <select
                       id="model"
                       value={model}
@@ -167,11 +186,11 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
                   <div className="space-y-1.5">
                     <Label htmlFor="nickname">
-                      Nickname <span className="text-destructive">*</span>
+                      {t("add_vehicle.field_nickname")} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="nickname"
-                      placeholder="e.g. Black Panther"
+                      placeholder={t("add_vehicle.field_nickname_placeholder")}
                       value={nickname}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                       autoFocus
@@ -179,7 +198,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="year">Year</Label>
+                    <Label htmlFor="year">{t("add_vehicle.field_year")}</Label>
                     <select
                       id="year"
                       value={year}
@@ -193,22 +212,22 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Driving scenario (mock data)</Label>
+                    <Label>{t("add_vehicle.field_scenario")}</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {SCENARIOS.map((s) => (
+                      {SCENARIO_VALUES.map((sv) => (
                         <button
-                          key={s.value}
+                          key={sv}
                           type="button"
-                          onClick={() => setScenario(s.value)}
+                          onClick={() => setScenario(sv)}
                           className={cn(
                             "rounded-lg border p-3 text-left transition-colors",
-                            scenario === s.value
+                            scenario === sv
                               ? "border-primary bg-primary/10 text-primary"
                               : "hover:bg-muted",
                           )}
                         >
-                          <div className="text-xs font-semibold">{s.label}</div>
-                          <div className="mt-0.5 text-[11px] text-muted-foreground">{s.desc}</div>
+                          <div className="text-xs font-semibold">{t(`scenarios.${sv}.label`)}</div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">{t(`scenarios.${sv}.desc`)}</div>
                         </button>
                       ))}
                     </div>
@@ -221,7 +240,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   )}
 
                   <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? "Adding…" : "Add vehicle"}
+                    {loading ? t("add_vehicle.submitting") : t("add_vehicle.submit")}
                   </Button>
                 </form>
               )}
@@ -237,18 +256,18 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       Tesla · {model} · {year}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Scenario: {SCENARIOS.find((s) => s.value === scenario)?.label}
+                      {t(`scenarios.${scenario}.label`)}
                     </p>
                   </div>
                   <div className="flex w-full gap-2 pt-2">
                     <Button variant="outline" onClick={() => { reset(); }} className="flex-1">
-                      Add another
+                      {t("add_vehicle.btn_add_another")}
                     </Button>
                     <Button
                       onClick={() => { close(); router.push(`/dashboard?v=${createdId}`); }}
                       className="flex-1"
                     >
-                      View vehicle
+                      {t("add_vehicle.btn_view_vehicle")}
                     </Button>
                   </div>
                 </div>
