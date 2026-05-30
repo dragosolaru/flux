@@ -36,6 +36,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder
           NEXTAUTH_SECRET: placeholder-secret-placeholder-secret
           NEXTAUTH_URL: http://localhost:3000
+          AUTH_TRUST_HOST: "true"
 
   e2e-smoke:
     runs-on: ubuntu-latest
@@ -60,6 +61,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder
           NEXTAUTH_SECRET: placeholder-secret-placeholder-secret
           NEXTAUTH_URL: http://localhost:3000
+          AUTH_TRUST_HOST: "true"
 
       - name: E2E smoke tests
         run: npm run test:e2e -- smoke.spec.ts
@@ -69,3 +71,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder
           NEXTAUTH_SECRET: placeholder-secret-placeholder-secret
           NEXTAUTH_URL: http://localhost:3000
+          AUTH_TRUST_HOST: "true"
