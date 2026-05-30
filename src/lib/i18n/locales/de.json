@@ -229,7 +229,8 @@
     "save": "sparen",
     "now": "Jetzt",
     "optimal": "Optimal",
-    "to_target": "bis Ziel"
+    "to_target": "bis Ziel",
+    "schedule_no_virtual_key": "Tesla verbinden zum automatischen Planen"
   },
   "departure": {
     "title": "Abfahrt & Vorkonditionierung",

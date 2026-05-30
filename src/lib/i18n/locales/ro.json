@@ -242,7 +242,8 @@
     "save": "economisești",
     "now": "Acum",
     "optimal": "Optim",
-    "to_target": "până la țintă"
+    "to_target": "până la țintă",
+    "schedule_no_virtual_key": "Conectează Tesla pentru a programa automat"
   },
   "billing": {
     "free_plan": "Plan gratuit",

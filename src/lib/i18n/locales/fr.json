@@ -229,7 +229,8 @@
     "save": "économiser",
     "now": "Maintenant",
     "optimal": "Optimal",
-    "to_target": "jusqu'à l'objectif"
+    "to_target": "jusqu'à l'objectif",
+    "schedule_no_virtual_key": "Connectez Tesla pour planifier automatiquement"
   },
   "departure": {
     "title": "Départ & Préconditionnement",

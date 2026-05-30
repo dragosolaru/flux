@@ -242,7 +242,8 @@
     "save": "save",
     "now": "Now",
     "optimal": "Optimal",
-    "to_target": "to target"
+    "to_target": "to target",
+    "schedule_no_virtual_key": "Connect Tesla to schedule automatically"
   },
   "billing": {
     "free_plan": "Free plan",

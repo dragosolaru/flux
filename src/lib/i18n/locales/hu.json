@@ -229,7 +229,8 @@
     "save": "megtakarítás",
     "now": "Most",
     "optimal": "Optimális",
-    "to_target": "a célhoz"
+    "to_target": "a célhoz",
+    "schedule_no_virtual_key": "Csatlakoztasd a Teslát az automatikus ütemezéshez"
   },
   "departure": {
     "title": "Indulás & Előkészítés",

@@ -1,15 +1,22 @@
 "use client";
 
-import { CheckCircle2, Clock, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { apiFetch } from "@/lib/api-fetch";
 import { computeSmartCharge } from "@/lib/external/tariffs/recommend";
 import { getModelSpec } from "@/lib/brands/models";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 import type { VehicleListItem } from "@/hooks/useVehicles";
@@ -30,6 +37,9 @@ function VehicleRecommendation({
   const t = useTranslations("energy");
   const [scheduled, setScheduled] = useState(false);
   const { mutate, isPending } = useVehicleCommand();
+  const { data: caps } = useCapabilities();
+
+  const hasCommandsReady = caps?.hasCommandsReady ?? false;
 
   const { data: state } = useQuery({
     queryKey: ["vehicle-state", vehicle.id],
@@ -76,6 +86,27 @@ function VehicleRecommendation({
     );
   }
 
+  const scheduleButton = (
+    <Button
+      variant={scheduled ? "default" : "outline"}
+      size="sm"
+      className="shrink-0 h-8 text-xs"
+      onClick={hasCommandsReady ? handleSchedule : undefined}
+      disabled={!hasCommandsReady || isPending || scheduled}
+    >
+      {isPending ? (
+        <Loader2 className="size-3 animate-spin" />
+      ) : scheduled ? (
+        <>
+          <CheckCircle2 className="size-3 mr-1" />
+          {t("scheduled")}
+        </>
+      ) : (
+        t("schedule_btn")
+      )}
+    </Button>
+  );
+
   return (
     <div className="flex items-start gap-3 rounded-lg border p-3">
       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-chart-2/15">
@@ -98,22 +129,16 @@ function VehicleRecommendation({
           {" · "}~{Math.round(rec.hoursNeeded * 10) / 10}h {t("to_target")}
         </p>
       </div>
-      <Button
-        variant={scheduled ? "default" : "outline"}
-        size="sm"
-        className="shrink-0 h-8 text-xs"
-        onClick={handleSchedule}
-        disabled={isPending || scheduled}
-      >
-        {scheduled ? (
-          <>
-            <CheckCircle2 className="size-3 mr-1" />
-            {t("scheduled")}
-          </>
-        ) : (
-          t("schedule_btn")
-        )}
-      </Button>
+      {hasCommandsReady ? (
+        scheduleButton
+      ) : (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{scheduleButton}</TooltipTrigger>
+            <TooltipContent>{t("schedule_no_virtual_key")}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 }
