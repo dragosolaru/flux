@@ -60,6 +60,34 @@ export const STATIONS: ChargingStation[] = [
   { id: "tsc-010", networkId: "tesla-sc", name: "Tesla SC Kraków", lat: 50.061, lng: 19.938, maxKw: 250, totalStalls: 10, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.42, addressCity: "Kraków", addressCountry: "PL" },
   { id: "tsc-011", networkId: "tesla-sc", name: "Tesla SC Lisbon", lat: 38.717, lng: -9.138, maxKw: 250, totalStalls: 12, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.45, addressCity: "Lisbon", addressCountry: "PT" },
   { id: "tsc-012", networkId: "tesla-sc", name: "Tesla SC Athens", lat: 37.983, lng: 23.727, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.46, addressCity: "Athens", addressCountry: "GR" },
+
+  // Tesla Superchargers Romania
+  { id: "tsc-ro-cluj", networkId: "tesla-sc", name: "Tesla SC Cluj-Napoca", lat: 46.777, lng: 23.617, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Cluj-Napoca", addressCountry: "RO" },
+  { id: "tsc-ro-sibiu", networkId: "tesla-sc", name: "Tesla SC Sibiu", lat: 45.793, lng: 24.152, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Sibiu", addressCountry: "RO" },
+  { id: "tsc-ro-pitesti", networkId: "tesla-sc", name: "Tesla SC Pitești", lat: 44.856, lng: 24.869, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Pitești", addressCountry: "RO" },
+  { id: "tsc-ro-ploiesti", networkId: "tesla-sc", name: "Tesla SC Ploiești", lat: 44.952, lng: 26.023, maxKw: 250, totalStalls: 6, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Ploiești", addressCountry: "RO" },
+  { id: "tsc-ro-brasov", networkId: "tesla-sc", name: "Tesla SC Brașov", lat: 45.658, lng: 25.601, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Brașov", addressCountry: "RO" },
+  { id: "tsc-ro-timisoara", networkId: "tesla-sc", name: "Tesla SC Timișoara", lat: 45.749, lng: 21.230, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Timișoara", addressCountry: "RO" },
+  { id: "tsc-ro-iasi", networkId: "tesla-sc", name: "Tesla SC Iași", lat: 47.158, lng: 27.600, maxKw: 150, totalStalls: 6, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Iași", addressCountry: "RO" },
+  { id: "tsc-ro-constanta", networkId: "tesla-sc", name: "Tesla SC Constanța", lat: 44.174, lng: 28.638, maxKw: 150, totalStalls: 6, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Constanța", addressCountry: "RO" },
+  { id: "tsc-ro-oradea", networkId: "tesla-sc", name: "Tesla SC Oradea", lat: 47.061, lng: 21.946, maxKw: 150, totalStalls: 6, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Oradea", addressCountry: "RO" },
+  { id: "tsc-ro-craiova", networkId: "tesla-sc", name: "Tesla SC Craiova", lat: 44.316, lng: 23.801, maxKw: 150, totalStalls: 4, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Craiova", addressCountry: "RO" },
+
+  // IONITY Romania
+  { id: "ion-ro-001", networkId: "ionity", name: "IONITY Boița", lat: 45.668, lng: 24.329, maxKw: 350, totalStalls: 6, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Boița", addressCountry: "RO" },
+  { id: "ion-ro-002", networkId: "ionity", name: "IONITY Câmpina", lat: 45.123, lng: 25.741, maxKw: 350, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Câmpina", addressCountry: "RO" },
+  { id: "ion-ro-003", networkId: "ionity", name: "IONITY Deva", lat: 45.879, lng: 22.909, maxKw: 350, totalStalls: 6, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Deva", addressCountry: "RO" },
+  { id: "ion-ro-004", networkId: "ionity", name: "IONITY Turda", lat: 46.571, lng: 23.787, maxKw: 350, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Turda", addressCountry: "RO" },
+
+  // EnBW/Renovatio Romania
+  { id: "enbw-ro-001", networkId: "enbw", name: "Renovatio Câmpia Turzii", lat: 46.548, lng: 23.882, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Câmpia Turzii", addressCountry: "RO" },
+  { id: "enbw-ro-002", networkId: "enbw", name: "Renovatio Sibiu Nord", lat: 45.814, lng: 24.148, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Sibiu", addressCountry: "RO" },
+  { id: "enbw-ro-003", networkId: "enbw", name: "Renovatio Pitești Sud", lat: 44.831, lng: 24.892, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Pitești", addressCountry: "RO" },
+  { id: "enbw-ro-004", networkId: "enbw", name: "Renovatio Băilești", lat: 44.024, lng: 23.347, maxKw: 100, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Băilești", addressCountry: "RO" },
+
+  // Fastned Romania
+  { id: "fast-ro-001", networkId: "fastned", name: "Fastned Balș A1", lat: 44.359, lng: 24.088, maxKw: 300, totalStalls: 8, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.59, addressCity: "Balș", addressCountry: "RO" },
+  { id: "fast-ro-002", networkId: "fastned", name: "Fastned Curtea de Argeș", lat: 45.138, lng: 24.681, maxKw: 300, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.59, addressCity: "Curtea de Argeș", addressCountry: "RO" },
 ];
 
 export function getStations() {

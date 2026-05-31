@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { STATIONS } from "@/lib/external/charging-networks/stations";
+import { haversine } from "@/lib/external/routing/providers/mock-router";
 
 export interface ChargingStation {
   id: string;
@@ -114,32 +116,42 @@ export async function GET(req: NextRequest) {
   }
 
   let raw: unknown;
+  let ocmOk = false;
   try {
     const res = await fetch(ocmUrl.toString(), {
       headers: { "Accept": "application/json" },
       next: { revalidate: 300 },
     });
-    if (!res.ok) {
-      return NextResponse.json(
-        { message: `OpenChargeMap error: ${res.status}` },
-        { status: 502 },
-      );
+    if (res.ok) {
+      raw = await res.json();
+      ocmOk = true;
     }
-    raw = await res.json();
   } catch {
-    return NextResponse.json({ message: "Failed to reach OpenChargeMap" }, { status: 502 });
+    // fall through to static fallback
   }
 
-  if (!Array.isArray(raw)) {
-    return NextResponse.json({ message: "Unexpected response from OpenChargeMap" }, { status: 502 });
+  if (ocmOk && Array.isArray(raw)) {
+    const stations: ChargingStation[] = [];
+    for (const item of raw) {
+      if (!isOcmPoi(item)) continue;
+      const station = mapPoi(item);
+      if (station) stations.push(station);
+    }
+    return NextResponse.json(stations);
   }
 
-  const stations: ChargingStation[] = [];
-  for (const item of raw) {
-    if (!isOcmPoi(item)) continue;
-    const station = mapPoi(item);
-    if (station) stations.push(station);
-  }
-
-  return NextResponse.json(stations);
+  const center = { lat: latNum, lng: lngNum };
+  const fallback: ChargingStation[] = STATIONS
+    .filter((s) => haversine(center, s) <= radius)
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      lat: s.lat,
+      lng: s.lng,
+      connectorCount: s.totalStalls,
+      maxPowerKw: s.maxKw,
+      isOperational: true,
+      town: s.addressCity,
+    }));
+  return NextResponse.json(fallback);
 }

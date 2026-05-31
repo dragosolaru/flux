@@ -307,5 +307,9 @@
     "precondition_btn": "Akkumulátor előkészítése",
     "preconditioning": "Aktiválás…",
     "preconditioned": "Aktív ✓"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat."
   }
 }

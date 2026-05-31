@@ -307,5 +307,9 @@
     "now": "Now",
     "optimal": "Optimal",
     "to_target": "to target"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Data provided by OpenChargeMap. Availability may vary."
   }
 }

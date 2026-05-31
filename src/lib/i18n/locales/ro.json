@@ -307,5 +307,9 @@
     "now": "Acum",
     "optimal": "Optim",
     "to_target": "până la țintă"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
   }
 }

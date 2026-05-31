@@ -156,11 +156,15 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 9. Charging map
 
-**What:** Map of ~50 real-world EU charging stations (IONITY, Tesla SC, etc.) with network/power/plug filters and availability overlay.
+**What:** Map of ~70 real-world EU charging stations (IONITY, Tesla SC, EnBW/Renovatio, Fastned, Allego, etc.) including full Romanian coverage (Cluj-Napoca, Sibiu, Brașov, Pitești, Ploiești, Timișoara, Iași, Constanța, Oradea, Craiova + highway IONITY/EnBW/Fastned). Network/power/plug filters and availability overlay.
 
-**How to use:** UI `/charging-map` (`StationMap`, Leaflet). API: `GET /api/charging-map` (filter by `network`, `minKw`, `plug`; adds network metadata + availability), `GET /api/charging-stations`.
+**How to use:** UI `/charging-map` (`StationMap`, Leaflet). API: `GET /api/charging-map` (filter by `network`, `minKw`, `plug`; adds network metadata + availability), `GET /api/charging-stations` (accepts `lat`, `lng`, `radius` params).
 
-**Key files:** `src/components/charging-map/StationMap.tsx`, `src/lib/external/charging-networks/stations.ts`, `.../availability.ts`, `.../meta.ts`, `src/app/api/charging-map/route.ts`.
+**Fallback behaviour:** `GET /api/charging-stations` first tries OpenChargeMap. On any error (403, network, timeout) it falls back to the static `STATIONS` dataset filtered by haversine distance within the requested radius. No error is returned to the client.
+
+**i18n:** `chargingMap.disclaimer` key present in all 5 locales — shown as attribution text on the map page.
+
+**Key files:** `src/components/charging-map/StationMap.tsx`, `src/lib/external/charging-networks/stations.ts`, `.../availability.ts`, `.../meta.ts`, `src/app/api/charging-map/route.ts`, `src/app/api/charging-stations/route.ts`.
 
 **Dependencies:** Leaflet/react-leaflet. Station data is a **static seeded dataset**; availability is simulated.
 

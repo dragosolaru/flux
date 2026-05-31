@@ -307,5 +307,9 @@
     "precondition_btn": "Préconditionner la batterie",
     "preconditioning": "Activation…",
     "preconditioned": "Actif ✓"
+  },
+
+  "chargingMap": {
+    "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier."
   }
 }
