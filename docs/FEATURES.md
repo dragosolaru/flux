@@ -275,3 +275,18 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — new keys: `kpi_total_lei`, `kpi_total_kwh`, `kpi_home_pct`, `kpi_fuel_saving`, `kpi_cost_per_km_blended`, `kpi_wh_per_km_label`, `docs_heading`, `fab_label`, and others
 
 **Dependencies:** Framer Motion v12, `PageWrapper`, `GlassCard` CSS utility, `DocumentStatusCard`, `IngestCard`, `useCosts`, `useDocuments`.
+
+---
+
+## 17. Charging Page — Mobile Redesign
+
+**What:** Full mobile-first redesign of `/charging` using the glassmorphism design system. Replaces the plain card layout with: (1) an animated `CircularProgress` ring always visible, reflecting charge state with green/amber/grey color; center shows current % + kW + time remaining when active; (2) a glass-card charge limit slider with save button; (3) an iOS-style scheduled charging card with toggle + time picker; (4) staggered glass history cards — each with date, duration, kWh, cost, home/public icon + location label; empty state with centered icon.
+
+**How to use:** `/charging?v=<vehicleId>`. No API changes. The server passes the 20 most recent `charging_sessions` rows (started_at, ended_at, energy_added_kwh, cost_eur, location_name). Live vehicle state (ring, slider) fetched client-side via `useVehicle`.
+
+**Key files:**
+- `src/app/(dashboard)/charging/charging-client.tsx` — full redesigned client component
+- `src/app/(dashboard)/charging/page.tsx` — server component, passes `ChargingSessionRow[]`
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — added keys: `ring_status_*`, `ring_target`, `ring_power`, `ring_time_remaining`, `history_duration`, `history_kwh`, `history_cost`, `history_home`, `history_public`
+
+**Dependencies:** `CircularProgress`, `GlassCard`, `PageWrapper` (design system), `staggerContainer`/`fadeInUp`/`tapShrink` from `variants.ts`, Framer Motion v12, `useVehicle`, `useVehicleCommand`, `useChargingHistorySync`.

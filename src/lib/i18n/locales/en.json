@@ -251,7 +251,19 @@
     "history_empty_title": "No charging history yet",
     "history_empty_hint": "Sessions appear here once your car has been plugged in while the dashboard is open.",
     "history_sync": "Sync from Tesla",
-    "history_syncing": "Syncing…"
+    "history_syncing": "Syncing…",
+    "ring_status_charging": "Charging",
+    "ring_status_complete": "Charge complete",
+    "ring_status_stopped": "Charge stopped",
+    "ring_status_disconnected": "Not connected",
+    "ring_target": "Target",
+    "ring_power": "Power",
+    "ring_time_remaining": "Remaining",
+    "history_duration": "Duration",
+    "history_kwh": "kWh added",
+    "history_cost": "Cost",
+    "history_home": "Home",
+    "history_public": "Public"
   },
   "commands": {
     "title": "Commands",

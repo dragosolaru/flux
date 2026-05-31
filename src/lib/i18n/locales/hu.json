@@ -250,7 +250,19 @@
     "history_empty_title": "Még nincs töltési előzmény",
     "history_empty_hint": "A munkamenetek itt jelennek meg, ha az autót csatlakoztatták miközben a dashboard nyitva volt.",
     "history_sync": "Szinkronizálás a Teslából",
-    "history_syncing": "Szinkronizálás…"
+    "history_syncing": "Szinkronizálás…",
+    "ring_status_charging": "Töltés folyamatban",
+    "ring_status_complete": "Töltés kész",
+    "ring_status_stopped": "Töltés leállítva",
+    "ring_status_disconnected": "Nincs csatlakoztatva",
+    "ring_target": "Cél",
+    "ring_power": "Teljesítmény",
+    "ring_time_remaining": "Hátralévő idő",
+    "history_duration": "Időtartam",
+    "history_kwh": "Feltöltött kWh",
+    "history_cost": "Költség",
+    "history_home": "Otthon",
+    "history_public": "Nyilvános"
   },
   "commands": {
     "title": "Parancsok",
