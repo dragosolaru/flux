@@ -129,7 +129,7 @@ File: `src/lib/external/bnr/client.ts`
 
 File: `src/app/api/documents/inbound-email/route.ts`
 
-Webhook URL: `POST /api/documents/inbound-email?secret=<EMAIL_WEBHOOK_SECRET>`
+Webhook URL: `POST /api/documents/inbound-email` — authenticated via the `x-webhook-secret: <EMAIL_WEBHOOK_SECRET>` HTTP header (the old `?secret=` query param was removed; fails closed with 503 if the env var is unset).
 
 ### Addressing model
 

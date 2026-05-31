@@ -29,3 +29,12 @@
 - No comments unless the WHY is non-obvious.
 - No abstraction beyond what the task needs. Three similar lines > premature helper.
 - `npx tsc --noEmit` must pass before committing.
+- `npm run lint` must pass before committing (CI fails on errors).
+
+## Documentation rule (non-negotiable)
+
+Every feature you build or change MUST be documented in `docs/FEATURES.md`.
+Add or update a section with: **what it does**, **how to use it** (the API
+route or UI entry point), **key files**, and **dependencies**. Keep entries
+short and skimmable — the goal is fast, cheap onboarding for the next reader.
+Update this doc in the SAME commit as the feature.

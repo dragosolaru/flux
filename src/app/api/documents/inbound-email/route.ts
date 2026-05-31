@@ -12,7 +12,9 @@
  *   4. Subject contains vehicle nickname     → that vehicle
  *
  * Env vars:
- *   EMAIL_WEBHOOK_SECRET            — shared secret (?secret= query param)
+ *   EMAIL_WEBHOOK_SECRET            — shared secret, sent in the `x-webhook-secret`
+ *                                     HTTP header (the old ?secret= query param was removed;
+ *                                     fails closed with 503 if unset)
  *   NEXT_PUBLIC_CLOUDMAILIN_ADDRESS — e.g. abc123@cloudmailin.net
  */
 

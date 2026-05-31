@@ -102,7 +102,8 @@ Policies enforce: users can only read/write rows where `user_id = auth.uid()`, o
 1. User sends email with a document attachment to their vehicle's address:  
    `2b31b9c101b11f6682f3+black-panther-f793064e@cloudmailin.net`
 2. Cloudmailin receives it and POSTs multipart/form-data to:  
-   `https://flux-alpha-three.vercel.app/api/documents/inbound-email?secret=<EMAIL_WEBHOOK_SECRET>`
+   `https://flux-alpha-three.vercel.app/api/documents/inbound-email`  
+   with a custom HTTP header `x-webhook-secret: <EMAIL_WEBHOOK_SECRET>`
 3. The webhook extracts `+black-panther-f793064e` from the To address to identify the vehicle
 4. Attachments are uploaded to Supabase Storage and queued for Claude Vision parsing
 
@@ -110,9 +111,10 @@ Policies enforce: users can only read/write rows where `user_id = auth.uid()`, o
 
 In Cloudmailin → your address → Edit:
 - **POST Format:** Multipart - Normalized
-- **Target URL:** `https://flux-alpha-three.vercel.app/api/documents/inbound-email?secret=<EMAIL_WEBHOOK_SECRET>`
+- **Target URL:** `https://flux-alpha-three.vercel.app/api/documents/inbound-email`
+- **Custom HTTP header:** `x-webhook-secret: <EMAIL_WEBHOOK_SECRET>`
 
-The `EMAIL_WEBHOOK_SECRET` in the URL must match the env var set in Vercel.
+The `x-webhook-secret` header value must match the `EMAIL_WEBHOOK_SECRET` env var set in Vercel. The endpoint fails closed (503) if the env var is unset. The old `?secret=` query-param method has been removed — passing the secret in the URL leaks it into access logs and proxies.
 
 ### Vehicle address format
 
@@ -131,7 +133,7 @@ The webhook at `POST /api/documents/inbound-email` accepts:
 - **Mailgun**: multipart/form-data with `To`, `Subject`, `attachment-*` fields
 - **SendGrid Inbound Parse**: multipart/form-data with same field names
 
-To switch providers: update the webhook URL in the provider's dashboard. Keep `EMAIL_WEBHOOK_SECRET` in the query string or `x-webhook-secret` header.
+To switch providers: update the webhook URL in the provider's dashboard and configure the `x-webhook-secret: <EMAIL_WEBHOOK_SECRET>` HTTP header there.
 
 ---
 

@@ -98,7 +98,6 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
   }
 
   const canEdit = (doc.status === "done" || doc.status === "needs_review") && !nonElec;
-  const canManualAdd = !!nonElec;
 
   return (
     <Card className={cn(

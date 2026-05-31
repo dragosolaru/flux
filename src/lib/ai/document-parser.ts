@@ -11,11 +11,11 @@ import type { Document } from "@/types/costs";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const ConfidenceSchema = z.object({
-  document_type: z.number().min(0).max(1),
-  total_kwh: z.number().min(0).max(1),
-  cost_total: z.number().min(0).max(1),
-  period_start: z.number().min(0).max(1),
-  session_timestamp: z.number().min(0).max(1),
+  document_type: z.number().min(0).max(1).catch(0),
+  total_kwh: z.number().min(0).max(1).catch(0),
+  cost_total: z.number().min(0).max(1).catch(0),
+  period_start: z.number().min(0).max(1).catch(0),
+  session_timestamp: z.number().min(0).max(1).catch(0),
 });
 
 const ParsedDocumentSchema = z.object({

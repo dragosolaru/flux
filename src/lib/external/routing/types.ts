@@ -41,11 +41,3 @@ export interface RouteProvider {
     drivingMinutes: number;
   };
 }
-
-// Quick autocomplete dataset — major EU cities for the demo
-export interface CityPreset {
-  name: string;
-  country: string;
-  lat: number;
-  lng: number;
-}

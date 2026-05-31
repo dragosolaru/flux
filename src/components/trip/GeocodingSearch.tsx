@@ -34,10 +34,13 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync inputValue when external value changes
-  useEffect(() => {
+  // Sync inputValue when external value changes — adjust state during render
+  // (React's recommended pattern over a setState-in-effect).
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setInputValue(value ? shortName(value.name) : "");
-  }, [value]);
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -78,6 +81,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
   }
 
   function handleSelect(r: NominatimResult) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     onChange({ name: r.name, lat: r.lat, lng: r.lng });
     setInputValue(shortName(r.name));
     setResults([]);
@@ -86,6 +90,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
 
   function handleClear(e: React.MouseEvent) {
     e.stopPropagation();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     onChange(null);
     setInputValue("");
     setResults([]);
