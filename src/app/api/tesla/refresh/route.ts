@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { getValidAccessToken } from "@/lib/tesla/tokens";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   vehicleId: z.string().uuid(),
@@ -21,6 +22,10 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await checkRateLimit(session.user.id, "tesla-refresh", 30)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   let payload: unknown;

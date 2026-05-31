@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { DEFAULT_PROVIDER_ID, listProviders } from "@/lib/external/tariffs/registry";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
   const session = await auth();
@@ -28,6 +29,10 @@ export async function PUT(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await checkRateLimit(session.user.id, "tariff-settings", 20)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   const body = await req.json();

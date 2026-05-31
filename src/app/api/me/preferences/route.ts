@@ -7,6 +7,7 @@ import { LOCALE_COOKIE, isLocale } from "@/lib/i18n/config";
 import { isCurrency } from "@/lib/currency/format";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 interface PreferencesResponse {
   locale: string;
@@ -80,6 +81,10 @@ export async function PATCH(request: Request) {
   const userId = await ensureSupabaseUserId(session);
   if (!userId) {
     return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
+  if (!await checkRateLimit(userId, "preferences", 30)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   const body = await request.json().catch(() => null);
