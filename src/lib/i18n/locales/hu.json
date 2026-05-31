@@ -103,7 +103,6 @@
       "upgrade_cta": "Frissítés Pro-ra"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Napi ingázó",
@@ -211,7 +210,6 @@
     "chip_last_seen": "Utoljára",
     "action_charge": "Töltés"
   },
-
   "charging": {
     "page_title": "Töltés",
     "status_title": "Töltési állapot",
@@ -232,7 +230,6 @@
     "history_sync": "Szinkronizálás a Teslából",
     "history_syncing": "Szinkronizálás…"
   },
-
   "commands": {
     "title": "Parancsok",
     "subtitle": "Vezérelje távolról az autót.",
@@ -293,7 +290,29 @@
     "upload_success": "Dokumentum hozzáadva — feldolgozás folyamatban…",
     "upload_error": "Feltöltés sikertelen",
     "delete_success": "Dokumentum törölve",
-    "delete_error": "Nem sikerült törölni a dokumentumot"
+    "delete_error": "Nem sikerült törölni a dokumentumot",
+    "kpi_total_lei": "Összes kiadás",
+    "kpi_total_kwh": "Összes kWh",
+    "kpi_home_pct": "Otthoni töltés",
+    "kpi_fuel_saving": "Megtakarítás vs üzemanyag",
+    "kpi_cost_per_km_blended": "Költség / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Dokumentumok",
+    "fab_label": "Dokumentum hozzáadása",
+    "status_done": "Kész",
+    "status_needs_review": "Ellenőrzés",
+    "status_error": "Hiba",
+    "status_processing": "Feldolgozás",
+    "status_pending": "Függőben",
+    "fuel_equivalent_label": "Benzinegyenérték",
+    "fuel_saving": "{amount} megtakarítva benzinnel szemben",
+    "fuel_more_expensive": "{amount} drágább mint a benzin",
+    "fuel_equivalent_cost": "Ugyanannyi mint a benzin",
+    "fuel_register_km": "Rögzítse a km-t az üzemanyag-összehasonlításhoz",
+    "fuel_add_docs": "Adjon hozzá dokumentumokat az összehasonlításhoz",
+    "blended": "Vegyes",
+    "km_driven": "km megtett",
+    "no_chart_data": "Még nincs havi adat"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -319,7 +338,6 @@
     "preconditioning": "Aktiválás…",
     "preconditioned": "Aktív ✓"
   },
-
   "chargingMap": {
     "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat."
   }
