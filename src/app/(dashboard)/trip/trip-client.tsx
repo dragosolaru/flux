@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { StopCard } from "@/components/trip/StopCard";
@@ -20,6 +21,7 @@ interface TripResponse {
 }
 
 export function TripClient() {
+  const t = useTranslations("trip");
   const { data: vehicles } = useVehicles();
   const [vehicleId, setVehicleId] = useState<string>("");
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
@@ -51,7 +53,7 @@ export function TripClient() {
       setFormCollapsed(true);
       setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nu s-a putut planifica traseul.");
+      setError(err instanceof Error ? err.message : t("infeasible_hint"));
     } finally {
       setLoading(false);
     }
@@ -86,33 +88,33 @@ export function TripClient() {
           /* Compact pill summary */
           <button
             onClick={() => setFormCollapsed(false)}
-            className="flex w-full items-center justify-between gap-2 rounded-2xl border bg-background/90 p-3 shadow-xl backdrop-blur-sm"
+            className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex min-w-0 items-center gap-2">
               <Route className="size-4 shrink-0 text-primary" />
               <span className="truncate text-sm font-medium">
-                {originShort} → {destinationShort} · {startSoc}% 🔋
+                {originShort} → {destinationShort} · {startSoc}%
               </span>
             </div>
             <Pencil className="size-4 shrink-0 text-muted-foreground" />
           </button>
         ) : (
           /* Full form */
-          <div className="rounded-2xl border bg-background/90 p-3 shadow-xl backdrop-blur-sm space-y-2.5">
+          <div className="space-y-2.5 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center gap-2">
               <Route className="size-4 text-primary" />
-              <h1 className="text-xs font-semibold">Trip Planner</h1>
+              <h1 className="text-xs font-semibold">{t("title")}</h1>
             </div>
 
             <GeocodingSearch
-              placeholder="De unde pleci?"
+              placeholder={t("origin_placeholder")}
               value={origin}
               onChange={setOrigin}
               icon={<Navigation className="size-4" />}
             />
 
             <GeocodingSearch
-              placeholder="Unde mergi?"
+              placeholder={t("destination_placeholder")}
               value={destination}
               onChange={setDestination}
             />
@@ -120,7 +122,7 @@ export function TripClient() {
             {/* Battery slider — label and value inline, slider below */}
             <div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Baterie la plecare</span>
+                <span>{t("battery_label")}</span>
                 <span className="font-medium text-foreground">{startSoc}%</span>
               </div>
               <input
@@ -137,13 +139,13 @@ export function TripClient() {
             {/* Vehicle selector */}
             {vehicles && vehicles.length > 0 && (
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Vehicul (opțional)</label>
+                <label className="mb-1 block text-xs text-muted-foreground">{t("vehicle_label")}</label>
                 <select
                   value={vehicleId}
                   onChange={(e) => setVehicleId(e.target.value)}
-                  className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-sm"
                 >
-                  <option value="">Spec implicită (Model 3 LR)</option>
+                  <option value="">{t("vehicle_default")}</option>
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.nickname ?? v.displayName}
@@ -161,12 +163,12 @@ export function TripClient() {
               {loading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Se calculează…
+                  {t("planning")}
                 </>
               ) : (
                 <>
                   <Route className="size-4" />
-                  Planifică traseul
+                  {t("plan_btn")}
                 </>
               )}
             </button>
@@ -185,39 +187,39 @@ export function TripClient() {
       {plan && (
         <div
           ref={panelRef}
-          className="absolute bottom-0 left-0 right-0 z-[1000] max-h-[45vh] overflow-y-auto rounded-t-2xl border-t bg-background shadow-2xl"
+          className="absolute bottom-0 left-0 right-0 z-[1000] max-h-[45vh] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl"
         >
           {/* Drag handle + edit link */}
-          <div className="sticky top-0 flex items-center justify-between bg-background px-4 pb-1 pt-2">
-            <div className="mx-auto h-1 w-10 rounded-full bg-border" />
+          <div className="sticky top-0 flex items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
+            <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
             <button
               onClick={() => setFormCollapsed(false)}
               className="absolute right-4 text-xs text-muted-foreground hover:text-foreground"
             >
-              ← Editează
+              {t("edit_btn")}
             </button>
           </div>
 
           <div className="space-y-4 px-4 pb-6 pt-2">
             {plan.plan.feasible === false ? (
               /* Infeasible route — prominent error card */
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 backdrop-blur-sm">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
                   <div className="space-y-1.5">
-                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                      Ruta nu poate fi finalizată
+                    <p className="text-sm font-semibold text-amber-400">
+                      {t("infeasible_title")}
                     </p>
                     {plan.plan.warning && (
-                      <p className="text-xs text-amber-700 dark:text-amber-400">{plan.plan.warning}</p>
+                      <p className="text-xs text-amber-400/80">{plan.plan.warning}</p>
                     )}
-                    <p className="text-xs text-amber-600 dark:text-amber-500">
-                      Încearcă cu un procent de baterie mai mare sau selectează o mașină.
+                    <p className="text-xs text-amber-500/70">
+                      {t("infeasible_hint")}
                     </p>
                     {plan.plan.totalDistanceKm > 0 && (
                       <p className="text-xs text-muted-foreground">
                         {Math.round(plan.plan.totalDistanceKm)} km ·{" "}
-                        {Math.floor(plan.plan.drivingMinutes / 60)}h {plan.plan.drivingMinutes % 60}min condus
+                        {Math.floor(plan.plan.drivingMinutes / 60)}h {plan.plan.drivingMinutes % 60}min
                       </p>
                     )}
                   </div>
@@ -239,7 +241,7 @@ export function TripClient() {
                 />
 
                 {plan.plan.warning && (
-                  <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 backdrop-blur-sm">
                     <AlertCircle className="size-3.5 shrink-0" />
                     {plan.plan.warning}
                   </div>
@@ -248,15 +250,15 @@ export function TripClient() {
                 {plan.plan.stops.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Opriri la încărcare
+                      {t("stops_label")}
                     </p>
                     {plan.plan.stops.map((stop, i) => (
                       <StopCard key={i} stop={stop} index={i} />
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                    Bateria suficientă — ajungi fără opriri la încărcare. 🎉
+                  <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400 backdrop-blur-sm">
+                    {t("no_stops")}
                   </div>
                 )}
               </>
@@ -264,7 +266,7 @@ export function TripClient() {
 
             {plan.deratingPct < 0 && (
               <p className="text-xs text-muted-foreground">
-                * Autonomia redusă cu {Math.abs(plan.deratingPct)}% din cauza temperaturilor.
+                {t("derate_note", { pct: Math.abs(plan.deratingPct) })}
               </p>
             )}
           </div>

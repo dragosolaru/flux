@@ -311,5 +311,73 @@
 
   "chargingMap": {
     "disclaimer": "Daten von OpenChargeMap. Verfügbarkeit kann variieren."
+  },
+
+  "auth": {
+    "title_login": "Willkommen zurück",
+    "title_register": "Konto erstellen",
+    "subtitle_login": "Melde dich an, um dein Fahrzeug mit Flux zu verwalten.",
+    "subtitle_register": "Kostenlos während der offenen Beta. Keine Kreditkarte erforderlich.",
+    "tagline": "Intelligentes EV-Management",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit_login": "Anmelden",
+    "submit_register": "Konto erstellen",
+    "submitting_login": "Anmelden…",
+    "submitting_register": "Konto wird erstellt…",
+    "google": "Mit Google fortfahren",
+    "or": "oder",
+    "no_account": "Neu hier?",
+    "create_account": "Konto erstellen",
+    "have_account": "Hast du schon ein Konto?",
+    "sign_in_link": "Anmelden",
+    "error_invalid": "Ungültige E-Mail oder Passwort"
+  },
+
+  "landing": {
+    "hero_headline": "Intelligentes EV-Management für Tesla-Besitzer",
+    "hero_subheadline": "Ladekosten verfolgen, Live-Fahrzeugstatus überwachen, Routen planen und dein Tesla steuern — alles an einem Ort.",
+    "hero_cta": "Kostenlos starten",
+    "hero_cta_pricing": "Preise",
+    "hero_badge": "Flux — EV Management",
+    "features_title": "Alles, was du für dein E-Fahrzeug brauchst",
+    "feature_ocr_title": "Belegscan",
+    "feature_ocr_desc": "Lade Ladebelege von jedem Netz hoch — wir extrahieren Kosten, kWh und Datum automatisch.",
+    "feature_tariff_title": "Intelligentes Laden",
+    "feature_tariff_desc": "Sieh die heutigen Strompreise und plane das Laden für die günstigste Stunde.",
+    "feature_smart_title": "Live-Dashboard",
+    "feature_smart_desc": "Echtzeit-Akku %, Reichweite und Status — direkt von deinem Tesla synchronisiert.",
+    "feature_i18n_title": "Mehrsprachig",
+    "feature_i18n_desc": "Verfügbar auf Englisch, Rumänisch, Deutsch, Französisch und Ungarisch.",
+    "pricing_teaser_title": "Einfache, transparente Preise",
+    "pricing_teaser_desc": "Kostenlos während der Beta. Pro schaltet unbegrenzte Fahrzeuge, OCR und KI-Einblicke frei.",
+    "pricing_teaser_cta": "Pläne ansehen"
+  },
+
+  "trip": {
+    "title": "Routenplaner",
+    "origin_placeholder": "Wo startest du?",
+    "destination_placeholder": "Wohin fährst du?",
+    "battery_label": "Startakku",
+    "vehicle_label": "Fahrzeug (optional)",
+    "vehicle_default": "Standard (Model 3 LR)",
+    "plan_btn": "Route planen",
+    "planning": "Berechnung…",
+    "edit_btn": "← Bearbeiten",
+    "route_label": "Geplante Route",
+    "stops_label": "Ladestopps",
+    "no_stops": "Genug Akku — keine Ladestopps nötig.",
+    "approx_route_warning": "Näherungsroute — OSRM nicht verfügbar",
+    "fuel_comparison": "Was würde Benzin kosten?",
+    "ev_cost_label": "EV-Kosten (Laden)",
+    "petrol_label": "Benzin ({lPer100km}L/100km × €{pricePerL}/L)",
+    "savings_label": "Ersparnis",
+    "infeasible_title": "Route kann nicht abgeschlossen werden",
+    "infeasible_hint": "Versuche einen höheren Startakku oder wähle ein bestimmtes Fahrzeug.",
+    "derate_note": "* Reichweite um {pct}% aufgrund von Temperaturen reduziert.",
+    "stops_count_zero": "Keine Stopps",
+    "stops_count_one": "1 Stopp",
+    "stops_count_other": "{count} Stopps",
+    "charging_time_label": "+{duration} Laden"
   }
 }

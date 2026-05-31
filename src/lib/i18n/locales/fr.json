@@ -311,5 +311,73 @@
 
   "chargingMap": {
     "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier."
+  },
+
+  "auth": {
+    "title_login": "Bon retour",
+    "title_register": "Créez votre compte",
+    "subtitle_login": "Connectez-vous pour gérer votre véhicule depuis Flux.",
+    "subtitle_register": "Gratuit pendant la bêta ouverte. Aucune carte de crédit requise.",
+    "tagline": "Gestion intelligente des VE",
+    "email": "Email",
+    "password": "Mot de passe",
+    "submit_login": "Se connecter",
+    "submit_register": "Créer un compte",
+    "submitting_login": "Connexion…",
+    "submitting_register": "Création du compte…",
+    "google": "Continuer avec Google",
+    "or": "ou",
+    "no_account": "Nouveau ici ?",
+    "create_account": "Créer un compte",
+    "have_account": "Vous avez déjà un compte ?",
+    "sign_in_link": "Se connecter",
+    "error_invalid": "Email ou mot de passe invalide"
+  },
+
+  "landing": {
+    "hero_headline": "Gestion intelligente des VE pour les propriétaires Tesla",
+    "hero_subheadline": "Suivez les coûts de charge, surveillez l'état du véhicule en direct, planifiez des trajets et contrôlez votre Tesla — tout en un seul endroit.",
+    "hero_cta": "Commencer gratuitement",
+    "hero_cta_pricing": "Tarifs",
+    "hero_badge": "Flux — EV Management",
+    "features_title": "Tout ce dont vous avez besoin pour votre VE",
+    "feature_ocr_title": "Scan de reçus",
+    "feature_ocr_desc": "Téléchargez des reçus de charge de n'importe quel réseau — nous extrayons le coût, les kWh et la date automatiquement.",
+    "feature_tariff_title": "Charge intelligente",
+    "feature_tariff_desc": "Voyez les prix de l'électricité du jour et planifiez la charge à l'heure la moins chère.",
+    "feature_smart_title": "Tableau de bord en direct",
+    "feature_smart_desc": "Batterie %, autonomie et statut en temps réel — synchronisés depuis votre Tesla.",
+    "feature_i18n_title": "Multilingue",
+    "feature_i18n_desc": "Disponible en anglais, roumain, allemand, français et hongrois.",
+    "pricing_teaser_title": "Tarification simple et transparente",
+    "pricing_teaser_desc": "Gratuit pendant la bêta. Pro débloque véhicules illimités, OCR illimité et analyses IA.",
+    "pricing_teaser_cta": "Voir les plans"
+  },
+
+  "trip": {
+    "title": "Planificateur de trajets",
+    "origin_placeholder": "D'où partez-vous ?",
+    "destination_placeholder": "Où allez-vous ?",
+    "battery_label": "Batterie au départ",
+    "vehicle_label": "Véhicule (optionnel)",
+    "vehicle_default": "Spec par défaut (Model 3 LR)",
+    "plan_btn": "Planifier le trajet",
+    "planning": "Calcul en cours…",
+    "edit_btn": "← Modifier",
+    "route_label": "Trajet planifié",
+    "stops_label": "Arrêts de charge",
+    "no_stops": "Batterie suffisante — vous arrivez sans arrêts de charge.",
+    "approx_route_warning": "Itinéraire approximatif — OSRM indisponible",
+    "fuel_comparison": "Combien coûterait l'essence ?",
+    "ev_cost_label": "Coût VE (charge)",
+    "petrol_label": "Essence ({lPer100km}L/100km × €{pricePerL}/L)",
+    "savings_label": "Économies",
+    "infeasible_title": "L'itinéraire ne peut pas être complété",
+    "infeasible_hint": "Essayez un pourcentage de batterie plus élevé ou sélectionnez un véhicule spécifique.",
+    "derate_note": "* Autonomie réduite de {pct}% en raison des températures.",
+    "stops_count_zero": "Aucun arrêt",
+    "stops_count_one": "1 arrêt",
+    "stops_count_other": "{count} arrêts",
+    "charging_time_label": "+{duration} de charge"
   }
 }
