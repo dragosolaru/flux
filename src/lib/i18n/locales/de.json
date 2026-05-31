@@ -127,7 +127,11 @@
       "preferences": "Präferenzen",
       "location": "Standort",
       "tariff": "Energietarif",
-      "account": "Konto"
+      "account": "Konto",
+      "notifications": "Benachrichtigungen",
+      "vehicles": "Fahrzeuge",
+      "billing": "Abonnement",
+      "danger": "Gefahrenzone"
     },
     "locale": {
       "label": "Sprache",
@@ -173,6 +177,24 @@
       "confirm_cancel": "Abbrechen",
       "confirm_input_label": "Gib DELETE ein, um zu bestätigen",
       "confirm_delete": "Ja, Konto löschen"
+    },
+    "vehicles": {
+      "empty": "Noch keine Fahrzeuge hinzugefügt. Besuche die Garage, um eines hinzuzufügen.",
+      "go_to_garage": "Fahrzeuge verwalten"
+    },
+    "account": {
+      "name": "Name",
+      "email": "E-Mail",
+      "export_data": "Meine Daten exportieren"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Kostenloser Plan",
+      "plan_pro_desc": "Unbegrenzte Fahrzeuge und Dokumente, KI-Funktionen aktiviert.",
+      "plan_free_desc": "1 Fahrzeug, 3 Dokumente/Monat.",
+      "upgrade_label": "Upgrade auf Pro — €4,99/Mo.",
+      "pro_unlock_note": "Pro schaltet frei: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustandsverfolgung, wöchentlicher E-Mail-Digest.",
+      "see_all_features": "Alle Funktionen ansehen →"
     }
   },
   "ingest": {
@@ -243,7 +265,9 @@
     "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
     "sending": "Wird gesendet…",
     "no_vehicles_title": "Noch keine Fahrzeuge",
-    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden."
+    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden.",
+    "success": "Befehl gesendet",
+    "error": "Befehl fehlgeschlagen"
   },
   "garage": {
     "title": "Garage",
@@ -323,7 +347,24 @@
     "save": "sparen",
     "now": "Jetzt",
     "optimal": "Optimal",
-    "to_target": "bis Ziel"
+    "to_target": "bis Ziel",
+    "page_title": "Energie",
+    "page_subtitle": "Heutige Tarifpreise & Ladeempfehlungen",
+    "recommended_badge": "Empfohlen ✓",
+    "no_recommendation": "Keine Ladeempfehlung",
+    "no_recommendation_hint": "Fahrzeug anschließen für Empfehlungen",
+    "price_curve_title": "24-Stunden-Preiskurve",
+    "current_price_label": "Aktueller Preis",
+    "tariff_provider_label": "Tarifanbieter",
+    "cheapest_window_label": "Günstigstes Fenster",
+    "cheapest_window_saves": "Ersparnis ggü. jetzt",
+    "avg_label": "Ø",
+    "refresh": "Aktualisieren",
+    "schedule_charge_title": "Laden planen",
+    "departure_card_title": "Abfahrt & Vorkonditionierung",
+    "collapse": "Einklappen",
+    "expand": "Ausklappen",
+    "schedule_no_virtual_key": "Virtual Key einrichten, um Laden zu planen"
   },
   "departure": {
     "title": "Abfahrt & Vorkonditionierung",
@@ -340,5 +381,25 @@
   },
   "chargingMap": {
     "disclaimer": "Daten von OpenChargeMap. Verfügbarkeit kann variieren."
+  },
+  "auth": {
+    "title_login": "Willkommen zurück",
+    "title_register": "Konto erstellen",
+    "subtitle_login": "Melde dich an, um dein Fahrzeug mit Flux zu verwalten.",
+    "subtitle_register": "Kostenlos während der offenen Beta. Keine Kreditkarte erforderlich.",
+    "tagline": "Intelligentes EV-Management",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit_login": "Anmelden",
+    "submit_register": "Konto erstellen",
+    "submitting_login": "Anmelden…",
+    "submitting_register": "Konto wird erstellt…",
+    "google": "Mit Google fortfahren",
+    "or": "oder",
+    "no_account": "Neu hier?",
+    "create_account": "Konto erstellen",
+    "have_account": "Hast du schon ein Konto?",
+    "sign_in_link": "Anmelden",
+    "error_invalid": "Ungültige E-Mail oder Passwort"
   }
 }

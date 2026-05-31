@@ -127,7 +127,11 @@
       "preferences": "Preferenciák",
       "location": "Helyszín",
       "tariff": "Energiadíj",
-      "account": "Fiók"
+      "account": "Fiók",
+      "notifications": "Értesítések",
+      "vehicles": "Járművek",
+      "billing": "Előfizetés",
+      "danger": "Veszélyzóna"
     },
     "locale": {
       "label": "Nyelv",
@@ -173,6 +177,24 @@
       "confirm_cancel": "Mégse",
       "confirm_input_label": "Írja be a DELETE szót a megerősítéshez",
       "confirm_delete": "Igen, töröld a fiókot"
+    },
+    "vehicles": {
+      "empty": "Még nem adtál hozzá járművet. Látogasd meg a Garázst, hogy hozzáadj egyet.",
+      "go_to_garage": "Járművek kezelése"
+    },
+    "account": {
+      "name": "Név",
+      "email": "Email",
+      "export_data": "Adataim exportálása"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Ingyenes csomag",
+      "plan_pro_desc": "Korlátlan járművek és dokumentumok, AI funkciók engedélyezve.",
+      "plan_free_desc": "1 jármű, 3 dokumentum/hó.",
+      "upgrade_label": "Upgrade Próra — €4,99/hó",
+      "pro_unlock_note": "Pro felold: korlátlan járművek, korlátlan OCR, akkumulátor állapot követés, heti email összefoglaló.",
+      "see_all_features": "Összes funkció megtekintése →"
     }
   },
   "ingest": {
@@ -243,7 +265,9 @@
     "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
     "sending": "Küldés…",
     "no_vehicles_title": "Még nincs jármű",
-    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez."
+    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez.",
+    "success": "Parancs elküldve",
+    "error": "Parancs sikertelen"
   },
   "garage": {
     "title": "Garázs",
@@ -323,7 +347,24 @@
     "save": "megtakarítás",
     "now": "Most",
     "optimal": "Optimális",
-    "to_target": "a célhoz"
+    "to_target": "a célhoz",
+    "page_title": "Energia",
+    "page_subtitle": "Mai tarifárak & okos töltési javaslatok",
+    "recommended_badge": "Ajánlott ✓",
+    "no_recommendation": "Nincs töltési javaslat",
+    "no_recommendation_hint": "Csatlakoztassa az autót a javaslatokhoz",
+    "price_curve_title": "24 órás árgörbe",
+    "current_price_label": "Jelenlegi ár",
+    "tariff_provider_label": "Tarifa szolgáltató",
+    "cheapest_window_label": "Legolcsóbb időszak",
+    "cheapest_window_saves": "megtakarítás most vs.",
+    "avg_label": "átl",
+    "refresh": "Frissítés",
+    "schedule_charge_title": "Töltés ütemezése",
+    "departure_card_title": "Indulás & Előkondicionálás",
+    "collapse": "Összecsukás",
+    "expand": "Kibontás",
+    "schedule_no_virtual_key": "Állítsa be a Virtual Key-t a töltés ütemezéséhez"
   },
   "departure": {
     "title": "Indulás & Előkészítés",
@@ -340,5 +381,25 @@
   },
   "chargingMap": {
     "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat."
+  },
+  "auth": {
+    "title_login": "Üdv újra",
+    "title_register": "Fiók létrehozása",
+    "subtitle_login": "Jelentkezz be járműved Flux-szal való kezeléséhez.",
+    "subtitle_register": "Ingyenes a nyílt béta alatt. Nem szükséges bankkártya.",
+    "tagline": "Intelligens EV kezelés",
+    "email": "Email",
+    "password": "Jelszó",
+    "submit_login": "Bejelentkezés",
+    "submit_register": "Fiók létrehozása",
+    "submitting_login": "Bejelentkezés…",
+    "submitting_register": "Fiók létrehozása…",
+    "google": "Folytatás Google-lal",
+    "or": "vagy",
+    "no_account": "Új itt?",
+    "create_account": "Fiók létrehozása",
+    "have_account": "Van már fiókod?",
+    "sign_in_link": "Bejelentkezés",
+    "error_invalid": "Érvénytelen email vagy jelszó"
   }
 }

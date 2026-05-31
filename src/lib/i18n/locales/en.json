@@ -127,7 +127,11 @@
       "preferences": "Preferences",
       "location": "Location",
       "tariff": "Energy tariff",
-      "account": "Account"
+      "account": "Account",
+      "notifications": "Notifications",
+      "vehicles": "Vehicles",
+      "billing": "Subscription",
+      "danger": "Danger Zone"
     },
     "locale": {
       "label": "Language",
@@ -174,6 +178,24 @@
       "confirm_cancel": "Cancel",
       "confirm_input_label": "Type DELETE to confirm",
       "confirm_delete": "Yes, delete my account"
+    },
+    "vehicles": {
+      "empty": "No vehicles added yet. Visit the Garage to add one.",
+      "go_to_garage": "Manage vehicles"
+    },
+    "account": {
+      "name": "Name",
+      "email": "Email",
+      "export_data": "Export my data"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Free plan",
+      "plan_pro_desc": "Unlimited vehicles and documents, AI features enabled.",
+      "plan_free_desc": "1 vehicle, 3 documents/month.",
+      "upgrade_label": "Upgrade to Pro — €4.99/mo",
+      "pro_unlock_note": "Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest.",
+      "see_all_features": "See all features →"
     }
   },
   "ingest": {
@@ -244,7 +266,9 @@
     "no_commands": "No commands available for this vehicle.",
     "sending": "Sending…",
     "no_vehicles_title": "No vehicles yet",
-    "no_vehicles_hint": "Add a vehicle in the Garage to send commands."
+    "no_vehicles_hint": "Add a vehicle in the Garage to send commands.",
+    "success": "Command sent",
+    "error": "Command failed"
   },
   "garage": {
     "title": "Garage",
@@ -314,14 +338,6 @@
     "status_error": "Error",
     "status_processing": "Processing",
     "status_pending": "Pending",
-    "fuel_equivalent_label": "Petrol equivalent",
-    "fuel_saving": "Saved {amount} vs petrol",
-    "fuel_more_expensive": "{amount} more than petrol",
-    "fuel_equivalent_cost": "Same as petrol",
-    "fuel_register_km": "Register km to compare with fuel",
-    "fuel_add_docs": "Add documents to compare with fuel",
-    "blended": "Blended",
-    "km_driven": "km driven",
     "no_chart_data": "No monthly data yet"
   },
   "departure": {
@@ -346,9 +362,46 @@
     "save": "save",
     "now": "Now",
     "optimal": "Optimal",
-    "to_target": "to target"
+    "to_target": "to target",
+    "page_title": "Energy",
+    "page_subtitle": "Today's tariff prices & smart-charge recommendations",
+    "recommended_badge": "Recommended ✓",
+    "no_recommendation": "No smart charge data",
+    "no_recommendation_hint": "Plug in your car to see recommendations",
+    "price_curve_title": "24-hour price curve",
+    "current_price_label": "Current price",
+    "tariff_provider_label": "Tariff provider",
+    "cheapest_window_label": "Cheapest window",
+    "cheapest_window_saves": "saves vs now",
+    "avg_label": "avg",
+    "refresh": "Refresh",
+    "schedule_charge_title": "Schedule charge",
+    "departure_card_title": "Departure & Preconditioning",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "schedule_no_virtual_key": "Set up Virtual Key to schedule charging"
   },
   "chargingMap": {
     "disclaimer": "Data provided by OpenChargeMap. Availability may vary."
+  },
+  "auth": {
+    "title_login": "Welcome back",
+    "title_register": "Create your account",
+    "subtitle_login": "Sign in to manage your vehicle from Flux.",
+    "subtitle_register": "Free during the open beta. No credit card required.",
+    "tagline": "Smart EV management",
+    "email": "Email",
+    "password": "Password",
+    "submit_login": "Sign in",
+    "submit_register": "Create account",
+    "submitting_login": "Signing in…",
+    "submitting_register": "Creating account…",
+    "google": "Continue with Google",
+    "or": "or",
+    "no_account": "New here?",
+    "create_account": "Create an account",
+    "have_account": "Already have an account?",
+    "sign_in_link": "Sign in",
+    "error_invalid": "Invalid email or password"
   }
 }

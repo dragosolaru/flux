@@ -127,7 +127,11 @@
       "preferences": "Preferințe",
       "location": "Locație",
       "tariff": "Tarif energie",
-      "account": "Cont"
+      "account": "Cont",
+      "notifications": "Notificări",
+      "vehicles": "Vehicule",
+      "billing": "Abonament",
+      "danger": "Zonă periculoasă"
     },
     "locale": {
       "label": "Limbă",
@@ -174,6 +178,24 @@
       "confirm_cancel": "Anulează",
       "confirm_input_label": "Scrie DELETE pentru a confirma",
       "confirm_delete": "Da, șterge contul meu"
+    },
+    "vehicles": {
+      "empty": "Niciun vehicul adăugat. Vizitează Garajul pentru a adăuga unul.",
+      "go_to_garage": "Gestionează vehiculele"
+    },
+    "account": {
+      "name": "Nume",
+      "email": "Email",
+      "export_data": "Exportă datele mele"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Plan gratuit",
+      "plan_pro_desc": "Vehicule și documente nelimitate, funcții AI activate.",
+      "plan_free_desc": "1 vehicul, 3 documente/lună.",
+      "upgrade_label": "Upgrade la Pro — €4.99/lună",
+      "pro_unlock_note": "Pro include: vehicule nelimitate, OCR nelimitat, monitorizare baterie, digest săptămânal pe email.",
+      "see_all_features": "Vezi toate funcțiile →"
     }
   },
   "ingest": {
@@ -244,7 +266,9 @@
     "no_commands": "Nicio comandă disponibilă pentru această mașină.",
     "sending": "Se trimite…",
     "no_vehicles_title": "Nicio mașină încă",
-    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi."
+    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi.",
+    "success": "Comandă trimisă",
+    "error": "Comandă eșuată"
   },
   "garage": {
     "title": "Garaj",
@@ -314,14 +338,6 @@
     "status_error": "Eroare",
     "status_processing": "Se procesează",
     "status_pending": "În așteptare",
-    "fuel_equivalent_label": "Echivalent benzină",
-    "fuel_saving": "Economisit {amount} față de benzină",
-    "fuel_more_expensive": "{amount} mai scump decât benzina",
-    "fuel_equivalent_cost": "La fel ca benzina",
-    "fuel_register_km": "Înregistrează km pentru comparație",
-    "fuel_add_docs": "Adaugă documente pentru comparație",
-    "blended": "Mixt",
-    "km_driven": "km parcurși",
     "no_chart_data": "Fără date lunare încă"
   },
   "departure": {
@@ -346,9 +362,46 @@
     "save": "economisești",
     "now": "Acum",
     "optimal": "Optim",
-    "to_target": "până la țintă"
+    "to_target": "până la țintă",
+    "page_title": "Energie",
+    "page_subtitle": "Prețuri tarifare & recomandări de încărcare inteligentă",
+    "recommended_badge": "Recomandat ✓",
+    "no_recommendation": "Nicio recomandare de încărcare",
+    "no_recommendation_hint": "Conectează mașina pentru a vedea recomandări",
+    "price_curve_title": "Curba de prețuri 24h",
+    "current_price_label": "Prețul curent",
+    "tariff_provider_label": "Furnizor tarif",
+    "cheapest_window_label": "Interval cel mai ieftin",
+    "cheapest_window_saves": "economii față de acum",
+    "avg_label": "med",
+    "refresh": "Actualizează",
+    "schedule_charge_title": "Programează încărcarea",
+    "departure_card_title": "Plecare & Preconditionare",
+    "collapse": "Restrânge",
+    "expand": "Extinde",
+    "schedule_no_virtual_key": "Configurează Virtual Key pentru a programa încărcarea"
   },
   "chargingMap": {
     "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
+  },
+  "auth": {
+    "title_login": "Bine ai revenit",
+    "title_register": "Creează-ți contul",
+    "subtitle_login": "Autentifică-te pentru a-ți gestiona vehiculul din Flux.",
+    "subtitle_register": "Gratuit în perioada beta. Nu este necesar un card de credit.",
+    "tagline": "Gestionare inteligentă EV",
+    "email": "Email",
+    "password": "Parolă",
+    "submit_login": "Autentificare",
+    "submit_register": "Creează cont",
+    "submitting_login": "Autentificare…",
+    "submitting_register": "Se creează contul…",
+    "google": "Continuă cu Google",
+    "or": "sau",
+    "no_account": "Ești nou?",
+    "create_account": "Creează un cont",
+    "have_account": "Ai deja un cont?",
+    "sign_in_link": "Autentifică-te",
+    "error_invalid": "Email sau parolă invalidă"
   }
 }
