@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -14,11 +14,12 @@ const DISMISSED_KEY = "flux:mock-banner-dismissed";
 
 export function MockGlobalBanner() {
   const t = useTranslations();
-  const [dismissed, setDismissed] = useState(true);
-
-  useEffect(() => {
-    setDismissed(sessionStorage.getItem(DISMISSED_KEY) === "1");
-  }, []);
+  // Lazy initializer is SSR-safe: window is undefined on the server. The banner
+  // only renders once the vehicles query resolves (client-only), so reading
+  // sessionStorage here cannot cause a hydration mismatch.
+  const [dismissed, setDismissed] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem(DISMISSED_KEY) === "1",
+  );
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles"],

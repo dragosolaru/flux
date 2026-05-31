@@ -141,6 +141,7 @@
       "confirm_title": "Delete your account?",
       "confirm_description": "This will permanently delete your Flux account, all vehicles, charging history, documents, and costs. This action cannot be undone.",
       "confirm_cancel": "Cancel",
+      "confirm_input_label": "Type DELETE to confirm",
       "confirm_delete": "Yes, delete my account"
     }
   },
@@ -165,6 +166,37 @@
     }
   },
 
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "updates every 30s",
+    "demo_subtitle": "Demo data · updates every 30s",
+    "refresh": "Refresh",
+    "error_title": "Couldn't reach your vehicle",
+    "error_subtitle": "Check your connection and try again.",
+    "retry": "Try again"
+  },
+
+  "charging": {
+    "page_title": "Charging",
+    "status_title": "Charging status",
+    "limit_title": "Charge limit",
+    "limit_description": "Set the maximum state-of-charge. Tesla recommends ≤90% for daily use.",
+    "limit_label": "Limit",
+    "limit_save": "Save limit",
+    "limit_saving": "Saving…",
+    "limit_error": "Could not load charge limit.",
+    "scheduled_title": "Scheduled charging",
+    "scheduled_description": "Start charging at a chosen time — useful for off-peak tariffs.",
+    "scheduled_enabled": "Enabled",
+    "scheduled_start_at": "Start at",
+    "history_title": "Recent charging sessions",
+    "history_description": "Snapshots captured while charging was active.",
+    "history_empty_title": "No charging history yet",
+    "history_empty_hint": "Sessions appear here once your car has been plugged in while the dashboard is open.",
+    "history_sync": "Sync from Tesla",
+    "history_syncing": "Syncing…"
+  },
+
   "commands": {
     "title": "Commands",
     "subtitle": "Control your car remotely.",
@@ -176,7 +208,9 @@
     "honk": "Honk",
     "flash": "Flash lights",
     "no_commands": "No commands available for this vehicle.",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "no_vehicles_title": "No vehicles yet",
+    "no_vehicles_hint": "Add a vehicle in the Garage to send commands."
   },
 
   "garage": {
@@ -203,7 +237,12 @@
     "missing_email_docs": "Missing email documents?",
     "recover": "Recover",
     "recovered": "Recovered: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "processed_docs_heading": "Processed documents",
+    "upload_success": "Document added — processing…",
+    "upload_error": "Upload failed",
+    "delete_success": "Document deleted",
+    "delete_error": "Could not delete document"
   },
 
   "departure": {

@@ -1,10 +1,12 @@
 "use client";
 
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BatteryHealthCard } from "@/components/vehicle/BatteryHealthCard";
+import { BatteryDegradationChart } from "@/components/vehicle/BatteryDegradationChart";
 import { ChargingStatus } from "@/components/charging/ChargingStatus";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
 import { DepartureCard } from "@/components/vehicle/DepartureCard";
@@ -19,6 +21,7 @@ import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { WeatherRangeCard } from "@/components/vehicle/WeatherRangeCard";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
+import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import type { BrandKey } from "@/lib/brands/types";
 
 interface DashboardClientProps {
@@ -29,20 +32,22 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ vehicleId, vehicleName, brand, model }: DashboardClientProps) {
-  const { data, isLoading, isFetching, error, refetch } = useVehicle(vehicleId);
+  const { data, isLoading, isFetching, isError, error, refetch } = useVehicle(vehicleId);
   const caps = useBrandCapabilities(brand);
   const t = caps?.telemetry;
+  const td = useTranslations("dashboard");
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <VehicleNotifications vehicleId={vehicleId} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{vehicleName}</h1>
           <p className="text-sm text-muted-foreground">
             {data?.dataSource === "live" ? (
-              <><span className="font-medium text-chart-2">Live</span> · updates every 30s</>
+              <><span className="font-medium text-chart-2">{td("live_label")}</span> · {td("live_subtitle")}</>
             ) : (
-              "Demo data · updates every 30s"
+              td("demo_subtitle")
             )}
           </p>
         </div>
@@ -53,7 +58,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           disabled={isFetching}
         >
           <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
+          {td("refresh")}
         </Button>
       </div>
 
@@ -62,12 +67,10 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
             <AlertTriangle className="size-8 text-destructive" />
             <div>
-              <div className="font-medium">Couldn&apos;t reach your vehicle</div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {error instanceof Error ? error.message : "Unknown error"}
-              </p>
+              <div className="font-medium">{td("error_title")}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{td("error_subtitle")}</p>
             </div>
-            <Button onClick={() => refetch()}>Try again</Button>
+            <Button onClick={() => refetch()}>{td("retry")}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -76,13 +79,13 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           {data && <StatsGrid state={data} />}
 
           <div className="grid gap-4 md:grid-cols-2">
-            <ChargingStatus state={data} isLoading={isLoading} />
+            <ChargingStatus state={data} isLoading={isLoading} isError={isError} />
             <FeatureGate capability="COMMANDS" fallback="null">
               <CommandPanel vehicleId={vehicleId} brand={brand} state={data} />
             </FeatureGate>
           </div>
 
-          <FeatureGate capability="COMMANDS" fallback="null">
+          <FeatureGate capability="LIVE" fallback="null">
             <DepartureCard vehicleId={vehicleId} />
           </FeatureGate>
 
@@ -122,6 +125,12 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
                   cellVoltages={data.cellVoltages}
                   showCells={t.cellVoltages}
                 />
+              )}
+
+              {t.batteryHealthPct && (
+                <FeatureGate capability="PRO" fallback="null">
+                  <BatteryDegradationChart vehicleId={vehicleId} />
+                </FeatureGate>
               )}
 
               {t.softwareVersion && (

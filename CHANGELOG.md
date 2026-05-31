@@ -4,9 +4,25 @@ All notable changes to Flux are documented here.
 
 ---
 
-## [Unreleased] — A.2 Tesla Live Reactivation
+## 2026-05-25 — Sprint: Security hardening + new features
 
-_Next: set `LIVE_INTEGRATIONS=tesla` in Vercel, QA OAuth flow, verify FeatureGate(LIVE) unlocks for connected users. Also run migration 008 in Supabase SQL Editor first._
+### Bug fixes
+- `FleetTotalsCard`: infinite loading skeleton replaced with "Fleet data unavailable" on query error
+- `ChargingStatus` + charging page: separate loading/error/empty states (no more eternal skeleton)
+- `DepartureCard`: gate moved from `COMMANDS` to `LIVE` — preconditioning and scheduled departure work via Fleet API OAuth, no VCP proxy required
+
+### New features
+- **WhatsApp OCR ingest**: `/api/documents/inbound-whatsapp` Twilio webhook, media download with Basic auth, same `processDocument` pipeline as email (migration 011: `sender_phone` column + `whatsapp` source)
+- **OpenChargeMap API**: `/api/charging-stations` route — auth + rate limiting + geolocation; charging map fetches 300k+ real POIs instead of ~50 hardcoded stations
+- **In-app notifications**: `useVehicleNotifications` toasts on `charging → complete`; `useSmartChargeNotifications` toasts when cheapest tariff window opens
+- **i18n**: `settings.danger_zone` and `tibber` provider key filled in for de/fr/hu locales
+
+### Security
+- Open redirect in `LoginForm` fixed: `callbackUrl` validated to start with `/`
+- Email IDOR: `findVehicleByNickname` scoped to resolved user
+- Webhook secret: `x-webhook-secret` header only (removed `?secret=` query param fallback)
+- `getValidAccessToken` threads `userId` for defense-in-depth ownership check
+- Rate limiting on all Tesla routes: state 120/hr, commands 30/hr, charging-history 20/hr, charging-map 60/hr
 
 ---
 

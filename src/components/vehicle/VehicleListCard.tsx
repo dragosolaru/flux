@@ -11,6 +11,7 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { MockChip } from "./MockChip";
 import { VehicleModelImage } from "./VehicleModelImage";
+import { VehicleIcon } from "@/components/vehicles/VehicleIcon";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVirtualKeyPair } from "@/hooks/useVirtualKeyPair";
@@ -49,7 +50,11 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
       <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-4 p-5">
           <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl", colorClass)}>
-            <BrandLogo brand={vehicle.brand} className="size-7" />
+            {vehicle.model ? (
+              <VehicleIcon model={vehicle.model} size="sm" className="size-8" />
+            ) : (
+              <BrandLogo brand={vehicle.brand} className="size-7" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-semibold">Remove {vehicle.nickname ?? vehicle.displayName}?</p>
@@ -80,8 +85,12 @@ export function VehicleListCard({ vehicle }: VehicleListCardProps) {
       <Link href={`/dashboard?v=${vehicle.id}`} className="block">
         <Card className="transition-shadow group-hover:shadow-md">
           <CardContent className="flex items-center gap-4 p-5">
-            <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold", colorClass)}>
-              {brandLabel[0]}
+            <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl", colorClass)}>
+              {vehicle.model ? (
+                <VehicleIcon model={vehicle.model} size="sm" className="size-8" />
+              ) : (
+                <span className="text-lg font-bold">{brandLabel[0]}</span>
+              )}
             </div>
 
             <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 # Flux — Product TODO
 
-_Last updated: 2026-05-24_
+_Last updated: 2026-05-25_
 
 ---
 
@@ -22,9 +22,8 @@ No Playwright tests exist. Any regression (auth, add vehicle, upload doc) goes u
 Replace `tibber-mock` with a real Tibber GraphQL client. The `TariffProvider` interface is the right shape; adding a real provider flips `hasTariff = true` and unlocks the Energy page for Tibber users.
 - **Effort:** `[M]`
 
-### 4. WhatsApp OCR ingest via Twilio webhook
-`IngestCard` shows a WhatsApp CTA but there is no webhook. The email pipeline already does the heavy lifting; a new route `/api/documents/inbound-whatsapp` needs to accept Twilio Media and call `processDocument`.
-- **Effort:** `[M]`
+### ~~4. WhatsApp OCR ingest via Twilio webhook~~ ✅ Done 2026-05-25
+`/api/documents/inbound-whatsapp` implemented — Twilio webhook, media download with Basic auth, same `processDocument` pipeline as email, DB migration 011 for `sender_phone` column.
 
 ### 5. VehicleCard image / avatar is absent
 `VehicleCard` and `VehicleListCard` render brand name text but no vehicle silhouette or image. A static SVG per Tesla model (Model 3, Y, S, X) would noticeably improve garage and dashboard UX.
@@ -54,9 +53,8 @@ Replace `tibber-mock` with a real Tibber GraphQL client. The `TariffProvider` in
 `mockRouter.computeRoute()` does Haversine math; `mockWeather` returns a fixed snapshot. Replace with OSRM/GraphHopper (routing) and Open-Meteo (weather) — both free tiers.
 - **Effort:** `[L]`
 
-### 11. Charging map uses static hardcoded stations (~50)
-Integrate OpenChargeMap API (free, 300k+ POIs) to replace the hardcoded array.
-- **Effort:** `[L]`
+### ~~11. Charging map uses static hardcoded stations (~50)~~ ✅ Done 2026-05-25
+`/api/charging-stations` route with auth + rate limit; charging map client uses browser geolocation + TanStack Query to fetch live POIs from OpenChargeMap API.
 
 ### 12. Vehicle simulator scenario switcher
 Users can pick a scenario when adding a mock vehicle but cannot change it afterwards. A scenario switcher in Settings or the Garage card would improve demo usability.
@@ -74,17 +72,15 @@ Availability is simulated (deterministic pseudo-random). A "Simulated availabili
 No `manifest.webmanifest`, no service worker. The mobile BottomNav exists but users cannot add Flux to their home screen as an app icon.
 - **Effort:** `[M]`
 
-### 16. In-app notifications for charging events
-No push notification fires when charging completes or when the cheap tariff window opens.
-- **Effort:** `[L]`
+### ~~16. In-app notifications for charging events~~ ✅ Done 2026-05-25
+`useVehicleNotifications` toasts on `charging→complete`; `useSmartChargeNotifications` toasts when cheapest window opens. Both wired via `VehicleNotifications` component in dashboard.
 
 ### 17. GDPR data export and account deletion
 `DangerZone` in settings only disconnects vehicle. A full "download my data" + "delete my account" flow is needed before EU public launch.
 - **Effort:** `[M]`
 
-### 18. Rate limiting and abuse protection
-No rate limiting on document upload, OCR, or Tesla command proxy routes. Add per-user limits via Upstash Redis or Vercel Edge Middleware.
-- **Effort:** `[M]`
+### ~~18. Rate limiting and abuse protection~~ ✅ Done 2026-05-25
+`checkRateLimit(userId, bucket, max)` from `src/lib/rate-limit.ts` applied to all Tesla API routes (state 120/hr, commands 30/hr, charging-history 20/hr, charging-map 60/hr).
 
 ---
 
@@ -160,5 +156,14 @@ PostHog or a Supabase-backed admin page to track OCR error rates and feature usa
 ### Settings & infra
 - Settings page — locale, currency, home location (Nominatim), tariff provider
 - Security audit — 17 findings resolved (migrations 005, 007; RLS policies, token encryption, CSRF)
-- DB migrations 001–010 — initial schema through `sender_email` column
+- DB migrations 001–011 — initial schema through `sender_phone` + WhatsApp source column
 - `SCHEMA_FULL.sql` — consolidated idempotent schema for all 14 tables
+
+### Sprint 2026-05-25
+- Security hardening — open redirect, email IDOR, webhook secret header-only, `getValidAccessToken` userId ownership, rate limiting on all routes
+- DepartureCard — scheduled departure + preconditioning commands, gated at LIVE capability
+- FleetTotalsCard & ChargingStatus — fixed infinite loading skeletons on query error
+- WhatsApp OCR ingest — `/api/documents/inbound-whatsapp` Twilio webhook, migration 011
+- OpenChargeMap API — `/api/charging-stations`, geolocation, replaces hardcoded 50 stations
+- In-app notifications — charging-complete toast, cheap-window toast via `VehicleNotifications`
+- i18n completeness — `settings.danger_zone` + `tibber` key in de/fr/hu locales

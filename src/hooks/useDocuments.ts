@@ -72,3 +72,15 @@ export function useEditDocument(vehicleId: string) {
     },
   });
 }
+
+export function useDeleteDocument(vehicleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: string) =>
+      apiFetch(`/api/documents/${documentId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
+      void qc.invalidateQueries({ queryKey: ["costs", vehicleId] });
+    },
+  });
+}

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function DELETE() {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -14,33 +15,30 @@ export async function DELETE() {
     return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
   }
 
+  if (!(await checkRateLimit(userId, "account-delete", 3))) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
+
   const supabase = createSupabaseAdminClient();
 
-  // 1. Delete energy_costs (references documents + vehicles)
-  await supabase.from("energy_costs").delete().eq("user_id", userId);
-
-  // 2. Delete command_events (references vehicles)
-  await supabase.from("command_events").delete().eq("user_id", userId);
-
-  // 3. Delete vehicle_snapshots (references vehicles)
-  // Get all vehicle ids first
+  // Resolve vehicle ids first — energy_costs, command_events, charging_sessions,
+  // and vehicle_snapshots have no user_id column; they are scoped by vehicle_id.
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("id")
     .eq("user_id", userId);
 
   const vehicleIds = (vehicles ?? []).map((v: { id: string }) => v.id);
+
   if (vehicleIds.length > 0) {
-    await supabase
-      .from("vehicle_snapshots")
-      .delete()
-      .in("vehicle_id", vehicleIds);
+    // 1. Child tables keyed by vehicle_id (no user_id column on any of these)
+    await supabase.from("energy_costs").delete().in("vehicle_id", vehicleIds);
+    await supabase.from("command_events").delete().in("vehicle_id", vehicleIds);
+    await supabase.from("charging_sessions").delete().in("vehicle_id", vehicleIds);
+    await supabase.from("vehicle_snapshots").delete().in("vehicle_id", vehicleIds);
   }
 
-  // 4. Delete charging_sessions (references vehicles)
-  await supabase.from("charging_sessions").delete().eq("user_id", userId);
-
-  // 5. Delete documents + Storage files
+  // 2. Delete documents + Storage files
   const { data: docs } = await supabase
     .from("documents")
     .select("storage_path")
@@ -51,7 +49,8 @@ export async function DELETE() {
       .map((d) => d.storage_path)
       .filter(Boolean);
     if (paths.length > 0) {
-      await supabase.storage.from("documents").remove(paths);
+      const { error: storageErr } = await supabase.storage.from("documents").remove(paths);
+      if (storageErr) console.error("[storage.remove]", paths, storageErr.message);
     }
   }
 
@@ -64,7 +63,8 @@ export async function DELETE() {
     const orphanPaths = storageFiles.map(
       (f: { name: string }) => `${userId}/${f.name}`,
     );
-    await supabase.storage.from("documents").remove(orphanPaths);
+    const { error: orphanErr } = await supabase.storage.from("documents").remove(orphanPaths);
+    if (orphanErr) console.error("[storage.remove]", orphanPaths, orphanErr.message);
   }
 
   await supabase.from("documents").delete().eq("user_id", userId);

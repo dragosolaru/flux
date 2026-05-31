@@ -6,24 +6,39 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { UpgradeButton } from "@/components/billing/UpgradeButton";
 import { cardVariants } from "@/lib/animations/variants";
 import { cn } from "@/lib/utils";
+
+const FREE_TIER_MAX = 3;
 
 interface IngestCardProps {
   email: string | null;
   onUpload: (file: File) => Promise<void> | void;
   disabled?: boolean;
   uploading?: boolean;
+  hasProSubscription?: boolean;
+  docsThisMonth?: number;
 }
 
-export function IngestCard({ email, onUpload, disabled, uploading }: IngestCardProps) {
+export function IngestCard({
+  email,
+  onUpload,
+  disabled,
+  uploading,
+  hasProSubscription,
+  docsThisMonth = 0,
+}: IngestCardProps) {
   const t = useTranslations();
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
+  const atFreeTierLimit = hasProSubscription === false && docsThisMonth >= FREE_TIER_MAX;
+  const uploadDisabled = disabled || atFreeTierLimit;
+
   function pickFile() {
-    if (!disabled) fileRef.current?.click();
+    if (!uploadDisabled) fileRef.current?.click();
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -48,6 +63,21 @@ export function IngestCard({ email, onUpload, disabled, uploading }: IngestCardP
             <p className="mt-0.5 text-xs text-muted-foreground">{t("ingest.subtitle")}</p>
           </div>
 
+          {hasProSubscription === false && (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2">
+              <p className="text-xs text-muted-foreground">
+                {t("ingest.free_tier_usage", { used: docsThisMonth, max: FREE_TIER_MAX })}
+              </p>
+              {atFreeTierLimit && (
+                <UpgradeButton
+                  label={t("ingest.upgrade_cta")}
+                  size="sm"
+                  variant="default"
+                />
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <input
               ref={fileRef}
@@ -55,7 +85,7 @@ export function IngestCard({ email, onUpload, disabled, uploading }: IngestCardP
               accept="image/jpeg,image/png,image/webp,application/pdf"
               onChange={handleFile}
               className="hidden"
-              disabled={disabled}
+              disabled={uploadDisabled}
             />
 
             <Option
@@ -67,7 +97,7 @@ export function IngestCard({ email, onUpload, disabled, uploading }: IngestCardP
               label={t("ingest.option.upload.label")}
               hint={uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
               onClick={pickFile}
-              disabled={disabled}
+              disabled={uploadDisabled}
               hovered={hoveredKey === "upload"}
               onHoverChange={(h) => setHoveredKey(h ? "upload" : null)}
             />

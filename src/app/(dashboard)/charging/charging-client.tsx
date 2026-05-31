@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 
-import { RefreshCw } from "lucide-react";
+import { BatteryCharging, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,10 +41,11 @@ export function ChargingClient({
   vehicleName,
   history,
 }: ChargingClientProps) {
-  const { data, isLoading } = useVehicle(vehicleId);
+  const { data, isLoading, isError } = useVehicle(vehicleId);
   const { mutate, isPending } = useVehicleCommand();
   const { data: caps } = useCapabilities();
   const syncMutation = useChargingHistorySync(vehicleId);
+  const tc = useTranslations("charging");
 
   const hasSyncedRef = useRef(false);
   useEffect(() => {
@@ -70,27 +72,26 @@ export function ChargingClient({
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Charging</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{tc("page_title")}</h1>
         <p className="text-sm text-muted-foreground">{vehicleName}</p>
       </div>
 
-      <ChargingStatus state={data} isLoading={isLoading} />
+      <ChargingStatus state={data} isLoading={isLoading} isError={isError} />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Charge limit</CardTitle>
-          <CardDescription>
-            Set the maximum state-of-charge. Tesla recommends ≤90% for daily
-            use.
-          </CardDescription>
+          <CardTitle className="text-base">{tc("limit_title")}</CardTitle>
+          <CardDescription>{tc("limit_description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isLoading || !data ? (
+          {isLoading ? (
             <Skeleton className="h-6 w-full" />
+          ) : !data ? (
+            <p className="text-sm text-muted-foreground">{tc("limit_error")}</p>
           ) : (
             <>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Limit</span>
+                <span className="text-muted-foreground">{tc("limit_label")}</span>
                 <span className="text-base font-medium tabular-nums">
                   {limit}%
                 </span>
@@ -107,7 +108,7 @@ export function ChargingClient({
                 disabled={isPending || limit === data.chargeLimit}
                 className="w-full sm:w-auto"
               >
-                {isPending ? "Saving…" : "Save limit"}
+                {isPending ? tc("limit_saving") : tc("limit_save")}
               </Button>
             </>
           )}
@@ -116,21 +117,18 @@ export function ChargingClient({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Scheduled charging</CardTitle>
-          <CardDescription>
-            Start charging at a chosen time — useful for off-peak tariffs.
-            Coming soon: persisted server-side schedules.
-          </CardDescription>
+          <CardTitle className="text-base">{tc("scheduled_title")}</CardTitle>
+          <CardDescription>{tc("scheduled_description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm">Enabled</span>
+            <span className="text-sm">{tc("scheduled_enabled")}</span>
             <Switch checked={scheduled} onCheckedChange={setScheduled} />
           </div>
           {scheduled && (
             <div className="flex items-center gap-3">
               <label htmlFor="time" className="text-sm text-muted-foreground">
-                Start at
+                {tc("scheduled_start_at")}
               </label>
               <input
                 id="time"
@@ -148,10 +146,8 @@ export function ChargingClient({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">Recent charging sessions</CardTitle>
-              <CardDescription>
-                Snapshots captured while charging was active.
-              </CardDescription>
+              <CardTitle className="text-base">{tc("history_title")}</CardTitle>
+              <CardDescription>{tc("history_description")}</CardDescription>
             </div>
             {caps?.hasLiveVehicle && (
               <Button
@@ -171,7 +167,7 @@ export function ChargingClient({
                   size={14}
                 />
                 <span className="ml-1">
-                  {syncMutation.isPending ? "Syncing…" : "Sync from Tesla"}
+                  {syncMutation.isPending ? tc("history_syncing") : tc("history_sync")}
                 </span>
               </Button>
             )}
@@ -179,10 +175,11 @@ export function ChargingClient({
         </CardHeader>
         <CardContent>
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No charging history yet — once your car has been plugged in while
-              the dashboard is open, sessions will appear here.
-            </p>
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <BatteryCharging className="size-10 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-muted-foreground">{tc("history_empty_title")}</p>
+              <p className="text-xs text-muted-foreground">{tc("history_empty_hint")}</p>
+            </div>
           ) : (
             <ul className="divide-y">
               {history.map((row) => (

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getModelSpec } from "@/lib/brands/models";
 import { mockWeather } from "@/lib/external/weather/providers/mock-weather";
 import { derateRange } from "@/lib/external/weather/derating";
@@ -24,6 +25,10 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await checkRateLimit(session.user.id, "trip-plan", 20)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   const parsed = bodySchema.safeParse(await req.json());

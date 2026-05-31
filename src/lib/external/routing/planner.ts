@@ -28,7 +28,6 @@ export function planTrip(input: PlanInput): TripPlan {
 
   const idealRangeKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
   const deratedFullRangeKm = idealRangeKm * (1 + deratingPct / 100);
-  const usableRangeFromFull = deratedFullRangeKm * (1 - SAFETY_RESERVE_PCT / 100);
   const currentRangeKm = (currentSocPct / 100) * deratedFullRangeKm - (deratedFullRangeKm * SAFETY_RESERVE_PCT / 100);
 
   const stops: ChargingStop[] = [];

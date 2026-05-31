@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
   const session = await auth();
@@ -12,6 +13,10 @@ export async function GET() {
   const userId = await ensureSupabaseUserId(session);
   if (!userId) {
     return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
+  if (!await checkRateLimit(userId, "data-export", 5)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   const supabase = createSupabaseAdminClient();

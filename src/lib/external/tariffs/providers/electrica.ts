@@ -1,4 +1,4 @@
-import type { HourlyPrice, TariffProvider } from "../types";
+import type { TariffProvider } from "../types";
 
 const PRICE_EUR_KWH = 0.154; // ~0.77 RON/kWh at 5.0 RON/EUR
 

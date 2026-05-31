@@ -121,6 +121,21 @@
         "octopus-mock": "Octopus Energy (demó)",
         "awattar-mock": "aWATTar (demó)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Adataim exportálása",
+      "exporting": "Exportálás…",
+      "export_success": "Adatexport letöltve",
+      "export_error": "Nem sikerült exportálni",
+      "delete_button": "Fiók törlése",
+      "deleting": "Törlés…",
+      "delete_success": "Fiók törölve",
+      "delete_error": "Nem sikerült törölni a fiókot",
+      "confirm_title": "Fiók törlése?",
+      "confirm_description": "Ez véglegesen törli a Flux fiókodat, az összes járművet, töltési előzményt, dokumentumot és költséget. Ez a művelet nem vonható vissza.",
+      "confirm_cancel": "Mégse",
+      "confirm_input_label": "Írja be a DELETE szót a megerősítéshez",
+      "confirm_delete": "Igen, töröld a fiókot"
     }
   },
   "ingest": {
@@ -142,6 +157,37 @@
       }
     }
   },
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "30s-onként frissül",
+    "demo_subtitle": "Demo adatok · 30s-onként frissül",
+    "refresh": "Frissítés",
+    "error_title": "Nem sikerült elérni a járművet",
+    "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
+    "retry": "Próbálja újra"
+  },
+
+  "charging": {
+    "page_title": "Töltés",
+    "status_title": "Töltési állapot",
+    "limit_title": "Töltési korlát",
+    "limit_description": "Állítsa be a maximális töltöttségi szintet. A Tesla ≤90%-ot javasol napi használathoz.",
+    "limit_label": "Korlát",
+    "limit_save": "Korlát mentése",
+    "limit_saving": "Mentés…",
+    "limit_error": "Nem sikerült betölteni a töltési korlátot.",
+    "scheduled_title": "Ütemezett töltés",
+    "scheduled_description": "Indítsa a töltést egy kiválasztott időpontban — hasznos csúcsidőn kívüli tarifahoknál.",
+    "scheduled_enabled": "Engedélyezve",
+    "scheduled_start_at": "Indítás:",
+    "history_title": "Legutóbbi töltési munkamenetek",
+    "history_description": "Pillanatfelvételek aktív töltés közben.",
+    "history_empty_title": "Még nincs töltési előzmény",
+    "history_empty_hint": "A munkamenetek itt jelennek meg, ha az autót csatlakoztatták miközben a dashboard nyitva volt.",
+    "history_sync": "Szinkronizálás a Teslából",
+    "history_syncing": "Szinkronizálás…"
+  },
+
   "commands": {
     "title": "Parancsok",
     "subtitle": "Vezérelje távolról az autót.",
@@ -153,7 +199,9 @@
     "honk": "Dudálás",
     "flash": "Villogtatás",
     "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
-    "sending": "Küldés…"
+    "sending": "Küldés…",
+    "no_vehicles_title": "Még nincs jármű",
+    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez."
   },
   "garage": {
     "title": "Garázs",
@@ -191,7 +239,12 @@
     "recover": "Visszaállítás",
     "recovered": "Visszaállítva: {count}",
     "export_csv": "CSV exportálása",
-    "kpi_wh_per_km": "Hatékonyság"
+    "kpi_wh_per_km": "Hatékonyság",
+    "processed_docs_heading": "Feldolgozott dokumentumok",
+    "upload_success": "Dokumentum hozzáadva — feldolgozás folyamatban…",
+    "upload_error": "Feltöltés sikertelen",
+    "delete_success": "Dokumentum törölve",
+    "delete_error": "Nem sikerült törölni a dokumentumot"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",

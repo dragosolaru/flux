@@ -43,3 +43,9 @@ next-env.d.ts
 
 # Agent worktrees (temporary isolated git worktrees used by Claude agents)
 .claude/worktrees/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+.claude/settings.local.json

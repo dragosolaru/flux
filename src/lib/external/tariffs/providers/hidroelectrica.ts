@@ -1,4 +1,4 @@
-import type { HourlyPrice, TariffProvider } from "../types";
+import type { TariffProvider } from "../types";
 
 const PRICE_EUR_KWH = 0.130; // ~0.65 RON/kWh (competitive green tariff)
 

@@ -8,6 +8,7 @@ import { saveSnapshot } from "@/lib/mock/persistence";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
+import { canAddVehicle } from "@/lib/subscription";
 
 // GET /api/vehicles — list all active vehicles for the current user
 export async function GET() {
@@ -30,7 +31,8 @@ export async function GET() {
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("[vehicles/GET]", error.message);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
   return NextResponse.json(
@@ -97,6 +99,11 @@ export async function POST(req: NextRequest) {
 
   const supabase = createSupabaseAdminClient();
 
+  const vehicleCheck = await canAddVehicle(userId);
+  if (!vehicleCheck.allowed) {
+    return NextResponse.json({ message: vehicleCheck.message }, { status: 402 });
+  }
+
   const { data: vehicle, error: insertErr } = await supabase
     .from("vehicles")
     .insert({
@@ -113,10 +120,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertErr || !vehicle) {
-    return NextResponse.json(
-      { message: insertErr?.message ?? "Failed to create vehicle" },
-      { status: 500 },
-    );
+    console.error("[vehicles/POST]", insertErr?.message ?? "no vehicle returned");
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
   // Seed initial mock state

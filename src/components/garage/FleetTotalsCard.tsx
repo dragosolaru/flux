@@ -11,7 +11,6 @@ import type { VehicleState } from "@/types/vehicle";
 
 // kWh per 100km for average ICE (petrol) → CO₂: ~2.31 kg/litre, ~8 l/100km
 const ICE_CO2_KG_PER_100KM = 0.184; // kg CO₂ per km
-const EV_CO2_KG_PER_KWH = 0.04;     // EU average grid ~400g CO₂/kWh → per km
 
 function StatRow({ icon: Icon, label, value, note }: {
   icon: ComponentType<{ className?: string }>;
@@ -49,12 +48,23 @@ export function FleetTotalsCard({ vehicles }: FleetTotalsCardProps) {
 
   const states = stateQueries.map((q: { data?: VehicleState }) => q.data ?? null);
   const loadedCount = states.filter(Boolean).length;
+  const isAnyPending = stateQueries.some((q: { isPending: boolean }) => q.isPending);
 
-  if (loadedCount === 0) {
+  if (isAnyPending && loadedCount === 0) {
     return (
       <Card>
         <CardContent className="flex h-24 items-center justify-center">
           <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loadedCount === 0) {
+    return (
+      <Card>
+        <CardContent className="flex h-24 items-center justify-center text-sm text-muted-foreground">
+          Fleet data unavailable
         </CardContent>
       </Card>
     );

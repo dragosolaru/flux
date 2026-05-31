@@ -19,13 +19,15 @@ const ConfidenceSchema = z.object({
 });
 
 const ParsedDocumentSchema = z.object({
-  document_type: z.enum(["home_bill", "public_receipt", "unknown"]),
+  document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown"]),
+  has_non_electricity_items: z.boolean().default(false),
   provider_name: z.string().nullable(),
   period_start: z.string().nullable(),
   period_end: z.string().nullable(),
   session_timestamp: z.string().nullable(),
   total_kwh: z.number().nullable(),
   price_per_kwh: z.number().nullable(),
+  electricity_cost: z.number().nullable(),
   cost_total: z.number().nullable(),
   currency: z.string().default("RON"),
   charger_network: z.string().nullable(),

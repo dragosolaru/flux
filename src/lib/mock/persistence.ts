@@ -9,6 +9,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { MockVehicleSnapshot } from "./types";
 import type { CommandName } from "@/types/history";
 
+type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
 export async function loadSnapshot(
   vehicleId: string,
 ): Promise<MockVehicleSnapshot | null> {
@@ -72,10 +74,8 @@ export async function saveSnapshot(
 // Session closure helpers
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function maybeCloseChargingSession(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: AdminClient,
   vehicleId: string,
   prev: MockVehicleSnapshot,
   next: MockVehicleSnapshot,
@@ -108,10 +108,8 @@ async function maybeCloseChargingSession(
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function maybeCloseTrip(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: AdminClient,
   vehicleId: string,
   prev: MockVehicleSnapshot,
   next: MockVehicleSnapshot,
@@ -143,6 +141,8 @@ async function maybeCloseTrip(
     start_address: null,
     end_address: null,
     distance_km: distKm != null ? Math.round(distKm * 10) / 10 : null,
+    start_odometer_km: prev.activeTripStartOdometerKm,
+    end_odometer_km: next.state.odometerKm,
     energy_used_kwh: null,
     avg_speed_kmh: avgSpeedKmh != null ? Math.round(avgSpeedKmh * 10) / 10 : null,
     max_speed_kmh: null,

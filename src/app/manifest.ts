@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Flux",
     short_name: "Flux",
-    start_url: "/",
+    description: "EV Cost Intelligence",
+    start_url: "/dashboard",
     display: "standalone",
     background_color: "#09090b",
     theme_color: "#09090b",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { fetchTeslaChargingHistory } from "@/lib/tesla/charging-history";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -18,6 +19,14 @@ export async function POST(
   if (!z.string().uuid().safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
+
+  if (!(await checkRateLimit(session.user.id, "charging-history", 20))) {
+    return NextResponse.json(
+      { message: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
 
   const { data: vehicle, error: vehErr } = await supabase

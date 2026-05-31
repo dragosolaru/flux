@@ -121,6 +121,21 @@
         "octopus-mock": "Octopus Energy (démo)",
         "awattar-mock": "aWATTar (démo)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Exporter mes données",
+      "exporting": "Export en cours…",
+      "export_success": "Export téléchargé",
+      "export_error": "Échec de l'export",
+      "delete_button": "Supprimer mon compte",
+      "deleting": "Suppression…",
+      "delete_success": "Compte supprimé",
+      "delete_error": "Impossible de supprimer le compte",
+      "confirm_title": "Supprimer votre compte ?",
+      "confirm_description": "Cela supprimera définitivement votre compte Flux, tous les véhicules, l'historique de charge, les documents et les coûts. Cette action est irréversible.",
+      "confirm_cancel": "Annuler",
+      "confirm_input_label": "Tapez DELETE pour confirmer",
+      "confirm_delete": "Oui, supprimer mon compte"
     }
   },
   "ingest": {
@@ -142,6 +157,37 @@
       }
     }
   },
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "mise à jour toutes les 30s",
+    "demo_subtitle": "Données démo · mise à jour toutes les 30s",
+    "refresh": "Actualiser",
+    "error_title": "Impossible de contacter votre véhicule",
+    "error_subtitle": "Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer"
+  },
+
+  "charging": {
+    "page_title": "Recharge",
+    "status_title": "Statut de recharge",
+    "limit_title": "Limite de charge",
+    "limit_description": "Définissez l'état de charge maximum. Tesla recommande ≤90% pour un usage quotidien.",
+    "limit_label": "Limite",
+    "limit_save": "Enregistrer la limite",
+    "limit_saving": "Enregistrement…",
+    "limit_error": "Impossible de charger la limite de charge.",
+    "scheduled_title": "Recharge programmée",
+    "scheduled_description": "Démarrez la recharge à une heure choisie — utile pour les tarifs heures creuses.",
+    "scheduled_enabled": "Activé",
+    "scheduled_start_at": "Démarrer à",
+    "history_title": "Sessions de recharge récentes",
+    "history_description": "Instantanés capturés pendant que la recharge était active.",
+    "history_empty_title": "Aucun historique de recharge",
+    "history_empty_hint": "Les sessions apparaissent ici une fois que votre voiture a été branchée pendant que le tableau de bord était ouvert.",
+    "history_sync": "Synchroniser depuis Tesla",
+    "history_syncing": "Synchronisation…"
+  },
+
   "commands": {
     "title": "Commandes",
     "subtitle": "Contrôlez votre voiture à distance.",
@@ -153,7 +199,9 @@
     "honk": "Klaxon",
     "flash": "Flasher les phares",
     "no_commands": "Aucune commande disponible pour ce véhicule.",
-    "sending": "Envoi en cours…"
+    "sending": "Envoi en cours…",
+    "no_vehicles_title": "Aucun véhicule encore",
+    "no_vehicles_hint": "Ajoutez un véhicule dans le Garage pour envoyer des commandes."
   },
   "garage": {
     "title": "Garage",
@@ -191,7 +239,12 @@
     "recover": "Récupérer",
     "recovered": "Récupéré : {count}",
     "export_csv": "Exporter CSV",
-    "kpi_wh_per_km": "Efficacité"
+    "kpi_wh_per_km": "Efficacité",
+    "processed_docs_heading": "Documents traités",
+    "upload_success": "Document ajouté — traitement en cours…",
+    "upload_error": "Échec du téléchargement",
+    "delete_success": "Document supprimé",
+    "delete_error": "Impossible de supprimer le document"
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",

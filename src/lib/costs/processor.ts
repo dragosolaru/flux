@@ -34,6 +34,17 @@ export async function processDocument(documentId: string): Promise<void> {
     const parsed = await parseDocument(doc as Document);
     const avgConf = averageConfidence(parsed.confidence);
 
+    // Gas bills, petrol receipts, and other non-electricity docs don't generate energy_cost records
+    if (parsed.document_type === "gas_bill" || parsed.document_type === "petrol_receipt" || parsed.document_type === "other") {
+      await supabase.from("documents").update({
+        status: "needs_review",
+        parsed_json: parsed,
+        confidence: avgConf,
+        processed_at: new Date().toISOString(),
+      }).eq("id", documentId);
+      return;
+    }
+
     // Currency conversion
     const docDate =
       parsed.period_end
@@ -43,7 +54,7 @@ export async function processDocument(documentId: string): Promise<void> {
           : new Date();
 
     const exchangeRate = await getExchangeRate(parsed.currency ?? "RON", docDate);
-    const costTotal = parsed.cost_total ?? 0;
+    const costTotal = parsed.electricity_cost ?? parsed.cost_total ?? 0;
     const costRon = costTotal * exchangeRate;
 
     let chargingSessionId: string | null = null;

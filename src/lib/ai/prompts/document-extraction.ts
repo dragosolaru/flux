@@ -1,28 +1,39 @@
-export const DOCUMENT_EXTRACTION_PROMPT = `Ești un expert în facturi de energie electrică și bonuri de la stații de încărcare pentru vehicule electrice, cu specializare pe piața din România și Europa de Est (E.ON, Enel, CEZ, Electrica, ENGIE, Renovatio, Ionity, Tesla Supercharger, etc.).
+export const DOCUMENT_EXTRACTION_PROMPT = `Ești un expert în facturi de energie electrică și bonuri de la stații de încărcare EV, specializat pe piața din România și Europa de Est.
 
-Analizează documentul atașat (imagine sau PDF) și extrage informațiile structurate în formatul JSON de mai jos.
+Analizează documentul și clasifică-l PRECIS. Extrage EXCLUSIV informațiile despre energia electrică (curent electric). Ignora gazul natural, gazul metan, benzina, motorina, produse alimentare, cafea, țigări sau orice alt produs/serviciu.
 
-Reguli stricte:
-- Dacă un câmp nu poate fi determinat cu certitudine din document, pune null
-- "home_bill" = factură de energie electrică de la furnizor de curent acasă (E.ON, Enel, CEZ, Electrica, ENGIE Energie etc.)
-- "public_receipt" = bon/chitanță de la o stație de încărcare publică (Ionity, Tesla SC, Renovatio, ENGIE Charging, Kaufland, OMV etc.)
+TIPURI DE DOCUMENTE:
+- "home_bill" — factură de curent electric de acasă (Electrica, E.ON Energie, Enel, CEZ, Hidroelectrica, ENGIE Energie Electrică — NUMAI dacă este pentru curent, nu gaz)
+- "public_receipt" — bon de la stație de încărcare EV publică (Renovatio, Ionity, Tesla Supercharger, MOL Plug, OMV EV, Kaufland EV, Lidl EV etc.)
+- "gas_bill" — factură de gaz natural/metan (ENGIE Gaz, E.ON Gaz, Distrigaz etc.) — NU curent electric
+- "petrol_receipt" — bon de la stație de carburant (OMV, Rompetrol, MOL, Petrom, Lukoil etc.) — chiar dacă include și încărcare EV
+- "other" — altceva: factură apă, factură telefon, bon alimentar, cafea, țigări, orice altceva
+- "unknown" — documentul nu poate fi identificat
+
+REGULI STRICTE:
+- total_kwh = EXCLUSIV kWh de curent electric (nu gaz, nu echivalent termic)
+- cost_total = EXCLUSIV suma pentru curent electric din document (fără gaz, benzină, alte produse)
+- electricity_cost = identic cu cost_total (suma exclusiv pentru curent electric)
+- Dacă factura conține atât curent cât și gaz (ex: factură combinată ENGIE), extrage NUMAI suma și kWh pentru curent; setează has_non_electricity_items: true
+- Dacă bonul de benzinărie include și o sesiune EV, tratează-l ca "petrol_receipt" cu has_non_electricity_items: true
 - period_start și period_end sunt pentru facturi acasă (intervalul facturat)
 - session_timestamp este DOAR pentru bonuri publice — momentul exact al sesiunii de încărcare
-- Moneda: identifică moneda din simbol (lei/RON, €/EUR, £/GBP, $, HUF etc.)
-- total_kwh = energia electrică totală din document (kWh, kW·h, kWh-uri)
-- cost_total = suma totală de plată din document (cu TVA inclus)
+- Moneda: identifică din simbol (lei/RON/L, €/EUR, £/GBP, $, HUF etc.)
+- Dacă un câmp nu poate fi determinat cu certitudine, pune null
 
-Răspunde EXCLUSIV cu JSON valid, fără text suplimentar, fără markdown, fără \`\`\`:
+Răspunde EXCLUSIV cu JSON valid, fără text, fără markdown:
 
 {
-  "document_type": "home_bill" | "public_receipt" | "unknown",
+  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown",
+  "has_non_electricity_items": boolean,
   "provider_name": string | null,
   "period_start": "YYYY-MM-DD" | null,
   "period_end": "YYYY-MM-DD" | null,
   "session_timestamp": "ISO8601" | null,
   "total_kwh": number | null,
-  "price_per_kwh": number | null,
+  "electricity_cost": number | null,
   "cost_total": number | null,
+  "price_per_kwh": number | null,
   "currency": "RON" | "EUR" | "GBP" | "USD" | "HUF" | "PLN" | "CZK",
   "charger_network": string | null,
   "location_name": string | null,

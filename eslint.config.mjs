@@ -12,7 +12,20 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Tooling/vendored dirs that are not app source.
+    ".agents/**",
+    ".claude/**",
   ]),
+  {
+    // Underscore-prefixed identifiers are intentionally unused (e.g. interface
+    // params kept for signature parity).
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

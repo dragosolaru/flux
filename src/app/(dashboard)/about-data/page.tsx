@@ -4,9 +4,6 @@ import { FlaskConical, Wifi } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import { BRAND_MODELS } from "@/lib/brands/models";
-import { getBrand } from "@/lib/brands/registry";
-import type { BrandKey } from "@/lib/brands/types";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "About your data · Flux" };
@@ -72,10 +69,6 @@ export default async function AboutDataPage() {
             <div className="divide-y">
               {activeVehicles.map((v: { id: string; display_name: string; brand: string; model: string | null; data_source: string; nickname: string | null }) => {
                 const isLive = v.data_source === "live";
-                const brand = getBrand(v.brand as BrandKey);
-                const spec = BRAND_MODELS[v.brand as BrandKey]?.find(
-                  (m) => m.modelName === v.model,
-                );
 
                 return (
                   <div key={v.id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-6">

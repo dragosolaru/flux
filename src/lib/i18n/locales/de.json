@@ -121,6 +121,21 @@
         "octopus-mock": "Octopus Energy (Demo)",
         "awattar-mock": "aWATTar (Demo)"
       }
+    },
+    "danger_zone": {
+      "export_button": "Meine Daten exportieren",
+      "exporting": "Wird exportiert…",
+      "export_success": "Datenexport heruntergeladen",
+      "export_error": "Export fehlgeschlagen",
+      "delete_button": "Konto löschen",
+      "deleting": "Wird gelöscht…",
+      "delete_success": "Konto gelöscht",
+      "delete_error": "Konto konnte nicht gelöscht werden",
+      "confirm_title": "Konto löschen?",
+      "confirm_description": "Dadurch werden dein Flux-Konto, alle Fahrzeuge, der Ladeverlauf, Dokumente und Kosten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirm_cancel": "Abbrechen",
+      "confirm_input_label": "Gib DELETE ein, um zu bestätigen",
+      "confirm_delete": "Ja, Konto löschen"
     }
   },
   "ingest": {
@@ -142,6 +157,37 @@
       }
     }
   },
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "aktualisiert alle 30s",
+    "demo_subtitle": "Demo-Daten · aktualisiert alle 30s",
+    "refresh": "Aktualisieren",
+    "error_title": "Fahrzeug nicht erreichbar",
+    "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
+    "retry": "Erneut versuchen"
+  },
+
+  "charging": {
+    "page_title": "Laden",
+    "status_title": "Ladestatus",
+    "limit_title": "Ladelimit",
+    "limit_description": "Lege den maximalen Ladezustand fest. Tesla empfiehlt ≤90% für den täglichen Einsatz.",
+    "limit_label": "Limit",
+    "limit_save": "Limit speichern",
+    "limit_saving": "Wird gespeichert…",
+    "limit_error": "Ladelimit konnte nicht geladen werden.",
+    "scheduled_title": "Geplantes Laden",
+    "scheduled_description": "Starte das Laden zu einer gewählten Zeit — nützlich für Niedertarifzeiten.",
+    "scheduled_enabled": "Aktiviert",
+    "scheduled_start_at": "Start um",
+    "history_title": "Neueste Ladesessions",
+    "history_description": "Momentaufnahmen während aktiver Ladung.",
+    "history_empty_title": "Noch kein Ladeverlauf",
+    "history_empty_hint": "Sessions erscheinen hier, sobald das Auto angeschlossen war, während das Dashboard offen war.",
+    "history_sync": "Von Tesla synchronisieren",
+    "history_syncing": "Wird synchronisiert…"
+  },
+
   "commands": {
     "title": "Befehle",
     "subtitle": "Auto fernsteuern.",
@@ -153,7 +199,9 @@
     "honk": "Hupen",
     "flash": "Lichter blinken",
     "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
-    "sending": "Wird gesendet…"
+    "sending": "Wird gesendet…",
+    "no_vehicles_title": "Noch keine Fahrzeuge",
+    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden."
   },
   "garage": {
     "title": "Garage",
@@ -191,7 +239,12 @@
     "recover": "Wiederherstellen",
     "recovered": "Wiederhergestellt: {count}",
     "export_csv": "CSV exportieren",
-    "kpi_wh_per_km": "Effizienz"
+    "kpi_wh_per_km": "Effizienz",
+    "processed_docs_heading": "Verarbeitete Dokumente",
+    "upload_success": "Dokument hinzugefügt — wird verarbeitet…",
+    "upload_error": "Upload fehlgeschlagen",
+    "delete_success": "Dokument gelöscht",
+    "delete_error": "Dokument konnte nicht gelöscht werden"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",

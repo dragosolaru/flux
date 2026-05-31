@@ -141,6 +141,7 @@
       "confirm_title": "Ștergi contul?",
       "confirm_description": "Aceasta va șterge permanent contul tău Flux, toate mașinile, istoricul de încărcare, documentele și costurile. Acțiunea nu poate fi anulată.",
       "confirm_cancel": "Anulează",
+      "confirm_input_label": "Scrie DELETE pentru a confirma",
       "confirm_delete": "Da, șterge contul meu"
     }
   },
@@ -165,6 +166,37 @@
     }
   },
 
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "se actualizează la 30s",
+    "demo_subtitle": "Date demo · se actualizează la 30s",
+    "refresh": "Reîmprospătează",
+    "error_title": "Nu am putut contacta mașina",
+    "error_subtitle": "Verifică conexiunea și încearcă din nou.",
+    "retry": "Încearcă din nou"
+  },
+
+  "charging": {
+    "page_title": "Încărcare",
+    "status_title": "Status încărcare",
+    "limit_title": "Limită încărcare",
+    "limit_description": "Setează SOC-ul maxim. Tesla recomandă ≤90% pentru uzul zilnic.",
+    "limit_label": "Limită",
+    "limit_save": "Salvează limita",
+    "limit_saving": "Se salvează…",
+    "limit_error": "Nu s-a putut încărca limita.",
+    "scheduled_title": "Încărcare programată",
+    "scheduled_description": "Pornește încărcarea la o oră aleasă — util pentru tarife de noapte.",
+    "scheduled_enabled": "Activat",
+    "scheduled_start_at": "Pornește la",
+    "history_title": "Sesiuni de încărcare recente",
+    "history_description": "Instantanee capturate în timp ce mașina era la încărcat.",
+    "history_empty_title": "Niciun istoric de încărcare",
+    "history_empty_hint": "Sesiunile apar aici odată ce mașina a fost conectată cât timp dashboard-ul era deschis.",
+    "history_sync": "Sincronizare din Tesla",
+    "history_syncing": "Se sincronizează…"
+  },
+
   "commands": {
     "title": "Comenzi",
     "subtitle": "Controlează mașina ta de la distanță.",
@@ -176,7 +208,9 @@
     "honk": "Claxon",
     "flash": "Lumini",
     "no_commands": "Nicio comandă disponibilă pentru această mașină.",
-    "sending": "Se trimite…"
+    "sending": "Se trimite…",
+    "no_vehicles_title": "Nicio mașină încă",
+    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi."
   },
 
   "garage": {
@@ -203,7 +237,12 @@
     "missing_email_docs": "Lipsesc documente trimise pe email?",
     "recover": "Recuperează",
     "recovered": "Recuperate: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "processed_docs_heading": "Documente procesate",
+    "upload_success": "Document adăugat — se procesează…",
+    "upload_error": "Upload eșuat",
+    "delete_success": "Document șters",
+    "delete_error": "Nu s-a putut șterge documentul"
   },
 
   "departure": {

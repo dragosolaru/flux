@@ -1,5 +1,6 @@
 import { isLiveEnabled } from "@/lib/live-integrations";
 import type { BrandProfile } from "../types";
+import type { VehicleState } from "@/types/vehicle";
 
 export const teslaProfile: BrandProfile = {
   key: "tesla",
@@ -73,5 +74,5 @@ export const teslaProfile: BrandProfile = {
     refreshModel: "polling",
   },
   // Adapter is a pass-through for mock; live adapter lives in src/lib/tesla/api.ts
-  adapter: (raw) => raw,
+  adapter: (raw) => raw as Partial<VehicleState>,
 };

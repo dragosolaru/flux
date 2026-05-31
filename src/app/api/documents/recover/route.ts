@@ -16,6 +16,7 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const UNMATCHED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -29,6 +30,10 @@ export async function POST() {
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+
+  if (!await checkRateLimit(userId, "doc-recover", 10)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
+  }
 
   const supabase = createSupabaseAdminClient();
 
@@ -88,11 +93,13 @@ export async function POST() {
 
     if (updateErr) {
       // Roll back the new file so we don't leak storage.
-      await supabase.storage.from("documents").remove([newPath]);
+      const { error: rollbackErr } = await supabase.storage.from("documents").remove([newPath]);
+      if (rollbackErr) console.error("[storage.remove]", newPath, rollbackErr.message);
       continue;
     }
 
-    await supabase.storage.from("documents").remove([oldPath]);
+    const { error: cleanupErr } = await supabase.storage.from("documents").remove([oldPath]);
+    if (cleanupErr) console.error("[storage.remove]", oldPath, cleanupErr.message);
 
     recovered.push(doc.id);
     processDocument(doc.id).catch((err: unknown) => {

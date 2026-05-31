@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowRight, Battery, Clock, Coins, MapPin, Plug } from "lucide-react";
+import { AlertCircle, Battery, Clock, Coins, Plug } from "lucide-react";
 import type { ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
 

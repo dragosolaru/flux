@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { sendVehicleCommand } from "@/lib/tesla/api";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SUPPORTED_COMMANDS = [
   "door_lock",
@@ -29,6 +30,10 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await checkRateLimit(session.user.id, "tesla-command", 10)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   let payload: unknown;
