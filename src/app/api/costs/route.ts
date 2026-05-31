@@ -88,17 +88,31 @@ export async function GET(request: Request) {
 
   const monthlyTrend = Array.from(buckets.values()).sort((a, b) => a.month.localeCompare(b.month));
 
-  // Fetch odometer range for cost/km (from trips table)
-  const { data: trips } = await supabase
+  // Fetch km driven in the same date window as the costs.
+  // trips.started_at aligns with billing period_start.
+  let tripQuery = supabase
     .from("trips")
     .select("distance_km")
     .eq("vehicle_id", parsed.data.vehicleId)
     .not("distance_km", "is", null);
+  if (parsed.data.from) tripQuery = tripQuery.gte("started_at", parsed.data.from);
+  if (parsed.data.to) tripQuery = tripQuery.lte("started_at", parsed.data.to);
 
+  const { data: trips } = await tripQuery;
   const totalKm = (trips ?? []).reduce(
     (s: number, t: { distance_km: number | null }) => s + (t.distance_km ?? 0),
     0,
   );
+
+  // For home bills, cost_ron is the full bill. Only the vehicle's attributed
+  // proportion (vehicle_kwh_attributed / total_kwh) belongs to the car.
+  const homeAttributedCostRon = homeRows.reduce((s, r) => {
+    if (r.total_kwh && r.vehicle_kwh_attributed && r.total_kwh > 0) {
+      return s + r.cost_ron * (r.vehicle_kwh_attributed / r.total_kwh);
+    }
+    return s + r.cost_ron;
+  }, 0);
+  const attributedTotalCostRon = homeAttributedCostRon + publicCostRon;
 
   const result: CostAggregation & { petrolEquivalentCostRon: number; totalKm: number } = {
     totalCostRon,
@@ -107,9 +121,9 @@ export async function GET(request: Request) {
     publicKwh,
     homeCostRon,
     publicCostRon,
-    costPerKmHome: totalKm > 0 && homeCostRon > 0 ? homeCostRon / totalKm : null,
+    costPerKmHome: totalKm > 0 && homeAttributedCostRon > 0 ? homeAttributedCostRon / totalKm : null,
     costPerKmPublic: totalKm > 0 && publicCostRon > 0 ? publicCostRon / totalKm : null,
-    costPerKmBlended: totalKm > 0 && totalCostRon > 0 ? totalCostRon / totalKm : null,
+    costPerKmBlended: totalKm > 0 && attributedTotalCostRon > 0 ? attributedTotalCostRon / totalKm : null,
     whPerKm: totalKm > 0 && totalKwh > 0 ? (totalKwh * 1000) / totalKm : null,
     monthlyTrend,
     petrolEquivalentCostRon: PETROL_COST_PER_KM * totalKm,

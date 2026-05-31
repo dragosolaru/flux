@@ -301,7 +301,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                 <Pencil className="size-3.5" />
               </button>
             )}
-            {!canManualAdd && !confirmDelete && onDelete && (
+            {!confirmDelete && onDelete && (
               <button
                 onClick={() => setConfirmDelete(true)}
                 className="rounded p-1 text-muted-foreground hover:text-destructive"
