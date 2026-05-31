@@ -343,3 +343,50 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/components/vehicle/CommandPanel.tsx`
 
 **Dependencies:** recharts, Framer Motion v12, sonner.
+
+---
+
+## 20. Landing Page & Trip Planner — Glass Polish
+
+**What:** Mobile-first polish pass on the `/` landing page and `/trip` trip planner, following the v2 UX redesign spec (sections 3.7 and 3.11).
+
+**Landing page (`/`):**
+- Hero section split into `<LandingHero>` (client) — staggered Framer Motion `fadeInUp` animations, badge pill, `text-4xl` on mobile / `text-6xl` on `lg:`, full-width CTA on mobile.
+- Feature grid via `<LandingFeatures>` (client) — `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`, each card uses `border border-white/8 bg-white/5 backdrop-blur-sm` glass styling with stagger animation.
+- CTA buttons use `bg-gradient-to-r from-primary to-primary/90`.
+- Nav and footer use `border-white/8` + `backdrop-blur-xl` instead of plain `border`.
+
+**Trip planner (`/trip`):**
+- Search overlay card upgraded to `border-white/10 bg-background/80 backdrop-blur-xl shadow-2xl`.
+- Vehicle `<select>` uses `border-white/10 bg-white/5 backdrop-blur-sm`.
+- Results panel upgraded to `border-white/10 bg-background/95 backdrop-blur-xl`.
+- Infeasible/warning banners use `border-amber-500/30 bg-amber-500/10` glass style.
+- No-stops banner uses `border-green-500/20 bg-green-500/10`.
+- All hardcoded Romanian strings replaced with `useTranslations("trip")`.
+
+**StopCard (`src/components/trip/StopCard.tsx`):**
+- Container: `border border-white/8 bg-white/5 backdrop-blur-sm`.
+- Network badge: pill chip `border-white/10 bg-white/5`.
+- Cost label uses `text-green-400` for dark mode.
+
+**CostSummary (`src/components/trip/CostSummary.tsx`):**
+- Chips row: `border-white/8 bg-white/5` glass chips.
+- Cost chip: `border-green-500/20 bg-green-500/10 text-green-400`.
+- Fuel comparison panel: `border-white/8 bg-white/5 backdrop-blur-sm`.
+- Fuel toggle button: adds hover `bg-white/5` for touch feedback.
+- All hardcoded Romanian strings replaced with `useTranslations("trip")`.
+
+**i18n:** Added `landing` and `trip` namespaces to all 5 locale files (en/ro/de/fr/hu). Added missing `auth` namespace to ro/de/fr/hu.
+
+**How to use:** Visit `/` (unauthenticated) or `/trip` (dashboard).
+
+**Key files:**
+- `src/app/page.tsx` — landing page server component
+- `src/components/landing/LandingHero.tsx` — animated hero client component
+- `src/components/landing/LandingFeatures.tsx` — animated feature grid client component
+- `src/app/(dashboard)/trip/trip-client.tsx` — trip planner client component
+- `src/components/trip/StopCard.tsx` — charging stop card
+- `src/components/trip/CostSummary.tsx` — trip cost summary with fuel comparison
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `landing` + `trip` + `auth` namespaces
+
+**Dependencies:** Framer Motion v12, `staggerContainer`/`fadeInUp` from `variants.ts`, next-intl `useTranslations`/`getTranslations`.

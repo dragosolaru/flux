@@ -394,6 +394,7 @@
   "chargingMap": {
     "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat."
   },
+
   "auth": {
     "title_login": "Üdv újra",
     "title_register": "Fiók létrehozása",
@@ -413,5 +414,52 @@
     "have_account": "Van már fiókod?",
     "sign_in_link": "Bejelentkezés",
     "error_invalid": "Érvénytelen email vagy jelszó"
+  },
+
+  "landing": {
+    "hero_headline": "Intelligens EV kezelés Tesla tulajdonosoknak",
+    "hero_subheadline": "Kövesd a töltési költségeket, figyeld a jármű élő állapotát, tervezz útvonalakat és vezéreld Tesla-dat — egy helyen.",
+    "hero_cta": "Kezdés ingyen",
+    "hero_cta_pricing": "Árak",
+    "hero_badge": "Flux — EV Management",
+    "features_title": "Minden, amire szükséged van az EV-dhez",
+    "feature_ocr_title": "Blokk szkennelés",
+    "feature_ocr_desc": "Tölts fel töltési blokkokat bármely hálózatról — automatikusan kivonjuk a költséget, kWh-t és dátumot.",
+    "feature_tariff_title": "Intelligens töltés",
+    "feature_tariff_desc": "Tekintsd meg a napi áramárakat és ütemezd a töltést a legolcsóbb órára.",
+    "feature_smart_title": "Élő irányítópult",
+    "feature_smart_desc": "Valós idejű akkumulátor %, hatótáv és állapot — szinkronizálva a Tesla-dból.",
+    "feature_i18n_title": "Többnyelvű",
+    "feature_i18n_desc": "Elérhető angolul, románul, németül, franciául és magyarul.",
+    "pricing_teaser_title": "Egyszerű, átlátható árazás",
+    "pricing_teaser_desc": "Ingyenes a béta alatt. A Pro korlátlan járműveket, OCR-t és AI elemzéseket old fel.",
+    "pricing_teaser_cta": "Tervek megtekintése"
+  },
+
+  "trip": {
+    "title": "Útvonaltervező",
+    "origin_placeholder": "Honnan indulsz?",
+    "destination_placeholder": "Hova mész?",
+    "battery_label": "Akkumulátor induláskor",
+    "vehicle_label": "Jármű (opcionális)",
+    "vehicle_default": "Alapértelmezett (Model 3 LR)",
+    "plan_btn": "Útvonal tervezése",
+    "planning": "Számítás…",
+    "edit_btn": "← Szerkesztés",
+    "route_label": "Tervezett útvonal",
+    "stops_label": "Töltési megállók",
+    "no_stops": "Elegendő az akkumulátor — megállók nélkül elérsz a célba.",
+    "approx_route_warning": "Közelítő útvonal — OSRM nem elérhető",
+    "fuel_comparison": "Mennyibe kerülne benzinnel?",
+    "ev_cost_label": "EV költség (töltés)",
+    "petrol_label": "Benzin ({lPer100km}L/100km × €{pricePerL}/L)",
+    "savings_label": "Megtakarítás",
+    "infeasible_title": "Az útvonal nem fejezhető be",
+    "infeasible_hint": "Próbálj magasabb akkumulátor százalékot vagy válassz egy adott járművet.",
+    "derate_note": "* A hatótáv {pct}%-kal csökkent a hőmérséklet miatt.",
+    "stops_count_zero": "Nincs megálló",
+    "stops_count_one": "1 megálló",
+    "stops_count_other": "{count} megálló",
+    "charging_time_label": "+{duration} töltés"
   }
 }

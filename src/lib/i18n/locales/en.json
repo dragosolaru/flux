@@ -415,5 +415,52 @@
     "have_account": "Already have an account?",
     "sign_in_link": "Sign in",
     "error_invalid": "Invalid email or password"
+  },
+
+  "landing": {
+    "hero_headline": "Smart EV management for Tesla owners",
+    "hero_subheadline": "Track charging costs, monitor live vehicle state, plan road trips, and control your Tesla — all in one place.",
+    "hero_cta": "Get started free",
+    "hero_cta_pricing": "Pricing",
+    "hero_badge": "Flux — EV Management",
+    "features_title": "Everything you need to run your EV",
+    "feature_ocr_title": "Receipt scanning",
+    "feature_ocr_desc": "Upload charging receipts from any network — we extract cost, kWh, and date automatically.",
+    "feature_tariff_title": "Smart charging",
+    "feature_tariff_desc": "See today's electricity prices and schedule charging at the cheapest hour.",
+    "feature_smart_title": "Live dashboard",
+    "feature_smart_desc": "Real-time battery %, range, and status — synced straight from your Tesla.",
+    "feature_i18n_title": "Multi-language",
+    "feature_i18n_desc": "Available in English, Romanian, German, French, and Hungarian.",
+    "pricing_teaser_title": "Simple, transparent pricing",
+    "pricing_teaser_desc": "Free during open beta. Pro unlocks unlimited vehicles, unlimited OCR, and AI insights.",
+    "pricing_teaser_cta": "See plans"
+  },
+
+  "trip": {
+    "title": "Trip Planner",
+    "origin_placeholder": "Where are you starting?",
+    "destination_placeholder": "Where are you going?",
+    "battery_label": "Starting battery",
+    "vehicle_label": "Vehicle (optional)",
+    "vehicle_default": "Default spec (Model 3 LR)",
+    "plan_btn": "Plan route",
+    "planning": "Calculating…",
+    "edit_btn": "← Edit",
+    "route_label": "Planned route",
+    "stops_label": "Charging stops",
+    "no_stops": "Enough battery — no charging stops needed.",
+    "approx_route_warning": "Approximate route — OSRM unavailable",
+    "fuel_comparison": "How much would petrol cost?",
+    "ev_cost_label": "EV cost (charging)",
+    "petrol_label": "Petrol ({lPer100km}L/100km × €{pricePerL}/L)",
+    "savings_label": "Savings",
+    "infeasible_title": "Route cannot be completed",
+    "infeasible_hint": "Try a higher starting battery or select a specific vehicle.",
+    "derate_note": "* Range reduced by {pct}% due to temperatures.",
+    "stops_count_zero": "No stops",
+    "stops_count_one": "1 stop",
+    "stops_count_other": "{count} stops",
+    "charging_time_label": "+{duration} charging"
   }
 }

@@ -396,6 +396,7 @@
   "chargingMap": {
     "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
   },
+
   "auth": {
     "title_login": "Bine ai revenit",
     "title_register": "Creează-ți contul",
@@ -415,5 +416,52 @@
     "have_account": "Ai deja un cont?",
     "sign_in_link": "Autentifică-te",
     "error_invalid": "Email sau parolă invalidă"
+  },
+
+  "landing": {
+    "hero_headline": "Gestionare inteligentă EV pentru proprietarii Tesla",
+    "hero_subheadline": "Urmărește costurile de încărcare, monitorizează starea live a vehiculului, planifică trasee și controlează Tesla-ul tău — totul într-un singur loc.",
+    "hero_cta": "Începe gratuit",
+    "hero_cta_pricing": "Prețuri",
+    "hero_badge": "Flux — EV Management",
+    "features_title": "Tot ce ai nevoie pentru mașina ta electrică",
+    "feature_ocr_title": "Scanare bonuri",
+    "feature_ocr_desc": "Încarcă bonuri de la orice rețea — extragem costul, kWh și data automat.",
+    "feature_tariff_title": "Încărcare inteligentă",
+    "feature_tariff_desc": "Vizualizează prețurile la electricitate și programează încărcarea la ora cea mai ieftină.",
+    "feature_smart_title": "Dashboard live",
+    "feature_smart_desc": "Baterie %, autonomie și stare în timp real — sincronizate direct din Tesla.",
+    "feature_i18n_title": "Multilingv",
+    "feature_i18n_desc": "Disponibil în engleză, română, germană, franceză și maghiară.",
+    "pricing_teaser_title": "Prețuri simple și transparente",
+    "pricing_teaser_desc": "Gratuit în perioada beta. Pro deblochează vehicule nelimitate, OCR nelimitat și analize AI.",
+    "pricing_teaser_cta": "Vezi planuri"
+  },
+
+  "trip": {
+    "title": "Planificator de trasee",
+    "origin_placeholder": "De unde pleci?",
+    "destination_placeholder": "Unde mergi?",
+    "battery_label": "Baterie la plecare",
+    "vehicle_label": "Vehicul (opțional)",
+    "vehicle_default": "Spec implicită (Model 3 LR)",
+    "plan_btn": "Planifică traseul",
+    "planning": "Se calculează…",
+    "edit_btn": "← Editează",
+    "route_label": "Traseu planificat",
+    "stops_label": "Opriri la încărcare",
+    "no_stops": "Baterie suficientă — ajungi fără opriri la încărcare.",
+    "approx_route_warning": "Rută aproximativă — OSRM indisponibil",
+    "fuel_comparison": "Cât ar costa cu benzină?",
+    "ev_cost_label": "Cost EV (încărcare)",
+    "petrol_label": "Benzină ({lPer100km}L/100km × €{pricePerL}/L)",
+    "savings_label": "Economii",
+    "infeasible_title": "Ruta nu poate fi finalizată",
+    "infeasible_hint": "Încearcă cu un procent de baterie mai mare sau selectează un vehicul specific.",
+    "derate_note": "* Autonomia redusă cu {pct}% din cauza temperaturilor.",
+    "stops_count_zero": "Fără opriri",
+    "stops_count_one": "1 oprire",
+    "stops_count_other": "{count} opriri",
+    "charging_time_label": "+{duration} încărcare"
   }
 }

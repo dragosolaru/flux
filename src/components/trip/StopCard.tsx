@@ -26,9 +26,9 @@ export function StopCard({ stop, index }: StopCardProps) {
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
 
   return (
-    <div className="flex gap-3 rounded-xl border bg-card p-3">
+    <div className="flex gap-3 rounded-xl border border-white/8 bg-white/5 p-3 backdrop-blur-sm">
       {/* Step number */}
-      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-xs font-bold text-white">
         {index + 1}
       </div>
 
@@ -37,16 +37,21 @@ export function StopCard({ stop, index }: StopCardProps) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{station.name}</p>
-            <p className="text-xs text-muted-foreground">{station.networkId} · {station.maxKw} kW</p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-muted-foreground">
+                {station.networkId}
+              </span>
+              <span className="text-xs text-muted-foreground">{station.maxKw} kW</span>
+            </div>
           </div>
-          <span className="shrink-0 text-sm font-semibold text-green-600">€{costEur.toFixed(2)}</span>
+          <span className="shrink-0 text-sm font-semibold text-green-400">€{costEur.toFixed(2)}</span>
         </div>
 
         {/* Stats row */}
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {/* Battery arc */}
+          {/* Battery range */}
           <span className="flex items-center gap-1">
-            <span className="inline-block size-2.5 rounded-sm bg-amber-400" />
+            <span className="inline-block size-2.5 rounded-sm bg-amber-400/80" />
             {arriveSoc}% → {departSoc}%
           </span>
 
