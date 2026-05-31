@@ -220,3 +220,27 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 **Dependencies:** Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_ANNUAL_PRICE_ID`).
 
 **Status:** Functional end-to-end (checkout, portal, webhook with idempotency, and tier-based gating enforced in `canAddVehicle`/`canUploadDocument`). Requires the Stripe env vars and price IDs to be configured; routes fail with 503 if price/webhook secret is missing.
+
+---
+
+## 14. Design System — Mobile-First Dark Redesign
+
+**What:** Premium dark mode design system with richer color tokens (deep navy-black background, electric-blue primary), glassmorphism card pattern, and shared animated components. Targets the 90% mobile user base.
+
+**How to use:**
+- Dark tokens apply automatically when `.dark` class is present (next-themes).
+- `<GlassCard>` — animated frosted-glass card; `animate={false}` disables motion.
+- `<CircularProgress value={0-100}>` — SVG ring with animated stroke for charging UI.
+- `<PageWrapper>` — wraps page content with fade-up entry animation.
+- `.glass-card` CSS class — apply directly when the React component is not needed.
+- `BottomNav` — updated to use `backdrop-blur-2xl` and a pill background indicator.
+
+**Key files:**
+- `src/app/globals.css` — color tokens (`:root` + `.dark`) + `.glass-card` utility
+- `src/components/ui/glass-card.tsx`
+- `src/components/ui/circular-progress.tsx`
+- `src/components/layout/page-wrapper.tsx`
+- `src/components/layout/BottomNav.tsx`
+- `src/lib/animations/variants.ts` — shared Framer Motion variants
+
+**Dependencies:** Framer Motion v12 (already installed), Tailwind CSS v4.

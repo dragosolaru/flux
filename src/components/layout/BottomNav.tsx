@@ -48,7 +48,7 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-white/8 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
       >
         <ul className="grid grid-cols-5">
           {TABS.map((tab) => {
@@ -62,7 +62,7 @@ export function BottomNav() {
                 {isActive && (
                   <motion.span
                     layoutId="bottom-nav-indicator"
-                    className="absolute -top-px h-0.5 w-8 rounded-full bg-primary"
+                    className="absolute inset-x-1 inset-y-0.5 rounded-xl bg-primary/15"
                     transition={navIndicatorSpring}
                   />
                 )}
