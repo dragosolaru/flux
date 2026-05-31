@@ -4,17 +4,14 @@ import { useState, type FormEvent, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
 
 interface LoginFormProps {
   mode: "login" | "register";
 }
 
 export function LoginForm({ mode }: LoginFormProps) {
+  const t = useTranslations("auth");
   const router = useRouter();
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
@@ -27,7 +24,6 @@ export function LoginForm({ mode }: LoginFormProps) {
     setPending(true);
 
     if (mode === "register") {
-      // Register via Supabase first, then sign in.
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,7 +46,7 @@ export function LoginForm({ mode }: LoginFormProps) {
     setPending(false);
 
     if (result?.error) {
-      toast.error("Invalid email or password");
+      toast.error(t("error_invalid"));
       return;
     }
     const safeUrl = callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
@@ -60,37 +56,43 @@ export function LoginForm({ mode }: LoginFormProps) {
 
   return (
     <div className="space-y-5">
-      <Button
-        variant="outline"
-        className="w-full"
+      <button
+        type="button"
         onClick={() => signIn("google", { callbackUrl })}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium transition-colors hover:bg-white/8"
       >
         <GoogleMark />
-        Continue with Google
-      </Button>
+        {t("google")}
+      </button>
 
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs uppercase tracking-wide text-muted-foreground">
-          or
+      <div className="relative flex items-center">
+        <div className="flex-1 border-t border-white/10" />
+        <span className="mx-3 text-xs uppercase tracking-wide text-muted-foreground">
+          {t("or")}
         </span>
+        <div className="flex-1 border-t border-white/10" />
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input
+          <label htmlFor="email" className="text-sm font-medium">
+            {t("email")}
+          </label>
+          <input
             id="email"
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder-muted-foreground focus:border-primary/60 focus:outline-none"
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
+          <label htmlFor="password" className="text-sm font-medium">
+            {t("password")}
+          </label>
+          <input
             id="password"
             type="password"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -98,17 +100,22 @@ export function LoginForm({ mode }: LoginFormProps) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
             minLength={6}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder-muted-foreground focus:border-primary/60 focus:outline-none"
           />
         </div>
-        <Button type="submit" className="w-full" disabled={pending}>
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+        >
           {pending
             ? mode === "login"
-              ? "Signing in…"
-              : "Creating account…"
+              ? t("submitting_login")
+              : t("submitting_register")
             : mode === "login"
-              ? "Sign in"
-              : "Create account"}
-        </Button>
+              ? t("submit_login")
+              : t("submit_register")}
+        </button>
       </form>
     </div>
   );

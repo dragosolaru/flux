@@ -244,3 +244,26 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/animations/variants.ts` — shared Framer Motion variants
 
 **Dependencies:** Framer Motion v12 (already installed), Tailwind CSS v4.
+
+---
+
+## 17. Settings + Auth Mobile Redesign
+
+**What:** Mobile-first redesign of `/settings` and the auth pages (`/login`, `/register`) following the glassmorphism design system.
+
+- **Settings** (`/settings`): iOS-style list layout wrapped in `PageWrapper`. Each section uses a `GlassCard` with `divide-y divide-white/5` rows. Every row has a `min-h-[52px]` flex layout with a colored rounded-square icon (`size-8 rounded-lg`), a label, and an optional value/control on the right. Sections: Account, Preferences, Location, Vehicles, Energy Tariff, Subscription, Danger Zone. The Danger Zone row uses `bg-destructive/20` icon background and `text-destructive` text.
+
+- **Auth** (`/login`, `/register`): Full-screen dark background with an electric glow (radial blurs via `blur-3xl`). Centered brand logo with tagline above a `.glass-card` form container that slides up via Framer Motion. Inputs use `bg-white/5 border border-white/10 rounded-xl py-3 px-4` styling. Submit button is full-width with `rounded-xl bg-primary`. All strings use `t()` from `auth.*` i18n namespace. `LoginForm` is updated to use `useTranslations("auth")` throughout.
+
+**How to use:**
+- `/settings` — requires authenticated session
+- `/login`, `/register` — public auth pages
+
+**Key files:**
+- `src/app/(dashboard)/settings/page.tsx` — iOS-style settings layout
+- `src/app/(auth)/layout.tsx` — dark full-screen auth shell with glow effects and brand header
+- `src/app/(auth)/login/page.tsx` — glass card login form
+- `src/app/(auth)/register/page.tsx` — glass card register form
+- `src/components/auth/LoginForm.tsx` — updated inputs + i18n via `useTranslations("auth")`
+
+**Dependencies:** `GlassCard`, `PageWrapper` (design system), `next-intl`, Framer Motion v12.
