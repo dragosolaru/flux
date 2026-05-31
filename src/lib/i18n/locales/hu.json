@@ -158,6 +158,7 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
+        "tibber": "Tibber",
         "tibber-mock": "Tibber (demó)",
         "octopus-mock": "Octopus Energy (demó)",
         "awattar-mock": "aWATTar (demó)"
@@ -251,6 +252,7 @@
     "history_empty_hint": "A munkamenetek itt jelennek meg, ha az autót csatlakoztatták miközben a dashboard nyitva volt.",
     "history_sync": "Szinkronizálás a Teslából",
     "history_syncing": "Szinkronizálás…",
+    "history_sync_success": "{count} munkamenet szinkronizálva",
     "ring_status_charging": "Töltés folyamatban",
     "ring_status_complete": "Töltés kész",
     "ring_status_stopped": "Töltés leállítva",
@@ -324,6 +326,7 @@
     "recover": "Visszaállítás",
     "recovered": "Visszaállítva: {count}",
     "export_csv": "CSV exportálása",
+    "add_receipt": "Blokk hozzáadása",
     "kpi_wh_per_km": "Hatékonyság",
     "processed_docs_heading": "Feldolgozott dokumentumok",
     "upload_success": "Dokumentum hozzáadva — feldolgozás folyamatban…",

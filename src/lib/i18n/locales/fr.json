@@ -158,6 +158,7 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
+        "tibber": "Tibber",
         "tibber-mock": "Tibber (démo)",
         "octopus-mock": "Octopus Energy (démo)",
         "awattar-mock": "aWATTar (démo)"
@@ -251,6 +252,7 @@
     "history_empty_hint": "Les sessions apparaissent ici une fois que votre voiture a été branchée pendant que le tableau de bord était ouvert.",
     "history_sync": "Synchroniser depuis Tesla",
     "history_syncing": "Synchronisation…",
+    "history_sync_success": "{count} sessions synchronisées",
     "ring_status_charging": "En charge",
     "ring_status_complete": "Charge complète",
     "ring_status_stopped": "Charge arrêtée",
@@ -324,6 +326,7 @@
     "recover": "Récupérer",
     "recovered": "Récupéré : {count}",
     "export_csv": "Exporter CSV",
+    "add_receipt": "Ajouter un reçu",
     "kpi_wh_per_km": "Efficacité",
     "processed_docs_heading": "Documents traités",
     "upload_success": "Document ajouté — traitement en cours…",

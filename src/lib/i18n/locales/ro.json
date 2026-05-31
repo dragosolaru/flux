@@ -252,6 +252,7 @@
     "history_empty_hint": "Sesiunile apar aici odată ce mașina a fost conectată cât timp dashboard-ul era deschis.",
     "history_sync": "Sincronizare din Tesla",
     "history_syncing": "Se sincronizează…",
+    "history_sync_success": "{count} sesiuni sincronizate",
     "ring_status_charging": "Se încarcă",
     "ring_status_complete": "Încărcare completă",
     "ring_status_stopped": "Încărcare oprită",
