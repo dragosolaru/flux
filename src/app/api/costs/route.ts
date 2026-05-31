@@ -90,17 +90,25 @@ export async function GET(request: Request) {
 
   // Fetch km driven in the same date window as the costs.
   // trips.started_at aligns with billing period_start.
+  // Prefer distance_km; fall back to end_odometer_km - start_odometer_km for
+  // trips where distance_km was not stored but odometer readings were captured.
   let tripQuery = supabase
     .from("trips")
-    .select("distance_km")
-    .eq("vehicle_id", parsed.data.vehicleId)
-    .not("distance_km", "is", null);
+    .select("distance_km, start_odometer_km, end_odometer_km")
+    .eq("vehicle_id", parsed.data.vehicleId);
   if (parsed.data.from) tripQuery = tripQuery.gte("started_at", parsed.data.from);
   if (parsed.data.to) tripQuery = tripQuery.lte("started_at", parsed.data.to);
 
   const { data: trips } = await tripQuery;
   const totalKm = (trips ?? []).reduce(
-    (s: number, t: { distance_km: number | null }) => s + (t.distance_km ?? 0),
+    (s: number, t: { distance_km: number | null; start_odometer_km: number | null; end_odometer_km: number | null }) => {
+      const km =
+        t.distance_km ??
+        (t.end_odometer_km != null && t.start_odometer_km != null
+          ? t.end_odometer_km - t.start_odometer_km
+          : null);
+      return s + (km ?? 0);
+    },
     0,
   );
 

@@ -214,6 +214,8 @@ create table if not exists trips (
   start_address            text,
   end_address              text,
   distance_km              numeric(8,2),
+  start_odometer_km        numeric(10,2),
+  end_odometer_km          numeric(10,2),
   energy_used_kwh          numeric(8,2),
   avg_speed_kmh            numeric(6,2),
   max_speed_kmh            numeric(6,2),

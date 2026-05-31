@@ -141,6 +141,8 @@ async function maybeCloseTrip(
     start_address: null,
     end_address: null,
     distance_km: distKm != null ? Math.round(distKm * 10) / 10 : null,
+    start_odometer_km: prev.activeTripStartOdometerKm,
+    end_odometer_km: next.state.odometerKm,
     energy_used_kwh: null,
     avg_speed_kmh: avgSpeedKmh != null ? Math.round(avgSpeedKmh * 10) / 10 : null,
     max_speed_kmh: null,

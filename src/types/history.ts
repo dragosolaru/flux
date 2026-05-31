@@ -41,6 +41,8 @@ export interface TripRecord {
   startAddress: string | null;
   endAddress: string | null;
   distanceKm: number | null;
+  startOdometerKm: number | null;
+  endOdometerKm: number | null;
   energyUsedKwh: number | null;
   avgSpeedKmh: number | null;
   maxSpeedKmh: number | null;
