@@ -103,7 +103,6 @@
       "upgrade_cta": "Passer à Pro"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Navetteur quotidien",
@@ -204,7 +203,6 @@
     "error_subtitle": "Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer"
   },
-
   "charging": {
     "page_title": "Recharge",
     "status_title": "Statut de recharge",
@@ -225,7 +223,6 @@
     "history_sync": "Synchroniser depuis Tesla",
     "history_syncing": "Synchronisation…"
   },
-
   "commands": {
     "title": "Commandes",
     "subtitle": "Contrôlez votre voiture à distance.",
@@ -282,7 +279,29 @@
     "upload_success": "Document ajouté — traitement en cours…",
     "upload_error": "Échec du téléchargement",
     "delete_success": "Document supprimé",
-    "delete_error": "Impossible de supprimer le document"
+    "delete_error": "Impossible de supprimer le document",
+    "kpi_total_lei": "Total dépensé",
+    "kpi_total_kwh": "Total kWh",
+    "kpi_home_pct": "Charge domicile",
+    "kpi_fuel_saving": "Économies vs carburant",
+    "kpi_cost_per_km_blended": "Coût / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Documents",
+    "fab_label": "Ajouter document",
+    "status_done": "Traité",
+    "status_needs_review": "Vérification",
+    "status_error": "Erreur",
+    "status_processing": "Traitement",
+    "status_pending": "En attente",
+    "fuel_equivalent_label": "Équivalent essence",
+    "fuel_saving": "Économisé {amount} vs essence",
+    "fuel_more_expensive": "{amount} plus cher que l'essence",
+    "fuel_equivalent_cost": "Identique à l'essence",
+    "fuel_register_km": "Enregistrer les km pour la comparaison",
+    "fuel_add_docs": "Ajouter des documents pour la comparaison",
+    "blended": "Mixte",
+    "km_driven": "km parcourus",
+    "no_chart_data": "Pas encore de données mensuelles"
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",
@@ -308,7 +327,6 @@
     "preconditioning": "Activation…",
     "preconditioned": "Actif ✓"
   },
-
   "chargingMap": {
     "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier."
   }

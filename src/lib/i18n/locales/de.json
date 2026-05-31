@@ -103,7 +103,6 @@
       "upgrade_cta": "Auf Pro upgraden"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Täglicher Pendler",
@@ -204,7 +203,6 @@
     "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
     "retry": "Erneut versuchen"
   },
-
   "charging": {
     "page_title": "Laden",
     "status_title": "Ladestatus",
@@ -225,7 +223,6 @@
     "history_sync": "Von Tesla synchronisieren",
     "history_syncing": "Wird synchronisiert…"
   },
-
   "commands": {
     "title": "Befehle",
     "subtitle": "Auto fernsteuern.",
@@ -282,7 +279,29 @@
     "upload_success": "Dokument hinzugefügt — wird verarbeitet…",
     "upload_error": "Upload fehlgeschlagen",
     "delete_success": "Dokument gelöscht",
-    "delete_error": "Dokument konnte nicht gelöscht werden"
+    "delete_error": "Dokument konnte nicht gelöscht werden",
+    "kpi_total_lei": "Gesamt ausgegeben",
+    "kpi_total_kwh": "Gesamt kWh",
+    "kpi_home_pct": "Zuhause laden",
+    "kpi_fuel_saving": "Ersparnis vs Kraftstoff",
+    "kpi_cost_per_km_blended": "Kosten / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Dokumente",
+    "fab_label": "Dokument hinzufügen",
+    "status_done": "Erledigt",
+    "status_needs_review": "Überprüfung",
+    "status_error": "Fehler",
+    "status_processing": "Verarbeitung",
+    "status_pending": "Ausstehend",
+    "fuel_equivalent_label": "Benzinäquivalent",
+    "fuel_saving": "{amount} gespart vs Benzin",
+    "fuel_more_expensive": "{amount} teurer als Benzin",
+    "fuel_equivalent_cost": "Gleich wie Benzin",
+    "fuel_register_km": "km erfassen für Kraftstoffvergleich",
+    "fuel_add_docs": "Dokumente hinzufügen für Kraftstoffvergleich",
+    "blended": "Gemischt",
+    "km_driven": "km gefahren",
+    "no_chart_data": "Noch keine Monatsdaten"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -308,7 +327,6 @@
     "preconditioning": "Wird aktiviert…",
     "preconditioned": "Aktiv ✓"
   },
-
   "chargingMap": {
     "disclaimer": "Daten von OpenChargeMap. Verfügbarkeit kann variieren."
   }

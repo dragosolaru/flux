@@ -244,3 +244,17 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/animations/variants.ts` — shared Framer Motion variants
 
 **Dependencies:** Framer Motion v12 (already installed), Tailwind CSS v4.
+
+---
+
+## 15. Costs Page — Mobile Redesign
+
+**What:** Mobile-first redesign of the `/costs` screen. Replaces the desktop-oriented grid layout with three mobile-optimised sections: (1) a horizontally-scrollable KPI chip row (6 chips: total spent, total kWh, home %, cost/km, Wh/km, fuel saving), (2) a gradient bar chart for the monthly trend, and (3) a timeline-style document list where each entry has a coloured dot+line indicating its status. A FAB (`+`) fixed at `bottom-24 right-4` opens the upload/ingest card inline.
+
+**How to use:** UI `/costs?v=<vehicleId>`. No API changes. The FAB toggles the `IngestCard` visibility; when no documents exist the card is always shown. Status colours: done = green, needs_review = amber, error = red.
+
+**Key files:**
+- `src/app/(dashboard)/costs/costs-client.tsx` — full client component (KPI chips, chart, timeline, FAB)
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — new keys: `kpi_total_lei`, `kpi_total_kwh`, `kpi_home_pct`, `kpi_fuel_saving`, `kpi_cost_per_km_blended`, `kpi_wh_per_km_label`, `docs_heading`, `fab_label`, and others
+
+**Dependencies:** Framer Motion v12, `PageWrapper`, `GlassCard` CSS utility, `DocumentStatusCard`, `IngestCard`, `useCosts`, `useDocuments`.

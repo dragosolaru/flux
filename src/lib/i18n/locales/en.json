@@ -16,11 +16,9 @@
     "copied": "Copied",
     "soon": "Soon"
   },
-
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."
   },
-
   "nav": {
     "section": {
       "car": "Car",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Simulated data",
     "subtitle": "Connect Tesla for real data",
     "cta": "Connect Tesla"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Add your first car",
@@ -82,7 +78,6 @@
       "cta": "Set up Virtual Key"
     }
   },
-
   "onboarding": {
     "title": "Welcome to Flux",
     "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
@@ -108,7 +103,6 @@
       "upgrade_cta": "Upgrade to Pro"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Daily commuter",
@@ -127,7 +121,6 @@
       "desc": "Parked for extended periods."
     }
   },
-
   "settings": {
     "title": "Settings",
     "section": {
@@ -183,7 +176,6 @@
       "confirm_delete": "Yes, delete my account"
     }
   },
-
   "ingest": {
     "title": "Add receipt",
     "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
@@ -203,7 +195,6 @@
       }
     }
   },
-
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "updates every 30s",
@@ -213,7 +204,6 @@
     "error_subtitle": "Check your connection and try again.",
     "retry": "Try again"
   },
-
   "charging": {
     "page_title": "Charging",
     "status_title": "Charging status",
@@ -234,7 +224,6 @@
     "history_sync": "Sync from Tesla",
     "history_syncing": "Syncing…"
   },
-
   "commands": {
     "title": "Commands",
     "subtitle": "Control your car remotely.",
@@ -250,13 +239,11 @@
     "no_vehicles_title": "No vehicles yet",
     "no_vehicles_hint": "Add a vehicle in the Garage to send commands."
   },
-
   "garage": {
     "title": "Garage",
     "add_vehicle": "Add vehicle",
     "fleet_totals": "Fleet totals"
   },
-
   "costs": {
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Home vs Public",
@@ -268,7 +255,28 @@
     "add_docs_hint": "Add documents to see cost/km",
     "home": "Home",
     "public": "Public",
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "blended": "Blended",
+    "km_driven": "km driven",
+    "fuel_equivalent_label": "Petrol equivalent",
+    "fuel_saving": "Saved {amount} vs petrol",
+    "fuel_more_expensive": "{amount} more than petrol",
+    "fuel_equivalent_cost": "Same as petrol",
+    "fuel_register_km": "Register km to compare with fuel",
+    "fuel_add_docs": "Add documents to compare with fuel",
+    "months": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "page_title": "Costs",
     "no_docs_title": "No documents yet.",
     "no_docs_hint": "Upload your first bill or receipt to see costs.",
@@ -276,13 +284,27 @@
     "recover": "Recover",
     "recovered": "Recovered: {count}",
     "export_csv": "Export CSV",
-    "processed_docs_heading": "Processed documents",
+    "processed_docs_heading": "Documents",
     "upload_success": "Document added — processing…",
     "upload_error": "Upload failed",
     "delete_success": "Document deleted",
-    "delete_error": "Could not delete document"
+    "delete_error": "Could not delete document",
+    "add_receipt": "Add receipt",
+    "kpi_total_lei": "Total spent",
+    "kpi_total_kwh": "Total kWh",
+    "kpi_home_pct": "Home charging",
+    "kpi_fuel_saving": "Saved vs fuel",
+    "kpi_cost_per_km_blended": "Cost / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Documents",
+    "fab_label": "Add document",
+    "status_done": "Done",
+    "status_needs_review": "Review",
+    "status_error": "Error",
+    "status_processing": "Processing",
+    "status_pending": "Pending",
+    "no_chart_data": "No monthly data yet"
   },
-
   "departure": {
     "title": "Departure & Preconditioning",
     "departure_label": "Scheduled departure",
@@ -296,7 +318,6 @@
     "preconditioning": "Activating…",
     "preconditioned": "Active ✓"
   },
-
   "energy": {
     "smart_charge_title": "Smart charge",
     "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
@@ -308,7 +329,6 @@
     "optimal": "Optimal",
     "to_target": "to target"
   },
-
   "chargingMap": {
     "disclaimer": "Data provided by OpenChargeMap. Availability may vary."
   }
