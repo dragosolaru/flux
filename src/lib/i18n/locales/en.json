@@ -420,7 +420,6 @@
     "sign_in_link": "Sign in",
     "error_invalid": "Invalid email or password"
   },
-
   "landing": {
     "hero_headline": "Smart EV management for Tesla owners",
     "hero_subheadline": "Track charging costs, monitor live vehicle state, plan road trips, and control your Tesla — all in one place.",
@@ -440,7 +439,6 @@
     "pricing_teaser_desc": "Free during open beta. Pro unlocks unlimited vehicles, unlimited OCR, and AI insights.",
     "pricing_teaser_cta": "See plans"
   },
-
   "trip": {
     "title": "Trip Planner",
     "origin_placeholder": "Where are you starting?",
@@ -466,5 +464,10 @@
     "stops_count_one": "1 stop",
     "stops_count_other": "{count} stops",
     "charging_time_label": "+{duration} charging"
+  },
+  "notFoundPage": {
+    "heading": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "back_to_dashboard": "Back to dashboard"
   }
 }

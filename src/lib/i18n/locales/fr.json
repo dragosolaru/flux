@@ -160,7 +160,8 @@
         "hidroelectrica": "Hidroelectrica Energie",
         "tibber-mock": "Tibber (démo)",
         "octopus-mock": "Octopus Energy (démo)",
-        "awattar-mock": "aWATTar (démo)"
+        "awattar-mock": "aWATTar (démo)",
+        "tibber": "Tibber"
       }
     },
     "danger_zone": {
@@ -262,7 +263,8 @@
     "history_kwh": "kWh ajoutés",
     "history_cost": "Coût",
     "history_home": "Domicile",
-    "history_public": "Public"
+    "history_public": "Public",
+    "history_sync_success": "{count} sessions synchronisées"
   },
   "commands": {
     "title": "Commandes",
@@ -351,7 +353,8 @@
     "fuel_add_docs": "Ajouter des documents pour la comparaison",
     "blended": "Mixte",
     "km_driven": "km parcourus",
-    "no_chart_data": "Pas encore de données mensuelles"
+    "no_chart_data": "Pas encore de données mensuelles",
+    "add_receipt": "Ajouter un reçu"
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",
@@ -397,7 +400,6 @@
   "chargingMap": {
     "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier."
   },
-
   "auth": {
     "title_login": "Bon retour",
     "title_register": "Créez votre compte",
@@ -418,7 +420,6 @@
     "sign_in_link": "Se connecter",
     "error_invalid": "Email ou mot de passe invalide"
   },
-
   "landing": {
     "hero_headline": "Gestion intelligente des VE pour les propriétaires Tesla",
     "hero_subheadline": "Suivez les coûts de charge, surveillez l'état du véhicule en direct, planifiez des trajets et contrôlez votre Tesla — tout en un seul endroit.",
@@ -438,7 +439,6 @@
     "pricing_teaser_desc": "Gratuit pendant la bêta. Pro débloque véhicules illimités, OCR illimité et analyses IA.",
     "pricing_teaser_cta": "Voir les plans"
   },
-
   "trip": {
     "title": "Planificateur de trajets",
     "origin_placeholder": "D'où partez-vous ?",
@@ -464,5 +464,10 @@
     "stops_count_one": "1 arrêt",
     "stops_count_other": "{count} arrêts",
     "charging_time_label": "+{duration} de charge"
+  },
+  "notFoundPage": {
+    "heading": "Page introuvable",
+    "description": "La page recherchée n'existe pas ou a été déplacée.",
+    "back_to_dashboard": "Retour au tableau de bord"
   }
 }
