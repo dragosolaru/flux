@@ -103,7 +103,6 @@
       "upgrade_cta": "Auf Pro upgraden"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Täglicher Pendler",
@@ -128,7 +127,11 @@
       "preferences": "Präferenzen",
       "location": "Standort",
       "tariff": "Energietarif",
-      "account": "Konto"
+      "account": "Konto",
+      "notifications": "Benachrichtigungen",
+      "vehicles": "Fahrzeuge",
+      "billing": "Abonnement",
+      "danger": "Gefahrenzone"
     },
     "locale": {
       "label": "Sprache",
@@ -174,6 +177,24 @@
       "confirm_cancel": "Abbrechen",
       "confirm_input_label": "Gib DELETE ein, um zu bestätigen",
       "confirm_delete": "Ja, Konto löschen"
+    },
+    "vehicles": {
+      "empty": "Noch keine Fahrzeuge hinzugefügt. Besuche die Garage, um eines hinzuzufügen.",
+      "go_to_garage": "Fahrzeuge verwalten"
+    },
+    "account": {
+      "name": "Name",
+      "email": "E-Mail",
+      "export_data": "Meine Daten exportieren"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Kostenloser Plan",
+      "plan_pro_desc": "Unbegrenzte Fahrzeuge und Dokumente, KI-Funktionen aktiviert.",
+      "plan_free_desc": "1 Fahrzeug, 3 Dokumente/Monat.",
+      "upgrade_label": "Upgrade auf Pro — €4,99/Mo.",
+      "pro_unlock_note": "Pro schaltet frei: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustandsverfolgung, wöchentlicher E-Mail-Digest.",
+      "see_all_features": "Alle Funktionen ansehen →"
     }
   },
   "ingest": {
@@ -202,9 +223,15 @@
     "refresh": "Aktualisieren",
     "error_title": "Fahrzeug nicht erreichbar",
     "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "charging_active": "Lädt",
+    "charging_remaining": "verbleibend",
+    "chip_location": "Standort",
+    "chip_temp": "Temp",
+    "chip_odometer": "Km-Stand",
+    "chip_last_seen": "Zuletzt",
+    "action_charge": "Laden"
   },
-
   "charging": {
     "page_title": "Laden",
     "status_title": "Ladestatus",
@@ -223,9 +250,20 @@
     "history_empty_title": "Noch kein Ladeverlauf",
     "history_empty_hint": "Sessions erscheinen hier, sobald das Auto angeschlossen war, während das Dashboard offen war.",
     "history_sync": "Von Tesla synchronisieren",
-    "history_syncing": "Wird synchronisiert…"
+    "history_syncing": "Wird synchronisiert…",
+    "ring_status_charging": "Lädt",
+    "ring_status_complete": "Laden abgeschlossen",
+    "ring_status_stopped": "Laden gestoppt",
+    "ring_status_disconnected": "Nicht verbunden",
+    "ring_target": "Ziel",
+    "ring_power": "Leistung",
+    "ring_time_remaining": "Verbleibend",
+    "history_duration": "Dauer",
+    "history_kwh": "kWh geladen",
+    "history_cost": "Kosten",
+    "history_home": "Zuhause",
+    "history_public": "Öffentlich"
   },
-
   "commands": {
     "title": "Befehle",
     "subtitle": "Auto fernsteuern.",
@@ -239,12 +277,18 @@
     "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
     "sending": "Wird gesendet…",
     "no_vehicles_title": "Noch keine Fahrzeuge",
-    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden."
+    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden.",
+    "success": "Befehl gesendet",
+    "error": "Befehl fehlgeschlagen"
   },
   "garage": {
     "title": "Garage",
     "add_vehicle": "Fahrzeug hinzufügen",
-    "fleet_totals": "Flottenübersicht"
+    "fleet_totals": "Flottenübersicht",
+    "vehicles_count_one": "1 Fahrzeug",
+    "vehicles_count_other": "{count} Fahrzeuge",
+    "mock_label": "Demo",
+    "tap_to_open": "Tippen für Dashboard"
   },
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",
@@ -282,7 +326,29 @@
     "upload_success": "Dokument hinzugefügt — wird verarbeitet…",
     "upload_error": "Upload fehlgeschlagen",
     "delete_success": "Dokument gelöscht",
-    "delete_error": "Dokument konnte nicht gelöscht werden"
+    "delete_error": "Dokument konnte nicht gelöscht werden",
+    "kpi_total_lei": "Gesamt ausgegeben",
+    "kpi_total_kwh": "Gesamt kWh",
+    "kpi_home_pct": "Zuhause laden",
+    "kpi_fuel_saving": "Ersparnis vs Kraftstoff",
+    "kpi_cost_per_km_blended": "Kosten / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Dokumente",
+    "fab_label": "Dokument hinzufügen",
+    "status_done": "Erledigt",
+    "status_needs_review": "Überprüfung",
+    "status_error": "Fehler",
+    "status_processing": "Verarbeitung",
+    "status_pending": "Ausstehend",
+    "fuel_equivalent_label": "Benzinäquivalent",
+    "fuel_saving": "{amount} gespart vs Benzin",
+    "fuel_more_expensive": "{amount} teurer als Benzin",
+    "fuel_equivalent_cost": "Gleich wie Benzin",
+    "fuel_register_km": "km erfassen für Kraftstoffvergleich",
+    "fuel_add_docs": "Dokumente hinzufügen für Kraftstoffvergleich",
+    "blended": "Gemischt",
+    "km_driven": "km gefahren",
+    "no_chart_data": "Noch keine Monatsdaten"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -293,7 +359,24 @@
     "save": "sparen",
     "now": "Jetzt",
     "optimal": "Optimal",
-    "to_target": "bis Ziel"
+    "to_target": "bis Ziel",
+    "page_title": "Energie",
+    "page_subtitle": "Heutige Tarifpreise & Ladeempfehlungen",
+    "recommended_badge": "Empfohlen ✓",
+    "no_recommendation": "Keine Ladeempfehlung",
+    "no_recommendation_hint": "Fahrzeug anschließen für Empfehlungen",
+    "price_curve_title": "24-Stunden-Preiskurve",
+    "current_price_label": "Aktueller Preis",
+    "tariff_provider_label": "Tarifanbieter",
+    "cheapest_window_label": "Günstigstes Fenster",
+    "cheapest_window_saves": "Ersparnis ggü. jetzt",
+    "avg_label": "Ø",
+    "refresh": "Aktualisieren",
+    "schedule_charge_title": "Laden planen",
+    "departure_card_title": "Abfahrt & Vorkonditionierung",
+    "collapse": "Einklappen",
+    "expand": "Ausklappen",
+    "schedule_no_virtual_key": "Virtual Key einrichten, um Laden zu planen"
   },
   "departure": {
     "title": "Abfahrt & Vorkonditionierung",
@@ -308,8 +391,27 @@
     "preconditioning": "Wird aktiviert…",
     "preconditioned": "Aktiv ✓"
   },
-
   "chargingMap": {
     "disclaimer": "Daten von OpenChargeMap. Verfügbarkeit kann variieren."
+  },
+  "auth": {
+    "title_login": "Willkommen zurück",
+    "title_register": "Konto erstellen",
+    "subtitle_login": "Melde dich an, um dein Fahrzeug mit Flux zu verwalten.",
+    "subtitle_register": "Kostenlos während der offenen Beta. Keine Kreditkarte erforderlich.",
+    "tagline": "Intelligentes EV-Management",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit_login": "Anmelden",
+    "submit_register": "Konto erstellen",
+    "submitting_login": "Anmelden…",
+    "submitting_register": "Konto wird erstellt…",
+    "google": "Mit Google fortfahren",
+    "or": "oder",
+    "no_account": "Neu hier?",
+    "create_account": "Konto erstellen",
+    "have_account": "Hast du schon ein Konto?",
+    "sign_in_link": "Anmelden",
+    "error_invalid": "Ungültige E-Mail oder Passwort"
   }
 }

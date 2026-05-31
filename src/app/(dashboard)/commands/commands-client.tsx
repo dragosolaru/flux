@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Car } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
 import { FeatureGate } from "@/components/layout/FeatureGate";
+import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useVehicle } from "@/hooks/useVehicle";
-import { cardVariants, pageVariants, staggerContainer } from "@/lib/animations/variants";
+import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { VehicleBrand } from "@/types/vehicle";
 
 interface CommandsClientProps {
@@ -30,7 +32,9 @@ export function CommandsClient({ vehicles }: CommandsClientProps) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
         <Car className="size-12 text-muted-foreground/30" />
-        <p className="text-sm font-medium text-muted-foreground">{t("no_vehicles_title")}</p>
+        <p className="text-sm font-medium text-muted-foreground">
+          {t("no_vehicles_title")}
+        </p>
         <p className="text-xs text-muted-foreground">{t("no_vehicles_hint")}</p>
         <Button asChild variant="outline" size="sm" className="mt-1">
           <Link href="/garage">{tGarage("add_vehicle")}</Link>
@@ -41,11 +45,7 @@ export function CommandsClient({ vehicles }: CommandsClientProps) {
 
   return (
     <FeatureGate capability="COMMANDS">
-      <motion.div
-        variants={pageVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <PageWrapper>
         <motion.div
           variants={staggerContainer}
           initial="hidden"
@@ -53,20 +53,36 @@ export function CommandsClient({ vehicles }: CommandsClientProps) {
           className="space-y-4"
         >
           {vehicles.map((v) => (
-            <VehicleCommands key={v.id} id={v.id} name={v.display_name} brand={v.brand as VehicleBrand} />
+            <VehicleCommands
+              key={v.id}
+              id={v.id}
+              name={v.display_name}
+              brand={v.brand as VehicleBrand}
+            />
           ))}
         </motion.div>
-      </motion.div>
+      </PageWrapper>
     </FeatureGate>
   );
 }
 
-function VehicleCommands({ id, name, brand }: { id: string; name: string; brand: VehicleBrand }) {
+function VehicleCommands({
+  id,
+  name,
+  brand,
+}: {
+  id: string;
+  name: string;
+  brand: VehicleBrand;
+}) {
   const { data } = useVehicle(id);
+
   return (
-    <motion.div variants={cardVariants} className="space-y-2">
-      <div className="text-sm font-medium text-muted-foreground">{name}</div>
-      <CommandPanel vehicleId={id} brand={brand} state={data} />
+    <motion.div variants={cardVariants}>
+      <GlassCard className="p-5" animate={false}>
+        <p className="mb-4 text-sm font-semibold">{name}</p>
+        <CommandPanel vehicleId={id} brand={brand} state={data} />
+      </GlassCard>
     </motion.div>
   );
 }

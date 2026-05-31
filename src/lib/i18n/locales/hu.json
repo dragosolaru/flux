@@ -103,7 +103,6 @@
       "upgrade_cta": "Frissítés Pro-ra"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Napi ingázó",
@@ -128,7 +127,11 @@
       "preferences": "Preferenciák",
       "location": "Helyszín",
       "tariff": "Energiadíj",
-      "account": "Fiók"
+      "account": "Fiók",
+      "notifications": "Értesítések",
+      "vehicles": "Járművek",
+      "billing": "Előfizetés",
+      "danger": "Veszélyzóna"
     },
     "locale": {
       "label": "Nyelv",
@@ -174,6 +177,24 @@
       "confirm_cancel": "Mégse",
       "confirm_input_label": "Írja be a DELETE szót a megerősítéshez",
       "confirm_delete": "Igen, töröld a fiókot"
+    },
+    "vehicles": {
+      "empty": "Még nem adtál hozzá járművet. Látogasd meg a Garázst, hogy hozzáadj egyet.",
+      "go_to_garage": "Járművek kezelése"
+    },
+    "account": {
+      "name": "Név",
+      "email": "Email",
+      "export_data": "Adataim exportálása"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Ingyenes csomag",
+      "plan_pro_desc": "Korlátlan járművek és dokumentumok, AI funkciók engedélyezve.",
+      "plan_free_desc": "1 jármű, 3 dokumentum/hó.",
+      "upgrade_label": "Upgrade Próra — €4,99/hó",
+      "pro_unlock_note": "Pro felold: korlátlan járművek, korlátlan OCR, akkumulátor állapot követés, heti email összefoglaló.",
+      "see_all_features": "Összes funkció megtekintése →"
     }
   },
   "ingest": {
@@ -202,9 +223,15 @@
     "refresh": "Frissítés",
     "error_title": "Nem sikerült elérni a járművet",
     "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
-    "retry": "Próbálja újra"
+    "retry": "Próbálja újra",
+    "charging_active": "Töltés",
+    "charging_remaining": "hátralévő",
+    "chip_location": "Helyszín",
+    "chip_temp": "Hőfok",
+    "chip_odometer": "Km-óra",
+    "chip_last_seen": "Utoljára",
+    "action_charge": "Töltés"
   },
-
   "charging": {
     "page_title": "Töltés",
     "status_title": "Töltési állapot",
@@ -223,9 +250,20 @@
     "history_empty_title": "Még nincs töltési előzmény",
     "history_empty_hint": "A munkamenetek itt jelennek meg, ha az autót csatlakoztatták miközben a dashboard nyitva volt.",
     "history_sync": "Szinkronizálás a Teslából",
-    "history_syncing": "Szinkronizálás…"
+    "history_syncing": "Szinkronizálás…",
+    "ring_status_charging": "Töltés folyamatban",
+    "ring_status_complete": "Töltés kész",
+    "ring_status_stopped": "Töltés leállítva",
+    "ring_status_disconnected": "Nincs csatlakoztatva",
+    "ring_target": "Cél",
+    "ring_power": "Teljesítmény",
+    "ring_time_remaining": "Hátralévő idő",
+    "history_duration": "Időtartam",
+    "history_kwh": "Feltöltött kWh",
+    "history_cost": "Költség",
+    "history_home": "Otthon",
+    "history_public": "Nyilvános"
   },
-
   "commands": {
     "title": "Parancsok",
     "subtitle": "Vezérelje távolról az autót.",
@@ -239,12 +277,18 @@
     "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
     "sending": "Küldés…",
     "no_vehicles_title": "Még nincs jármű",
-    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez."
+    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez.",
+    "success": "Parancs elküldve",
+    "error": "Parancs sikertelen"
   },
   "garage": {
     "title": "Garázs",
     "add_vehicle": "Jármű hozzáadása",
-    "fleet_totals": "Flotta összesítő"
+    "fleet_totals": "Flotta összesítő",
+    "vehicles_count_one": "1 jármű",
+    "vehicles_count_other": "{count} jármű",
+    "mock_label": "Demó",
+    "tap_to_open": "Koppintson a dashboardhoz"
   },
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",
@@ -282,7 +326,29 @@
     "upload_success": "Dokumentum hozzáadva — feldolgozás folyamatban…",
     "upload_error": "Feltöltés sikertelen",
     "delete_success": "Dokumentum törölve",
-    "delete_error": "Nem sikerült törölni a dokumentumot"
+    "delete_error": "Nem sikerült törölni a dokumentumot",
+    "kpi_total_lei": "Összes kiadás",
+    "kpi_total_kwh": "Összes kWh",
+    "kpi_home_pct": "Otthoni töltés",
+    "kpi_fuel_saving": "Megtakarítás vs üzemanyag",
+    "kpi_cost_per_km_blended": "Költség / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Dokumentumok",
+    "fab_label": "Dokumentum hozzáadása",
+    "status_done": "Kész",
+    "status_needs_review": "Ellenőrzés",
+    "status_error": "Hiba",
+    "status_processing": "Feldolgozás",
+    "status_pending": "Függőben",
+    "fuel_equivalent_label": "Benzinegyenérték",
+    "fuel_saving": "{amount} megtakarítva benzinnel szemben",
+    "fuel_more_expensive": "{amount} drágább mint a benzin",
+    "fuel_equivalent_cost": "Ugyanannyi mint a benzin",
+    "fuel_register_km": "Rögzítse a km-t az üzemanyag-összehasonlításhoz",
+    "fuel_add_docs": "Adjon hozzá dokumentumokat az összehasonlításhoz",
+    "blended": "Vegyes",
+    "km_driven": "km megtett",
+    "no_chart_data": "Még nincs havi adat"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -293,7 +359,24 @@
     "save": "megtakarítás",
     "now": "Most",
     "optimal": "Optimális",
-    "to_target": "a célhoz"
+    "to_target": "a célhoz",
+    "page_title": "Energia",
+    "page_subtitle": "Mai tarifárak & okos töltési javaslatok",
+    "recommended_badge": "Ajánlott ✓",
+    "no_recommendation": "Nincs töltési javaslat",
+    "no_recommendation_hint": "Csatlakoztassa az autót a javaslatokhoz",
+    "price_curve_title": "24 órás árgörbe",
+    "current_price_label": "Jelenlegi ár",
+    "tariff_provider_label": "Tarifa szolgáltató",
+    "cheapest_window_label": "Legolcsóbb időszak",
+    "cheapest_window_saves": "megtakarítás most vs.",
+    "avg_label": "átl",
+    "refresh": "Frissítés",
+    "schedule_charge_title": "Töltés ütemezése",
+    "departure_card_title": "Indulás & Előkondicionálás",
+    "collapse": "Összecsukás",
+    "expand": "Kibontás",
+    "schedule_no_virtual_key": "Állítsa be a Virtual Key-t a töltés ütemezéséhez"
   },
   "departure": {
     "title": "Indulás & Előkészítés",
@@ -308,8 +391,27 @@
     "preconditioning": "Aktiválás…",
     "preconditioned": "Aktív ✓"
   },
-
   "chargingMap": {
     "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat."
+  },
+  "auth": {
+    "title_login": "Üdv újra",
+    "title_register": "Fiók létrehozása",
+    "subtitle_login": "Jelentkezz be járműved Flux-szal való kezeléséhez.",
+    "subtitle_register": "Ingyenes a nyílt béta alatt. Nem szükséges bankkártya.",
+    "tagline": "Intelligens EV kezelés",
+    "email": "Email",
+    "password": "Jelszó",
+    "submit_login": "Bejelentkezés",
+    "submit_register": "Fiók létrehozása",
+    "submitting_login": "Bejelentkezés…",
+    "submitting_register": "Fiók létrehozása…",
+    "google": "Folytatás Google-lal",
+    "or": "vagy",
+    "no_account": "Új itt?",
+    "create_account": "Fiók létrehozása",
+    "have_account": "Van már fiókod?",
+    "sign_in_link": "Bejelentkezés",
+    "error_invalid": "Érvénytelen email vagy jelszó"
   }
 }

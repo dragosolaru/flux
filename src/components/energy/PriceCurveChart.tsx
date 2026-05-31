@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+} from "recharts";
 import type { HourlyPrice } from "@/lib/external/tariffs/types";
 
 interface PriceCurveChartProps {
@@ -9,8 +18,32 @@ interface PriceCurveChartProps {
   cheapestWindowEnd: number;
 }
 
-const HEIGHT = 120;
-const BAR_GAP = 2;
+interface TooltipPayload {
+  value: number;
+  payload: { hour: number; price: number };
+}
+
+function GlassTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload[];
+}) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0];
+  if (!entry) return null;
+  return (
+    <div className="rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-xs backdrop-blur-sm">
+      <p className="font-medium">
+        {String(entry.payload.hour).padStart(2, "0")}:00
+      </p>
+      <p className="text-muted-foreground">
+        {(entry.value * 100).toFixed(1)} ct/kWh
+      </p>
+    </div>
+  );
+}
 
 export function PriceCurveChart({
   prices,
@@ -20,73 +53,101 @@ export function PriceCurveChart({
 }: PriceCurveChartProps) {
   if (prices.length === 0) return null;
 
-  const max = Math.max(...prices.map((p) => p.priceEurKwh));
-  const min = Math.min(...prices.map((p) => p.priceEurKwh));
-  const range = max - min || 1;
+  const data = prices.map((p) => ({
+    hour: p.hour,
+    price: p.priceEurKwh,
+  }));
+
+  const minPrice = Math.min(...prices.map((p) => p.priceEurKwh));
+  const maxPrice = Math.max(...prices.map((p) => p.priceEurKwh));
+  const yDomain = [Math.max(0, minPrice * 0.85), maxPrice * 1.1] as [
+    number,
+    number,
+  ];
 
   return (
     <div className="w-full">
-      <svg
-        viewBox={`0 0 480 ${HEIGHT + 28}`}
-        className="w-full"
-        aria-label="24-hour electricity price chart"
-      >
-        {prices.map((p, i) => {
-          const barW = (480 - BAR_GAP * 23) / 24;
-          const x = i * (barW + BAR_GAP);
-          const barH = Math.max(4, ((p.priceEurKwh - min) / range) * HEIGHT * 0.85 + HEIGHT * 0.1);
-          const y = HEIGHT - barH;
-
-          const isCurrent = i === currentHour;
-          const isCheap = i >= cheapestWindowStart && i < cheapestWindowEnd;
-          const isPast = i < currentHour;
-
-          let fill = "hsl(var(--muted))";
-          if (isCheap) fill = "hsl(var(--chart-2))";
-          if (isCurrent) fill = "hsl(var(--primary))";
-          if (isPast && !isCheap) fill = "hsl(var(--muted-foreground) / 0.3)";
-
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={y}
-                width={barW}
-                height={barH}
-                rx={2}
-                fill={fill}
-                opacity={isPast && !isCurrent ? 0.5 : 1}
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart
+          data={data}
+          margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop
+                offset="5%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity={0.4}
               />
-              {/* Hour labels every 6h */}
-              {i % 6 === 0 && (
-                <text
-                  x={x + barW / 2}
-                  y={HEIGHT + 16}
-                  textAnchor="middle"
-                  fontSize={9}
-                  fill="hsl(var(--muted-foreground))"
-                >
-                  {String(i).padStart(2, "0")}:00
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+              <stop
+                offset="95%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity={0.02}
+              />
+            </linearGradient>
+          </defs>
 
-      {/* Legend */}
-      <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
+          <XAxis
+            dataKey="hour"
+            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v: number) =>
+              v % 6 === 0 ? String(v).padStart(2, "0") + ":00" : ""
+            }
+            interval={0}
+          />
+          <YAxis
+            domain={yDomain}
+            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v: number) => (v * 100).toFixed(0)}
+          />
+          <Tooltip content={<GlassTooltip />} />
+
+          {/* Cheapest window background highlight */}
+          {Array.from(
+            { length: cheapestWindowEnd - cheapestWindowStart },
+            (_, i) => cheapestWindowStart + i,
+          ).map((h) => (
+            <ReferenceLine
+              key={h}
+              x={h}
+              stroke="hsl(var(--chart-2))"
+              strokeOpacity={0.12}
+              strokeWidth={18}
+            />
+          ))}
+
+          {/* Current hour vertical dashed line */}
+          <ReferenceLine
+            x={currentHour}
+            stroke="hsl(var(--primary))"
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="price"
+            stroke="hsl(var(--primary))"
+            strokeWidth={2}
+            fill="url(#priceGradient)"
+            dot={false}
+            activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-sm bg-[hsl(var(--chart-2))]" />
           Cheapest window
         </span>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-sm bg-[hsl(var(--primary))]" />
           Now
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block size-2.5 rounded-sm bg-[hsl(var(--muted))]" />
-          Upcoming
         </span>
       </div>
     </div>

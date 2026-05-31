@@ -16,11 +16,9 @@
     "copied": "Copiat",
     "soon": "Curând"
   },
-
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."
   },
-
   "nav": {
     "section": {
       "car": "Mașina",
@@ -53,13 +51,11 @@
       }
     }
   },
-
   "mock_banner": {
     "title": "Date simulate",
     "subtitle": "Conectează Tesla pentru date reale",
     "cta": "Conectează Tesla"
   },
-
   "empty_states": {
     "no_vehicle": {
       "title": "Adaugă prima ta mașină",
@@ -82,7 +78,6 @@
       "cta": "Configurează Virtual Key"
     }
   },
-
   "onboarding": {
     "title": "Bine ai venit în Flux",
     "subtitle": "Gestionează costurile, monitorizează și controlează-ți Tesla — totul într-un singur loc.",
@@ -108,7 +103,6 @@
       "upgrade_cta": "Upgrade la Pro"
     }
   },
-
   "scenarios": {
     "commuter": {
       "label": "Navetist zilnic",
@@ -127,14 +121,17 @@
       "desc": "Parcat pentru perioade extinse."
     }
   },
-
   "settings": {
     "title": "Setări",
     "section": {
       "preferences": "Preferințe",
       "location": "Locație",
       "tariff": "Tarif energie",
-      "account": "Cont"
+      "account": "Cont",
+      "notifications": "Notificări",
+      "vehicles": "Vehicule",
+      "billing": "Abonament",
+      "danger": "Zonă periculoasă"
     },
     "locale": {
       "label": "Limbă",
@@ -181,9 +178,26 @@
       "confirm_cancel": "Anulează",
       "confirm_input_label": "Scrie DELETE pentru a confirma",
       "confirm_delete": "Da, șterge contul meu"
+    },
+    "vehicles": {
+      "empty": "Niciun vehicul adăugat. Vizitează Garajul pentru a adăuga unul.",
+      "go_to_garage": "Gestionează vehiculele"
+    },
+    "account": {
+      "name": "Nume",
+      "email": "Email",
+      "export_data": "Exportă datele mele"
+    },
+    "billing": {
+      "plan_pro": "Flux Pro",
+      "plan_free": "Plan gratuit",
+      "plan_pro_desc": "Vehicule și documente nelimitate, funcții AI activate.",
+      "plan_free_desc": "1 vehicul, 3 documente/lună.",
+      "upgrade_label": "Upgrade la Pro — €4.99/lună",
+      "pro_unlock_note": "Pro include: vehicule nelimitate, OCR nelimitat, monitorizare baterie, digest săptămânal pe email.",
+      "see_all_features": "Vezi toate funcțiile →"
     }
   },
-
   "ingest": {
     "title": "Adaugă bon",
     "subtitle": "Trimite bonul de la orice rețea — Renovatio, IONITY, MOL, Petrom — și îl procesăm automat.",
@@ -203,7 +217,6 @@
       }
     }
   },
-
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "se actualizează la 30s",
@@ -211,9 +224,15 @@
     "refresh": "Reîmprospătează",
     "error_title": "Nu am putut contacta mașina",
     "error_subtitle": "Verifică conexiunea și încearcă din nou.",
-    "retry": "Încearcă din nou"
+    "retry": "Încearcă din nou",
+    "charging_active": "Încărcare",
+    "charging_remaining": "rămas",
+    "chip_location": "Locație",
+    "chip_temp": "Temp",
+    "chip_odometer": "Odometru",
+    "chip_last_seen": "Văzut",
+    "action_charge": "Încărcare"
   },
-
   "charging": {
     "page_title": "Încărcare",
     "status_title": "Status încărcare",
@@ -232,9 +251,20 @@
     "history_empty_title": "Niciun istoric de încărcare",
     "history_empty_hint": "Sesiunile apar aici odată ce mașina a fost conectată cât timp dashboard-ul era deschis.",
     "history_sync": "Sincronizare din Tesla",
-    "history_syncing": "Se sincronizează…"
+    "history_syncing": "Se sincronizează…",
+    "ring_status_charging": "Se încarcă",
+    "ring_status_complete": "Încărcare completă",
+    "ring_status_stopped": "Încărcare oprită",
+    "ring_status_disconnected": "Neconectat",
+    "ring_target": "Țintă",
+    "ring_power": "Putere",
+    "ring_time_remaining": "Timp rămas",
+    "history_duration": "Durată",
+    "history_kwh": "kWh adăugat",
+    "history_cost": "Cost",
+    "history_home": "Acasă",
+    "history_public": "Public"
   },
-
   "commands": {
     "title": "Comenzi",
     "subtitle": "Controlează mașina ta de la distanță.",
@@ -248,15 +278,19 @@
     "no_commands": "Nicio comandă disponibilă pentru această mașină.",
     "sending": "Se trimite…",
     "no_vehicles_title": "Nicio mașină încă",
-    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi."
+    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi.",
+    "success": "Comandă trimisă",
+    "error": "Comandă eșuată"
   },
-
   "garage": {
     "title": "Garaj",
     "add_vehicle": "Adaugă mașină",
-    "fleet_totals": "Totaluri flotă"
+    "fleet_totals": "Totaluri flotă",
+    "vehicles_count_one": "1 mașină",
+    "vehicles_count_other": "{count} mașini",
+    "mock_label": "Demo",
+    "tap_to_open": "Apasă pentru dashboard"
   },
-
   "costs": {
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Acasă vs Public",
@@ -268,7 +302,28 @@
     "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
     "home": "Acasă",
     "public": "Public",
-    "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"],
+    "blended": "Mixt",
+    "km_driven": "km parcurși",
+    "fuel_equivalent_label": "Echivalent benzină",
+    "fuel_saving": "Economisit {amount} față de benzină",
+    "fuel_more_expensive": "{amount} mai scump decât benzina",
+    "fuel_equivalent_cost": "La fel ca benzina",
+    "fuel_register_km": "Înregistrează km pentru comparație",
+    "fuel_add_docs": "Adaugă documente pentru comparație",
+    "months": [
+      "ian",
+      "feb",
+      "mar",
+      "apr",
+      "mai",
+      "iun",
+      "iul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec"
+    ],
     "page_title": "Costuri",
     "no_docs_title": "Niciun document încă.",
     "no_docs_hint": "Uploadează prima factură sau bon pentru a vedea costurile.",
@@ -276,13 +331,27 @@
     "recover": "Recuperează",
     "recovered": "Recuperate: {count}",
     "export_csv": "Export CSV",
-    "processed_docs_heading": "Documente procesate",
+    "processed_docs_heading": "Documente",
     "upload_success": "Document adăugat — se procesează…",
     "upload_error": "Upload eșuat",
     "delete_success": "Document șters",
-    "delete_error": "Nu s-a putut șterge documentul"
+    "delete_error": "Nu s-a putut șterge documentul",
+    "add_receipt": "Adaugă bon",
+    "kpi_total_lei": "Total cheltuit",
+    "kpi_total_kwh": "Total kWh",
+    "kpi_home_pct": "Acasă",
+    "kpi_fuel_saving": "Economii vs benzină",
+    "kpi_cost_per_km_blended": "Cost / km",
+    "kpi_wh_per_km_label": "Wh / km",
+    "docs_heading": "Documente",
+    "fab_label": "Adaugă document",
+    "status_done": "Procesat",
+    "status_needs_review": "Verificare",
+    "status_error": "Eroare",
+    "status_processing": "Se procesează",
+    "status_pending": "În așteptare",
+    "no_chart_data": "Fără date lunare încă"
   },
-
   "departure": {
     "title": "Plecare & Preconditionare",
     "departure_label": "Plecare programată",
@@ -296,7 +365,6 @@
     "preconditioning": "Se activează…",
     "preconditioned": "Activ ✓"
   },
-
   "energy": {
     "smart_charge_title": "Încărcare inteligentă",
     "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",
@@ -306,10 +374,46 @@
     "save": "economisești",
     "now": "Acum",
     "optimal": "Optim",
-    "to_target": "până la țintă"
+    "to_target": "până la țintă",
+    "page_title": "Energie",
+    "page_subtitle": "Prețuri tarifare & recomandări de încărcare inteligentă",
+    "recommended_badge": "Recomandat ✓",
+    "no_recommendation": "Nicio recomandare de încărcare",
+    "no_recommendation_hint": "Conectează mașina pentru a vedea recomandări",
+    "price_curve_title": "Curba de prețuri 24h",
+    "current_price_label": "Prețul curent",
+    "tariff_provider_label": "Furnizor tarif",
+    "cheapest_window_label": "Interval cel mai ieftin",
+    "cheapest_window_saves": "economii față de acum",
+    "avg_label": "med",
+    "refresh": "Actualizează",
+    "schedule_charge_title": "Programează încărcarea",
+    "departure_card_title": "Plecare & Preconditionare",
+    "collapse": "Restrânge",
+    "expand": "Extinde",
+    "schedule_no_virtual_key": "Configurează Virtual Key pentru a programa încărcarea"
   },
-
   "chargingMap": {
     "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
+  },
+  "auth": {
+    "title_login": "Bine ai revenit",
+    "title_register": "Creează-ți contul",
+    "subtitle_login": "Autentifică-te pentru a-ți gestiona vehiculul din Flux.",
+    "subtitle_register": "Gratuit în perioada beta. Nu este necesar un card de credit.",
+    "tagline": "Gestionare inteligentă EV",
+    "email": "Email",
+    "password": "Parolă",
+    "submit_login": "Autentificare",
+    "submit_register": "Creează cont",
+    "submitting_login": "Autentificare…",
+    "submitting_register": "Se creează contul…",
+    "google": "Continuă cu Google",
+    "or": "sau",
+    "no_account": "Ești nou?",
+    "create_account": "Creează un cont",
+    "have_account": "Ai deja un cont?",
+    "sign_in_link": "Autentifică-te",
+    "error_invalid": "Email sau parolă invalidă"
   }
 }

@@ -4,20 +4,21 @@ import { CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { GlassCard } from "@/components/ui/glass-card";
 import { apiFetch } from "@/lib/api-fetch";
 import { computeSmartCharge } from "@/lib/external/tariffs/recommend";
 import { getModelSpec } from "@/lib/brands/models";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
+import { cardVariants } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 import type { VehicleListItem } from "@/hooks/useVehicles";
 import type { VehicleState } from "@/types/vehicle";
@@ -25,6 +26,7 @@ import type { BrandKey } from "@/lib/brands/types";
 
 interface SmartChargeCardProps {
   forecast: TariffForecast | null;
+  isLoading?: boolean;
 }
 
 function VehicleRecommendation({
@@ -76,7 +78,11 @@ function VehicleRecommendation({
 
   function handleSchedule() {
     mutate(
-      { vehicleId: vehicle.id, command: "schedule_charging", args: { time: startTimeMinutes } },
+      {
+        vehicleId: vehicle.id,
+        command: "schedule_charging",
+        args: { time: startTimeMinutes },
+      },
       {
         onSuccess: () => {
           setScheduled(true);
@@ -87,54 +93,75 @@ function VehicleRecommendation({
   }
 
   const scheduleButton = (
-    <Button
-      variant={scheduled ? "default" : "outline"}
-      size="sm"
-      className="shrink-0 h-8 text-xs"
+    <motion.button
+      whileTap={{ scale: 0.97 }}
       onClick={hasCommandsReady ? handleSchedule : undefined}
       disabled={!hasCommandsReady || isPending || scheduled}
+      className={[
+        "mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all",
+        scheduled
+          ? "bg-chart-2 text-white"
+          : "bg-primary text-primary-foreground hover:bg-primary/90",
+        (!hasCommandsReady || isPending || scheduled) &&
+          "cursor-not-allowed opacity-60",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {isPending ? (
-        <Loader2 className="size-3 animate-spin" />
+        <Loader2 className="size-4 animate-spin" />
       ) : scheduled ? (
         <>
-          <CheckCircle2 className="size-3 mr-1" />
+          <CheckCircle2 className="size-4" />
           {t("scheduled")}
         </>
       ) : (
-        t("schedule_btn")
+        <>
+          <Zap className="size-4" />
+          {t("schedule_btn")}
+        </>
       )}
-    </Button>
+    </motion.button>
   );
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border p-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-chart-2/15">
-        <Clock className="size-4 text-chart-2" />
+    <div className="space-y-1">
+      {/* Vehicle name */}
+      <p className="text-xs font-medium text-muted-foreground">
+        {vehicle.nickname ?? vehicle.displayName}
+      </p>
+
+      {/* Key recommendation details */}
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chart-2/15">
+          <Clock className="size-5 text-chart-2" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-semibold">
+            {t("start_at")}{" "}
+            <span className="text-chart-2">
+              {String(rec.startAtHour).padStart(2, "0")}:00
+            </span>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("save")}{" "}
+            <span className="font-semibold text-chart-2">
+              €{rec.savingsEur.toFixed(2)}
+            </span>{" "}
+            · ~{Math.round(rec.hoursNeeded * 10) / 10}h {t("to_target")}
+          </p>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">
-          {vehicle.nickname ?? vehicle.displayName}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t("start_at")}{" "}
-          <span className="font-medium text-chart-2">
-            {String(rec.startAtHour).padStart(2, "0")}:00
-          </span>{" "}
-          — {t("save")}{" "}
-          <span className="font-medium text-chart-2">€{rec.savingsEur.toFixed(2)}</span>
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {t("now")}: €{rec.currentCostEur.toFixed(2)} · {t("optimal")}: €{rec.optimalCostEur.toFixed(2)}
-          {" · "}~{Math.round(rec.hoursNeeded * 10) / 10}h {t("to_target")}
-        </p>
-      </div>
+
+      {/* Schedule CTA */}
       {hasCommandsReady ? (
         scheduleButton
       ) : (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger asChild>{scheduleButton}</TooltipTrigger>
+            <TooltipTrigger asChild>
+              <span className="block">{scheduleButton}</span>
+            </TooltipTrigger>
             <TooltipContent>{t("schedule_no_virtual_key")}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -143,7 +170,10 @@ function VehicleRecommendation({
   );
 }
 
-export function SmartChargeCard({ forecast }: SmartChargeCardProps) {
+export function SmartChargeCard({
+  forecast,
+  isLoading = false,
+}: SmartChargeCardProps) {
   const t = useTranslations("energy");
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles"],
@@ -151,24 +181,51 @@ export function SmartChargeCard({ forecast }: SmartChargeCardProps) {
     staleTime: 60_000,
   });
 
-  if (!forecast || !vehicles || vehicles.length === 0) return null;
-
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground uppercase tracking-wide">
-          <Zap className="size-3.5" />
-          {t("smart_charge_title")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {vehicles.map((v: VehicleListItem) => (
-          <VehicleRecommendation key={v.id} vehicle={v} forecast={forecast} />
-        ))}
-        <p className="text-xs text-muted-foreground">
+    <motion.div variants={cardVariants}>
+      <GlassCard className="p-5" animate={false}>
+        {/* Header row */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-full bg-chart-2/15">
+              <Zap className="size-4 text-chart-2" />
+            </div>
+            <h2 className="text-sm font-semibold">{t("smart_charge_title")}</h2>
+          </div>
+          <span className="rounded-full bg-chart-2/15 px-2.5 py-0.5 text-xs font-medium text-chart-2">
+            {t("recommended_badge")}
+          </span>
+        </div>
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="space-y-3">
+            <div className="h-10 animate-pulse rounded-xl bg-white/5" />
+            <div className="h-12 animate-pulse rounded-xl bg-white/5" />
+          </div>
+        ) : !forecast || !vehicles || vehicles.length === 0 ? (
+          <div className="py-4 text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              {t("no_recommendation")}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground/60">
+              {t("no_recommendation_hint")}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4 divide-y divide-white/5">
+            {vehicles.map((v: VehicleListItem) => (
+              <div key={v.id} className="pt-4 first:pt-0">
+                <VehicleRecommendation vehicle={v} forecast={forecast} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-3 text-xs text-muted-foreground/60">
           {t("smart_charge_hint")}
         </p>
-      </CardContent>
-    </Card>
+      </GlassCard>
+    </motion.div>
   );
 }

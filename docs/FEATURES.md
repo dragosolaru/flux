@@ -244,3 +244,37 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/animations/variants.ts` — shared Framer Motion variants
 
 **Dependencies:** Framer Motion v12 (already installed), Tailwind CSS v4.
+
+---
+
+## 15. Energy & Commands — Mobile-First Redesign
+
+**What:** Full visual redesign of `/energy` and `/commands` for mobile-first usage (glassmorphism cards, Framer Motion animations, recharts AreaChart, 2-column command grid).
+
+**Energy page (`/energy`):**
+- **Smart Charge hero card** — `SmartChargeCard` is now the top, most prominent element; large glass card with "Recommended ✓" badge, optimal start time, savings in €, and a full-width `Schedule` CTA button with `whileTap` press feedback. Shows a muted placeholder when no recommendation is available.
+- **Price curve chart** — `PriceCurveChart` rebuilt with recharts `AreaChart`; blue gradient fill, vertical dashed `ReferenceLine` at the current hour, green stripe behind the cheapest window, glassmorphism tooltip.
+- **Collapsible Departure & Preconditioning card** — `ChevronDown/Up` toggle with `AnimatePresence` height animation; shows `DepartureCard` for the first vehicle.
+- **Tariff provider selector** — moved into its own glass card below the chart.
+- `PageWrapper` wraps all content; each section fades up via `cardVariants`.
+
+**Commands page (`/commands`):**
+- `CommandPanel` redesigned with a 2-column `grid grid-cols-2 gap-3` layout.
+- Each button is a `motion.button` glass card (`min-h-[80px]`, icon `size-8`, label `text-sm`), `whileTap: {scale:0.95}`.
+- **Active state**: `border-primary/60 shadow-primary/20 shadow-lg` when climate is on or car is unlocked.
+- **Sending state**: `Loader2` spinner replaces the icon, button `opacity-60 pointer-events-none`.
+- Success/error feedback via `sonner` toast (`t("success")` / `t("error")`).
+- Each vehicle's commands wrapped in a `GlassCard` with the vehicle name above the grid.
+
+**How to use:** Navigate to `/energy` or `/commands` from the bottom nav or sidebar.
+
+**Key files:**
+- `src/app/(dashboard)/energy/energy-client.tsx`
+- `src/app/(dashboard)/commands/commands-client.tsx`
+- `src/components/energy/PriceCurveChart.tsx`
+- `src/components/energy/SmartChargeCard.tsx`
+- `src/components/vehicle/CommandPanel.tsx`
+
+**i18n:** New keys added to all 5 locales: `energy.page_title`, `energy.page_subtitle`, `energy.recommended_badge`, `energy.no_recommendation`, `energy.no_recommendation_hint`, `energy.price_curve_title`, `energy.tariff_provider_label`, `energy.cheapest_window_label`, `energy.cheapest_window_saves`, `energy.avg_label`, `energy.refresh`, `energy.departure_card_title`, `energy.collapse`, `energy.expand`, `energy.schedule_no_virtual_key`, `commands.success`, `commands.error`.
+
+**Dependencies:** recharts (already installed), Framer Motion v12, sonner (already installed).

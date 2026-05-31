@@ -1,13 +1,14 @@
 "use client";
 
-import { Fan, Lock, Megaphone, Sparkles, Unlock } from "lucide-react";
+import { Fan, Lock, Loader2, Megaphone, Sparkles, Unlock } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
+import { staggerContainer, cardVariants } from "@/lib/animations/variants";
 import type { CommandName } from "@/types/history";
 import type { VehicleBrand, VehicleState } from "@/types/vehicle";
 
@@ -23,7 +24,13 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const { mutate, isPending, variables } = useVehicleCommand();
 
   function send(command: CommandName, args?: Record<string, unknown>) {
-    mutate({ vehicleId, command, args });
+    mutate(
+      { vehicleId, command, args },
+      {
+        onSuccess: () => toast.success(t("success")),
+        onError: () => toast.error(t("error")),
+      },
+    );
   }
 
   const inFlight = (cmd: CommandName) =>
@@ -46,65 +53,106 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const labelFlash = t("flash");
 
   const buttons = [
-    caps.commands.lock && caps.commands.unlock && {
-      // While loading, show "Lock" label (defensive default) — button stays
-      // disabled until state arrives so the action matches the label.
-      cmd: stateLoaded ? lockCmd : "lock",
-      label: stateLoaded ? (lockCmd === "lock" ? labelLock : labelUnlock) : labelLock,
-      icon: stateLoaded ? (lockCmd === "lock" ? Lock : Unlock) : Lock,
-      inFlight: inFlight("lock") || inFlight("unlock"),
-    },
-    caps.commands.climateOn && caps.commands.climateOff && {
-      cmd: climateCmd,
-      label: climateActive ? labelClimateOff : labelClimateOn,
-      icon: Fan,
-      inFlight: inFlight("climate_on") || inFlight("climate_off"),
-    },
+    caps.commands.lock &&
+      caps.commands.unlock && {
+        cmd: stateLoaded ? lockCmd : ("lock" as CommandName),
+        label: stateLoaded
+          ? lockCmd === "lock"
+            ? labelLock
+            : labelUnlock
+          : labelLock,
+        icon: stateLoaded ? (lockCmd === "lock" ? Lock : Unlock) : Lock,
+        inFlight: inFlight("lock") || inFlight("unlock"),
+        active: stateLoaded && state?.isLocked === false,
+      },
+    caps.commands.climateOn &&
+      caps.commands.climateOff && {
+        cmd: climateCmd,
+        label: climateActive ? labelClimateOff : labelClimateOn,
+        icon: Fan,
+        inFlight: inFlight("climate_on") || inFlight("climate_off"),
+        active: climateActive,
+      },
     caps.commands.honk && {
       cmd: "honk" as CommandName,
       label: labelHonk,
       icon: Megaphone,
       inFlight: inFlight("honk"),
+      active: false,
     },
     caps.commands.flash && {
       cmd: "flash" as CommandName,
       label: labelFlash,
       icon: Sparkles,
       inFlight: inFlight("flash"),
+      active: false,
     },
-  ].filter(Boolean) as { cmd: CommandName; label: string; icon: ComponentType<{ className?: string }>; inFlight: boolean }[];
+  ].filter(Boolean) as {
+    cmd: CommandName;
+    label: string;
+    icon: ComponentType<{ className?: string }>;
+    inFlight: boolean;
+    active: boolean;
+  }[];
+
+  if (buttons.length === 0) {
+    return (
+      <p className="py-4 text-center text-sm text-muted-foreground">
+        {t("no_commands")}
+      </p>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{t("panel_title")}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {buttons.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("no_commands")}
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {buttons.map(({ cmd, label, icon: Icon, inFlight: fly }) => (
-              <Button
-                key={cmd}
-                variant="outline"
-                size="lg"
-                onClick={() => send(cmd)}
-                disabled={isPending || !state}
-                className="h-20 flex-col gap-1"
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-2 gap-3"
+    >
+      {buttons.map(({ cmd, label, icon: Icon, inFlight: fly, active }) => {
+        const isSending = fly;
+        return (
+          <motion.div key={cmd} variants={cardVariants}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => send(cmd)}
+              disabled={isPending || !state}
+              className={[
+                "flex min-h-[80px] w-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 transition-all",
+                "glass-card",
+                active
+                  ? "border-primary/60 shadow-lg shadow-primary/20"
+                  : "border-white/8",
+                isSending
+                  ? "pointer-events-none opacity-60"
+                  : "hover:border-white/15 hover:bg-white/8",
+                !state && "cursor-not-allowed opacity-50",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {isSending ? (
+                <Loader2 className="size-8 animate-spin text-primary" />
+              ) : (
+                <Icon
+                  className={`size-8 ${active ? "text-primary" : "text-foreground"}`}
+                />
+              )}
+              <span
+                className={`text-sm font-medium ${active ? "text-primary" : "text-foreground"}`}
               >
-                <Icon className="size-5" />
-                <span className="text-xs">{label}</span>
-                {fly && (
-                  <span className="text-[10px] text-muted-foreground">{t("sending")}</span>
-                )}
-              </Button>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                {label}
+              </span>
+              {isSending && (
+                <span className="text-[10px] text-muted-foreground">
+                  {t("sending")}
+                </span>
+              )}
+            </motion.button>
+          </motion.div>
+        );
+      })}
+    </motion.div>
   );
 }
