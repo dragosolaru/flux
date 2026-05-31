@@ -313,3 +313,33 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/components/auth/LoginForm.tsx` — updated inputs + i18n via `useTranslations("auth")`
 
 **Dependencies:** `GlassCard`, `PageWrapper` (design system), `next-intl`, Framer Motion v12.
+
+---
+
+## 19. Energy & Commands — Mobile-First Redesign
+
+**What:** Full visual redesign of `/energy` and `/commands` for mobile-first usage (glassmorphism cards, Framer Motion animations, recharts AreaChart, 2-column command grid).
+
+**Energy page (`/energy`):**
+- **Smart Charge hero card** — `SmartChargeCard` is now the top, most prominent element; large glass card with "Recommended ✓" badge, optimal start time, savings in €, and a full-width `Schedule` CTA button with `whileTap` press feedback. Shows a muted placeholder when no recommendation is available.
+- **Price curve chart** — `PriceCurveChart` rebuilt with recharts `AreaChart`; blue gradient fill, vertical dashed `ReferenceLine` at the current hour, green stripe behind the cheapest window, glassmorphism tooltip.
+- **Collapsible Departure & Preconditioning card** — `ChevronDown/Up` toggle with `AnimatePresence` height animation; shows `DepartureCard` for the first vehicle.
+- `PageWrapper` wraps all content; each section fades up via `cardVariants`.
+
+**Commands page (`/commands`):**
+- `CommandPanel` redesigned with a 2-column `grid grid-cols-2 gap-3` layout.
+- Each button is a `motion.button` glass card (`min-h-[80px]`, icon `size-8`, label `text-sm`), `whileTap: {scale:0.95}`.
+- **Active state**: `border-primary/60 shadow-primary/20 shadow-lg`.
+- **Sending state**: `Loader2` spinner replaces the icon, button `opacity-60 pointer-events-none`.
+- Success/error feedback via `sonner` toast.
+
+**How to use:** Navigate to `/energy` or `/commands` from the bottom nav or sidebar.
+
+**Key files:**
+- `src/app/(dashboard)/energy/energy-client.tsx`
+- `src/app/(dashboard)/commands/commands-client.tsx`
+- `src/components/energy/PriceCurveChart.tsx`
+- `src/components/energy/SmartChargeCard.tsx`
+- `src/components/vehicle/CommandPanel.tsx`
+
+**Dependencies:** recharts, Framer Motion v12, sonner.

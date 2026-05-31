@@ -34,7 +34,7 @@ export default async function CommandsPage() {
   }>;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("commands.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("commands.subtitle")}</p>
