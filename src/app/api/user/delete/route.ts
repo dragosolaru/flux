@@ -21,8 +21,8 @@ export async function DELETE() {
 
   const supabase = createSupabaseAdminClient();
 
-  // Resolve vehicle ids first — energy_costs, command_events, charging_sessions,
-  // and vehicle_snapshots have no user_id column; they are scoped by vehicle_id.
+  // Resolve vehicle ids — child tables (energy_costs, command_events,
+  // charging_sessions, vehicle_snapshots) have no user_id column.
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("id")
@@ -31,14 +31,14 @@ export async function DELETE() {
   const vehicleIds = (vehicles ?? []).map((v: { id: string }) => v.id);
 
   if (vehicleIds.length > 0) {
-    // 1. Child tables keyed by vehicle_id (no user_id column on any of these)
     await supabase.from("energy_costs").delete().in("vehicle_id", vehicleIds);
     await supabase.from("command_events").delete().in("vehicle_id", vehicleIds);
     await supabase.from("charging_sessions").delete().in("vehicle_id", vehicleIds);
     await supabase.from("vehicle_snapshots").delete().in("vehicle_id", vehicleIds);
+    await supabase.from("tesla_tokens").delete().in("vehicle_id", vehicleIds);
   }
 
-  // 2. Delete documents + Storage files
+  // Delete documents from Storage bucket
   const { data: docs } = await supabase
     .from("documents")
     .select("storage_path")
@@ -54,7 +54,7 @@ export async function DELETE() {
     }
   }
 
-  // Also sweep the Storage prefix in case orphaned files exist
+  // Sweep the Storage prefix for any orphaned files
   const { data: storageFiles } = await supabase.storage
     .from("documents")
     .list(userId, { limit: 1000 });
@@ -64,30 +64,18 @@ export async function DELETE() {
       (f: { name: string }) => `${userId}/${f.name}`,
     );
     const { error: orphanErr } = await supabase.storage.from("documents").remove(orphanPaths);
-    if (orphanErr) console.error("[storage.remove]", orphanPaths, orphanErr.message);
+    if (orphanErr) console.error("[storage.remove orphans]", orphanPaths, orphanErr.message);
   }
 
   await supabase.from("documents").delete().eq("user_id", userId);
-
-  // 6. Delete tesla_tokens (references vehicles)
-  if (vehicleIds.length > 0) {
-    await supabase.from("tesla_tokens").delete().in("vehicle_id", vehicleIds);
-  }
-
-  // 7. Delete vehicles
   await supabase.from("vehicles").delete().eq("user_id", userId);
-
-  // 8. Delete user_settings
   await supabase.from("user_settings").delete().eq("user_id", userId);
-
-  // 9. Delete profiles
   await supabase.from("profiles").delete().eq("id", userId);
 
-  // 10. Delete from auth.users
   const { error } = await supabase.auth.admin.deleteUser(userId);
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  return new NextResponse(null, { status: 204 });
+  return NextResponse.json({ ok: true });
 }

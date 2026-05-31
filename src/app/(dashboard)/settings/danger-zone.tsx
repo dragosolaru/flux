@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -15,7 +16,6 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogCancel,
-  AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
 export function DangerZone() {
@@ -24,6 +24,7 @@ export function DangerZone() {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   async function handleExport() {
     setExporting(true);
@@ -50,10 +51,16 @@ export function DangerZone() {
     }
   }
 
+  function handleDialogChange(open: boolean) {
+    setDialogOpen(open);
+    if (!open) setConfirmText("");
+  }
+
   async function handleDelete() {
+    if (confirmText !== "DELETE") return;
     setDeleting(true);
     try {
-      const res = await fetch("/api/user", { method: "DELETE" });
+      const res = await fetch("/api/user/delete", { method: "DELETE" });
       if (!res.ok) {
         toast.error(t("delete_error"));
         setDeleting(false);
@@ -61,7 +68,7 @@ export function DangerZone() {
         return;
       }
       toast.success(t("delete_success"));
-      await signOut({ callbackUrl: "/login" });
+      await signOut({ callbackUrl: "/" });
     } catch {
       toast.error(t("delete_error"));
       setDeleting(false);
@@ -79,7 +86,7 @@ export function DangerZone() {
         {exporting ? t("exporting") : t("export_button")}
       </Button>
 
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <AlertDialog open={dialogOpen} onOpenChange={handleDialogChange}>
         <AlertDialogTrigger asChild>
           <Button variant="destructive" disabled={deleting}>
             {deleting ? t("deleting") : t("delete_button")}
@@ -92,13 +99,29 @@ export function DangerZone() {
               {t("confirm_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="px-6 py-2">
+            <label className="mb-1.5 block text-sm text-muted-foreground">
+              {t("confirm_input_label")}
+            </label>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE"
+              disabled={deleting}
+              autoComplete="off"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>
               {t("confirm_cancel")}
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting || confirmText !== "DELETE"}
+            >
               {deleting ? t("deleting") : t("confirm_delete")}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -141,6 +141,7 @@
       "confirm_title": "Ștergi contul?",
       "confirm_description": "Aceasta va șterge permanent contul tău Flux, toate mașinile, istoricul de încărcare, documentele și costurile. Acțiunea nu poate fi anulată.",
       "confirm_cancel": "Anulează",
+      "confirm_input_label": "Scrie DELETE pentru a confirma",
       "confirm_delete": "Da, șterge contul meu"
     }
   },
