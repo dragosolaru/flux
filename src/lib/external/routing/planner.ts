@@ -1,7 +1,8 @@
 import type { ChargingStation } from "@/lib/external/charging-networks/types";
 import type { ModelSpec } from "@/lib/brands/models";
 import type { ChargingStop, RoutePoint, TripPlan } from "./types";
-import { haversine, mockRouter } from "./providers/mock-router";
+import { haversine } from "./providers/mock-router";
+import { computeOsrmRoute } from "./providers/osrm-router";
 
 const SAFETY_RESERVE_PCT = 10;   // Minimum SoC to arrive at any waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
@@ -21,10 +22,11 @@ interface PlanInput {
  * range × safety factor. At each "running out" point, find the nearest station
  * within reasonable detour from the next waypoint and stop there.
  */
-export function planTrip(input: PlanInput): TripPlan {
+export async function planTrip(input: PlanInput): Promise<TripPlan> {
   const { origin, destination, spec, currentSocPct, deratingPct = 0, stations } = input;
 
-  const { distanceKm, drivingMinutes } = mockRouter.computeRoute(origin, destination);
+  const osrm = await computeOsrmRoute(origin, destination);
+  const { distanceKm, drivingMinutes } = osrm;
 
   const idealRangeKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
   const deratedFullRangeKm = idealRangeKm * (1 + deratingPct / 100);
@@ -53,7 +55,7 @@ export function planTrip(input: PlanInput): TripPlan {
     }
 
     // Need to charge. Find a station near the point where we'd run out.
-    // Approximate point along the great-circle line at `kmFromStart + rangeNow * 0.8`
+    // Approximate point along the great-circle line at `kmFromStart + rangeNow * 0.85`
     const targetKm = kmFromStart + rangeNow * 0.85;
     const t = Math.min(1, targetKm / distanceKm);
     const targetLat = origin.lat + (destination.lat - origin.lat) * t;
@@ -124,5 +126,7 @@ export function planTrip(input: PlanInput): TripPlan {
     stops,
     feasible,
     warning,
+    polyline: osrm.polyline,
+    approxRoute: osrm.polyline === null,
   };
 }

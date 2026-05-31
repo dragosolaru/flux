@@ -28,6 +28,8 @@ export interface TripPlan {
   stops: ChargingStop[];
   feasible: boolean;
   warning: string | null;
+  polyline: { type: "LineString"; coordinates: [number, number][] } | null;
+  approxRoute: boolean;
 }
 
 export interface RouteProvider {
