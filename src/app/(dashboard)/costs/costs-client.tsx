@@ -1,14 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Inbox, Loader2, Receipt } from "lucide-react";
+import {
+  Car,
+  Download,
+  Fuel,
+  Gauge,
+  Home,
+  Inbox,
+  Loader2,
+  Plus,
+  Receipt,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { DocumentStatusCard } from "@/components/costs/DocumentStatusCard";
-import { CostDashboard } from "@/components/costs/CostDashboard";
 import { IngestCard } from "@/components/costs/IngestCard";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/layout/page-wrapper";
 import {
   useDocuments,
   useUploadDocument,
@@ -19,13 +32,290 @@ import {
 import { useCosts } from "@/hooks/useCosts";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useQueryClient } from "@tanstack/react-query";
-import { pageVariants, staggerContainer } from "@/lib/animations/variants";
+import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import type { CostAggregation, MonthlyBucket, Document } from "@/types/costs";
+import { cn } from "@/lib/utils";
 
 interface CostsClientProps {
   vehicleId: string;
   vehicleName: string;
   vehicleEmail: string | null;
 }
+
+interface CostsResponse extends CostAggregation {
+  petrolEquivalentCostRon: number;
+  totalKm: number;
+}
+
+function fmt(n: number | null | undefined, decimals = 2) {
+  if (n == null) return "—";
+  return n.toFixed(decimals);
+}
+
+function fmtRon(n: number | null | undefined) {
+  if (n == null) return "—";
+  return `${n.toFixed(2)} lei`;
+}
+
+// ─── KPI chip data builder ────────────────────────────────────────────────────
+
+interface KpiItem {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+  accent?: string;
+}
+
+function buildKpiItems(
+  data: CostsResponse,
+  t: ReturnType<typeof useTranslations<"costs">>,
+): KpiItem[] {
+  const items: KpiItem[] = [];
+  const hasData = data.totalCostRon > 0;
+
+  items.push({
+    icon: <TrendingUp className="size-5" />,
+    value: fmtRon(data.totalCostRon),
+    label: t("kpi_total_lei"),
+    accent: "text-primary",
+  });
+
+  items.push({
+    icon: <Zap className="size-5" />,
+    value: `${fmt(data.totalKwh, 1)} kWh`,
+    label: t("kpi_total_kwh"),
+    accent: "text-chart-2",
+  });
+
+  const splitHomePct =
+    data.totalKwh > 0 ? Math.round((data.homeKwh / data.totalKwh) * 100) : null;
+  items.push({
+    icon: <Home className="size-5" />,
+    value: splitHomePct != null ? `${splitHomePct}%` : "—",
+    label: t("kpi_home_pct"),
+    accent: "text-chart-2",
+  });
+
+  items.push({
+    icon: <Car className="size-5" />,
+    value:
+      data.costPerKmBlended != null
+        ? `${fmt(data.costPerKmBlended, 3)} lei`
+        : hasData
+          ? t("no_data")
+          : "—",
+    label: t("kpi_cost_per_km_blended"),
+    accent: "text-primary",
+  });
+
+  items.push({
+    icon: <Gauge className="size-5" />,
+    value: data.whPerKm != null ? `${fmt(data.whPerKm, 0)} Wh` : "—",
+    label: t("kpi_wh_per_km_label"),
+    accent: "text-chart-3",
+  });
+
+  const savingsRon = data.petrolEquivalentCostRon - data.totalCostRon;
+  items.push({
+    icon: <Fuel className="size-5" />,
+    value:
+      hasData && data.totalKm > 0 && data.petrolEquivalentCostRon > 0
+        ? savingsRon > 0
+          ? fmtRon(savingsRon)
+          : savingsRon < 0
+            ? `-${fmtRon(-savingsRon)}`
+            : "0 lei"
+        : "—",
+    label: t("kpi_fuel_saving"),
+    accent:
+      savingsRon > 0
+        ? "text-chart-2"
+        : savingsRon < 0
+          ? "text-destructive"
+          : "text-muted-foreground",
+  });
+
+  return items;
+}
+
+// ─── Monthly bar chart ────────────────────────────────────────────────────────
+
+function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
+  const t = useTranslations("costs");
+  if (months.length === 0) return null;
+
+  const visible = months.slice(-12);
+  const maxCost = Math.max(...visible.map((m) => m.costRon), 1);
+  const rawMonths = t.raw("months");
+  const MONTH_NAMES: string[] = Array.isArray(rawMonths)
+    ? (rawMonths as string[])
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      className="glass-card overflow-visible rounded-2xl p-4"
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <TrendingUp className="size-4 text-primary" />
+        <span className="text-sm font-semibold">{t("chart_monthly_trend")}</span>
+      </div>
+
+      <div className="relative mt-2">
+        <svg width="0" height="0" className="absolute">
+          <defs>
+            <linearGradient id="bar-gradient-costs" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="oklch(0.62 0.19 250)" />
+              <stop offset="100%" stopColor="oklch(0.68 0.18 162)" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div className="flex h-28 items-end gap-1.5 pb-6">
+          {visible.map((m) => {
+            const monthIdx = parseInt(m.month.slice(5)) - 1;
+            const label = MONTH_NAMES[monthIdx] ?? m.month.slice(5);
+            const heightPct = (m.costRon / maxCost) * 100;
+
+            return (
+              <div
+                key={m.month}
+                className="group relative flex flex-1 flex-col items-center justify-end"
+                style={{ height: "100%" }}
+              >
+                <div
+                  className="w-full rounded-t transition-all"
+                  style={{
+                    height: `${heightPct}%`,
+                    minHeight: m.costRon > 0 ? 3 : 0,
+                    background:
+                      "linear-gradient(to bottom, oklch(0.62 0.19 250), oklch(0.68 0.18 162))",
+                    opacity: 0.85,
+                  }}
+                />
+                <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground">
+                  {label}
+                </span>
+                <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-[10px] shadow-lg backdrop-blur-sm group-hover:block">
+                  <span className="font-semibold">{m.costRon.toFixed(0)} lei</span>
+                  <span className="ml-1 text-muted-foreground">· {m.kwh.toFixed(1)} kWh</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── KPI chips row ────────────────────────────────────────────────────────────
+
+function KpiChipsRow({ data }: { data: CostsResponse }) {
+  const t = useTranslations("costs");
+  const items = buildKpiItems(data, t);
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {items.map((item, i) => (
+        <motion.div
+          key={i}
+          variants={fadeInUp}
+          className="glass-card flex min-w-[120px] snap-center flex-col items-center gap-1 rounded-2xl px-4 py-3 text-center"
+        >
+          <span className={cn("mb-0.5", item.accent ?? "text-muted-foreground")}>
+            {item.icon}
+          </span>
+          <span className="text-lg font-bold tabular-nums leading-none">{item.value}</span>
+          <span className="text-[11px] text-muted-foreground">{item.label}</span>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+function KpiChipsSkeleton() {
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-1">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-24 min-w-[120px] rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+// ─── Timeline document list ───────────────────────────────────────────────────
+
+type DocStatus = "done" | "needs_review" | "error" | "pending" | "processing";
+
+function timelineDot(status: DocStatus): string {
+  if (status === "done") return "bg-chart-2";
+  if (status === "needs_review") return "bg-chart-3";
+  if (status === "error") return "bg-destructive";
+  return "bg-muted-foreground";
+}
+
+function timelineLine(status: DocStatus): string {
+  if (status === "done") return "bg-chart-2/30";
+  if (status === "needs_review") return "bg-chart-3/30";
+  if (status === "error") return "bg-destructive/30";
+  return "bg-muted/30";
+}
+
+interface TimelineDocListProps {
+  documents: Document[];
+  onEdit: (id: string, updates: Record<string, unknown>) => void;
+  onDelete: (id: string) => void;
+}
+
+function TimelineDocList({ documents, onEdit, onDelete }: TimelineDocListProps) {
+  const t = useTranslations("costs");
+
+  return (
+    <div className="space-y-1">
+      <h2 className="px-1 text-sm font-semibold">{t("docs_heading")}</h2>
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="space-y-2"
+      >
+        {documents.map((doc, idx) => {
+          const status = doc.status as DocStatus;
+          const isLast = idx === documents.length - 1;
+
+          return (
+            <motion.div key={doc.id} variants={fadeInUp} className="flex gap-3">
+              {/* Timeline column */}
+              <div className="flex w-5 flex-col items-center pt-3">
+                <div className={cn("size-2.5 shrink-0 rounded-full", timelineDot(status))} />
+                {!isLast && (
+                  <div className={cn("mt-1 w-0.5 flex-1", timelineLine(status))} />
+                )}
+              </div>
+
+              {/* Card */}
+              <div className="min-w-0 flex-1 pb-2">
+                <DocumentStatusCard
+                  doc={doc}
+                  onEdit={(id, updates) => onEdit(id, updates)}
+                  onDelete={(id) => onDelete(id)}
+                />
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
   const t = useTranslations("costs");
@@ -35,26 +325,31 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { mutateAsync: upload, isPending: uploading } = useUploadDocument(vehicleId);
   const { mutate: editDocument } = useEditDocument(vehicleId);
   const { mutate: deleteDocument } = useDeleteDocument(vehicleId);
-  const { mutate: recover, isPending: recovering, data: recoverResult } = useRecoverDocuments(vehicleId);
+  const { mutate: recover, isPending: recovering, data: recoverResult } =
+    useRecoverDocuments(vehicleId);
   const { data: capabilities } = useCapabilities();
 
+  const [showIngest, setShowIngest] = useState(false);
+
   const now = new Date();
-  const docsThisMonth = documents?.filter((d) => {
-    const created = new Date(d.created_at);
-    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
-  }).length ?? 0;
+  const docsThisMonth =
+    documents?.filter((d) => {
+      const created = new Date(d.created_at);
+      return (
+        created.getFullYear() === now.getFullYear() &&
+        created.getMonth() === now.getMonth()
+      );
+    }).length ?? 0;
 
   // Invalidate costs when any document transitions out of pending/processing.
-  // The ref is keyed implicitly to vehicleId; reset it when the user switches
-  // vehicles to avoid invalidating the new vehicle based on the old one's state.
+  // Reset per-vehicle so switching vehicles doesn't trigger spurious invalidation.
   const prevHadPending = useRef(false);
   useEffect(() => {
     prevHadPending.current = false;
   }, [vehicleId]);
   useEffect(() => {
-    const hasPending = documents?.some(
-      (d) => d.status === "pending" || d.status === "processing",
-    ) ?? false;
+    const hasPending =
+      documents?.some((d) => d.status === "pending" || d.status === "processing") ?? false;
     if (prevHadPending.current && !hasPending) {
       void qc.invalidateQueries({ queryKey: ["costs", vehicleId] });
     }
@@ -65,28 +360,25 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
     try {
       await upload(file);
       toast.success(t("upload_success"));
+      setShowIngest(false);
     } catch {
       toast.error(t("upload_error"));
     }
   }
 
+  const costsData = costs as CostsResponse | undefined;
+  const hasDocuments = !docsLoading && documents && documents.length > 0;
+  const noDocuments = !docsLoading && (!documents || documents.length === 0);
+
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="hidden"
-      animate="visible"
-      className="mx-auto flex max-w-5xl flex-col gap-6"
-    >
+    <PageWrapper className="relative mx-auto max-w-2xl gap-4 pb-28">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("page_title")}</h1>
-          <p className="text-sm text-muted-foreground">{vehicleName}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("page_title")}</h1>
+          <p className="text-xs text-muted-foreground">{vehicleName}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-        >
+        <Button variant="ghost" size="sm" asChild>
           <a href={`/api/costs/export?vehicleId=${vehicleId}`} download>
             <Download className="size-4" />
             {t("export_csv")}
@@ -94,64 +386,80 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
         </Button>
       </div>
 
-      <CostDashboard data={costs} isLoading={costsLoading} />
+      {/* KPI chips row */}
+      {costsLoading ? (
+        <KpiChipsSkeleton />
+      ) : costsData ? (
+        <KpiChipsRow data={costsData} />
+      ) : null}
 
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
-        <IngestCard
-          email={vehicleEmail}
-          onUpload={handleUpload}
-          disabled={uploading}
-          uploading={uploading}
-          hasProSubscription={capabilities?.hasProSubscription}
-          docsThisMonth={docsThisMonth}
-        />
-
-        <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-4 py-2 text-xs">
-          <span className="flex items-center gap-2 text-muted-foreground">
-            <Inbox className="size-3.5" />
-            {t("missing_email_docs")}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => recover()}
-            disabled={recovering}
-          >
-            {recovering && <Loader2 className="size-3 animate-spin" />}
-            {recoverResult ? t("recovered", { count: recoverResult.recovered }) : t("recover")}
-          </Button>
-        </div>
-      </motion.div>
-
-      {!docsLoading && documents && documents.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold">{t("processed_docs_heading")}</h2>
-          <div className="space-y-2">
-            {documents.map((doc) => (
-              <DocumentStatusCard
-                key={doc.id}
-                doc={doc}
-                onEdit={(id, updates) => editDocument({ documentId: id, updates })}
-                onDelete={(id) => {
-                  deleteDocument(id, {
-                    onSuccess: () => toast.success("Document șters"),
-                    onError: () => toast.error("Nu s-a putut șterge documentul"),
-                  });
-                }}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Monthly bar chart */}
+      {costsData && costsData.monthlyTrend.length > 0 && (
+        <MonthlyBarChart months={costsData.monthlyTrend} />
       )}
 
-      {!docsLoading && (!documents || documents.length === 0) && (
+      {/* Email recovery banner */}
+      <div className="flex items-center justify-between rounded-xl border border-white/8 bg-white/5 px-4 py-2 text-xs">
+        <span className="flex items-center gap-2 text-muted-foreground">
+          <Inbox className="size-3.5" />
+          {t("missing_email_docs")}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => recover()}
+          disabled={recovering}
+        >
+          {recovering && <Loader2 className="size-3 animate-spin" />}
+          {recoverResult ? t("recovered", { count: recoverResult.recovered }) : t("recover")}
+        </Button>
+      </div>
+
+      {/* Ingest card: shown when FAB toggled or no docs yet */}
+      {(showIngest || noDocuments) && (
+        <motion.div variants={cardVariants} initial="hidden" animate="visible">
+          <IngestCard
+            email={vehicleEmail}
+            onUpload={handleUpload}
+            disabled={uploading}
+            uploading={uploading}
+            hasProSubscription={capabilities?.hasProSubscription}
+            docsThisMonth={docsThisMonth}
+          />
+        </motion.div>
+      )}
+
+      {/* Document timeline */}
+      {hasDocuments ? (
+        <TimelineDocList
+          documents={documents}
+          onEdit={(id, updates) => editDocument({ documentId: id, updates })}
+          onDelete={(id) => {
+            deleteDocument(id, {
+              onSuccess: () => toast.success(t("delete_success")),
+              onError: () => toast.error(t("delete_error")),
+            });
+          }}
+        />
+      ) : noDocuments ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
           <Receipt className="size-10 opacity-30" />
           <p className="text-sm">{t("no_docs_title")}</p>
           <p className="text-xs">{t("no_docs_hint")}</p>
         </div>
-      )}
-    </motion.div>
+      ) : null}
+
+      {/* FAB — floating action button, above bottom nav (64px) */}
+      <motion.button
+        aria-label={t("fab_label")}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setShowIngest((v) => !v)}
+        className="fixed bottom-24 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Plus className="size-6" />
+      </motion.button>
+    </PageWrapper>
   );
 }
