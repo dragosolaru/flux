@@ -211,7 +211,14 @@
     "refresh": "Reîmprospătează",
     "error_title": "Nu am putut contacta mașina",
     "error_subtitle": "Verifică conexiunea și încearcă din nou.",
-    "retry": "Încearcă din nou"
+    "retry": "Încearcă din nou",
+    "charging_active": "Încărcare",
+    "charging_remaining": "rămas",
+    "chip_location": "Locație",
+    "chip_temp": "Temp",
+    "chip_odometer": "Odometru",
+    "chip_last_seen": "Văzut",
+    "action_charge": "Încărcare"
   },
 
   "charging": {
@@ -254,7 +261,11 @@
   "garage": {
     "title": "Garaj",
     "add_vehicle": "Adaugă mașină",
-    "fleet_totals": "Totaluri flotă"
+    "fleet_totals": "Totaluri flotă",
+    "vehicles_count_one": "1 mașină",
+    "vehicles_count_other": "{count} mașini",
+    "mock_label": "Demo",
+    "tap_to_open": "Apasă pentru dashboard"
   },
 
   "costs": {

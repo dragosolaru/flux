@@ -244,3 +244,20 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/animations/variants.ts` — shared Framer Motion variants
 
 **Dependencies:** Framer Motion v12 (already installed), Tailwind CSS v4.
+
+---
+
+## 15. Dashboard & Garage Mobile Redesign
+
+**What:** Full mobile-first redesign of `/dashboard` and `/garage` using the new glassmorphism design system. Dashboard features a hero card with `text-7xl` SOC display, animated progress bar (green/amber/red), LIVE badge, horizontal-scrolling stat chips, 3-button quick actions, and a conditional charging overlay card. Garage shows full-width `aspect-[16/7]` vehicle cards with gradient backgrounds and vehicle silhouette SVGs, plus a dashed "Add vehicle" card.
+
+**How to use:**
+- `/dashboard?v=<vehicleId>` — hero card, stat chips row, quick actions, charging card
+- `/garage` — vehicle hero cards, add-vehicle dashed card
+
+**Key files:**
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — hero card, stat chips, quick actions, charging overlay
+- `src/app/(dashboard)/garage/garage-client.tsx` — full-width vehicle cards with glassmorphism
+- `src/lib/i18n/locales/*.json` — added `dashboard.charging_active`, `dashboard.charging_remaining`, `dashboard.chip_*`, `dashboard.action_charge`, `garage.vehicles_count_*`, `garage.mock_label`, `garage.tap_to_open` to all 5 locales
+
+**Dependencies:** `GlassCard`, `CircularProgress`, `PageWrapper` (design system), Framer Motion, `useVehicle`, `useVehicles`, `useVehicleCommand`.

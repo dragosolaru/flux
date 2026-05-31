@@ -202,7 +202,14 @@
     "refresh": "Actualiser",
     "error_title": "Impossible de contacter votre véhicule",
     "error_subtitle": "Vérifiez votre connexion et réessayez.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "charging_active": "En charge",
+    "charging_remaining": "restant",
+    "chip_location": "Position",
+    "chip_temp": "Temp",
+    "chip_odometer": "Odomètre",
+    "chip_last_seen": "Vu",
+    "action_charge": "Recharge"
   },
 
   "charging": {
@@ -244,7 +251,11 @@
   "garage": {
     "title": "Garage",
     "add_vehicle": "Ajouter un véhicule",
-    "fleet_totals": "Totaux de la flotte"
+    "fleet_totals": "Totaux de la flotte",
+    "vehicles_count_one": "1 véhicule",
+    "vehicles_count_other": "{count} véhicules",
+    "mock_label": "Démo",
+    "tap_to_open": "Appuyer pour le tableau de bord"
   },
   "costs": {
     "kpi_cost_per_km": "Coût par km",

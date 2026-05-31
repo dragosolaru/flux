@@ -202,7 +202,14 @@
     "refresh": "Frissítés",
     "error_title": "Nem sikerült elérni a járművet",
     "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
-    "retry": "Próbálja újra"
+    "retry": "Próbálja újra",
+    "charging_active": "Töltés",
+    "charging_remaining": "hátralévő",
+    "chip_location": "Helyszín",
+    "chip_temp": "Hőfok",
+    "chip_odometer": "Km-óra",
+    "chip_last_seen": "Utoljára",
+    "action_charge": "Töltés"
   },
 
   "charging": {
@@ -244,7 +251,11 @@
   "garage": {
     "title": "Garázs",
     "add_vehicle": "Jármű hozzáadása",
-    "fleet_totals": "Flotta összesítő"
+    "fleet_totals": "Flotta összesítő",
+    "vehicles_count_one": "1 jármű",
+    "vehicles_count_other": "{count} jármű",
+    "mock_label": "Demó",
+    "tap_to_open": "Koppintson a dashboardhoz"
   },
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",

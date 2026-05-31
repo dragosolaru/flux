@@ -211,7 +211,14 @@
     "refresh": "Refresh",
     "error_title": "Couldn't reach your vehicle",
     "error_subtitle": "Check your connection and try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "charging_active": "Charging",
+    "charging_remaining": "remaining",
+    "chip_location": "Location",
+    "chip_temp": "Temp",
+    "chip_odometer": "Odometer",
+    "chip_last_seen": "Last seen",
+    "action_charge": "Charge"
   },
 
   "charging": {
@@ -254,7 +261,11 @@
   "garage": {
     "title": "Garage",
     "add_vehicle": "Add vehicle",
-    "fleet_totals": "Fleet totals"
+    "fleet_totals": "Fleet totals",
+    "vehicles_count_one": "1 vehicle",
+    "vehicles_count_other": "{count} vehicles",
+    "mock_label": "Demo",
+    "tap_to_open": "Tap to open dashboard"
   },
 
   "costs": {

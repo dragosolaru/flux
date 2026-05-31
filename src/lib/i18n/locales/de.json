@@ -202,7 +202,14 @@
     "refresh": "Aktualisieren",
     "error_title": "Fahrzeug nicht erreichbar",
     "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "charging_active": "Lädt",
+    "charging_remaining": "verbleibend",
+    "chip_location": "Standort",
+    "chip_temp": "Temp",
+    "chip_odometer": "Km-Stand",
+    "chip_last_seen": "Zuletzt",
+    "action_charge": "Laden"
   },
 
   "charging": {
@@ -244,7 +251,11 @@
   "garage": {
     "title": "Garage",
     "add_vehicle": "Fahrzeug hinzufügen",
-    "fleet_totals": "Flottenübersicht"
+    "fleet_totals": "Flottenübersicht",
+    "vehicles_count_one": "1 Fahrzeug",
+    "vehicles_count_other": "{count} Fahrzeuge",
+    "mock_label": "Demo",
+    "tap_to_open": "Tippen für Dashboard"
   },
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",
