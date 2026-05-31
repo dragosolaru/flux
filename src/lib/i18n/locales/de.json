@@ -223,7 +223,19 @@
     "history_empty_title": "Noch kein Ladeverlauf",
     "history_empty_hint": "Sessions erscheinen hier, sobald das Auto angeschlossen war, während das Dashboard offen war.",
     "history_sync": "Von Tesla synchronisieren",
-    "history_syncing": "Wird synchronisiert…"
+    "history_syncing": "Wird synchronisiert…",
+    "ring_status_charging": "Lädt",
+    "ring_status_complete": "Laden abgeschlossen",
+    "ring_status_stopped": "Laden gestoppt",
+    "ring_status_disconnected": "Nicht verbunden",
+    "ring_target": "Ziel",
+    "ring_power": "Leistung",
+    "ring_time_remaining": "Verbleibend",
+    "history_duration": "Dauer",
+    "history_kwh": "kWh geladen",
+    "history_cost": "Kosten",
+    "history_home": "Zuhause",
+    "history_public": "Öffentlich"
   },
 
   "commands": {

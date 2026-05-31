@@ -232,7 +232,19 @@
     "history_empty_title": "Niciun istoric de încărcare",
     "history_empty_hint": "Sesiunile apar aici odată ce mașina a fost conectată cât timp dashboard-ul era deschis.",
     "history_sync": "Sincronizare din Tesla",
-    "history_syncing": "Se sincronizează…"
+    "history_syncing": "Se sincronizează…",
+    "ring_status_charging": "Se încarcă",
+    "ring_status_complete": "Încărcare completă",
+    "ring_status_stopped": "Încărcare oprită",
+    "ring_status_disconnected": "Neconectat",
+    "ring_target": "Țintă",
+    "ring_power": "Putere",
+    "ring_time_remaining": "Timp rămas",
+    "history_duration": "Durată",
+    "history_kwh": "kWh adăugat",
+    "history_cost": "Cost",
+    "history_home": "Acasă",
+    "history_public": "Public"
   },
 
   "commands": {

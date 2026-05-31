@@ -223,7 +223,19 @@
     "history_empty_title": "Aucun historique de recharge",
     "history_empty_hint": "Les sessions apparaissent ici une fois que votre voiture a été branchée pendant que le tableau de bord était ouvert.",
     "history_sync": "Synchroniser depuis Tesla",
-    "history_syncing": "Synchronisation…"
+    "history_syncing": "Synchronisation…",
+    "ring_status_charging": "En charge",
+    "ring_status_complete": "Charge complète",
+    "ring_status_stopped": "Charge arrêtée",
+    "ring_status_disconnected": "Non connecté",
+    "ring_target": "Cible",
+    "ring_power": "Puissance",
+    "ring_time_remaining": "Temps restant",
+    "history_duration": "Durée",
+    "history_kwh": "kWh ajoutés",
+    "history_cost": "Coût",
+    "history_home": "Domicile",
+    "history_public": "Public"
   },
 
   "commands": {
