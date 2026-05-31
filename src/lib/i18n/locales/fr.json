@@ -82,7 +82,45 @@
     "title": "Bienvenue sur Flux",
     "subtitle": "Gérez les coûts, surveillez et contrôlez votre Tesla — tout en un seul endroit.",
     "cta_primary": "Connecter Tesla",
-    "cta_secondary": "Explorer avec les données démo"
+    "cta_secondary": "Explorer avec les données démo",
+    "add_vehicle": {
+      "title": "Ajouter un véhicule",
+      "title_success": "Véhicule ajouté !",
+      "description": "Configurez votre véhicule pour commencer à suivre les coûts et l'autonomie.",
+      "description_success": "Votre véhicule a été ajouté. Vous pouvez maintenant le surveiller depuis le tableau de bord.",
+      "submit": "Ajouter le véhicule",
+      "submitting": "Ajout en cours…",
+      "btn_add_another": "Ajouter un autre véhicule",
+      "btn_view_vehicle": "Voir le véhicule",
+      "field_model": "Modèle",
+      "field_nickname": "Surnom",
+      "field_nickname_placeholder": "ex : Mon Tesla",
+      "field_year": "Année",
+      "field_scenario": "Scénario d'utilisation",
+      "error_nickname_required": "Le surnom est obligatoire.",
+      "upgrade_title": "Plan Pro requis",
+      "upgrade_description": "Passez à Pro pour ajouter plus d'un véhicule.",
+      "upgrade_cta": "Passer à Pro"
+    }
+  },
+
+  "scenarios": {
+    "commuter": {
+      "label": "Navetteur quotidien",
+      "desc": "Trajets urbains courts, chargé à domicile chaque nuit."
+    },
+    "weekend-errands": {
+      "label": "Courses du week-end",
+      "desc": "Déplacements occasionnels en ville."
+    },
+    "road-trip": {
+      "label": "Road trip",
+      "desc": "Longs trajets autoroutiers avec arrêts Superchargeur."
+    },
+    "vacation": {
+      "label": "Mode vacances",
+      "desc": "Garé pendant de longues périodes."
+    }
   },
   "settings": {
     "title": "Paramètres",

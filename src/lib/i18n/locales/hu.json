@@ -82,7 +82,45 @@
     "title": "Üdvözli a Flux",
     "subtitle": "Kezelje a költségeket, figyelje és vezérelje Tesla-ját — mindent egy helyen.",
     "cta_primary": "Tesla csatlakoztatása",
-    "cta_secondary": "Fedezze fel demóadatokkal"
+    "cta_secondary": "Fedezze fel demóadatokkal",
+    "add_vehicle": {
+      "title": "Jármű hozzáadása",
+      "title_success": "Jármű hozzáadva!",
+      "description": "Konfigurálja járművét a költségek és hatótávolság követéséhez.",
+      "description_success": "Járműve hozzá lett adva. Most már figyelheti az irányítópultról.",
+      "submit": "Jármű hozzáadása",
+      "submitting": "Hozzáadás folyamatban…",
+      "btn_add_another": "Másik jármű hozzáadása",
+      "btn_view_vehicle": "Jármű megtekintése",
+      "field_model": "Modell",
+      "field_nickname": "Becenév",
+      "field_nickname_placeholder": "pl.: Az én Teslám",
+      "field_year": "Év",
+      "field_scenario": "Használati forgatókönyv",
+      "error_nickname_required": "A becenév kötelező.",
+      "upgrade_title": "Pro csomag szükséges",
+      "upgrade_description": "Frissítsen Pro-ra több jármű hozzáadásához.",
+      "upgrade_cta": "Frissítés Pro-ra"
+    }
+  },
+
+  "scenarios": {
+    "commuter": {
+      "label": "Napi ingázó",
+      "desc": "Rövid városi utak, minden este otthon töltve."
+    },
+    "weekend-errands": {
+      "label": "Hétvégi bevásárlás",
+      "desc": "Alkalmi városon belüli utak."
+    },
+    "road-trip": {
+      "label": "Hosszú út",
+      "desc": "Hosszú autópályás utak Supercharger megállókkal."
+    },
+    "vacation": {
+      "label": "Nyaralási mód",
+      "desc": "Hosszabb ideig parkolva."
+    }
   },
   "settings": {
     "title": "Beállítások",

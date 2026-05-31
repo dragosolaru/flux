@@ -87,7 +87,45 @@
     "title": "Bine ai venit în Flux",
     "subtitle": "Gestionează costurile, monitorizează și controlează-ți Tesla — totul într-un singur loc.",
     "cta_primary": "Conectează Tesla",
-    "cta_secondary": "Explorează cu date demo"
+    "cta_secondary": "Explorează cu date demo",
+    "add_vehicle": {
+      "title": "Adaugă un vehicul",
+      "title_success": "Vehicul adăugat!",
+      "description": "Configurează vehiculul pentru a începe să urmărești costurile și autonomia.",
+      "description_success": "Vehiculul tău a fost adăugat. Îl poți monitoriza acum din dashboard.",
+      "submit": "Adaugă vehicul",
+      "submitting": "Se adaugă…",
+      "btn_add_another": "Adaugă alt vehicul",
+      "btn_view_vehicle": "Vezi vehiculul",
+      "field_model": "Model",
+      "field_nickname": "Poreclă",
+      "field_nickname_placeholder": "ex: Tesla mea",
+      "field_year": "An",
+      "field_scenario": "Scenariu de utilizare",
+      "error_nickname_required": "Porecla este obligatorie.",
+      "upgrade_title": "Plan Pro necesar",
+      "upgrade_description": "Fă upgrade la Pro pentru a adăuga mai mult de un vehicul.",
+      "upgrade_cta": "Upgrade la Pro"
+    }
+  },
+
+  "scenarios": {
+    "commuter": {
+      "label": "Navetist zilnic",
+      "desc": "Trasee urbane scurte, încărcat acasă în fiecare noapte."
+    },
+    "weekend-errands": {
+      "label": "Comisioane de weekend",
+      "desc": "Deplasări ocazionale prin oraș."
+    },
+    "road-trip": {
+      "label": "Road trip",
+      "desc": "Călătorii lungi pe autostradă cu opriri la Supercharger."
+    },
+    "vacation": {
+      "label": "Mod vacanță",
+      "desc": "Parcat pentru perioade extinse."
+    }
   },
 
   "settings": {

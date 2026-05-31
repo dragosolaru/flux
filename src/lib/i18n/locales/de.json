@@ -82,7 +82,45 @@
     "title": "Willkommen bei Flux",
     "subtitle": "Kosten verwalten, deinen Tesla überwachen und steuern — alles an einem Ort.",
     "cta_primary": "Tesla verbinden",
-    "cta_secondary": "Mit Demo-Daten erkunden"
+    "cta_secondary": "Mit Demo-Daten erkunden",
+    "add_vehicle": {
+      "title": "Fahrzeug hinzufügen",
+      "title_success": "Fahrzeug hinzugefügt!",
+      "description": "Konfiguriere dein Fahrzeug, um Kosten und Reichweite zu verfolgen.",
+      "description_success": "Dein Fahrzeug wurde hinzugefügt. Du kannst es jetzt im Dashboard überwachen.",
+      "submit": "Fahrzeug hinzufügen",
+      "submitting": "Wird hinzugefügt…",
+      "btn_add_another": "Weiteres Fahrzeug hinzufügen",
+      "btn_view_vehicle": "Fahrzeug anzeigen",
+      "field_model": "Modell",
+      "field_nickname": "Spitzname",
+      "field_nickname_placeholder": "z.B. Mein Tesla",
+      "field_year": "Jahr",
+      "field_scenario": "Nutzungsszenario",
+      "error_nickname_required": "Spitzname ist erforderlich.",
+      "upgrade_title": "Pro-Plan erforderlich",
+      "upgrade_description": "Upgrade auf Pro, um mehr als ein Fahrzeug hinzuzufügen.",
+      "upgrade_cta": "Auf Pro upgraden"
+    }
+  },
+
+  "scenarios": {
+    "commuter": {
+      "label": "Täglicher Pendler",
+      "desc": "Kurze Stadtfahrten, täglich zuhause geladen."
+    },
+    "weekend-errands": {
+      "label": "Wochenendeinkäufe",
+      "desc": "Gelegentliche Fahrten in der Stadt."
+    },
+    "road-trip": {
+      "label": "Roadtrip",
+      "desc": "Lange Autobahnfahrten mit Supercharger-Stopps."
+    },
+    "vacation": {
+      "label": "Urlaubsmodus",
+      "desc": "Längere Zeit geparkt."
+    }
   },
   "settings": {
     "title": "Einstellungen",

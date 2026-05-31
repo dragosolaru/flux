@@ -87,7 +87,45 @@
     "title": "Welcome to Flux",
     "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
     "cta_primary": "Connect Tesla",
-    "cta_secondary": "Explore with demo data"
+    "cta_secondary": "Explore with demo data",
+    "add_vehicle": {
+      "title": "Add a vehicle",
+      "title_success": "Vehicle added!",
+      "description": "Configure your vehicle to start tracking costs and range.",
+      "description_success": "Your vehicle has been added. You can now monitor it from the dashboard.",
+      "submit": "Add vehicle",
+      "submitting": "Adding…",
+      "btn_add_another": "Add another vehicle",
+      "btn_view_vehicle": "View vehicle",
+      "field_model": "Model",
+      "field_nickname": "Nickname",
+      "field_nickname_placeholder": "e.g. My Tesla",
+      "field_year": "Year",
+      "field_scenario": "Usage scenario",
+      "error_nickname_required": "Nickname is required.",
+      "upgrade_title": "Pro plan required",
+      "upgrade_description": "Upgrade to Pro to add more than one vehicle.",
+      "upgrade_cta": "Upgrade to Pro"
+    }
+  },
+
+  "scenarios": {
+    "commuter": {
+      "label": "Daily commuter",
+      "desc": "Short urban trips, charged at home every night."
+    },
+    "weekend-errands": {
+      "label": "Weekend errands",
+      "desc": "Occasional trips around the city."
+    },
+    "road-trip": {
+      "label": "Road trip",
+      "desc": "Long highway journeys with Supercharger stops."
+    },
+    "vacation": {
+      "label": "Vacation mode",
+      "desc": "Parked for extended periods."
+    }
   },
 
   "settings": {
