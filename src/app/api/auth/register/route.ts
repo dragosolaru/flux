@@ -42,8 +42,9 @@ export async function POST(req: NextRequest) {
   });
 
   if (error || !data.user) {
+    console.error("[auth/register]", error?.message ?? "no user returned");
     return NextResponse.json(
-      { message: error?.message ?? "Could not create user" },
+      { message: "Could not create user" },
       { status: 400 },
     );
   }

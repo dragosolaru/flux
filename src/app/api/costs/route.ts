@@ -60,7 +60,10 @@ export async function GET(request: Request) {
   if (parsed.data.to) query = query.lte("period_start", parsed.data.to);
 
   const { data: rows, error } = await query;
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error("[costs]", error.message);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 
   const costs = (rows ?? []) as EnergyCostRow[];
 

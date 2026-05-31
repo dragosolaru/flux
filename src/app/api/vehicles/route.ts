@@ -31,7 +31,8 @@ export async function GET() {
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("[vehicles/GET]", error.message);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
   return NextResponse.json(
@@ -119,10 +120,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertErr || !vehicle) {
-    return NextResponse.json(
-      { message: insertErr?.message ?? "Failed to create vehicle" },
-      { status: 500 },
-    );
+    console.error("[vehicles/POST]", insertErr?.message ?? "no vehicle returned");
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
   // Seed initial mock state
