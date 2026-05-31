@@ -64,9 +64,9 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   async function handleUpload(file: File) {
     try {
       await upload(file);
-      toast.success("Document adăugat — se procesează…");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload eșuat");
+      toast.success(t("upload_success"));
+    } catch {
+      toast.error(t("upload_error"));
     }
   }
 
@@ -126,7 +126,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
 
       {!docsLoading && documents && documents.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold">Documente procesate</h2>
+          <h2 className="text-sm font-semibold">{t("processed_docs_heading")}</h2>
           <div className="space-y-2">
             {documents.map((doc) => (
               <DocumentStatusCard

@@ -16,9 +16,11 @@
     "copied": "Copied",
     "soon": "Soon"
   },
+
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."
   },
+
   "nav": {
     "section": {
       "car": "Car",
@@ -51,11 +53,13 @@
       }
     }
   },
+
   "mock_banner": {
     "title": "Simulated data",
     "subtitle": "Connect Tesla for real data",
     "cta": "Connect Tesla"
   },
+
   "empty_states": {
     "no_vehicle": {
       "title": "Add your first car",
@@ -76,64 +80,23 @@
       "title": "Control your car from your browser",
       "subtitle": "Pair your Virtual Key and send commands: climate, lock, charge, windows.",
       "cta": "Set up Virtual Key"
-    },
-    "no_pro": {
-      "title": "Unlock Pro features",
-      "subtitle": "Upgrade to Pro for unlimited vehicles, OCR, battery health tracking, and more.",
-      "cta": "Upgrade to Pro"
     }
   },
+
   "onboarding": {
     "title": "Welcome to Flux",
     "subtitle": "Manage costs, monitor and control your Tesla — all in one place.",
     "cta_primary": "Connect Tesla",
-    "cta_secondary": "Explore with demo data",
-    "add_vehicle": {
-      "title": "Add your Tesla",
-      "title_success": "Vehicle added!",
-      "description": "Pick model & nickname. Live integration requires Tesla account pairing (next step).",
-      "description_success": "Your new vehicle is ready in the garage.",
-      "field_model": "Model",
-      "field_nickname": "Nickname",
-      "field_nickname_placeholder": "e.g. Black Panther",
-      "field_year": "Year",
-      "field_scenario": "Driving scenario (mock data)",
-      "submit": "Add vehicle",
-      "submitting": "Adding…",
-      "error_nickname_required": "Nickname is required",
-      "btn_add_another": "Add another",
-      "btn_view_vehicle": "View vehicle",
-      "upgrade_title": "Free plan limit reached",
-      "upgrade_description": "Your free plan includes 1 vehicle. Upgrade to Pro to add unlimited vehicles.",
-      "upgrade_cta": "Upgrade to Pro for unlimited vehicles"
-    },
-    "scenarios": {
-      "commuter": {
-        "label": "Daily Commuter",
-        "desc": "9-to-5, home charging"
-      },
-      "weekend-errands": {
-        "label": "Weekend Errands",
-        "desc": "Short city trips"
-      },
-      "road-trip": {
-        "label": "Road Trip",
-        "desc": "Long distance with DC stops"
-      },
-      "vacation": {
-        "label": "Vacation",
-        "desc": "Multi-day getaway"
-      }
-    }
+    "cta_secondary": "Explore with demo data"
   },
+
   "settings": {
     "title": "Settings",
     "section": {
       "preferences": "Preferences",
       "location": "Location",
       "tariff": "Energy tariff",
-      "account": "Account",
-      "subscription": "Subscription"
+      "account": "Account"
     },
     "locale": {
       "label": "Language",
@@ -179,19 +142,12 @@
       "confirm_description": "This will permanently delete your Flux account, all vehicles, charging history, documents, and costs. This action cannot be undone.",
       "confirm_cancel": "Cancel",
       "confirm_delete": "Yes, delete my account"
-    },
-    "whatsapp": {
-      "label": "WhatsApp number",
-      "description": "Register your WhatsApp number to send receipts via WhatsApp. They'll be attributed to your account automatically.",
-      "save": "Save",
-      "invalid": "Use international format, e.g. +40712345678."
     }
   },
+
   "ingest": {
     "title": "Add receipt",
     "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
-    "free_tier_usage": "{used} / {max} uploads used this month",
-    "upgrade_cta": "Upgrade to Pro for unlimited uploads",
     "option": {
       "upload": {
         "label": "Photo",
@@ -208,6 +164,38 @@
       }
     }
   },
+
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "updates every 30s",
+    "demo_subtitle": "Demo data · updates every 30s",
+    "refresh": "Refresh",
+    "error_title": "Couldn't reach your vehicle",
+    "error_subtitle": "Check your connection and try again.",
+    "retry": "Try again"
+  },
+
+  "charging": {
+    "page_title": "Charging",
+    "status_title": "Charging status",
+    "limit_title": "Charge limit",
+    "limit_description": "Set the maximum state-of-charge. Tesla recommends ≤90% for daily use.",
+    "limit_label": "Limit",
+    "limit_save": "Save limit",
+    "limit_saving": "Saving…",
+    "limit_error": "Could not load charge limit.",
+    "scheduled_title": "Scheduled charging",
+    "scheduled_description": "Start charging at a chosen time — useful for off-peak tariffs.",
+    "scheduled_enabled": "Enabled",
+    "scheduled_start_at": "Start at",
+    "history_title": "Recent charging sessions",
+    "history_description": "Snapshots captured while charging was active.",
+    "history_empty_title": "No charging history yet",
+    "history_empty_hint": "Sessions appear here once your car has been plugged in while the dashboard is open.",
+    "history_sync": "Sync from Tesla",
+    "history_syncing": "Syncing…"
+  },
+
   "commands": {
     "title": "Commands",
     "subtitle": "Control your car remotely.",
@@ -219,13 +207,17 @@
     "honk": "Honk",
     "flash": "Flash lights",
     "no_commands": "No commands available for this vehicle.",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "no_vehicles_title": "No vehicles yet",
+    "no_vehicles_hint": "Add a vehicle in the Garage to send commands."
   },
+
   "garage": {
     "title": "Garage",
     "add_vehicle": "Add vehicle",
     "fleet_totals": "Fleet totals"
   },
+
   "costs": {
     "kpi_cost_per_km": "Cost per km",
     "kpi_home_vs_public": "Home vs Public",
@@ -237,36 +229,21 @@
     "add_docs_hint": "Add documents to see cost/km",
     "home": "Home",
     "public": "Public",
-    "blended": "Blended",
-    "km_driven": "km driven",
-    "fuel_equivalent_label": "Petrol equivalent (7L/100km)",
-    "fuel_saving": "You save {amount}",
-    "fuel_more_expensive": "{amount} more expensive",
-    "fuel_equivalent_cost": "Equivalent cost",
-    "fuel_register_km": "Log km driven to compare",
-    "fuel_add_docs": "Add documents to compare",
-    "months": [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec"
-    ],
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     "page_title": "Costs",
     "no_docs_title": "No documents yet.",
     "no_docs_hint": "Upload your first bill or receipt to see costs.",
     "missing_email_docs": "Missing email documents?",
     "recover": "Recover",
     "recovered": "Recovered: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "processed_docs_heading": "Processed documents",
+    "upload_success": "Document added — processing…",
+    "upload_error": "Upload failed",
+    "delete_success": "Document deleted",
+    "delete_error": "Could not delete document"
   },
+
   "departure": {
     "title": "Departure & Preconditioning",
     "departure_label": "Scheduled departure",
@@ -280,6 +257,7 @@
     "preconditioning": "Activating…",
     "preconditioned": "Active ✓"
   },
+
   "energy": {
     "smart_charge_title": "Smart charge",
     "smart_charge_hint": "Only shown for plugged-in vehicles below their charge limit.",
@@ -289,57 +267,6 @@
     "save": "save",
     "now": "Now",
     "optimal": "Optimal",
-    "to_target": "to target",
-    "schedule_no_virtual_key": "Connect Tesla to schedule automatically"
-  },
-  "billing": {
-    "free_plan": "Free plan",
-    "pro_plan": "Flux Pro",
-    "free_description": "1 vehicle, 3 documents/month.",
-    "pro_description": "Unlimited vehicles and documents, AI features enabled.",
-    "upgrade_cta": "Upgrade to Pro — €4.99/mo",
-    "manage": "Manage subscription",
-    "see_all": "See all features →",
-    "upgrade_hint": "Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest."
-  },
-  "battery_health": {
-    "title": "Battery degradation",
-    "collecting": "Collecting data — the trend appears after a few days of use.",
-    "latest": "months"
-  },
-  "landing": {
-    "hero_headline": "Know the real cost of driving electric.",
-    "hero_subheadline": "Flux tracks your Tesla's energy costs, charging sessions, and smart-charges on your actual Romanian tariff — so you always pay less.",
-    "hero_cta": "Get started free",
-    "hero_cta_pricing": "See pricing",
-    "features_title": "Everything your EV needs.",
-    "feature_ocr_title": "OCR energy bills",
-    "feature_ocr_desc": "Snap a photo of any electricity bill and Flux extracts kWh, cost, and provider automatically — no manual entry.",
-    "feature_tariff_title": "Real Romanian tariffs",
-    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux knows your exact rates and calculates home-charging cost down to the cent.",
-    "feature_smart_title": "Smart charging schedule",
-    "feature_smart_desc": "We read your tariff price curve and tell you the cheapest hour to start charging. One tap to schedule.",
-    "feature_i18n_title": "Your language, your currency",
-    "feature_i18n_desc": "Available in Romanian, English, German, French, and Hungarian. Costs shown in RON, EUR, or your preferred currency.",
-    "pricing_teaser_title": "Start free, upgrade when you need more.",
-    "pricing_teaser_desc": "Free plan covers one vehicle and three OCR documents per month. Pro is €4.99 / month for unlimited everything.",
-    "pricing_teaser_cta": "View pricing"
-  },
-
-  "errorPage": {
-    "heading": "Something went wrong",
-    "description": "An unexpected error occurred. You can try again or go back to the dashboard.",
-    "retry": "Try again",
-    "back_to_dashboard": "Back to dashboard"
-  },
-
-  "notFoundPage": {
-    "heading": "Page not found",
-    "description": "The page you're looking for doesn't exist or has been moved.",
-    "back_to_dashboard": "Back to dashboard"
-  },
-
-  "chargingMap": {
-    "disclaimer": "Charging availability is simulated for demo purposes."
+    "to_target": "to target"
   }
 }

@@ -16,9 +16,11 @@
     "copied": "Copiat",
     "soon": "Curând"
   },
+
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."
   },
+
   "nav": {
     "section": {
       "car": "Mașina",
@@ -51,11 +53,13 @@
       }
     }
   },
+
   "mock_banner": {
     "title": "Date simulate",
     "subtitle": "Conectează Tesla pentru date reale",
     "cta": "Conectează Tesla"
   },
+
   "empty_states": {
     "no_vehicle": {
       "title": "Adaugă prima ta mașină",
@@ -76,64 +80,23 @@
       "title": "Controlează mașina din browser",
       "subtitle": "Pereche Virtual Key și trimite comenzi: climate, lock, charge, geamuri.",
       "cta": "Configurează Virtual Key"
-    },
-    "no_pro": {
-      "title": "Deblochează funcțiile Pro",
-      "subtitle": "Treci la Pro pentru vehicule nelimitate, OCR, istoricul bateriei și altele.",
-      "cta": "Treci la Pro"
     }
   },
+
   "onboarding": {
     "title": "Bine ai venit în Flux",
     "subtitle": "Gestionează costurile, monitorizează și controlează-ți Tesla — totul într-un singur loc.",
     "cta_primary": "Conectează Tesla",
-    "cta_secondary": "Explorează cu date demo",
-    "add_vehicle": {
-      "title": "Adaugă Tesla-ul tău",
-      "title_success": "Mașina adăugată!",
-      "description": "Alege modelul și porecla. Integrarea live necesită conectarea contului Tesla (pasul următor).",
-      "description_success": "Noua ta mașină este gata în garaj.",
-      "field_model": "Model",
-      "field_nickname": "Poreclă",
-      "field_nickname_placeholder": "ex. Pantera Neagră",
-      "field_year": "An",
-      "field_scenario": "Scenariu de condus (date simulate)",
-      "submit": "Adaugă mașina",
-      "submitting": "Se adaugă…",
-      "error_nickname_required": "Porecla este obligatorie",
-      "btn_add_another": "Adaugă alta",
-      "btn_view_vehicle": "Vezi mașina",
-      "upgrade_title": "Limita planului gratuit atinsă",
-      "upgrade_description": "Planul tău gratuit include 1 mașină. Treci la Pro pentru mașini nelimitate.",
-      "upgrade_cta": "Treci la Pro pentru mașini nelimitate"
-    },
-    "scenarios": {
-      "commuter": {
-        "label": "Navetist zilnic",
-        "desc": "9-17, încărcare acasă"
-      },
-      "weekend-errands": {
-        "label": "Comisioane de weekend",
-        "desc": "Scurte drumuri în oraș"
-      },
-      "road-trip": {
-        "label": "Road Trip",
-        "desc": "Distanțe lungi cu opriri DC"
-      },
-      "vacation": {
-        "label": "Vacanță",
-        "desc": "Excursie de mai multe zile"
-      }
-    }
+    "cta_secondary": "Explorează cu date demo"
   },
+
   "settings": {
     "title": "Setări",
     "section": {
       "preferences": "Preferințe",
       "location": "Locație",
       "tariff": "Tarif energie",
-      "account": "Cont",
-      "subscription": "Abonament"
+      "account": "Cont"
     },
     "locale": {
       "label": "Limbă",
@@ -179,19 +142,12 @@
       "confirm_description": "Aceasta va șterge permanent contul tău Flux, toate mașinile, istoricul de încărcare, documentele și costurile. Acțiunea nu poate fi anulată.",
       "confirm_cancel": "Anulează",
       "confirm_delete": "Da, șterge contul meu"
-    },
-    "whatsapp": {
-      "label": "Număr WhatsApp",
-      "description": "Înregistrează-ți numărul de WhatsApp ca să trimiți bonuri prin WhatsApp. Vor fi atribuite automat contului tău.",
-      "save": "Salvează",
-      "invalid": "Folosește format internațional, ex. +40712345678."
     }
   },
+
   "ingest": {
     "title": "Adaugă bon",
     "subtitle": "Trimite bonul de la orice rețea — Renovatio, IONITY, MOL, Petrom — și îl procesăm automat.",
-    "free_tier_usage": "{used} / {max} upload-uri folosite luna aceasta",
-    "upgrade_cta": "Treci la Pro pentru upload-uri nelimitate",
     "option": {
       "upload": {
         "label": "Foto",
@@ -208,6 +164,38 @@
       }
     }
   },
+
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "se actualizează la 30s",
+    "demo_subtitle": "Date demo · se actualizează la 30s",
+    "refresh": "Reîmprospătează",
+    "error_title": "Nu am putut contacta mașina",
+    "error_subtitle": "Verifică conexiunea și încearcă din nou.",
+    "retry": "Încearcă din nou"
+  },
+
+  "charging": {
+    "page_title": "Încărcare",
+    "status_title": "Status încărcare",
+    "limit_title": "Limită încărcare",
+    "limit_description": "Setează SOC-ul maxim. Tesla recomandă ≤90% pentru uzul zilnic.",
+    "limit_label": "Limită",
+    "limit_save": "Salvează limita",
+    "limit_saving": "Se salvează…",
+    "limit_error": "Nu s-a putut încărca limita.",
+    "scheduled_title": "Încărcare programată",
+    "scheduled_description": "Pornește încărcarea la o oră aleasă — util pentru tarife de noapte.",
+    "scheduled_enabled": "Activat",
+    "scheduled_start_at": "Pornește la",
+    "history_title": "Sesiuni de încărcare recente",
+    "history_description": "Instantanee capturate în timp ce mașina era la încărcat.",
+    "history_empty_title": "Niciun istoric de încărcare",
+    "history_empty_hint": "Sesiunile apar aici odată ce mașina a fost conectată cât timp dashboard-ul era deschis.",
+    "history_sync": "Sincronizare din Tesla",
+    "history_syncing": "Se sincronizează…"
+  },
+
   "commands": {
     "title": "Comenzi",
     "subtitle": "Controlează mașina ta de la distanță.",
@@ -219,70 +207,15 @@
     "honk": "Claxon",
     "flash": "Lumini",
     "no_commands": "Nicio comandă disponibilă pentru această mașină.",
-    "sending": "Se trimite…"
+    "sending": "Se trimite…",
+    "no_vehicles_title": "Nicio mașină încă",
+    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi."
   },
+
   "garage": {
     "title": "Garaj",
     "add_vehicle": "Adaugă mașină",
     "fleet_totals": "Totaluri flotă"
-  },
-  "departure": {
-    "title": "Plecare & Preconditionare",
-    "departure_label": "Plecare programată",
-    "departure_hint": "Mașina va încălzi bateria și habitaclul înainte să pleci.",
-    "schedule_btn": "Programează",
-    "scheduling": "Se programează…",
-    "scheduled": "Programat ✓",
-    "precondition_label": "Preconditionează acum",
-    "precondition_hint": "Încălzește bateria pentru încărcare DC mai rapidă. Ideal înainte de un Supercharger.",
-    "precondition_btn": "Preconditionează bateria",
-    "preconditioning": "Se activează…",
-    "preconditioned": "Activ ✓"
-  },
-  "energy": {
-    "smart_charge_title": "Încărcare inteligentă",
-    "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",
-    "schedule_btn": "Programează",
-    "scheduled": "Programat ✓",
-    "start_at": "Pornește la",
-    "save": "economisești",
-    "now": "Acum",
-    "optimal": "Optim",
-    "to_target": "până la țintă",
-    "schedule_no_virtual_key": "Conectează Tesla pentru a programa automat"
-  },
-  "billing": {
-    "free_plan": "Plan gratuit",
-    "pro_plan": "Flux Pro",
-    "free_description": "1 vehicul, 3 documente/lună.",
-    "pro_description": "Vehicule și documente nelimitate, funcții AI activate.",
-    "upgrade_cta": "Treci la Pro — €4.99/lună",
-    "manage": "Gestionează abonamentul",
-    "see_all": "Vezi toate funcțiile →",
-    "upgrade_hint": "Pro include: vehicule nelimitate, OCR nelimitat, urmărirea stării bateriei, rezumat săptămânal."
-  },
-  "battery_health": {
-    "title": "Degradare baterie",
-    "collecting": "Se colectează date — tendința apare după câteva zile de utilizare.",
-    "latest": "luni"
-  },
-  "landing": {
-    "hero_headline": "Știi cât te costă cu adevărat mașina electrică?",
-    "hero_subheadline": "Flux urmărește costurile de energie ale Tesla-ului tău, sesiunile de încărcare și programează încărcarea pe tariful tău real din România — ca să plătești mai puțin mereu.",
-    "hero_cta": "Începe gratuit",
-    "hero_cta_pricing": "Vezi prețuri",
-    "features_title": "Tot ce are nevoie mașina ta electrică.",
-    "feature_ocr_title": "OCR pentru facturi de energie",
-    "feature_ocr_desc": "Fotografiază orice factură de curent și Flux extrage automat kWh, costul și furnizorul — fără introducere manuală.",
-    "feature_tariff_title": "Tarife românești reale",
-    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux cunoaște tarifele tale exacte și calculează costul încărcării acasă la bănuț.",
-    "feature_smart_title": "Programare inteligentă a încărcării",
-    "feature_smart_desc": "Citim curba de prețuri a tarifului tău și îți spunem cea mai ieftină oră să încarci. Un tap pentru programare.",
-    "feature_i18n_title": "Limba ta, moneda ta",
-    "feature_i18n_desc": "Disponibil în română, engleză, germană, franceză și maghiară. Costuri afișate în RON, EUR sau moneda preferată.",
-    "pricing_teaser_title": "Începe gratuit, upgradează când ai nevoie de mai mult.",
-    "pricing_teaser_desc": "Planul gratuit acoperă un vehicul și trei documente OCR pe lună. Pro este €4.99 / lună pentru totul nelimitat.",
-    "pricing_teaser_cta": "Vezi prețuri"
   },
 
   "costs": {
@@ -296,14 +229,6 @@
     "add_docs_hint": "Adaugă documente pentru a vedea costul/km",
     "home": "Acasă",
     "public": "Public",
-    "blended": "Medie",
-    "km_driven": "km parcurși",
-    "fuel_equivalent_label": "Benzină echivalent (7L/100km)",
-    "fuel_saving": "Economisești {amount}",
-    "fuel_more_expensive": "Cu {amount} mai scump",
-    "fuel_equivalent_cost": "Cost echivalent",
-    "fuel_register_km": "Înregistrează km parcurși pentru comparație",
-    "fuel_add_docs": "Adaugă documente pentru comparație",
     "months": ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"],
     "page_title": "Costuri",
     "no_docs_title": "Niciun document încă.",
@@ -311,23 +236,37 @@
     "missing_email_docs": "Lipsesc documente trimise pe email?",
     "recover": "Recuperează",
     "recovered": "Recuperate: {count}",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "processed_docs_heading": "Documente procesate",
+    "upload_success": "Document adăugat — se procesează…",
+    "upload_error": "Upload eșuat",
+    "delete_success": "Document șters",
+    "delete_error": "Nu s-a putut șterge documentul"
   },
 
-  "errorPage": {
-    "heading": "Ceva a mers greșit",
-    "description": "A apărut o eroare neașteptată. Poți încerca din nou sau să te întorci la dashboard.",
-    "retry": "Încearcă din nou",
-    "back_to_dashboard": "Înapoi la dashboard"
+  "departure": {
+    "title": "Plecare & Preconditionare",
+    "departure_label": "Plecare programată",
+    "departure_hint": "Mașina va încălzi bateria și habitaclul înainte să pleci.",
+    "schedule_btn": "Programează",
+    "scheduling": "Se programează…",
+    "scheduled": "Programat ✓",
+    "precondition_label": "Preconditionează acum",
+    "precondition_hint": "Încălzește bateria pentru încărcare DC mai rapidă. Ideal înainte de un Supercharger.",
+    "precondition_btn": "Preconditionează bateria",
+    "preconditioning": "Se activează…",
+    "preconditioned": "Activ ✓"
   },
 
-  "notFoundPage": {
-    "heading": "Pagina nu a fost găsită",
-    "description": "Pagina căutată nu există sau a fost mutată.",
-    "back_to_dashboard": "Înapoi la dashboard"
-  },
-
-  "chargingMap": {
-    "disclaimer": "Disponibilitatea stațiilor este simulată în scop demo."
+  "energy": {
+    "smart_charge_title": "Încărcare inteligentă",
+    "smart_charge_hint": "Afișat doar pentru mașini conectate sub limita de încărcare.",
+    "schedule_btn": "Programează",
+    "scheduled": "Programat ✓",
+    "start_at": "Pornește la",
+    "save": "economisești",
+    "now": "Acum",
+    "optimal": "Optim",
+    "to_target": "până la țintă"
   }
 }

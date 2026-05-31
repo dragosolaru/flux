@@ -76,55 +76,13 @@
       "title": "Auto vom Browser steuern",
       "subtitle": "Koppele deinen Virtual Key und sende Befehle: Klima, Sperren, Laden, Fenster.",
       "cta": "Virtual Key einrichten"
-    },
-    "no_pro": {
-      "title": "Pro-Funktionen freischalten",
-      "subtitle": "Upgrade auf Pro für unbegrenzte Fahrzeuge, OCR, Batteriezustand und mehr.",
-      "cta": "Auf Pro upgraden"
     }
   },
   "onboarding": {
     "title": "Willkommen bei Flux",
     "subtitle": "Kosten verwalten, deinen Tesla überwachen und steuern — alles an einem Ort.",
     "cta_primary": "Tesla verbinden",
-    "cta_secondary": "Mit Demo-Daten erkunden",
-    "add_vehicle": {
-      "title": "Deinen Tesla hinzufügen",
-      "title_success": "Fahrzeug hinzugefügt!",
-      "description": "Modell und Spitzname auswählen. Live-Integration erfordert die Kopplung des Tesla-Kontos (nächster Schritt).",
-      "description_success": "Dein neues Fahrzeug ist bereit in der Garage.",
-      "field_model": "Modell",
-      "field_nickname": "Spitzname",
-      "field_nickname_placeholder": "z. B. Schwarzer Panther",
-      "field_year": "Baujahr",
-      "field_scenario": "Fahrszenario (simulierte Daten)",
-      "submit": "Fahrzeug hinzufügen",
-      "submitting": "Wird hinzugefügt…",
-      "error_nickname_required": "Spitzname ist erforderlich",
-      "btn_add_another": "Weiteres hinzufügen",
-      "btn_view_vehicle": "Fahrzeug anzeigen",
-      "upgrade_title": "Limit des kostenlosen Plans erreicht",
-      "upgrade_description": "Dein kostenloser Plan enthält 1 Fahrzeug. Upgrade auf Pro für unbegrenzte Fahrzeuge.",
-      "upgrade_cta": "Auf Pro upgraden für unbegrenzte Fahrzeuge"
-    },
-    "scenarios": {
-      "commuter": {
-        "label": "Täglicher Pendler",
-        "desc": "9-17 Uhr, Laden zuhause"
-      },
-      "weekend-errands": {
-        "label": "Wochenendeinkäufe",
-        "desc": "Kurze Stadtfahrten"
-      },
-      "road-trip": {
-        "label": "Road Trip",
-        "desc": "Lange Strecken mit DC-Stopps"
-      },
-      "vacation": {
-        "label": "Urlaub",
-        "desc": "Mehrtägiger Ausflug"
-      }
-    }
+    "cta_secondary": "Mit Demo-Daten erkunden"
   },
   "settings": {
     "title": "Einstellungen",
@@ -132,8 +90,7 @@
       "preferences": "Präferenzen",
       "location": "Standort",
       "tariff": "Energietarif",
-      "account": "Konto",
-      "subscription": "Abonnement"
+      "account": "Konto"
     },
     "locale": {
       "label": "Sprache",
@@ -160,38 +117,15 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
-        "tibber": "Tibber",
         "tibber-mock": "Tibber (Demo)",
         "octopus-mock": "Octopus Energy (Demo)",
         "awattar-mock": "aWATTar (Demo)"
       }
-    },
-    "danger_zone": {
-      "export_button": "Meine Daten exportieren",
-      "exporting": "Wird exportiert…",
-      "export_success": "Datenexport heruntergeladen",
-      "export_error": "Export fehlgeschlagen",
-      "delete_button": "Konto löschen",
-      "deleting": "Wird gelöscht…",
-      "delete_success": "Konto gelöscht",
-      "delete_error": "Konto konnte nicht gelöscht werden",
-      "confirm_title": "Konto löschen?",
-      "confirm_description": "Dadurch werden dein Flux-Konto, alle Fahrzeuge, der Ladeverlauf, Dokumente und Kosten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
-      "confirm_cancel": "Abbrechen",
-      "confirm_delete": "Ja, Konto löschen"
-    },
-    "whatsapp": {
-      "label": "WhatsApp-Nummer",
-      "description": "Registriere deine WhatsApp-Nummer, um Belege per WhatsApp zu senden. Sie werden automatisch deinem Konto zugeordnet.",
-      "save": "Speichern",
-      "invalid": "Internationales Format verwenden, z. B. +40712345678."
     }
   },
   "ingest": {
     "title": "Beleg hinzufügen",
     "subtitle": "Sende einen Beleg von einem beliebigen Netzwerk — Renovatio, IONITY, MOL, Petrom — wir verarbeiten ihn automatisch.",
-    "free_tier_usage": "{used} / {max} Uploads diesen Monat verwendet",
-    "upgrade_cta": "Auf Pro upgraden für unbegrenzte Uploads",
     "option": {
       "upload": {
         "label": "Foto",
@@ -208,6 +142,37 @@
       }
     }
   },
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "aktualisiert alle 30s",
+    "demo_subtitle": "Demo-Daten · aktualisiert alle 30s",
+    "refresh": "Aktualisieren",
+    "error_title": "Fahrzeug nicht erreichbar",
+    "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
+    "retry": "Erneut versuchen"
+  },
+
+  "charging": {
+    "page_title": "Laden",
+    "status_title": "Ladestatus",
+    "limit_title": "Ladelimit",
+    "limit_description": "Lege den maximalen Ladezustand fest. Tesla empfiehlt ≤90% für den täglichen Einsatz.",
+    "limit_label": "Limit",
+    "limit_save": "Limit speichern",
+    "limit_saving": "Wird gespeichert…",
+    "limit_error": "Ladelimit konnte nicht geladen werden.",
+    "scheduled_title": "Geplantes Laden",
+    "scheduled_description": "Starte das Laden zu einer gewählten Zeit — nützlich für Niedertarifzeiten.",
+    "scheduled_enabled": "Aktiviert",
+    "scheduled_start_at": "Start um",
+    "history_title": "Neueste Ladesessions",
+    "history_description": "Momentaufnahmen während aktiver Ladung.",
+    "history_empty_title": "Noch kein Ladeverlauf",
+    "history_empty_hint": "Sessions erscheinen hier, sobald das Auto angeschlossen war, während das Dashboard offen war.",
+    "history_sync": "Von Tesla synchronisieren",
+    "history_syncing": "Wird synchronisiert…"
+  },
+
   "commands": {
     "title": "Befehle",
     "subtitle": "Auto fernsteuern.",
@@ -219,12 +184,52 @@
     "honk": "Hupen",
     "flash": "Lichter blinken",
     "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
-    "sending": "Wird gesendet…"
+    "sending": "Wird gesendet…",
+    "no_vehicles_title": "Noch keine Fahrzeuge",
+    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden."
   },
   "garage": {
     "title": "Garage",
     "add_vehicle": "Fahrzeug hinzufügen",
     "fleet_totals": "Flottenübersicht"
+  },
+  "costs": {
+    "kpi_cost_per_km": "Kosten pro km",
+    "kpi_home_vs_public": "Zuhause vs Öffentlich",
+    "kpi_total_energy": "Gesamtenergie",
+    "kpi_vs_fuel": "vs Kraftstoff",
+    "chart_monthly_trend": "Monatlicher Trend",
+    "no_data": "Noch keine Daten",
+    "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
+    "home": "Zuhause",
+    "public": "Öffentlich",
+    "months": [
+      "Jan",
+      "Feb",
+      "Mär",
+      "Apr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Dez"
+    ],
+    "page_title": "Kosten",
+    "no_docs_title": "Noch keine Dokumente.",
+    "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
+    "missing_email_docs": "E-Mail-Dokumente fehlen?",
+    "recover": "Wiederherstellen",
+    "recovered": "Wiederhergestellt: {count}",
+    "export_csv": "CSV exportieren",
+    "kpi_wh_per_km": "Effizienz",
+    "processed_docs_heading": "Verarbeitete Dokumente",
+    "upload_success": "Dokument hinzugefügt — wird verarbeitet…",
+    "upload_error": "Upload fehlgeschlagen",
+    "delete_success": "Dokument gelöscht",
+    "delete_error": "Dokument konnte nicht gelöscht werden"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -235,8 +240,7 @@
     "save": "sparen",
     "now": "Jetzt",
     "optimal": "Optimal",
-    "to_target": "bis Ziel",
-    "schedule_no_virtual_key": "Tesla verbinden zum automatischen Planen"
+    "to_target": "bis Ziel"
   },
   "departure": {
     "title": "Abfahrt & Vorkonditionierung",
@@ -250,84 +254,5 @@
     "precondition_btn": "Batterie vorkonditionieren",
     "preconditioning": "Wird aktiviert…",
     "preconditioned": "Aktiv ✓"
-  },
-  "billing": {
-    "free_plan": "Kostenloser Plan",
-    "pro_plan": "Flux Pro",
-    "free_description": "1 Fahrzeug, 3 Dokumente/Monat.",
-    "pro_description": "Unbegrenzte Fahrzeuge und Dokumente, KI-Funktionen aktiviert.",
-    "upgrade_cta": "Auf Pro upgraden — €4,99/Monat",
-    "manage": "Abonnement verwalten",
-    "see_all": "Alle Funktionen ansehen →",
-    "upgrade_hint": "Pro beinhaltet: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustand-Tracking, wöchentliche E-Mail."
-  },
-  "battery_health": {
-    "title": "Batteriedegradation",
-    "collecting": "Daten werden gesammelt — der Trend erscheint nach einigen Tagen.",
-    "latest": "Monate"
-  },
-  "landing": {
-    "hero_headline": "Kenne die echten Kosten deines Elektrofahrzeugs.",
-    "hero_subheadline": "Flux verfolgt die Energiekosten deines Tesla, Ladesitzungen und plant das Laden nach deinem echten rumänischen Tarif — damit du immer weniger zahlst.",
-    "hero_cta": "Kostenlos starten",
-    "hero_cta_pricing": "Preise ansehen",
-    "features_title": "Alles, was dein E-Auto braucht.",
-    "feature_ocr_title": "OCR für Energierechnungen",
-    "feature_ocr_desc": "Fotografiere eine Stromrechnung und Flux extrahiert automatisch kWh, Kosten und Anbieter — keine manuelle Eingabe.",
-    "feature_tariff_title": "Echte rumänische Tarife",
-    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — Flux kennt deine genauen Tarife und berechnet die Heimladekosten auf den Cent genau.",
-    "feature_smart_title": "Intelligente Ladezeitplanung",
-    "feature_smart_desc": "Wir lesen deine Tarifpreiskurve und sagen dir die günstigste Stunde zum Laden. Ein Tipp zum Planen.",
-    "feature_i18n_title": "Deine Sprache, deine Währung",
-    "feature_i18n_desc": "Verfügbar auf Rumänisch, Englisch, Deutsch, Französisch und Ungarisch. Kosten in RON, EUR oder deiner bevorzugten Währung.",
-    "pricing_teaser_title": "Kostenlos starten, upgraden wenn nötig.",
-    "pricing_teaser_desc": "Der kostenlose Plan umfasst ein Fahrzeug und drei OCR-Dokumente pro Monat. Pro ist €4,99 / Monat für alles unbegrenzt.",
-    "pricing_teaser_cta": "Preise anzeigen"
-  },
-
-  "costs": {
-    "kpi_cost_per_km": "Kosten pro km",
-    "kpi_home_vs_public": "Zuhause vs Öffentlich",
-    "kpi_total_energy": "Gesamtenergie",
-    "kpi_wh_per_km": "Effizienz",
-    "kpi_vs_fuel": "vs Kraftstoff",
-    "chart_monthly_trend": "Monatlicher Trend",
-    "no_data": "Noch keine Daten",
-    "add_docs_hint": "Dokumente hinzufügen um Kosten/km zu sehen",
-    "home": "Zuhause",
-    "public": "Öffentlich",
-    "blended": "Durchschnitt",
-    "km_driven": "km gefahren",
-    "fuel_equivalent_label": "Benzin-Äquivalent (7L/100km)",
-    "fuel_saving": "Du sparst {amount}",
-    "fuel_more_expensive": "{amount} teurer",
-    "fuel_equivalent_cost": "Gleichwertige Kosten",
-    "fuel_register_km": "Gefahrene km erfassen zum Vergleich",
-    "fuel_add_docs": "Dokumente hinzufügen zum Vergleich",
-    "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-    "page_title": "Kosten",
-    "no_docs_title": "Noch keine Dokumente.",
-    "no_docs_hint": "Lade deine erste Rechnung oder deinen Beleg hoch, um Kosten zu sehen.",
-    "missing_email_docs": "E-Mail-Dokumente fehlen?",
-    "recover": "Wiederherstellen",
-    "recovered": "Wiederhergestellt: {count}",
-    "export_csv": "CSV exportieren"
-  },
-
-  "errorPage": {
-    "heading": "Etwas ist schiefgelaufen",
-    "description": "Ein unerwarteter Fehler ist aufgetreten. Du kannst es erneut versuchen oder zum Dashboard zurückkehren.",
-    "retry": "Erneut versuchen",
-    "back_to_dashboard": "Zurück zum Dashboard"
-  },
-
-  "notFoundPage": {
-    "heading": "Seite nicht gefunden",
-    "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
-    "back_to_dashboard": "Zurück zum Dashboard"
-  },
-
-  "chargingMap": {
-    "disclaimer": "Die Ladeverfügbarkeit ist für Demo-Zwecke simuliert."
   }
 }

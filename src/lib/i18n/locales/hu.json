@@ -76,55 +76,13 @@
       "title": "Vezérelje az autót a böngészőből",
       "subtitle": "Párosítsa a Virtual Key-t és küldjön parancsokat: klíma, zárolás, töltés, ablakok.",
       "cta": "Virtual Key beállítása"
-    },
-    "no_pro": {
-      "title": "Pro funkciók feloldása",
-      "subtitle": "Váltson Próra a korlátlan járművek, OCR, akkumulátor-állapot és egyebek érdekében.",
-      "cta": "Váltás Próra"
     }
   },
   "onboarding": {
     "title": "Üdvözli a Flux",
     "subtitle": "Kezelje a költségeket, figyelje és vezérelje Tesla-ját — mindent egy helyen.",
     "cta_primary": "Tesla csatlakoztatása",
-    "cta_secondary": "Fedezze fel demóadatokkal",
-    "add_vehicle": {
-      "title": "Tesla hozzáadása",
-      "title_success": "Jármű hozzáadva!",
-      "description": "Válassza ki a modellt és a becenevet. Az élő integrációhoz Tesla-fiók összekapcsolása szükséges (következő lépés).",
-      "description_success": "Az új járműve készen áll a garázsban.",
-      "field_model": "Modell",
-      "field_nickname": "Becenév",
-      "field_nickname_placeholder": "pl. Fekete Párduc",
-      "field_year": "Évjárat",
-      "field_scenario": "Vezetési forgatókönyv (szimulált adatok)",
-      "submit": "Jármű hozzáadása",
-      "submitting": "Hozzáadás…",
-      "error_nickname_required": "A becenév megadása kötelező",
-      "btn_add_another": "Újabb hozzáadása",
-      "btn_view_vehicle": "Jármű megtekintése",
-      "upgrade_title": "Ingyenes csomag korlátja elérve",
-      "upgrade_description": "Az ingyenes csomag 1 járművet tartalmaz. Váltson Próra a korlátlan járművekért.",
-      "upgrade_cta": "Váltás Próra a korlátlan járművekért"
-    },
-    "scenarios": {
-      "commuter": {
-        "label": "Napi ingázó",
-        "desc": "9-17, otthoni töltés"
-      },
-      "weekend-errands": {
-        "label": "Hétvégi bevásárlás",
-        "desc": "Rövid városi utak"
-      },
-      "road-trip": {
-        "label": "Hosszú út",
-        "desc": "Nagy távolság DC megállókkal"
-      },
-      "vacation": {
-        "label": "Nyaralás",
-        "desc": "Többnapos kirándulás"
-      }
-    }
+    "cta_secondary": "Fedezze fel demóadatokkal"
   },
   "settings": {
     "title": "Beállítások",
@@ -132,8 +90,7 @@
       "preferences": "Preferenciák",
       "location": "Helyszín",
       "tariff": "Energiadíj",
-      "account": "Fiók",
-      "subscription": "Előfizetés"
+      "account": "Fiók"
     },
     "locale": {
       "label": "Nyelv",
@@ -160,38 +117,15 @@
         "eon-ro": "E.ON Energie România (ToU)",
         "enel-ro": "Enel Energie Muntenia",
         "hidroelectrica": "Hidroelectrica Energie",
-        "tibber": "Tibber",
         "tibber-mock": "Tibber (demó)",
         "octopus-mock": "Octopus Energy (demó)",
         "awattar-mock": "aWATTar (demó)"
       }
-    },
-    "danger_zone": {
-      "export_button": "Adataim exportálása",
-      "exporting": "Exportálás…",
-      "export_success": "Adatexport letöltve",
-      "export_error": "Nem sikerült exportálni",
-      "delete_button": "Fiók törlése",
-      "deleting": "Törlés…",
-      "delete_success": "Fiók törölve",
-      "delete_error": "Nem sikerült törölni a fiókot",
-      "confirm_title": "Fiók törlése?",
-      "confirm_description": "Ez véglegesen törli a Flux fiókodat, az összes járművet, töltési előzményt, dokumentumot és költséget. Ez a művelet nem vonható vissza.",
-      "confirm_cancel": "Mégse",
-      "confirm_delete": "Igen, töröld a fiókot"
-    },
-    "whatsapp": {
-      "label": "WhatsApp-szám",
-      "description": "Regisztráld a WhatsApp-számodat, hogy nyugtákat küldhess WhatsAppon. Automatikusan a fiókodhoz rendelődnek.",
-      "save": "Mentés",
-      "invalid": "Nemzetközi formátumot használj, pl. +40712345678."
     }
   },
   "ingest": {
     "title": "Bizonylat hozzáadása",
     "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
-    "free_tier_usage": "{used} / {max} feltöltés felhasználva ezen a hónapon",
-    "upgrade_cta": "Váltás Próra a korlátlan feltöltésért",
     "option": {
       "upload": {
         "label": "Fotó",
@@ -208,6 +142,37 @@
       }
     }
   },
+  "dashboard": {
+    "live_label": "Live",
+    "live_subtitle": "30s-onként frissül",
+    "demo_subtitle": "Demo adatok · 30s-onként frissül",
+    "refresh": "Frissítés",
+    "error_title": "Nem sikerült elérni a járművet",
+    "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
+    "retry": "Próbálja újra"
+  },
+
+  "charging": {
+    "page_title": "Töltés",
+    "status_title": "Töltési állapot",
+    "limit_title": "Töltési korlát",
+    "limit_description": "Állítsa be a maximális töltöttségi szintet. A Tesla ≤90%-ot javasol napi használathoz.",
+    "limit_label": "Korlát",
+    "limit_save": "Korlát mentése",
+    "limit_saving": "Mentés…",
+    "limit_error": "Nem sikerült betölteni a töltési korlátot.",
+    "scheduled_title": "Ütemezett töltés",
+    "scheduled_description": "Indítsa a töltést egy kiválasztott időpontban — hasznos csúcsidőn kívüli tarifahoknál.",
+    "scheduled_enabled": "Engedélyezve",
+    "scheduled_start_at": "Indítás:",
+    "history_title": "Legutóbbi töltési munkamenetek",
+    "history_description": "Pillanatfelvételek aktív töltés közben.",
+    "history_empty_title": "Még nincs töltési előzmény",
+    "history_empty_hint": "A munkamenetek itt jelennek meg, ha az autót csatlakoztatták miközben a dashboard nyitva volt.",
+    "history_sync": "Szinkronizálás a Teslából",
+    "history_syncing": "Szinkronizálás…"
+  },
+
   "commands": {
     "title": "Parancsok",
     "subtitle": "Vezérelje távolról az autót.",
@@ -219,12 +184,52 @@
     "honk": "Dudálás",
     "flash": "Villogtatás",
     "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
-    "sending": "Küldés…"
+    "sending": "Küldés…",
+    "no_vehicles_title": "Még nincs jármű",
+    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez."
   },
   "garage": {
     "title": "Garázs",
     "add_vehicle": "Jármű hozzáadása",
     "fleet_totals": "Flotta összesítő"
+  },
+  "costs": {
+    "kpi_cost_per_km": "Költség km-enként",
+    "kpi_home_vs_public": "Otthon vs Nyilvános",
+    "kpi_total_energy": "Összes energia",
+    "kpi_vs_fuel": "vs Üzemanyag",
+    "chart_monthly_trend": "Havi trend",
+    "no_data": "Még nincs adat",
+    "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
+    "home": "Otthon",
+    "public": "Nyilvános",
+    "months": [
+      "jan",
+      "feb",
+      "már",
+      "ápr",
+      "máj",
+      "jún",
+      "júl",
+      "aug",
+      "szep",
+      "okt",
+      "nov",
+      "dec"
+    ],
+    "page_title": "Költségek",
+    "no_docs_title": "Még nincsenek dokumentumok.",
+    "no_docs_hint": "Töltse fel az első számláját vagy bizonylatát a költségek megtekintéséhez.",
+    "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
+    "recover": "Visszaállítás",
+    "recovered": "Visszaállítva: {count}",
+    "export_csv": "CSV exportálása",
+    "kpi_wh_per_km": "Hatékonyság",
+    "processed_docs_heading": "Feldolgozott dokumentumok",
+    "upload_success": "Dokumentum hozzáadva — feldolgozás folyamatban…",
+    "upload_error": "Feltöltés sikertelen",
+    "delete_success": "Dokumentum törölve",
+    "delete_error": "Nem sikerült törölni a dokumentumot"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -235,8 +240,7 @@
     "save": "megtakarítás",
     "now": "Most",
     "optimal": "Optimális",
-    "to_target": "a célhoz",
-    "schedule_no_virtual_key": "Csatlakoztasd a Teslát az automatikus ütemezéshez"
+    "to_target": "a célhoz"
   },
   "departure": {
     "title": "Indulás & Előkészítés",
@@ -250,84 +254,5 @@
     "precondition_btn": "Akkumulátor előkészítése",
     "preconditioning": "Aktiválás…",
     "preconditioned": "Aktív ✓"
-  },
-  "billing": {
-    "free_plan": "Ingyenes csomag",
-    "pro_plan": "Flux Pro",
-    "free_description": "1 jármű, 3 dokumentum/hónap.",
-    "pro_description": "Korlátlan járművek és dokumentumok, AI funkciók engedélyezve.",
-    "upgrade_cta": "Váltás Próra — €4,99/hó",
-    "manage": "Előfizetés kezelése",
-    "see_all": "Összes funkció megtekintése →",
-    "upgrade_hint": "Pro tartalmaz: korlátlan járművek, korlátlan OCR, akkumulátor-állapot követés, heti e-mail összefoglaló."
-  },
-  "battery_health": {
-    "title": "Akkumulátor-romlás",
-    "collecting": "Adatgyűjtés — a trend néhány nap használat után jelenik meg.",
-    "latest": "hónap"
-  },
-  "landing": {
-    "hero_headline": "Tudja, mennyibe kerül valójában az elektromos autó?",
-    "hero_subheadline": "A Flux nyomon követi Tesla-ja energiaköltségeit, töltési munkameneteit, és az ön valódi romániai tarifa alapján ütemezi a töltést — hogy mindig kevesebbet fizessen.",
-    "hero_cta": "Ingyenes kezdés",
-    "hero_cta_pricing": "Árak megtekintése",
-    "features_title": "Minden, amire az elektromos autójának szüksége van.",
-    "feature_ocr_title": "OCR energiaszámlákhoz",
-    "feature_ocr_desc": "Fényképezze le bármelyik villanyszámlát, és a Flux automatikusan kinyeri a kWh-t, a költséget és a szolgáltatót — kézi bevitel nélkül.",
-    "feature_tariff_title": "Valódi romániai tarifák",
-    "feature_tariff_desc": "Electrica, E.ON, Enel, Hidroelectrica — a Flux ismeri pontos tarifáit, és fillérre kiszámolja az otthoni töltés költségét.",
-    "feature_smart_title": "Intelligens töltésütemezés",
-    "feature_smart_desc": "Beolvassuk az ön tarifájának árgörbéjét, és megmondjuk a legolcsóbb töltési időpontot. Egy koppintás az ütemezéshez.",
-    "feature_i18n_title": "Az ön nyelve, az ön pénzneme",
-    "feature_i18n_desc": "Elérhető románul, angolul, németül, franciául és magyarul. Költségek RON-ban, EUR-ban vagy a kívánt pénznemben.",
-    "pricing_teaser_title": "Kezdje ingyen, frissítsen amikor szükséges.",
-    "pricing_teaser_desc": "Az ingyenes csomag egy járművet és havi három OCR-dokumentumot tartalmaz. A Pro €4,99 / hó korlátlan mindenért.",
-    "pricing_teaser_cta": "Árak megtekintése"
-  },
-
-  "costs": {
-    "kpi_cost_per_km": "Költség km-enként",
-    "kpi_home_vs_public": "Otthon vs Nyilvános",
-    "kpi_total_energy": "Összes energia",
-    "kpi_wh_per_km": "Hatékonyság",
-    "kpi_vs_fuel": "vs Üzemanyag",
-    "chart_monthly_trend": "Havi trend",
-    "no_data": "Még nincs adat",
-    "add_docs_hint": "Adjon hozzá dokumentumokat a költség/km megtekintéséhez",
-    "home": "Otthon",
-    "public": "Nyilvános",
-    "blended": "Átlag",
-    "km_driven": "megtett km",
-    "fuel_equivalent_label": "Benzin egyenérték (7L/100km)",
-    "fuel_saving": "Megtakarítás: {amount}",
-    "fuel_more_expensive": "{amount} drágább",
-    "fuel_equivalent_cost": "Egyenértékű költség",
-    "fuel_register_km": "Rögzítse a megtett km-t az összehasonlításhoz",
-    "fuel_add_docs": "Adjon hozzá dokumentumokat az összehasonlításhoz",
-    "months": ["jan", "feb", "már", "ápr", "máj", "jún", "júl", "aug", "szep", "okt", "nov", "dec"],
-    "page_title": "Költségek",
-    "no_docs_title": "Még nincsenek dokumentumok.",
-    "no_docs_hint": "Töltse fel az első számláját vagy bizonylatát a költségek megtekintéséhez.",
-    "missing_email_docs": "Hiányoznak az e-mail dokumentumok?",
-    "recover": "Visszaállítás",
-    "recovered": "Visszaállítva: {count}",
-    "export_csv": "CSV exportálása"
-  },
-
-  "errorPage": {
-    "heading": "Valami hiba történt",
-    "description": "Váratlan hiba lépett fel. Megpróbálhatja újra, vagy visszatérhet a dashboardra.",
-    "retry": "Próbálja újra",
-    "back_to_dashboard": "Vissza a dashboardra"
-  },
-
-  "notFoundPage": {
-    "heading": "Az oldal nem található",
-    "description": "A keresett oldal nem létezik vagy áthelyezték.",
-    "back_to_dashboard": "Vissza a dashboardra"
-  },
-
-  "chargingMap": {
-    "disclaimer": "A töltési elérhetőség demó célokra szimulált."
   }
 }

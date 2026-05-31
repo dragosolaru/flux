@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
   const { data, isLoading, isFetching, isError, error, refetch } = useVehicle(vehicleId);
   const caps = useBrandCapabilities(brand);
   const t = caps?.telemetry;
+  const td = useTranslations("dashboard");
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
@@ -43,9 +45,9 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           <h1 className="text-2xl font-semibold tracking-tight">{vehicleName}</h1>
           <p className="text-sm text-muted-foreground">
             {data?.dataSource === "live" ? (
-              <><span className="font-medium text-chart-2">Live</span> · updates every 30s</>
+              <><span className="font-medium text-chart-2">{td("live_label")}</span> · {td("live_subtitle")}</>
             ) : (
-              "Demo data · updates every 30s"
+              td("demo_subtitle")
             )}
           </p>
         </div>
@@ -56,7 +58,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           disabled={isFetching}
         >
           <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
+          {td("refresh")}
         </Button>
       </div>
 
@@ -65,12 +67,10 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model }: Dashbo
           <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
             <AlertTriangle className="size-8 text-destructive" />
             <div>
-              <div className="font-medium">Couldn&apos;t reach your vehicle</div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {error instanceof Error ? error.message : "Unknown error"}
-              </p>
+              <div className="font-medium">{td("error_title")}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{td("error_subtitle")}</p>
             </div>
-            <Button onClick={() => refetch()}>Try again</Button>
+            <Button onClick={() => refetch()}>{td("retry")}</Button>
           </CardContent>
         </Card>
       ) : (
