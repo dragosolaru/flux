@@ -288,7 +288,10 @@
     "vehicles_count_one": "1 Fahrzeug",
     "vehicles_count_other": "{count} Fahrzeuge",
     "mock_label": "Demo",
-    "tap_to_open": "Tippen für Dashboard"
+    "tap_to_open": "Tippen für Dashboard",
+    "tariff_hint_cheapest": "Günstigster Ladezeitpunkt:",
+    "tariff_hint_save": "sparen",
+    "tariff_hint_unit": "ct/kWh gegenüber jetzt"
   },
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",

@@ -288,7 +288,10 @@
     "vehicles_count_one": "1 jármű",
     "vehicles_count_other": "{count} jármű",
     "mock_label": "Demó",
-    "tap_to_open": "Koppintson a dashboardhoz"
+    "tap_to_open": "Koppintson a dashboardhoz",
+    "tariff_hint_cheapest": "Legolcsóbb töltési idő:",
+    "tariff_hint_save": "megtakarítás",
+    "tariff_hint_unit": "ct/kWh most-hoz képest"
   },
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",

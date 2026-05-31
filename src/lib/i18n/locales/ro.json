@@ -289,7 +289,10 @@
     "vehicles_count_one": "1 mașină",
     "vehicles_count_other": "{count} mașini",
     "mock_label": "Demo",
-    "tap_to_open": "Apasă pentru dashboard"
+    "tap_to_open": "Apasă pentru dashboard",
+    "tariff_hint_cheapest": "Cel mai ieftin moment:",
+    "tariff_hint_save": "economisești",
+    "tariff_hint_unit": "ct/kWh față de acum"
   },
   "costs": {
     "kpi_cost_per_km": "Cost per km",

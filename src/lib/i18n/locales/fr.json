@@ -288,7 +288,10 @@
     "vehicles_count_one": "1 véhicule",
     "vehicles_count_other": "{count} véhicules",
     "mock_label": "Démo",
-    "tap_to_open": "Appuyer pour le tableau de bord"
+    "tap_to_open": "Appuyer pour le tableau de bord",
+    "tariff_hint_cheapest": "Recharge la moins chère :",
+    "tariff_hint_save": "économisez",
+    "tariff_hint_unit": "ct/kWh vs maintenant"
   },
   "costs": {
     "kpi_cost_per_km": "Coût par km",

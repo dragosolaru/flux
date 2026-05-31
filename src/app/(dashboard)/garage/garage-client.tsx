@@ -152,14 +152,14 @@ export function GarageClient() {
         <GlassCard animate={false} className="flex items-center gap-2 px-3 py-2 text-sm text-chart-2">
           <Zap className="size-3.5 shrink-0" />
           <span>
-            Cheapest plug-in:{" "}
+            {tg("tariff_hint_cheapest")}{" "}
             <strong>
               {String(tariff.cheapestWindowStart).padStart(2, "0")}:00
               {" – "}
               {String(tariff.cheapestWindowEnd).padStart(2, "0")}:00
             </strong>
-            {" · "}save{" "}
-            {((tariff.currentPrice - tariff.cheapestAvgPrice) * 100).toFixed(1)} ct/kWh vs now
+            {" · "}{tg("tariff_hint_save")}{" "}
+            {((tariff.currentPrice - tariff.cheapestAvgPrice) * 100).toFixed(1)} {tg("tariff_hint_unit")}
           </span>
         </GlassCard>
       )}
