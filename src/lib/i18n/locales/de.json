@@ -196,6 +196,12 @@
       "upgrade_label": "Upgrade auf Pro — €4,99/Mo.",
       "pro_unlock_note": "Pro schaltet frei: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustandsverfolgung, wöchentlicher E-Mail-Digest.",
       "see_all_features": "Alle Funktionen ansehen →"
+    },
+    "whatsapp": {
+      "label": "WhatsApp-Nummer",
+      "description": "Energiequittungen per WhatsApp senden, um sie automatisch zu verarbeiten.",
+      "save": "Speichern",
+      "invalid": "Gültige internationale Nummer eingeben (z. B. +40712345678)"
     }
   },
   "ingest": {
@@ -469,6 +475,12 @@
   "notFoundPage": {
     "heading": "Seite nicht gefunden",
     "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "back_to_dashboard": "Zurück zum Dashboard"
+  },
+  "errorPage": {
+    "heading": "Etwas ist schiefgelaufen",
+    "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
+    "retry": "Erneut versuchen",
     "back_to_dashboard": "Zurück zum Dashboard"
   }
 }

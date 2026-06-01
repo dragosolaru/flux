@@ -196,6 +196,12 @@
       "upgrade_label": "Upgrade Próra — €4,99/hó",
       "pro_unlock_note": "Pro felold: korlátlan járművek, korlátlan OCR, akkumulátor állapot követés, heti email összefoglaló.",
       "see_all_features": "Összes funkció megtekintése →"
+    },
+    "whatsapp": {
+      "label": "WhatsApp-szám",
+      "description": "Küldjön energiaszámlákat WhatsApp-on keresztül az automatikus feldolgozáshoz.",
+      "save": "Mentés",
+      "invalid": "Adjon meg érvényes nemzetközi számot (pl. +40712345678)"
     }
   },
   "ingest": {
@@ -469,6 +475,12 @@
   "notFoundPage": {
     "heading": "Az oldal nem található",
     "description": "A keresett oldal nem létezik vagy áthelyezték.",
+    "back_to_dashboard": "Vissza az irányítópultra"
+  },
+  "errorPage": {
+    "heading": "Valami hiba történt",
+    "description": "Váratlan hiba történt. Kérjük, próbálja újra.",
+    "retry": "Próbálja újra",
     "back_to_dashboard": "Vissza az irányítópultra"
   }
 }

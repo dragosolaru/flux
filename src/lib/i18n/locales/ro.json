@@ -196,6 +196,12 @@
       "upgrade_label": "Upgrade la Pro — €4.99/lună",
       "pro_unlock_note": "Pro include: vehicule nelimitate, OCR nelimitat, monitorizare baterie, digest săptămânal pe email.",
       "see_all_features": "Vezi toate funcțiile →"
+    },
+    "whatsapp": {
+      "label": "Număr WhatsApp",
+      "description": "Trimite bonuri de energie pe WhatsApp pentru a fi procesate automat.",
+      "save": "Salvează",
+      "invalid": "Introdu un număr internațional valid (ex: +40712345678)"
     }
   },
   "ingest": {
@@ -469,6 +475,12 @@
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",
     "description": "Pagina căutată nu există sau a fost mutată.",
+    "back_to_dashboard": "Înapoi la panou"
+  },
+  "errorPage": {
+    "heading": "Ceva nu a mers bine",
+    "description": "A apărut o eroare neașteptată. Încearcă din nou.",
+    "retry": "Încearcă din nou",
     "back_to_dashboard": "Înapoi la panou"
   }
 }

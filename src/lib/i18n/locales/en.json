@@ -196,6 +196,12 @@
       "upgrade_label": "Upgrade to Pro — €4.99/mo",
       "pro_unlock_note": "Pro unlocks: unlimited vehicles, unlimited OCR, battery health tracking, weekly email digest.",
       "see_all_features": "See all features →"
+    },
+    "whatsapp": {
+      "label": "WhatsApp number",
+      "description": "Send energy receipts via WhatsApp to be processed automatically.",
+      "save": "Save",
+      "invalid": "Enter a valid international number (e.g. +40712345678)"
     }
   },
   "ingest": {
@@ -469,6 +475,12 @@
   "notFoundPage": {
     "heading": "Page not found",
     "description": "The page you're looking for doesn't exist or has been moved.",
+    "back_to_dashboard": "Back to dashboard"
+  },
+  "errorPage": {
+    "heading": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try again",
     "back_to_dashboard": "Back to dashboard"
   }
 }

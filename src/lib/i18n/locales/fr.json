@@ -196,6 +196,12 @@
       "upgrade_label": "Passer à Pro — 4,99 €/mois",
       "pro_unlock_note": "Pro débloque : véhicules illimités, OCR illimité, suivi de l'état de la batterie, digest email hebdomadaire.",
       "see_all_features": "Voir toutes les fonctionnalités →"
+    },
+    "whatsapp": {
+      "label": "Numéro WhatsApp",
+      "description": "Envoyez des reçus d'énergie via WhatsApp pour un traitement automatique.",
+      "save": "Enregistrer",
+      "invalid": "Entrez un numéro international valide (ex: +40712345678)"
     }
   },
   "ingest": {
@@ -469,6 +475,12 @@
   "notFoundPage": {
     "heading": "Page introuvable",
     "description": "La page recherchée n'existe pas ou a été déplacée.",
+    "back_to_dashboard": "Retour au tableau de bord"
+  },
+  "errorPage": {
+    "heading": "Quelque chose s'est mal passé",
+    "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "retry": "Réessayer",
     "back_to_dashboard": "Retour au tableau de bord"
   }
 }
