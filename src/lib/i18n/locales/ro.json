@@ -221,7 +221,9 @@
         "label": "WhatsApp",
         "description": "Curând"
       }
-    }
+    },
+    "free_tier_usage": "{used} din {max} facturi folosite luna aceasta",
+    "upgrade_cta": "Upgrade la Pro"
   },
   "dashboard": {
     "live_label": "Live",

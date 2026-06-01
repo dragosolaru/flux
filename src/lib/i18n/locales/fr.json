@@ -221,7 +221,9 @@
         "label": "WhatsApp",
         "description": "Bientôt"
       }
-    }
+    },
+    "free_tier_usage": "{used} sur {max} reçus utilisés ce mois-ci",
+    "upgrade_cta": "Passer à Pro"
   },
   "dashboard": {
     "live_label": "Live",

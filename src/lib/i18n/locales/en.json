@@ -221,7 +221,9 @@
         "label": "WhatsApp",
         "description": "Soon"
       }
-    }
+    },
+    "free_tier_usage": "{used} of {max} receipts used this month",
+    "upgrade_cta": "Upgrade to Pro"
   },
   "dashboard": {
     "live_label": "Live",

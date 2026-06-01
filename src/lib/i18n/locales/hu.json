@@ -221,7 +221,9 @@
         "label": "WhatsApp",
         "description": "Hamarosan"
       }
-    }
+    },
+    "free_tier_usage": "{used} / {max} nyugta felhasználva ebben a hónapban",
+    "upgrade_cta": "Váltás Pro-ra"
   },
   "dashboard": {
     "live_label": "Live",

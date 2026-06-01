@@ -221,7 +221,9 @@
         "label": "WhatsApp",
         "description": "Bald"
       }
-    }
+    },
+    "free_tier_usage": "{used} von {max} Belegen diesen Monat verwendet",
+    "upgrade_cta": "Auf Pro upgraden"
   },
   "dashboard": {
     "live_label": "Live",
