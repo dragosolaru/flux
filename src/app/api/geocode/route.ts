@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export const runtime = "edge";
+import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 interface NominatimResult {
   display_name: string;
@@ -10,6 +11,15 @@ interface NominatimResult {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ results: [] }, { status: 401 });
+  }
+
+  if (!(await checkRateLimit(session.user.id, "geocode", 60))) {
+    return NextResponse.json({ results: [] }, { status: 429 });
+  }
+
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q || q.length < 2) {
     return NextResponse.json({ results: [] });
