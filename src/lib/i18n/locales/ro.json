@@ -263,7 +263,8 @@
     "history_kwh": "kWh adăugat",
     "history_cost": "Cost",
     "history_home": "Acasă",
-    "history_public": "Public"
+    "history_public": "Public",
+    "history_sync_success": "{count} sesiuni sincronizate"
   },
   "commands": {
     "title": "Comenzi",
@@ -399,7 +400,6 @@
   "chargingMap": {
     "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
   },
-
   "auth": {
     "title_login": "Bine ai revenit",
     "title_register": "Creează-ți contul",
@@ -420,7 +420,6 @@
     "sign_in_link": "Autentifică-te",
     "error_invalid": "Email sau parolă invalidă"
   },
-
   "landing": {
     "hero_headline": "Gestionare inteligentă EV pentru proprietarii Tesla",
     "hero_subheadline": "Urmărește costurile de încărcare, monitorizează starea live a vehiculului, planifică trasee și controlează Tesla-ul tău — totul într-un singur loc.",
@@ -440,7 +439,6 @@
     "pricing_teaser_desc": "Gratuit în perioada beta. Pro deblochează vehicule nelimitate, OCR nelimitat și analize AI.",
     "pricing_teaser_cta": "Vezi planuri"
   },
-
   "trip": {
     "title": "Planificator de trasee",
     "origin_placeholder": "De unde pleci?",
@@ -466,5 +464,10 @@
     "stops_count_one": "1 oprire",
     "stops_count_other": "{count} opriri",
     "charging_time_label": "+{duration} încărcare"
+  },
+  "notFoundPage": {
+    "heading": "Pagina nu a fost găsită",
+    "description": "Pagina căutată nu există sau a fost mutată.",
+    "back_to_dashboard": "Înapoi la panou"
   }
 }

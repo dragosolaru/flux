@@ -18,13 +18,17 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-1">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        <MockGlobalBanner />
-        <main className="flex-1 px-4 py-6 pb-24 md:px-8 md:pb-6">{children}</main>
+    <div className="flex h-dvh flex-col">
+      {/* Horizontal row: sidebar + main content */}
+      <div className="flex min-w-0 flex-1 overflow-hidden">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <TopBar />
+          <MockGlobalBanner />
+          <main className="flex-1 overflow-y-auto px-4 py-6 pb-4 md:px-8 md:pb-6">{children}</main>
+        </div>
       </div>
+      {/* Bottom nav sits at the base of the flex column — no position:fixed needed */}
       <BottomNav />
     </div>
   );

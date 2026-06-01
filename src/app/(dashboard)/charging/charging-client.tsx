@@ -76,9 +76,18 @@ export function ChargingClient({
     }
   }, [caps?.hasLiveVehicle]); // eslint-disable-line
 
-  const [limit, setLimit] = useState<number>(data?.chargeLimit ?? 80);
+  const [limit, setLimit] = useState<number>(80);
   const [scheduled, setScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState("23:00");
+
+  const prevServerLimitRef = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    const serverLimit = data?.chargeLimit;
+    if (serverLimit != null && serverLimit !== prevServerLimitRef.current) {
+      prevServerLimitRef.current = serverLimit;
+      setLimit(serverLimit);
+    }
+  }, [data?.chargeLimit]);
 
   const effectiveLimit = data?.chargeLimit ?? limit;
   const isCharging = data?.chargingState === "charging";

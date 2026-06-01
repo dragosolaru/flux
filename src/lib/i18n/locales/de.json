@@ -160,7 +160,8 @@
         "hidroelectrica": "Hidroelectrica Energie",
         "tibber-mock": "Tibber (Demo)",
         "octopus-mock": "Octopus Energy (Demo)",
-        "awattar-mock": "aWATTar (Demo)"
+        "awattar-mock": "aWATTar (Demo)",
+        "tibber": "Tibber"
       }
     },
     "danger_zone": {
@@ -262,7 +263,8 @@
     "history_kwh": "kWh geladen",
     "history_cost": "Kosten",
     "history_home": "Zuhause",
-    "history_public": "Öffentlich"
+    "history_public": "Öffentlich",
+    "history_sync_success": "{count} Sitzungen synchronisiert"
   },
   "commands": {
     "title": "Befehle",
@@ -351,7 +353,8 @@
     "fuel_add_docs": "Dokumente hinzufügen für Kraftstoffvergleich",
     "blended": "Gemischt",
     "km_driven": "km gefahren",
-    "no_chart_data": "Noch keine Monatsdaten"
+    "no_chart_data": "Noch keine Monatsdaten",
+    "add_receipt": "Bon hinzufügen"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -397,7 +400,6 @@
   "chargingMap": {
     "disclaimer": "Daten von OpenChargeMap. Verfügbarkeit kann variieren."
   },
-
   "auth": {
     "title_login": "Willkommen zurück",
     "title_register": "Konto erstellen",
@@ -418,7 +420,6 @@
     "sign_in_link": "Anmelden",
     "error_invalid": "Ungültige E-Mail oder Passwort"
   },
-
   "landing": {
     "hero_headline": "Intelligentes EV-Management für Tesla-Besitzer",
     "hero_subheadline": "Ladekosten verfolgen, Live-Fahrzeugstatus überwachen, Routen planen und dein Tesla steuern — alles an einem Ort.",
@@ -438,7 +439,6 @@
     "pricing_teaser_desc": "Kostenlos während der Beta. Pro schaltet unbegrenzte Fahrzeuge, OCR und KI-Einblicke frei.",
     "pricing_teaser_cta": "Pläne ansehen"
   },
-
   "trip": {
     "title": "Routenplaner",
     "origin_placeholder": "Wo startest du?",
@@ -464,5 +464,10 @@
     "stops_count_one": "1 Stopp",
     "stops_count_other": "{count} Stopps",
     "charging_time_label": "+{duration} Laden"
+  },
+  "notFoundPage": {
+    "heading": "Seite nicht gefunden",
+    "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "back_to_dashboard": "Zurück zum Dashboard"
   }
 }
