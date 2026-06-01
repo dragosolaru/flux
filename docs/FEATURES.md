@@ -417,3 +417,27 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `landing` + `trip` + `auth` namespaces
 
 **Dependencies:** Framer Motion v12, `staggerContainer`/`fadeInUp` from `variants.ts`, next-intl `useTranslations`/`getTranslations`.
+
+---
+
+## 24. Battery State-of-Health (SoH) API
+
+**What it does:** Returns the historical battery health time-series for a vehicle as `{ date, sohPct }[]`, queried from `battery_health_history` with ownership check.
+
+**Entry point:** `GET /api/vehicles/[vehicleId]/battery-health`
+
+**Key files:** `src/app/api/vehicles/[vehicleId]/battery-health/route.ts`
+
+**Dependencies:** Supabase (`battery_health_history` table). Displayed by `BatteryHealthCard` on the dashboard.
+
+---
+
+## 25. Weather & Range Derating API
+
+**What it does:** Returns mock weather conditions at the vehicle's last-known location and a `derating` object showing how weather reduces real-world range versus the ideal figure.
+
+**Entry point:** `GET /api/vehicles/[vehicleId]/weather`
+
+**Key files:** `src/app/api/vehicles/[vehicleId]/weather/route.ts`, `src/lib/external/weather/providers/mock-weather.ts`, `src/lib/external/weather/derating.ts`
+
+**Dependencies:** Supabase (vehicle state for lat/lng). Weather data is mock-only; no external API key required.
