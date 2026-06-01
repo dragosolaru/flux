@@ -346,7 +346,34 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ---
 
-## 20. Landing Page & Trip Planner — Glass Polish
+## 20. Capability Context Endpoint
+
+**What it does:** Returns a `CapabilityContext` object (`hasVehicle`, `hasLiveVehicle`, `hasTariff`, `hasCommandsReady`, `hasProSubscription`) so client components can gate UI features in a single fetch without exposing subscription details across every query. Unauthenticated callers receive all-false defaults rather than a 401.
+**Entry point:** `GET /api/me/capabilities`
+**Key files:** `src/app/api/me/capabilities/route.ts`, `src/lib/capabilities.ts`
+**Dependencies:** Supabase (`vehicles`, `user_settings`, `profiles` tables).
+
+---
+
+## 21. PWA Manifest
+
+**What it does:** Exposes a Web App Manifest so Flux can be installed as a standalone PWA (home-screen icon, splash colour `#09090b`, `start_url=/dashboard`).
+**Entry point:** `GET /manifest.webmanifest` — Next.js auto-serves `src/app/manifest.ts`
+**Key files:** `src/app/manifest.ts`
+**Dependencies:** `public/icon-192.png`, `public/icon-512.png`.
+
+---
+
+## 22. Pricing Page
+
+**What it does:** Public marketing page comparing Free (€0) and Pro (€4.99/mo or €39/yr) tiers with feature lists. Renders `UpgradeButton` for authenticated free-tier users and a `/login` redirect for unauthenticated visitors.
+**Entry point:** `src/app/pricing/page.tsx`
+**Key files:** `src/app/pricing/page.tsx`, `src/components/billing/UpgradeButton.tsx`, `src/lib/subscription.ts`
+**Dependencies:** Supabase (reads `profiles.subscription_tier`), Stripe (checkout triggered via `UpgradeButton`).
+
+---
+
+## 23. Landing Page & Trip Planner — Glass Polish
 
 **What:** Mobile-first polish pass on the `/` landing page and `/trip` trip planner, following the v2 UX redesign spec (sections 3.7 and 3.11).
 
