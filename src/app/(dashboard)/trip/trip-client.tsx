@@ -70,7 +70,7 @@ export function TripClient() {
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
   return (
-    <div className="relative" style={{ height: "calc(100vh - 4rem)" }}>
+    <div className="relative -mx-4 -mt-6 -mb-4 md:-mx-8 md:-mb-6" style={{ height: "calc(100dvh - 3.5rem - 3.75rem)" }}>
       {/* Full-screen map */}
       <div className="absolute inset-0">
         <TripMap

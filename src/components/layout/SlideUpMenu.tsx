@@ -54,7 +54,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm md:hidden"
             aria-hidden
           />
           <motion.div
@@ -71,7 +71,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
             onDragEnd={(_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 400) onClose();
             }}
-            className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t bg-background pb-[max(env(safe-area-inset-bottom),16px)] shadow-2xl md:hidden"
+            className="fixed inset-x-0 bottom-0 z-[2001] rounded-t-2xl border-t bg-background pb-[max(env(safe-area-inset-bottom),16px)] shadow-2xl md:hidden"
           >
             <div className="flex justify-center pt-2">
               <div className="h-1 w-12 rounded-full bg-muted-foreground/30" />
