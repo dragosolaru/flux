@@ -418,7 +418,8 @@
     "create_account": "Create an account",
     "have_account": "Already have an account?",
     "sign_in_link": "Sign in",
-    "error_invalid": "Invalid email or password"
+    "error_invalid": "Invalid email or password",
+    "error_register_failed": "Could not create account. Please try again."
   },
   "landing": {
     "hero_headline": "Smart EV management for Tesla owners",

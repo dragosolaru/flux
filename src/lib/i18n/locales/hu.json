@@ -418,7 +418,8 @@
     "create_account": "Fiók létrehozása",
     "have_account": "Van már fiókod?",
     "sign_in_link": "Bejelentkezés",
-    "error_invalid": "Érvénytelen email vagy jelszó"
+    "error_invalid": "Érvénytelen email vagy jelszó",
+    "error_register_failed": "A fiók nem hozható létre. Kérjük, próbálja újra."
   },
   "landing": {
     "hero_headline": "Intelligens EV kezelés Tesla tulajdonosoknak",

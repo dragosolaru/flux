@@ -418,7 +418,8 @@
     "create_account": "Créer un compte",
     "have_account": "Vous avez déjà un compte ?",
     "sign_in_link": "Se connecter",
-    "error_invalid": "Email ou mot de passe invalide"
+    "error_invalid": "Email ou mot de passe invalide",
+    "error_register_failed": "Impossible de créer le compte. Veuillez réessayer."
   },
   "landing": {
     "hero_headline": "Gestion intelligente des VE pour les propriétaires Tesla",

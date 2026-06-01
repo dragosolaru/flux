@@ -30,8 +30,7 @@ export function LoginForm({ mode }: LoginFormProps) {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Failed" }));
-        toast.error(err.message ?? "Could not create account");
+        toast.error(t("error_register_failed"));
         setPending(false);
         return;
       }

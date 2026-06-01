@@ -418,7 +418,8 @@
     "create_account": "Creează un cont",
     "have_account": "Ai deja un cont?",
     "sign_in_link": "Autentifică-te",
-    "error_invalid": "Email sau parolă invalidă"
+    "error_invalid": "Email sau parolă invalidă",
+    "error_register_failed": "Contul nu a putut fi creat. Încearcă din nou."
   },
   "landing": {
     "hero_headline": "Gestionare inteligentă EV pentru proprietarii Tesla",

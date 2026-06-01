@@ -73,7 +73,7 @@ export default async function HomePage() {
             {t("hero_cta_pricing")}
           </Link>
           <Link
-            href="/login"
+            href="/register"
             className="rounded-md bg-gradient-to-r from-primary to-primary/90 px-4 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             {t("hero_cta")}
@@ -112,7 +112,7 @@ export default async function HomePage() {
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
-                href="/login"
+                href="/register"
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/90 px-8 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
               >
                 {t("hero_cta")}

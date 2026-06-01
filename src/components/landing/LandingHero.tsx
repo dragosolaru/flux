@@ -55,7 +55,7 @@ export function LandingHero({
           className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center"
         >
           <Link
-            href="/login"
+            href="/register"
             className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/90 px-8 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
           >
             {ctaLabel}
