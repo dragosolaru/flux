@@ -183,6 +183,10 @@
       "empty": "Noch keine Fahrzeuge hinzugefügt. Besuche die Garage, um eines hinzuzufügen.",
       "go_to_garage": "Fahrzeuge verwalten"
     },
+    "scenario": {
+      "label": "Demo-Szenario",
+      "help": "Ändert das simulierte Fahrverhalten für dieses Demo-Fahrzeug."
+    },
     "account": {
       "name": "Name",
       "email": "E-Mail",
@@ -225,11 +229,27 @@
     "free_tier_usage": "{used} von {max} Belegen diesen Monat verwendet",
     "upgrade_cta": "Auf Pro upgraden"
   },
+  "pwa": {
+    "install_title": "Flux installieren",
+    "cta": "Zum Startbildschirm hinzufügen",
+    "dismiss": "Nicht jetzt",
+    "ios_hint": "Tippe auf Teilen → „Zum Home-Bildschirm" zum Installieren."
+  },
+  "getting_started": {
+    "title": "Erste Schritte",
+    "dismiss": "Schließen",
+    "step_vehicle": "Erstes Fahrzeug hinzufügen",
+    "step_receipt": "Ersten Beleg hochladen",
+    "step_home": "Heimatadresse festlegen",
+    "step_explore": "Demo-Szenario erkunden"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "aktualisiert alle 30s",
     "demo_subtitle": "Demo-Daten · aktualisiert alle 30s",
     "refresh": "Aktualisieren",
+    "pull_to_refresh": "Zum Aktualisieren ziehen",
+    "refreshing": "Wird aktualisiert…",
     "error_title": "Fahrzeug nicht erreichbar",
     "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
     "retry": "Erneut versuchen",

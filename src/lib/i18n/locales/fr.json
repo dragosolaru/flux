@@ -183,6 +183,10 @@
       "empty": "Aucun véhicule ajouté. Visitez le Garage pour en ajouter un.",
       "go_to_garage": "Gérer les véhicules"
     },
+    "scenario": {
+      "label": "Scénario démo",
+      "help": "Change le comportement de conduite simulé pour ce véhicule démo."
+    },
     "account": {
       "name": "Nom",
       "email": "Email",
@@ -225,11 +229,27 @@
     "free_tier_usage": "{used} sur {max} reçus utilisés ce mois-ci",
     "upgrade_cta": "Passer à Pro"
   },
+  "pwa": {
+    "install_title": "Installer Flux",
+    "cta": "Ajouter à l'écran d'accueil",
+    "dismiss": "Pas maintenant",
+    "ios_hint": "Appuyez sur Partager → « Sur l'écran d'accueil » pour installer."
+  },
+  "getting_started": {
+    "title": "Premiers pas",
+    "dismiss": "Fermer",
+    "step_vehicle": "Ajouter votre premier véhicule",
+    "step_receipt": "Télécharger votre premier reçu",
+    "step_home": "Définir votre adresse domicile",
+    "step_explore": "Explorer un scénario démo"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "mise à jour toutes les 30s",
     "demo_subtitle": "Données démo · mise à jour toutes les 30s",
     "refresh": "Actualiser",
+    "pull_to_refresh": "Tirer pour actualiser",
+    "refreshing": "Actualisation…",
     "error_title": "Impossible de contacter votre véhicule",
     "error_subtitle": "Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer",

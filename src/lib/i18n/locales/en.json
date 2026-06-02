@@ -183,6 +183,10 @@
       "empty": "No vehicles added yet. Visit the Garage to add one.",
       "go_to_garage": "Manage vehicles"
     },
+    "scenario": {
+      "label": "Demo scenario",
+      "help": "Changes the simulated driving behaviour for this demo vehicle."
+    },
     "account": {
       "name": "Name",
       "email": "Email",
@@ -225,11 +229,27 @@
     "free_tier_usage": "{used} of {max} receipts used this month",
     "upgrade_cta": "Upgrade to Pro"
   },
+  "pwa": {
+    "install_title": "Install Flux",
+    "cta": "Add to Home Screen",
+    "dismiss": "Not now",
+    "ios_hint": "Tap Share → \"Add to Home Screen\" to install."
+  },
+  "getting_started": {
+    "title": "Getting started",
+    "dismiss": "Dismiss",
+    "step_vehicle": "Add your first vehicle",
+    "step_receipt": "Upload your first receipt",
+    "step_home": "Set your home address",
+    "step_explore": "Explore a demo scenario"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "updates every 30s",
     "demo_subtitle": "Demo data · updates every 30s",
     "refresh": "Refresh",
+    "pull_to_refresh": "Pull to refresh",
+    "refreshing": "Refreshing…",
     "error_title": "Couldn't reach your vehicle",
     "error_subtitle": "Check your connection and try again.",
     "retry": "Try again",

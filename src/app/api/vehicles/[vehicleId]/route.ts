@@ -3,8 +3,12 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createInitialSnapshot } from "@/lib/mock/seed";
+import { listScenarios } from "@/lib/mock/scenarios";
+import type { BrandKey } from "@/lib/brands/types";
 
 const uuidSchema = z.string().uuid();
+const VALID_SCENARIO_IDS = listScenarios().map((s) => s.id);
 
 export async function PATCH(
   req: Request,
@@ -20,25 +24,91 @@ export async function PATCH(
   }
   const body = await req.json().catch(() => ({}));
 
-  // Only allow updating virtual_key_paired via this endpoint
-  const virtualKeyPaired = typeof body.virtualKeyPaired === "boolean"
-    ? body.virtualKeyPaired
-    : undefined;
+  const virtualKeyPaired =
+    typeof body.virtualKeyPaired === "boolean" ? body.virtualKeyPaired : undefined;
+  const scenarioId =
+    typeof body.scenarioId === "string" ? body.scenarioId : undefined;
 
-  if (virtualKeyPaired === undefined) {
+  if (virtualKeyPaired === undefined && scenarioId === undefined) {
     return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase
-    .from("vehicles")
-    .update({ virtual_key_paired: virtualKeyPaired })
-    .eq("id", vehicleId)
-    .eq("user_id", session.user.id);
 
-  if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  // Ownership check
+  const { data: vehicle } = await supabase
+    .from("vehicles")
+    .select("id, display_name, brand, model, data_source")
+    .eq("id", vehicleId)
+    .eq("user_id", session.user.id)
+    .single();
+
+  if (!vehicle) {
+    return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
+
+  // Handle virtualKeyPaired update
+  if (virtualKeyPaired !== undefined) {
+    const { error } = await supabase
+      .from("vehicles")
+      .update({ virtual_key_paired: virtualKeyPaired })
+      .eq("id", vehicleId)
+      .eq("user_id", session.user.id);
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+
+  // Handle scenario switch (mock vehicles only)
+  if (scenarioId !== undefined) {
+    if (vehicle.data_source !== "mock") {
+      return NextResponse.json(
+        { message: "Scenario switching is only available for demo vehicles" },
+        { status: 400 },
+      );
+    }
+    if (!VALID_SCENARIO_IDS.includes(scenarioId)) {
+      return NextResponse.json({ message: "Invalid scenarioId" }, { status: 400 });
+    }
+
+    // Preserve current odometer from existing mock state
+    const { data: existingState } = await supabase
+      .from("mock_vehicle_state")
+      .select("state")
+      .eq("vehicle_id", vehicleId)
+      .maybeSingle();
+
+    const currentOdometer =
+      (existingState?.state as { odometerKm?: number } | null)?.odometerKm ?? 0;
+
+    const snapshot = createInitialSnapshot(
+      vehicleId,
+      vehicle.display_name,
+      vehicle.brand as BrandKey,
+      scenarioId,
+      vehicle.model ?? null,
+    );
+
+    // Carry over odometer so history stays consistent
+    snapshot.state.odometerKm = currentOdometer;
+
+    const { error } = await supabase.from("mock_vehicle_state").upsert({
+      vehicle_id: vehicleId,
+      state: snapshot.state,
+      motion_state: snapshot.motionState,
+      scenario_id: snapshot.scenarioId,
+      last_tick_at: snapshot.lastTickAt,
+      vehicle_spec: snapshot.vehicleSpec ?? null,
+      active_charging_session_start: null,
+      active_charging_session_network: null,
+      active_charging_session_start_soc: null,
+      active_trip_start: null,
+      active_trip_start_lat: null,
+      active_trip_start_lng: null,
+      active_trip_start_odometer_km: null,
+    });
+
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+
   return NextResponse.json({ success: true });
 }
 

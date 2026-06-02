@@ -441,3 +441,69 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 **Key files:** `src/app/api/vehicles/[vehicleId]/weather/route.ts`, `src/lib/external/weather/providers/mock-weather.ts`, `src/lib/external/weather/derating.ts`
 
 **Dependencies:** Supabase (vehicle state for lat/lng). Weather data is mock-only; no external API key required.
+
+---
+
+## 26. Scenario Switcher (Demo Vehicles)
+
+**What it does:** Lets users switch the simulated driving behaviour of a demo vehicle without re-adding it. Selecting a new scenario re-seeds `mock_vehicle_state` with fresh defaults while preserving the existing odometer reading so trip history stays consistent.
+
+**How to use:**
+- Settings → Vehicles section → select a scenario from the dropdown (only visible for mock/demo vehicles).
+- API: `PATCH /api/vehicles/[vehicleId]` with body `{ "scenarioId": "road-trip" }`. Valid values: `commuter`, `weekend-errands`, `road-trip`, `vacation`. Returns `{ success: true }`.
+
+**Key files:**
+- `src/app/api/vehicles/[vehicleId]/route.ts` — PATCH handler extended to accept `scenarioId`
+- `src/components/settings/ScenarioPicker.tsx` — client dropdown with `useTransition` + TanStack Query invalidation
+- `src/app/(dashboard)/settings/page.tsx` — wires picker into the Vehicles section (mock vehicles only)
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `settings.scenario.label/help` keys
+
+**Dependencies:** `createInitialSnapshot()` (`src/lib/mock/seed.ts`), `listScenarios()` (`src/lib/mock/scenarios.ts`), `mock_vehicle_state` Supabase table.
+
+---
+
+## 27. PWA — Installable App
+
+**What it does:** Makes Flux installable as a home-screen app on Android and iOS. Includes a network-first service worker with app-shell caching, an install banner for Android (uses the `beforeinstallprompt` event), and a Share-sheet hint for iOS. The duplicate static `public/manifest.webmanifest` was removed — the canonical manifest is served by Next.js from `src/app/manifest.ts`.
+
+**How to use:** On Android Chrome, a banner appears at the bottom of the dashboard inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. The banner can be dismissed (persisted in `localStorage`).
+
+**Key files:**
+- `public/sw.js` — network-first service worker, caches app shell
+- `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount
+- `src/components/pwa/InstallPrompt.tsx` — install banner (Android + iOS hint, `md:hidden`)
+- `src/app/(dashboard)/layout.tsx` — mounts both components
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys
+
+**Dependencies:** No new npm packages. Requires HTTPS in production for SW registration.
+
+---
+
+## 28. Getting Started Checklist
+
+**What it does:** Shows a dismissible "Getting Started" card above the Hero card on the dashboard for new users. Tracks four steps: add a vehicle, upload a receipt, set a home address, and explore a demo scenario (shown only if a mock vehicle exists). The card disappears automatically when all three required steps are done, or when dismissed (persisted in `localStorage`).
+
+**How to use:** Visible automatically to users who haven't completed the checklist. Each incomplete step is a direct link to the relevant page. Once done or dismissed, it won't appear again (unless `localStorage` is cleared).
+
+**Key files:**
+- `src/components/onboarding/GettingStartedCard.tsx` — client component (dismiss + step list)
+- `src/app/(dashboard)/dashboard/page.tsx` — fetches checklist state server-side and passes to DashboardClient
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — renders card above HeroCard
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `getting_started.*` keys
+
+**Dependencies:** Supabase (`vehicles`, `documents`, `user_settings` tables), `GlassCard`.
+
+---
+
+## 29. Dashboard Polish — Live Badge Fetch State + Pull-to-Refresh
+
+**What it does:**
+- **Live badge:** The dot in the "Live" badge pulses blue while a background refetch is in-flight (every 30 s), giving clear visual feedback that data is updating.
+- **Pull-to-refresh (mobile only):** Pulling down from the top of the dashboard on touch devices triggers an immediate data refetch. Uses touch events on the `<main>` scroll container; no extra libraries.
+
+**Key files:**
+- `src/hooks/usePullToRefresh.ts` — reusable hook, queries `document.querySelector('main')`, 70px drag threshold
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — `isFetching` forwarded to `LiveBadge`; `usePullToRefresh` mounted here
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `dashboard.pull_to_refresh/refreshing` keys
+
+**Dependencies:** `useVehicle` hook (exposes `isFetching` + `refetch` from TanStack Query).

@@ -183,6 +183,10 @@
       "empty": "Niciun vehicul adăugat. Vizitează Garajul pentru a adăuga unul.",
       "go_to_garage": "Gestionează vehiculele"
     },
+    "scenario": {
+      "label": "Scenariu demo",
+      "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo."
+    },
     "account": {
       "name": "Nume",
       "email": "Email",
@@ -225,11 +229,27 @@
     "free_tier_usage": "{used} din {max} facturi folosite luna aceasta",
     "upgrade_cta": "Upgrade la Pro"
   },
+  "pwa": {
+    "install_title": "Instalează Flux",
+    "cta": "Adaugă pe ecranul principal",
+    "dismiss": "Nu acum",
+    "ios_hint": "Apasă Share → „Adaugă pe ecran principal" pentru a instala."
+  },
+  "getting_started": {
+    "title": "Primii pași",
+    "dismiss": "Închide",
+    "step_vehicle": "Adaugă primul tău vehicul",
+    "step_receipt": "Încarcă prima factură",
+    "step_home": "Setează adresa de acasă",
+    "step_explore": "Explorează un scenariu demo"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "se actualizează la 30s",
     "demo_subtitle": "Date demo · se actualizează la 30s",
     "refresh": "Reîmprospătează",
+    "pull_to_refresh": "Trage pentru reîmprospătare",
+    "refreshing": "Se reîmprospătează…",
     "error_title": "Nu am putut contacta mașina",
     "error_subtitle": "Verifică conexiunea și încearcă din nou.",
     "retry": "Încearcă din nou",

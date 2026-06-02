@@ -183,6 +183,10 @@
       "empty": "Még nem adtál hozzá járművet. Látogasd meg a Garázst, hogy hozzáadj egyet.",
       "go_to_garage": "Járművek kezelése"
     },
+    "scenario": {
+      "label": "Demo forgatókönyv",
+      "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél."
+    },
     "account": {
       "name": "Név",
       "email": "Email",
@@ -225,11 +229,27 @@
     "free_tier_usage": "{used} / {max} nyugta felhasználva ebben a hónapban",
     "upgrade_cta": "Váltás Pro-ra"
   },
+  "pwa": {
+    "install_title": "Flux telepítése",
+    "cta": "Főképernyőre adás",
+    "dismiss": "Most nem",
+    "ios_hint": "Érintsd meg a Megosztás → „Főképernyőre" gombot a telepítéshez."
+  },
+  "getting_started": {
+    "title": "Első lépések",
+    "dismiss": "Bezárás",
+    "step_vehicle": "Első jármű hozzáadása",
+    "step_receipt": "Első nyugta feltöltése",
+    "step_home": "Otthoni cím beállítása",
+    "step_explore": "Demo forgatókönyv felfedezése"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "30s-onként frissül",
     "demo_subtitle": "Demo adatok · 30s-onként frissül",
     "refresh": "Frissítés",
+    "pull_to_refresh": "Húzd le a frissítéshez",
+    "refreshing": "Frissítés…",
     "error_title": "Nem sikerült elérni a járművet",
     "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
     "retry": "Próbálja újra",

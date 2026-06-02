@@ -5,6 +5,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { MockGlobalBanner } from "@/components/layout/MockGlobalBanner";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { auth } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -19,6 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-dvh flex-col">
+      <ServiceWorkerRegistrar />
       {/* Horizontal row: sidebar + main content */}
       <div className="flex min-w-0 flex-1 overflow-hidden">
         <Sidebar />
@@ -30,6 +33,7 @@ export default async function DashboardLayout({
       </div>
       {/* Bottom nav sits at the base of the flex column — no position:fixed needed */}
       <BottomNav />
+      <InstallPrompt />
     </div>
   );
 }
