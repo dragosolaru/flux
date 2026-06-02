@@ -22,6 +22,8 @@ import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
 import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
+import { InactiveVehiclesList } from "@/components/settings/InactiveVehiclesList";
+import { DeactivateButton } from "@/components/settings/DeactivateButton";
 import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
 import { auth } from "@/lib/auth";
@@ -47,11 +49,13 @@ export default async function SettingsPage() {
   type VehicleRow = {
     id: string;
     display_name: string;
+    nickname: string | null;
     brand: string;
     model: string | null;
     data_source: string;
+    is_active: boolean;
   };
-  let vehicles: VehicleRow[] = [];
+  let allVehicles: VehicleRow[] = [];
   let tariffProvider: string | null = null;
   let subscriptionTier: "free" | "pro" = "free";
   let scenarioByVehicleId: Record<string, string | null> = {};
@@ -60,9 +64,9 @@ export default async function SettingsPage() {
     const [{ data: vehicleRows }, { data: userSettings }, { data: profile }] = await Promise.all([
       supabase
         .from("vehicles")
-        .select("id, display_name, brand, model, data_source")
+        .select("id, display_name, nickname, brand, model, data_source, is_active")
         .eq("user_id", session.user.id)
-        .eq("is_active", true),
+        .order("created_at", { ascending: true }),
       supabase
         .from("user_settings")
         .select("tariff_provider")
@@ -75,14 +79,14 @@ export default async function SettingsPage() {
         .maybeSingle(),
     ]);
 
-    vehicles = (vehicleRows ?? []) as VehicleRow[];
+    allVehicles = (vehicleRows ?? []) as VehicleRow[];
     tariffProvider = userSettings?.tariff_provider ?? null;
     subscriptionTier = (
       (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free"
     ) as "free" | "pro";
 
-    const mockVehicleIds = vehicles
-      .filter((v) => v.data_source === "mock")
+    const mockVehicleIds = allVehicles
+      .filter((v) => v.data_source === "mock" && v.is_active)
       .map((v) => v.id);
     if (mockVehicleIds.length > 0) {
       const { data: mockStates } = await supabase
@@ -99,6 +103,13 @@ export default async function SettingsPage() {
   } catch (err) {
     console.error("[settings] data fetch failed", err);
   }
+
+  const activeVehicles = allVehicles.filter((v) => v.is_active);
+  const inactiveVehicles = allVehicles.filter((v) => !v.is_active);
+
+  const hasActiveFreeSlot =
+    subscriptionTier === "pro" ||
+    (subscriptionTier === "free" && activeVehicles.length < 1);
 
   const activeProvider = tariffProvider ?? DEFAULT_PROVIDER_ID;
   const providers = listProviders().map((p) => ({ id: p.id, displayName: p.displayName }));
@@ -170,47 +181,48 @@ export default async function SettingsPage() {
       <section>
         <SectionHeader label={t("settings.section.vehicles")} />
         <GlassCard className="divide-y divide-white/5">
-          {(vehicles ?? []).length === 0 ? (
+          {activeVehicles.length === 0 ? (
             <SettingsRow
               icon={<Car className="size-4 text-blue-400" />}
               iconBg="bg-blue-500/20"
               label={t("settings.vehicles.empty")}
             />
           ) : (
-            (vehicles ?? []).map(
-              (v: {
-                id: string;
-                display_name: string;
-                brand: string;
-                model: string | null;
-                data_source: string;
-              }) =>
-                v.data_source === "mock" ? (
-                  <SettingsRowExpanded
-                    key={v.id}
-                    icon={<Car className="size-4 text-blue-400" />}
-                    iconBg="bg-blue-500/20"
-                    label={v.display_name}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <p className="text-xs text-muted-foreground">
-                        {t("settings.scenario.help")}
-                      </p>
-                      <ScenarioPicker
-                        vehicleId={v.id}
-                        currentScenarioId={scenarioByVehicleId[v.id] ?? null}
-                      />
+            activeVehicles.map((v) =>
+              v.data_source === "mock" ? (
+                <SettingsRowExpanded
+                  key={v.id}
+                  icon={<Car className="size-4 text-blue-400" />}
+                  iconBg="bg-blue-500/20"
+                  label={v.nickname ?? v.display_name}
+                >
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {t("settings.scenario.help")}
+                    </p>
+                    <ScenarioPicker
+                      vehicleId={v.id}
+                      currentScenarioId={scenarioByVehicleId[v.id] ?? null}
+                    />
+                    <div className="mt-1">
+                      <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
                     </div>
-                  </SettingsRowExpanded>
-                ) : (
-                  <SettingsRow
-                    key={v.id}
-                    icon={<Car className="size-4 text-blue-400" />}
-                    iconBg="bg-blue-500/20"
-                    label={v.display_name}
-                    value={`${v.brand}${v.model ? ` · ${v.model}` : ""}`}
-                  />
-                ),
+                  </div>
+                </SettingsRowExpanded>
+              ) : (
+                <div key={v.id} className="flex min-h-[52px] items-center gap-3 px-4 py-2">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
+                    <Car className="size-4 text-blue-400" />
+                  </div>
+                  <span className="flex-1 text-sm font-medium">
+                    {v.nickname ?? v.display_name}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {v.brand}{v.model ? ` · ${v.model}` : ""}
+                  </span>
+                  <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
+                </div>
+              ),
             )
           )}
           <Link href="/garage" className="block">
@@ -222,6 +234,13 @@ export default async function SettingsPage() {
             />
           </Link>
         </GlassCard>
+
+        {inactiveVehicles.length > 0 && (
+          <InactiveVehiclesList
+            inactiveVehicles={inactiveVehicles}
+            hasActiveFreeSlot={hasActiveFreeSlot}
+          />
+        )}
       </section>
 
       {/* Energy tariff section */}
