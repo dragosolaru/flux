@@ -233,7 +233,8 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `<CircularProgress value={0-100}>` — SVG ring with animated stroke for charging UI.
 - `<PageWrapper>` — wraps page content with fade-up entry animation.
 - `.glass-card` CSS class — apply directly when the React component is not needed.
-- `BottomNav` — updated to use `backdrop-blur-2xl` and a pill background indicator.
+- `BottomNav` — pill indicator (`bg-primary/15`), active icon glow (`drop-shadow`), `whileTap` spring scale, haptic feedback, scroll-to-top on re-tap.
+- `SlideUpMenu` — `rounded-t-3xl`, `backdrop-blur-3xl`, stronger shadow, drag-to-dismiss.
 
 **Key files:**
 - `src/app/globals.css` — color tokens (`:root` + `.dark`) + `.glass-card` utility
@@ -464,12 +465,12 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 27. PWA — Installable App
 
-**What it does:** Makes Flux installable as a home-screen app on Android and iOS. Includes a network-first service worker with app-shell caching, an install banner for Android (uses the `beforeinstallprompt` event), and a Share-sheet hint for iOS. The duplicate static `public/manifest.webmanifest` was removed — the canonical manifest is served by Next.js from `src/app/manifest.ts`.
+**What it does:** Makes Flux installable as a home-screen app on Android and iOS. The service worker is a kill-switch (`public/sw.js`) that unregisters itself and clears all caches — a proper versioned SW can be reintroduced later. An install banner handles Android (`beforeinstallprompt`) and iOS (Share-sheet hint). iOS detection covers both classic UA string and iPadOS (MacIntel + touch). The iOS hint re-shows after 7 days; Android dismissal is permanent.
 
-**How to use:** On Android Chrome, a banner appears at the bottom of the dashboard inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. The banner can be dismissed (persisted in `localStorage`).
+**How to use:** On Android Chrome, a banner appears at the bottom of the screen inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. The banner can be dismissed. The canonical manifest is served by Next.js from `src/app/manifest.ts`.
 
 **Key files:**
-- `public/sw.js` — network-first service worker, caches app shell
+- `public/sw.js` — kill-switch service worker (unregisters and clears caches)
 - `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount
 - `src/components/pwa/InstallPrompt.tsx` — install banner (Android + iOS hint, `md:hidden`)
 - `src/app/(dashboard)/layout.tsx` — mounts both components

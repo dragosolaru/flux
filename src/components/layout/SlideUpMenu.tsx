@@ -71,10 +71,10 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
             onDragEnd={(_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 400) onClose();
             }}
-            className="fixed inset-x-0 bottom-0 z-[2001] rounded-t-2xl border-t bg-background pb-[max(env(safe-area-inset-bottom),16px)] shadow-2xl md:hidden"
+            className="fixed inset-x-0 bottom-0 z-[2001] rounded-t-3xl border-t border-white/12 bg-background/85 pb-[max(env(safe-area-inset-bottom),16px)] shadow-[0_-8px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl md:hidden"
           >
-            <div className="flex justify-center pt-2">
-              <div className="h-1 w-12 rounded-full bg-muted-foreground/30" />
+            <div className="flex justify-center pt-3">
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
             </div>
 
             <div className="flex items-center justify-between px-5 pt-3 pb-2">
@@ -96,22 +96,26 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
                 const needsUnlock = !gate.ok;
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-3 text-base transition-colors",
-                        "text-foreground hover:bg-accent active:bg-accent/70",
-                      )}
-                    >
-                      <Icon className="size-5 text-muted-foreground" />
-                      <span className="flex-1">{t(item.labelKey)}</span>
-                      {needsUnlock && (
-                        <span aria-hidden className="text-xs text-muted-foreground/70">
-                          ✦
-                        </span>
-                      )}
-                    </Link>
+                    <motion.div whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+                      <Link
+                        href={item.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-3 py-3 text-base transition-colors",
+                          "text-foreground hover:bg-accent active:bg-accent/70",
+                        )}
+                      >
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-accent/60">
+                          <Icon className="size-5 text-foreground/70" />
+                        </div>
+                        <span className="flex-1">{t(item.labelKey)}</span>
+                        {needsUnlock && (
+                          <span aria-hidden className="text-xs text-muted-foreground/70">
+                            ✦
+                          </span>
+                        )}
+                      </Link>
+                    </motion.div>
                   </li>
                 );
               })}
