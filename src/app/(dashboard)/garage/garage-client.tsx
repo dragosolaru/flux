@@ -15,7 +15,7 @@ import { VehicleModelImage } from "@/components/vehicle/VehicleModelImage";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { apiFetch } from "@/lib/api-fetch";
-import { cardVariants, floatLoop, staggerContainer } from "@/lib/animations/variants";
+import { cardVariants, fadeInUp, floatLoop, staggerContainer } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
 interface TariffResponse extends TariffForecast {
@@ -138,14 +138,19 @@ export function GarageClient() {
   return (
     <PageWrapper className="mx-auto max-w-xl gap-4 px-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-1">
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        className="flex items-center justify-between px-1"
+      >
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{tg("title")}</h1>
           <p className="text-sm text-muted-foreground">
             {isLoading ? "…" : countLabel}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tariff hint */}
       {caps?.hasTariff && tariff && tariff.cheapestAvgPrice < tariff.currentPrice && (

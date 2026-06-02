@@ -111,10 +111,10 @@ export function ChargingClient({
   return (
     <PageWrapper className="mx-auto max-w-lg gap-5 pb-8">
       {/* Page heading */}
-      <div>
+      <motion.div variants={fadeInUp} initial="hidden" animate="visible">
         <h1 className="text-2xl font-semibold tracking-tight">{tc("page_title")}</h1>
         <p className="text-sm text-muted-foreground">{vehicleName}</p>
-      </div>
+      </motion.div>
 
       {/* Active charge ring */}
       <GlassCard className="p-6 flex flex-col items-center gap-4">
