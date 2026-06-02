@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { BatteryCharging, Car, MoreHorizontal, Receipt, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useState, type ComponentType } from "react";
+import { useState, useCallback, type ComponentType } from "react";
 
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { checkCapability, type Capability } from "@/lib/capabilities";
@@ -13,6 +12,12 @@ import { navIndicatorSpring } from "@/lib/animations/variants";
 import { cn } from "@/lib/utils";
 
 import { SlideUpMenu } from "./SlideUpMenu";
+
+function haptic() {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(10);
+  }
+}
 
 interface MobileTab {
   key: string;
@@ -32,6 +37,7 @@ const TABS: MobileTab[] = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations();
   const { data: caps } = useCapabilities();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -43,6 +49,22 @@ export function BottomNav() {
     );
     return match?.key ?? null;
   })();
+
+  const handleTabPress = useCallback(
+    (tab: MobileTab) => {
+      haptic();
+      if (tab.href === "__more__") {
+        setMoreOpen(true);
+        return;
+      }
+      if (pathname === tab.href || pathname?.startsWith(`${tab.href}/`)) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        router.push(tab.href);
+      }
+    },
+    [pathname, router],
+  );
 
   return (
     <>
@@ -68,14 +90,14 @@ export function BottomNav() {
                 )}
                 <Icon
                   className={cn(
-                    "size-5 transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground",
+                    "relative size-[22px] transition-colors",
+                    isActive ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "text-muted-foreground",
                   )}
                 />
                 <span
                   className={cn(
-                    "transition-colors",
-                    isActive ? "text-foreground font-medium" : "text-muted-foreground",
+                    "relative transition-colors",
+                    isActive ? "text-primary font-semibold" : "text-muted-foreground",
                   )}
                 >
                   {t(tab.labelKey)}
@@ -93,21 +115,18 @@ export function BottomNav() {
 
             return (
               <li key={tab.key}>
-                {tab.href === "__more__" ? (
-                  <button
-                    type="button"
-                    onClick={() => setMoreOpen(true)}
-                    aria-label={t(tab.labelKey)}
-                    aria-expanded={moreOpen}
-                    className="w-full active:opacity-70"
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <Link href={tab.href} className="block active:opacity-70">
-                    {content}
-                  </Link>
-                )}
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  onClick={() => handleTabPress(tab)}
+                  aria-label={t(tab.labelKey)}
+                  aria-expanded={tab.href === "__more__" ? moreOpen : undefined}
+                  aria-current={isActive ? "page" : undefined}
+                  className="w-full"
+                >
+                  {content}
+                </motion.button>
               </li>
             );
           })}
