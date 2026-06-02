@@ -37,7 +37,7 @@ export async function GET() {
       .from("profiles")
       .select("subscription_tier")
       .eq("id", userId)
-      .single(),
+      .maybeSingle(),
   ]);
 
   const vehicleRows = (vehicles ?? []) as Array<{
