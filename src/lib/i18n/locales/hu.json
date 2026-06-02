@@ -183,6 +183,10 @@
       "empty": "Még nem adtál hozzá járművet. Látogasd meg a Garázst, hogy hozzáadj egyet.",
       "go_to_garage": "Járművek kezelése"
     },
+    "scenario": {
+      "label": "Demo forgatókönyv",
+      "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél."
+    },
     "account": {
       "name": "Név",
       "email": "Email",

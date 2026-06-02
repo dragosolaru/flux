@@ -183,6 +183,10 @@
       "empty": "Aucun véhicule ajouté. Visitez le Garage pour en ajouter un.",
       "go_to_garage": "Gérer les véhicules"
     },
+    "scenario": {
+      "label": "Scénario démo",
+      "help": "Change le comportement de conduite simulé pour ce véhicule démo."
+    },
     "account": {
       "name": "Nom",
       "email": "Email",

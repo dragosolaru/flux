@@ -20,6 +20,7 @@ import { PageWrapper } from "@/components/layout/page-wrapper";
 import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
 import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
+import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
 import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
@@ -58,6 +59,20 @@ export default async function SettingsPage() {
       .eq("id", session.user.id)
       .single(),
   ]);
+
+  const mockVehicleIds = (vehicles ?? [])
+    .filter((v) => v.data_source === "mock")
+    .map((v) => v.id);
+  const { data: mockStates } =
+    mockVehicleIds.length > 0
+      ? await supabase
+          .from("mock_vehicle_state")
+          .select("vehicle_id, scenario_id")
+          .in("vehicle_id", mockVehicleIds)
+      : { data: [] as { vehicle_id: string; scenario_id: string | null }[] };
+  const scenarioByVehicleId = Object.fromEntries(
+    (mockStates ?? []).map((s) => [s.vehicle_id, s.scenario_id]),
+  );
 
   const subscriptionTier = (
     (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free"
@@ -147,15 +162,33 @@ export default async function SettingsPage() {
                 brand: string;
                 model: string | null;
                 data_source: string;
-              }) => (
-                <SettingsRow
-                  key={v.id}
-                  icon={<Car className="size-4 text-blue-400" />}
-                  iconBg="bg-blue-500/20"
-                  label={v.display_name}
-                  value={`${v.brand}${v.model ? ` · ${v.model}` : ""}`}
-                />
-              ),
+              }) =>
+                v.data_source === "mock" ? (
+                  <SettingsRowExpanded
+                    key={v.id}
+                    icon={<Car className="size-4 text-blue-400" />}
+                    iconBg="bg-blue-500/20"
+                    label={v.display_name}
+                  >
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.scenario.help")}
+                      </p>
+                      <ScenarioPicker
+                        vehicleId={v.id}
+                        currentScenarioId={scenarioByVehicleId[v.id] ?? null}
+                      />
+                    </div>
+                  </SettingsRowExpanded>
+                ) : (
+                  <SettingsRow
+                    key={v.id}
+                    icon={<Car className="size-4 text-blue-400" />}
+                    iconBg="bg-blue-500/20"
+                    label={v.display_name}
+                    value={`${v.brand}${v.model ? ` · ${v.model}` : ""}`}
+                  />
+                ),
             )
           )}
           <Link href="/garage" className="block">

@@ -183,6 +183,10 @@
       "empty": "No vehicles added yet. Visit the Garage to add one.",
       "go_to_garage": "Manage vehicles"
     },
+    "scenario": {
+      "label": "Demo scenario",
+      "help": "Changes the simulated driving behaviour for this demo vehicle."
+    },
     "account": {
       "name": "Name",
       "email": "Email",

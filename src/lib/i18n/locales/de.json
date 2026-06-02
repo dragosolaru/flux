@@ -183,6 +183,10 @@
       "empty": "Noch keine Fahrzeuge hinzugefügt. Besuche die Garage, um eines hinzuzufügen.",
       "go_to_garage": "Fahrzeuge verwalten"
     },
+    "scenario": {
+      "label": "Demo-Szenario",
+      "help": "Ändert das simulierte Fahrverhalten für dieses Demo-Fahrzeug."
+    },
     "account": {
       "name": "Name",
       "email": "E-Mail",

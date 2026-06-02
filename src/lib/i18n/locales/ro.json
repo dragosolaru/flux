@@ -183,6 +183,10 @@
       "empty": "Niciun vehicul adăugat. Vizitează Garajul pentru a adăuga unul.",
       "go_to_garage": "Gestionează vehiculele"
     },
+    "scenario": {
+      "label": "Scenariu demo",
+      "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo."
+    },
     "account": {
       "name": "Nume",
       "email": "Email",
