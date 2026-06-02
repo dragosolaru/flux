@@ -492,3 +492,18 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `getting_started.*` keys
 
 **Dependencies:** Supabase (`vehicles`, `documents`, `user_settings` tables), `GlassCard`.
+
+---
+
+## 29. Dashboard Polish — Live Badge Fetch State + Pull-to-Refresh
+
+**What it does:**
+- **Live badge:** The dot in the "Live" badge pulses blue while a background refetch is in-flight (every 30 s), giving clear visual feedback that data is updating.
+- **Pull-to-refresh (mobile only):** Pulling down from the top of the dashboard on touch devices triggers an immediate data refetch. Uses touch events on the `<main>` scroll container; no extra libraries.
+
+**Key files:**
+- `src/hooks/usePullToRefresh.ts` — reusable hook, queries `document.querySelector('main')`, 70px drag threshold
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — `isFetching` forwarded to `LiveBadge`; `usePullToRefresh` mounted here
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `dashboard.pull_to_refresh/refreshing` keys
+
+**Dependencies:** `useVehicle` hook (exposes `isFetching` + `refetch` from TanStack Query).

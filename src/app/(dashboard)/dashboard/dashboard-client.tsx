@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
@@ -57,7 +58,7 @@ function getSocColor(level: number): string {
 // --------------------------------------------------------------------------
 // Hero card
 // --------------------------------------------------------------------------
-function HeroCard({ state, isLoading, vehicleName }: { state: VehicleState | undefined; isLoading: boolean; vehicleName: string }) {
+function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string }) {
   const td = useTranslations("dashboard");
   const soc = state?.batteryLevel ?? 0;
   const fresh = state ? isDataFresh(state.recordedAt) : false;
@@ -76,7 +77,7 @@ function HeroCard({ state, isLoading, vehicleName }: { state: VehicleState | und
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
         ) : (
-          <LiveBadge fresh={fresh} label={td("live_label")} />
+          <LiveBadge fresh={fresh} isFetching={isFetching} label={td("live_label")} />
         )}
       </div>
 
@@ -132,7 +133,7 @@ function HeroCard({ state, isLoading, vehicleName }: { state: VehicleState | und
   );
 }
 
-function LiveBadge({ fresh, label }: { fresh: boolean; label: string }) {
+function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching: boolean; label: string }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -142,8 +143,12 @@ function LiveBadge({ fresh, label }: { fresh: boolean; label: string }) {
       }`}
     >
       <span
-        className={`size-1.5 rounded-full ${
-          fresh ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"
+        className={`size-1.5 rounded-full transition-colors ${
+          isFetching
+            ? "animate-pulse bg-blue-400"
+            : fresh
+              ? "animate-pulse bg-emerald-400"
+              : "bg-muted-foreground"
         }`}
       />
       {label}
@@ -398,8 +403,9 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // Main export
 // --------------------------------------------------------------------------
 export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist }: DashboardClientProps) {
-  const { data, isLoading, isError, refetch } = useVehicle(vehicleId);
+  const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
+  usePullToRefresh(refetch);
 
   return (
     <PageWrapper className="mx-auto max-w-xl gap-4 px-0">
@@ -407,7 +413,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
 
       <GettingStartedCard data={checklist} />
 
-      <HeroCard state={data} isLoading={isLoading} vehicleName={vehicleName} />
+      <HeroCard state={data} isLoading={isLoading} isFetching={isFetching} vehicleName={vehicleName} />
 
       <StatChips state={data} isLoading={isLoading} />
 

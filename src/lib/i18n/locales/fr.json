@@ -248,6 +248,8 @@
     "live_subtitle": "mise à jour toutes les 30s",
     "demo_subtitle": "Données démo · mise à jour toutes les 30s",
     "refresh": "Actualiser",
+    "pull_to_refresh": "Tirer pour actualiser",
+    "refreshing": "Actualisation…",
     "error_title": "Impossible de contacter votre véhicule",
     "error_subtitle": "Vérifiez votre connexion et réessayez.",
     "retry": "Réessayer",

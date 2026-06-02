@@ -248,6 +248,8 @@
     "live_subtitle": "updates every 30s",
     "demo_subtitle": "Demo data · updates every 30s",
     "refresh": "Refresh",
+    "pull_to_refresh": "Pull to refresh",
+    "refreshing": "Refreshing…",
     "error_title": "Couldn't reach your vehicle",
     "error_subtitle": "Check your connection and try again.",
     "retry": "Try again",

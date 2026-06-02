@@ -248,6 +248,8 @@
     "live_subtitle": "30s-onként frissül",
     "demo_subtitle": "Demo adatok · 30s-onként frissül",
     "refresh": "Frissítés",
+    "pull_to_refresh": "Húzd le a frissítéshez",
+    "refreshing": "Frissítés…",
     "error_title": "Nem sikerült elérni a járművet",
     "error_subtitle": "Ellenőrizze a kapcsolatot és próbálja újra.",
     "retry": "Próbálja újra",

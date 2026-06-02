@@ -248,6 +248,8 @@
     "live_subtitle": "aktualisiert alle 30s",
     "demo_subtitle": "Demo-Daten · aktualisiert alle 30s",
     "refresh": "Aktualisieren",
+    "pull_to_refresh": "Zum Aktualisieren ziehen",
+    "refreshing": "Wird aktualisiert…",
     "error_title": "Fahrzeug nicht erreichbar",
     "error_subtitle": "Prüfe deine Verbindung und versuche es erneut.",
     "retry": "Erneut versuchen",
