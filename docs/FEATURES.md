@@ -523,3 +523,25 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `onboarding.add_vehicle.vin_label/vin_placeholder/vin_detected` keys
 
 **Dependencies:** No new npm packages. Client-only; no API changes.
+
+---
+
+## 31. Vehicle Deactivation & Deletion
+
+**What it does:** Lets users soft-delete (deactivate) or permanently delete a vehicle. Deactivation sets `is_active = false` — the vehicle disappears from all live queries but all data is preserved; it can be reactivated any time from Settings. Permanent deletion issues a hard `DELETE` with a required checkbox confirmation. Free-tier users cannot reactivate when their active-vehicle slot is full (returns 403 `free_tier_limit`).
+
+**How to use:**
+- **Garage:** tap the `⋮` (MoreVertical) button on any vehicle card → "Deactivate" → confirm dialog.
+- **Settings → Vehicles:** each active vehicle row has a "Deactivate" button; a collapsible "Inactive vehicles" section below shows deactivated vehicles with "Reactivate" and "Delete permanently" actions.
+
+**Key files:**
+- `src/app/api/vehicles/[vehicleId]/route.ts` — PATCH now accepts `is_active: boolean`; reactivation guarded by `canAddVehicle`
+- `src/app/api/vehicles/route.ts` — GET accepts `?include_inactive=true` to return all vehicles
+- `src/components/garage/VehicleCardMenu.tsx` — DropdownMenu + AlertDialog for garage deactivate flow
+- `src/app/(dashboard)/garage/garage-client.tsx` — mounts `VehicleCardMenu`, invalidates `["vehicles"]` on success
+- `src/components/settings/InactiveVehiclesList.tsx` — collapsible list with reactivate + permanent delete
+- `src/components/settings/DeactivateButton.tsx` — small client button used in the settings active-vehicle rows
+- `src/app/(dashboard)/settings/page.tsx` — fetches all vehicles (no `is_active` filter), splits into active/inactive, passes both down
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `garage.menu_deactivate/deactivate_confirm_*` and `settings.inactive_vehicles_title/reactivate/delete_*` keys
+
+**Dependencies:** `canAddVehicle` from `src/lib/subscription.ts`; `DropdownMenu` + `AlertDialog` from shadcn/ui (already present); no new npm packages.

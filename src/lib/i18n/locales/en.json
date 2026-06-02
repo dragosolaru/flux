@@ -186,6 +186,14 @@
       "empty": "No vehicles added yet. Visit the Garage to add one.",
       "go_to_garage": "Manage vehicles"
     },
+    "deactivate": "Deactivate",
+    "inactive_vehicles_title": "Inactive vehicles",
+    "reactivate": "Reactivate",
+    "reactivate_blocked": "Upgrade to Pro to reactivate more vehicles",
+    "delete_permanently": "Delete permanently",
+    "delete_confirm_title": "Delete vehicle permanently?",
+    "delete_confirm_checkbox": "I understand this action is irreversible and all data will be deleted",
+    "delete_confirm_cta": "Delete permanently",
     "scenario": {
       "label": "Demo scenario",
       "help": "Changes the simulated driving behaviour for this demo vehicle."
@@ -324,7 +332,11 @@
     "tap_to_open": "Tap to open dashboard",
     "tariff_hint_cheapest": "Cheapest plug-in:",
     "tariff_hint_save": "save",
-    "tariff_hint_unit": "ct/kWh vs now"
+    "tariff_hint_unit": "ct/kWh vs now",
+    "menu_deactivate": "Deactivate",
+    "deactivate_confirm_title": "Deactivate vehicle?",
+    "deactivate_confirm_desc": "The vehicle will be hidden from your garage. All data is preserved and you can reactivate it anytime from Settings.",
+    "deactivate_confirm_cta": "Deactivate"
   },
   "costs": {
     "kpi_cost_per_km": "Cost per km",

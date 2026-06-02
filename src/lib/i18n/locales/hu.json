@@ -186,6 +186,14 @@
       "empty": "Még nem adtál hozzá járművet. Látogasd meg a Garázst, hogy hozzáadj egyet.",
       "go_to_garage": "Járművek kezelése"
     },
+    "deactivate": "Deaktiválás",
+    "inactive_vehicles_title": "Inaktív járművek",
+    "reactivate": "Újraaktiválás",
+    "reactivate_blocked": "Frissíts Pro-ra a több jármű újraaktiválásához",
+    "delete_permanently": "Végleges törlés",
+    "delete_confirm_title": "Jármű végleges törlése?",
+    "delete_confirm_checkbox": "Megértem, hogy ez a művelet visszavonhatatlan és minden adat törlődik",
+    "delete_confirm_cta": "Végleges törlés",
     "scenario": {
       "label": "Demo forgatókönyv",
       "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél."
@@ -324,7 +332,11 @@
     "tap_to_open": "Koppintson a dashboardhoz",
     "tariff_hint_cheapest": "Legolcsóbb töltési idő:",
     "tariff_hint_save": "megtakarítás",
-    "tariff_hint_unit": "ct/kWh most-hoz képest"
+    "tariff_hint_unit": "ct/kWh most-hoz képest",
+    "menu_deactivate": "Deaktiválás",
+    "deactivate_confirm_title": "Jármű deaktiválása?",
+    "deactivate_confirm_desc": "A jármű el lesz rejtve a garázsból. Minden adat megmarad, és bármikor újra aktiválhatod a Beállításokban.",
+    "deactivate_confirm_cta": "Deaktiválás"
   },
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",

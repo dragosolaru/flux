@@ -10,8 +10,9 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
 import { canAddVehicle } from "@/lib/subscription";
 
-// GET /api/vehicles — list all active vehicles for the current user
-export async function GET() {
+// GET /api/vehicles — list vehicles for the current user
+// ?include_inactive=true returns all vehicles regardless of is_active
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -22,13 +23,21 @@ export async function GET() {
     return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
   }
 
+  const url = new URL(req.url);
+  const includeInactive = url.searchParams.get("include_inactive") === "true";
+
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("vehicles")
-    .select("id, brand, display_name, nickname, model, year, data_source, virtual_key_paired")
+    .select("id, brand, display_name, nickname, model, year, data_source, virtual_key_paired, is_active")
     .eq("user_id", userId)
-    .eq("is_active", true)
     .order("created_at", { ascending: true });
+
+  if (!includeInactive) {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[vehicles/GET]", error.message);
@@ -45,6 +54,7 @@ export async function GET() {
       year: number | null;
       data_source: string;
       virtual_key_paired: boolean | null;
+      is_active: boolean;
     }) => ({
       id: v.id,
       brand: v.brand,
@@ -54,6 +64,7 @@ export async function GET() {
       year: v.year ?? null,
       dataSource: v.data_source,
       virtualKeyPaired: v.virtual_key_paired ?? false,
+      isActive: v.is_active,
     })),
   );
 }
