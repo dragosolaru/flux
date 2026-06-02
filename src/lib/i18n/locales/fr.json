@@ -100,7 +100,10 @@
       "error_nickname_required": "Le surnom est obligatoire.",
       "upgrade_title": "Plan Pro requis",
       "upgrade_description": "Passez à Pro pour ajouter plus d'un véhicule.",
-      "upgrade_cta": "Passer à Pro"
+      "upgrade_cta": "Passer à Pro",
+      "vin_label": "NIV (optionnel)",
+      "vin_placeholder": "ex : 5YJ3E1EA1LF000001",
+      "vin_detected": "Détecté : {variant} ({year})"
     }
   },
   "scenarios": {

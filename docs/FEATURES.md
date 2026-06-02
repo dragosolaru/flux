@@ -508,3 +508,18 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `dashboard.pull_to_refresh/refreshing` keys
 
 **Dependencies:** `useVehicle` hook (exposes `isFetching` + `refetch` from TanStack Query).
+
+---
+
+## 30. VIN Decoder — Tesla Model Variant Auto-Detection
+
+**What it does:** Adds an optional VIN field to the Add Vehicle modal. When a user types a 17-character Tesla VIN (starting with `5YJ`), `decodeTeslaVin` parses the model (position 3), drive variant (position 4), and model year (position 9) from the VIN, then auto-fills the Model and Year dropdowns and shows a green "Detected: Model 3 Dual Motor AWD (2023)" hint inline. VIN is never sent to any API — it is purely client-side UX.
+
+**How to use:** Open the Add Vehicle modal, type a Tesla VIN in the "VIN (optional)" field. Auto-detection fires as you type once the string is exactly 17 characters.
+
+**Key files:**
+- `src/lib/brands/tesla/vin-decoder.ts` — pure `decodeTeslaVin(vin): VinInfo | null` utility
+- `src/components/onboarding/AddVehicleModal.tsx` — VIN input, `handleVinChange`, detection hint
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `onboarding.add_vehicle.vin_label/vin_placeholder/vin_detected` keys
+
+**Dependencies:** No new npm packages. Client-only; no API changes.

@@ -100,7 +100,10 @@
       "error_nickname_required": "Spitzname ist erforderlich.",
       "upgrade_title": "Pro-Plan erforderlich",
       "upgrade_description": "Upgrade auf Pro, um mehr als ein Fahrzeug hinzuzufügen.",
-      "upgrade_cta": "Auf Pro upgraden"
+      "upgrade_cta": "Auf Pro upgraden",
+      "vin_label": "VIN (optional)",
+      "vin_placeholder": "z.B. 5YJ3E1EA1LF000001",
+      "vin_detected": "Erkannt: {variant} ({year})"
     }
   },
   "scenarios": {
