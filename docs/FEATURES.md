@@ -459,3 +459,20 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `settings.scenario.label/help` keys
 
 **Dependencies:** `createInitialSnapshot()` (`src/lib/mock/seed.ts`), `listScenarios()` (`src/lib/mock/scenarios.ts`), `mock_vehicle_state` Supabase table.
+
+---
+
+## 27. PWA — Installable App
+
+**What it does:** Makes Flux installable as a home-screen app on Android and iOS. Includes a network-first service worker with app-shell caching, an install banner for Android (uses the `beforeinstallprompt` event), and a Share-sheet hint for iOS. The duplicate static `public/manifest.webmanifest` was removed — the canonical manifest is served by Next.js from `src/app/manifest.ts`.
+
+**How to use:** On Android Chrome, a banner appears at the bottom of the dashboard inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. The banner can be dismissed (persisted in `localStorage`).
+
+**Key files:**
+- `public/sw.js` — network-first service worker, caches app shell
+- `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount
+- `src/components/pwa/InstallPrompt.tsx` — install banner (Android + iOS hint, `md:hidden`)
+- `src/app/(dashboard)/layout.tsx` — mounts both components
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys
+
+**Dependencies:** No new npm packages. Requires HTTPS in production for SW registration.

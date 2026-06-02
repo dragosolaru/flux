@@ -229,6 +229,12 @@
     "free_tier_usage": "{used} din {max} facturi folosite luna aceasta",
     "upgrade_cta": "Upgrade la Pro"
   },
+  "pwa": {
+    "install_title": "Instalează Flux",
+    "cta": "Adaugă pe ecranul principal",
+    "dismiss": "Nu acum",
+    "ios_hint": "Apasă Share → „Adaugă pe ecran principal" pentru a instala."
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "se actualizează la 30s",

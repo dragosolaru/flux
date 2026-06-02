@@ -229,6 +229,12 @@
     "free_tier_usage": "{used} / {max} nyugta felhasználva ebben a hónapban",
     "upgrade_cta": "Váltás Pro-ra"
   },
+  "pwa": {
+    "install_title": "Flux telepítése",
+    "cta": "Főképernyőre adás",
+    "dismiss": "Most nem",
+    "ios_hint": "Érintsd meg a Megosztás → „Főképernyőre" gombot a telepítéshez."
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "30s-onként frissül",

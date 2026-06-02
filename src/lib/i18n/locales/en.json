@@ -229,6 +229,12 @@
     "free_tier_usage": "{used} of {max} receipts used this month",
     "upgrade_cta": "Upgrade to Pro"
   },
+  "pwa": {
+    "install_title": "Install Flux",
+    "cta": "Add to Home Screen",
+    "dismiss": "Not now",
+    "ios_hint": "Tap Share → \"Add to Home Screen\" to install."
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "updates every 30s",

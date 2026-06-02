@@ -229,6 +229,12 @@
     "free_tier_usage": "{used} sur {max} reçus utilisés ce mois-ci",
     "upgrade_cta": "Passer à Pro"
   },
+  "pwa": {
+    "install_title": "Installer Flux",
+    "cta": "Ajouter à l'écran d'accueil",
+    "dismiss": "Pas maintenant",
+    "ios_hint": "Appuyez sur Partager → « Sur l'écran d'accueil » pour installer."
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "mise à jour toutes les 30s",

@@ -229,6 +229,12 @@
     "free_tier_usage": "{used} von {max} Belegen diesen Monat verwendet",
     "upgrade_cta": "Auf Pro upgraden"
   },
+  "pwa": {
+    "install_title": "Flux installieren",
+    "cta": "Zum Startbildschirm hinzufügen",
+    "dismiss": "Nicht jetzt",
+    "ios_hint": "Tippe auf Teilen → „Zum Home-Bildschirm" zum Installieren."
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "aktualisiert alle 30s",
