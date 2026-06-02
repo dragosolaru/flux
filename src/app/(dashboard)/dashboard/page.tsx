@@ -21,7 +21,7 @@ export default async function DashboardPage({
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicle }, { data: vehicles }, { data: userSettings }, { count: docCount }] =
+  const [{ data: vehicle }, { data: vehicles }, { data: profile }, { count: docCount }] =
     await Promise.all([
       supabase
         .from("vehicles")
@@ -36,9 +36,9 @@ export default async function DashboardPage({
         .eq("user_id", session.user.id)
         .eq("is_active", true),
       supabase
-        .from("user_settings")
+        .from("profiles")
         .select("home_lat")
-        .eq("user_id", session.user.id)
+        .eq("id", session.user.id)
         .maybeSingle(),
       supabase
         .from("documents")
@@ -51,7 +51,7 @@ export default async function DashboardPage({
   const checklist: ChecklistData = {
     hasVehicle: true,
     hasDocument: (docCount ?? 0) > 0,
-    hasHomeLocation: userSettings?.home_lat != null,
+    hasHomeLocation: (profile as { home_lat?: number | null } | null)?.home_lat != null,
     hasMockVehicle: (vehicles ?? []).some(
       (v: { data_source: string }) => v.data_source === "mock",
     ),

@@ -7,9 +7,43 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { MockVehicleSnapshot } from "./types";
+import type { VehicleState } from "@/types/vehicle";
 import type { CommandName } from "@/types/history";
 
 type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+// Coerce a possibly-stringified JSONB numeric back to a finite number.
+// Guards against legacy/corrupted rows where arithmetic produced string
+// concatenation (e.g. batteryLevel stored as "00700370370365").
+function num(value: unknown, fallback: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+// Return n if it sits within [min,max]; otherwise it's corrupted — use fallback.
+function inRangeOr(n: number, min: number, max: number, fallback: number): number {
+  return n >= min && n <= max ? n : fallback;
+}
+
+// Repair the numeric fields of a loaded state so the engine never operates on
+// strings (which would concatenate) or out-of-range values. A value outside the
+// plausible band is treated as corruption and reset to a sane default rather
+// than clamped (clamping a huge number to 100 would falsely show a full
+// battery). Self-heals on the next saveSnapshot.
+function sanitizeState(state: VehicleState): VehicleState {
+  const battery = inRangeOr(num(state.batteryLevel, 65), 0, 100, 65);
+  const chargeLimit = inRangeOr(num(state.chargeLimit, 80), 50, 100, 80);
+  return {
+    ...state,
+    batteryLevel: battery,
+    chargeLimit,
+    odometerKm: state.odometerKm != null ? num(state.odometerKm, 0) : state.odometerKm,
+    batteryRangeKm:
+      state.batteryRangeKm != null ? num(state.batteryRangeKm, 0) : state.batteryRangeKm,
+    chargingRateKw:
+      state.chargingRateKw != null ? num(state.chargingRateKw, 0) : state.chargingRateKw,
+  };
+}
 
 export async function loadSnapshot(
   vehicleId: string,
@@ -24,7 +58,7 @@ export async function loadSnapshot(
   if (error || !data) return null;
 
   return {
-    state: data.state,
+    state: sanitizeState(data.state),
     motionState: data.motion_state,
     scenarioId: data.scenario_id,
     lastTickAt: data.last_tick_at,

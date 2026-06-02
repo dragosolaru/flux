@@ -42,30 +42,49 @@ export default async function SettingsPage() {
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicles }, { data: userSettings }, { data: profile }] = await Promise.all([
-    supabase
-      .from("vehicles")
-      .select("id, display_name, brand, model, data_source")
-      .eq("user_id", session.user.id)
-      .eq("is_active", true),
-    supabase
-      .from("user_settings")
-      .select("tariff_provider")
-      .eq("user_id", session.user.id)
-      .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("subscription_tier")
-      .eq("id", session.user.id)
-      .single(),
-  ]);
-
-  const mockVehicleIds = (vehicles ?? [])
-    .filter((v) => v.data_source === "mock")
-    .map((v) => v.id);
+  // Fetch all settings data defensively — a single DB hiccup must never take
+  // down the whole settings screen.
+  type VehicleRow = {
+    id: string;
+    display_name: string;
+    brand: string;
+    model: string | null;
+    data_source: string;
+  };
+  let vehicles: VehicleRow[] = [];
+  let tariffProvider: string | null = null;
+  let subscriptionTier: "free" | "pro" = "free";
   let scenarioByVehicleId: Record<string, string | null> = {};
-  if (mockVehicleIds.length > 0) {
-    try {
+
+  try {
+    const [{ data: vehicleRows }, { data: userSettings }, { data: profile }] = await Promise.all([
+      supabase
+        .from("vehicles")
+        .select("id, display_name, brand, model, data_source")
+        .eq("user_id", session.user.id)
+        .eq("is_active", true),
+      supabase
+        .from("user_settings")
+        .select("tariff_provider")
+        .eq("user_id", session.user.id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("subscription_tier")
+        .eq("id", session.user.id)
+        .maybeSingle(),
+    ]);
+
+    vehicles = (vehicleRows ?? []) as VehicleRow[];
+    tariffProvider = userSettings?.tariff_provider ?? null;
+    subscriptionTier = (
+      (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free"
+    ) as "free" | "pro";
+
+    const mockVehicleIds = vehicles
+      .filter((v) => v.data_source === "mock")
+      .map((v) => v.id);
+    if (mockVehicleIds.length > 0) {
       const { data: mockStates } = await supabase
         .from("mock_vehicle_state")
         .select("vehicle_id, scenario_id")
@@ -76,16 +95,12 @@ export default async function SettingsPage() {
           s.scenario_id,
         ]),
       );
-    } catch {
-      // Non-critical: if this fails, the picker will default to "commuter"
     }
+  } catch (err) {
+    console.error("[settings] data fetch failed", err);
   }
 
-  const subscriptionTier = (
-    (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free"
-  ) as "free" | "pro";
-
-  const activeProvider = userSettings?.tariff_provider ?? DEFAULT_PROVIDER_ID;
+  const activeProvider = tariffProvider ?? DEFAULT_PROVIDER_ID;
   const providers = listProviders().map((p) => ({ id: p.id, displayName: p.displayName }));
 
   return (

@@ -76,8 +76,8 @@ export async function PATCH(
       .eq("vehicle_id", vehicleId)
       .maybeSingle();
 
-    const currentOdometer =
-      (existingState?.state as { odometerKm?: number } | null)?.odometerKm ?? 0;
+    const rawOdometer = (existingState?.state as { odometerKm?: number } | null)?.odometerKm;
+    const currentOdometer = Number.isFinite(Number(rawOdometer)) ? Number(rawOdometer) : 0;
 
     const snapshot = createInitialSnapshot(
       vehicleId,

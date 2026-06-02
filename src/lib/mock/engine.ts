@@ -38,9 +38,11 @@ function applyChunk(
   const vehicleSpec = snapshot.vehicleSpec ?? scenario.vehicle;
 
   const state: VehicleState = { ...snapshot.state };
-  const battery = state.batteryLevel ?? scenario.initialBatteryLevel;
-  const odometer = state.odometerKm ?? 0;
-  const cap = vehicleSpec.batteryCapacityKwh;
+  // Coerce to numbers defensively — JSONB round-trips can yield strings, and
+  // `string + number` would silently concatenate instead of add.
+  const battery = Number(state.batteryLevel ?? scenario.initialBatteryLevel);
+  const odometer = Number(state.odometerKm ?? 0);
+  const cap = Number(vehicleSpec.batteryCapacityKwh);
 
   switch (step.motionState) {
     case "driving": {
