@@ -1,46 +1,29 @@
-const CACHE_NAME = "flux-shell-v1";
-const SHELL_URLS = [];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS).catch(() => {}))
-  );
+// Kill-switch service worker.
+//
+// An earlier service worker cached HTML navigations network-first with no
+// versioning or update flow. After a deploy, returning users were served stale
+// HTML that referenced JS chunks which no longer existed — breaking the app.
+//
+// This replacement unregisters itself and deletes every cache so any device
+// stuck on the old worker is freed and starts loading fresh content directly
+// from the network. A proper, versioned PWA worker can be reintroduced later.
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  const url = new URL(event.request.url);
-
-  // Skip non-same-origin and Next.js internals
-  if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/_next/")) return;
-  if (url.pathname.startsWith("/api/")) return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then((res) => {
-        // Cache successful navigation responses
-        if (res.ok && event.request.mode === "navigate") {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(event.request).then(
-          (cached) => cached ?? caches.match("/offline.html")
-        )
-      )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+      await self.registration.unregister();
+      const clients = await self.clients.matchAll({ type: "window" });
+      for (const client of clients) {
+        client.navigate(client.url);
+      }
+    })(),
   );
 });
+
+// Pass every request straight through to the network — never serve from cache.
+self.addEventListener("fetch", () => {});
