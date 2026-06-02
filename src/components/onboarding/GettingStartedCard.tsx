@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Circle, X } from "lucide-react";
@@ -22,13 +22,18 @@ interface Props {
 
 export function GettingStartedCard({ data }: Props) {
   const t = useTranslations("getting_started");
-  const [dismissed, setDismissed] = useState(() =>
-    typeof window !== "undefined" && localStorage.getItem(DISMISSED_KEY) === "1"
-  );
+  // Start hidden to avoid SSR/client hydration mismatch; reveal after mount.
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(DISMISSED_KEY) !== "1") {
+      queueMicrotask(() => setVisible(true));
+    }
+  }, []);
 
   const allDone = data.hasVehicle && data.hasDocument && data.hasHomeLocation;
 
-  if (dismissed || allDone) return null;
+  if (!visible || allDone) return null;
 
   return (
     <GlassCard animate={false} className="relative p-5">
@@ -37,7 +42,7 @@ export function GettingStartedCard({ data }: Props) {
         <button
           onClick={() => {
             localStorage.setItem(DISMISSED_KEY, "1");
-            setDismissed(true);
+            setVisible(false);
           }}
           className="text-muted-foreground hover:text-foreground"
         >

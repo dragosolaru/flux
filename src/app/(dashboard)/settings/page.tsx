@@ -63,16 +63,23 @@ export default async function SettingsPage() {
   const mockVehicleIds = (vehicles ?? [])
     .filter((v) => v.data_source === "mock")
     .map((v) => v.id);
-  const { data: mockStates } =
-    mockVehicleIds.length > 0
-      ? await supabase
-          .from("mock_vehicle_state")
-          .select("vehicle_id, scenario_id")
-          .in("vehicle_id", mockVehicleIds)
-      : { data: [] as { vehicle_id: string; scenario_id: string | null }[] };
-  const scenarioByVehicleId = Object.fromEntries(
-    (mockStates ?? []).map((s) => [s.vehicle_id, s.scenario_id]),
-  );
+  let scenarioByVehicleId: Record<string, string | null> = {};
+  if (mockVehicleIds.length > 0) {
+    try {
+      const { data: mockStates } = await supabase
+        .from("mock_vehicle_state")
+        .select("vehicle_id, scenario_id")
+        .in("vehicle_id", mockVehicleIds);
+      scenarioByVehicleId = Object.fromEntries(
+        (mockStates ?? []).map((s: { vehicle_id: string; scenario_id: string | null }) => [
+          s.vehicle_id,
+          s.scenario_id,
+        ]),
+      );
+    } catch {
+      // Non-critical: if this fails, the picker will default to "commuter"
+    }
+  }
 
   const subscriptionTier = (
     (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free"

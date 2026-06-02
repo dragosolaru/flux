@@ -1,5 +1,5 @@
 const CACHE_NAME = "flux-shell-v1";
-const SHELL_URLS = ["/dashboard", "/offline.html"];
+const SHELL_URLS = [];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
