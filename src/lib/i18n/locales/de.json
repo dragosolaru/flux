@@ -235,6 +235,14 @@
     "dismiss": "Nicht jetzt",
     "ios_hint": "Tippe auf Teilen → „Zum Home-Bildschirm" zum Installieren."
   },
+  "getting_started": {
+    "title": "Erste Schritte",
+    "dismiss": "Schließen",
+    "step_vehicle": "Erstes Fahrzeug hinzufügen",
+    "step_receipt": "Ersten Beleg hochladen",
+    "step_home": "Heimatadresse festlegen",
+    "step_explore": "Demo-Szenario erkunden"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "aktualisiert alle 30s",

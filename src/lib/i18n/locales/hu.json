@@ -235,6 +235,14 @@
     "dismiss": "Most nem",
     "ios_hint": "Érintsd meg a Megosztás → „Főképernyőre" gombot a telepítéshez."
   },
+  "getting_started": {
+    "title": "Első lépések",
+    "dismiss": "Bezárás",
+    "step_vehicle": "Első jármű hozzáadása",
+    "step_receipt": "Első nyugta feltöltése",
+    "step_home": "Otthoni cím beállítása",
+    "step_explore": "Demo forgatókönyv felfedezése"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "30s-onként frissül",

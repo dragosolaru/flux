@@ -235,6 +235,14 @@
     "dismiss": "Nu acum",
     "ios_hint": "Apasă Share → „Adaugă pe ecran principal" pentru a instala."
   },
+  "getting_started": {
+    "title": "Primii pași",
+    "dismiss": "Închide",
+    "step_vehicle": "Adaugă primul tău vehicul",
+    "step_receipt": "Încarcă prima factură",
+    "step_home": "Setează adresa de acasă",
+    "step_explore": "Explorează un scenariu demo"
+  },
   "dashboard": {
     "live_label": "Live",
     "live_subtitle": "se actualizează la 30s",

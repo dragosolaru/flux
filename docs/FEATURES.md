@@ -476,3 +476,19 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys
 
 **Dependencies:** No new npm packages. Requires HTTPS in production for SW registration.
+
+---
+
+## 28. Getting Started Checklist
+
+**What it does:** Shows a dismissible "Getting Started" card above the Hero card on the dashboard for new users. Tracks four steps: add a vehicle, upload a receipt, set a home address, and explore a demo scenario (shown only if a mock vehicle exists). The card disappears automatically when all three required steps are done, or when dismissed (persisted in `localStorage`).
+
+**How to use:** Visible automatically to users who haven't completed the checklist. Each incomplete step is a direct link to the relevant page. Once done or dismissed, it won't appear again (unless `localStorage` is cleared).
+
+**Key files:**
+- `src/components/onboarding/GettingStartedCard.tsx` — client component (dismiss + step list)
+- `src/app/(dashboard)/dashboard/page.tsx` — fetches checklist state server-side and passes to DashboardClient
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — renders card above HeroCard
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `getting_started.*` keys
+
+**Dependencies:** Supabase (`vehicles`, `documents`, `user_settings` tables), `GlassCard`.

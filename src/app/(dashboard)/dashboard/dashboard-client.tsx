@@ -19,6 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
+import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
@@ -32,6 +33,7 @@ interface DashboardClientProps {
   vehicleName: string;
   brand: BrandKey;
   model?: string;
+  checklist: ChecklistData;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -395,13 +397,15 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ vehicleId, vehicleName, brand, model: _model }: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist }: DashboardClientProps) {
   const { data, isLoading, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
 
   return (
     <PageWrapper className="mx-auto max-w-xl gap-4 px-0">
       <VehicleNotifications vehicleId={vehicleId} />
+
+      <GettingStartedCard data={checklist} />
 
       <HeroCard state={data} isLoading={isLoading} vehicleName={vehicleName} />
 
