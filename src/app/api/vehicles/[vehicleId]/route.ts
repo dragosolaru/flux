@@ -5,10 +5,17 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { listScenarios } from "@/lib/mock/scenarios";
+import { canAddVehicle } from "@/lib/subscription";
 import type { BrandKey } from "@/lib/brands/types";
 
 const uuidSchema = z.string().uuid();
 const VALID_SCENARIO_IDS = listScenarios().map((s) => s.id);
+
+const patchBodySchema = z.object({
+  virtualKeyPaired: z.boolean().optional(),
+  scenarioId: z.string().optional(),
+  is_active: z.boolean().optional(),
+});
 
 export async function PATCH(
   req: Request,
@@ -22,15 +29,27 @@ export async function PATCH(
   if (!uuidSchema.safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
-  const body = await req.json().catch(() => ({}));
+  const rawBody = await req.json().catch(() => ({}));
+  const parsed = patchBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
+  }
+  const body = parsed.data;
 
-  const virtualKeyPaired =
-    typeof body.virtualKeyPaired === "boolean" ? body.virtualKeyPaired : undefined;
-  const scenarioId =
-    typeof body.scenarioId === "string" ? body.scenarioId : undefined;
+  const virtualKeyPaired = body.virtualKeyPaired;
+  const scenarioId = body.scenarioId;
+  const isActive = body.is_active;
 
-  if (virtualKeyPaired === undefined && scenarioId === undefined) {
+  if (virtualKeyPaired === undefined && scenarioId === undefined && isActive === undefined) {
     return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
+  }
+
+  // Reactivation check: free tier slot limit
+  if (isActive === true) {
+    const check = await canAddVehicle(session.user.id);
+    if (!check.allowed) {
+      return NextResponse.json({ error: "free_tier_limit" }, { status: 403 });
+    }
   }
 
   const supabase = createSupabaseAdminClient();
@@ -45,6 +64,16 @@ export async function PATCH(
 
   if (!vehicle) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
+  }
+
+  // Handle is_active update
+  if (isActive !== undefined) {
+    const { error } = await supabase
+      .from("vehicles")
+      .update({ is_active: isActive })
+      .eq("id", vehicleId)
+      .eq("user_id", session.user.id);
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
   // Handle virtualKeyPaired update
