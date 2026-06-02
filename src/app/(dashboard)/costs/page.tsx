@@ -28,7 +28,7 @@ export default async function CostsPage({ searchParams }: PageProps) {
       .eq("is_active", true)
       .order("created_at", { ascending: true })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (first) redirect(`/costs?v=${(first as { id: string }).id}`);
     redirect("/garage");
@@ -40,7 +40,7 @@ export default async function CostsPage({ searchParams }: PageProps) {
     .select("id, nickname, display_name")
     .eq("id", vehicleId)
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (!vehicle) redirect("/garage");
 
