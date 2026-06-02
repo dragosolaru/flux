@@ -100,7 +100,10 @@
       "error_nickname_required": "Porecla este obligatorie.",
       "upgrade_title": "Plan Pro necesar",
       "upgrade_description": "Fă upgrade la Pro pentru a adăuga mai mult de un vehicul.",
-      "upgrade_cta": "Upgrade la Pro"
+      "upgrade_cta": "Upgrade la Pro",
+      "vin_label": "VIN (opțional)",
+      "vin_placeholder": "ex: 5YJ3E1EA1LF000001",
+      "vin_detected": "Detectat: {variant} ({year})"
     }
   },
   "scenarios": {

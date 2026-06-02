@@ -16,6 +16,7 @@ import { UpgradeButton } from "@/components/billing/UpgradeButton";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicles } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
+import { decodeTeslaVin, type VinInfo } from "@/lib/brands/tesla/vin-decoder";
 
 const TESLA_MODELS = ["Model 3", "Model Y", "Model S", "Model X"];
 const SCENARIO_VALUES = ["commuter", "weekend-errands", "road-trip", "vacation"] as const;
@@ -49,6 +50,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [createdId, setCreatedId] = useState("");
+  const [vin, setVin] = useState("");
+  const [vinInfo, setVinInfo] = useState<VinInfo | null>(null);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -67,6 +70,19 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
     setScenario("commuter");
     setError("");
     setCreatedId("");
+    setVin("");
+    setVinInfo(null);
+  }
+
+  function handleVinChange(e: ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    setVin(raw);
+    const decoded = decodeTeslaVin(raw);
+    setVinInfo(decoded);
+    if (decoded) {
+      setModel(decoded.model);
+      if (decoded.year !== null) setYear(String(decoded.year));
+    }
   }
 
   function close() {
@@ -182,6 +198,26 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                         <option key={m} value={m}>{m}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="vin">{t("add_vehicle.vin_label")}</Label>
+                    <Input
+                      id="vin"
+                      placeholder={t("add_vehicle.vin_placeholder")}
+                      value={vin}
+                      onChange={handleVinChange}
+                      maxLength={17}
+                      className="font-mono uppercase"
+                    />
+                    {vinInfo && (
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        {t("add_vehicle.vin_detected", {
+                          variant: `${vinInfo.model} ${vinInfo.variant}`,
+                          year: vinInfo.year ?? "—",
+                        })}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
