@@ -186,6 +186,14 @@
       "empty": "Niciun vehicul adăugat. Vizitează Garajul pentru a adăuga unul.",
       "go_to_garage": "Gestionează vehiculele"
     },
+    "deactivate": "Dezactivează",
+    "inactive_vehicles_title": "Vehicule inactive",
+    "reactivate": "Reactivează",
+    "reactivate_blocked": "Fă upgrade la Pro pentru a reactiva mai multe vehicule",
+    "delete_permanently": "Șterge permanent",
+    "delete_confirm_title": "Ștergi vehiculul permanent?",
+    "delete_confirm_checkbox": "Înțeleg că această acțiune este ireversibilă și toate datele vor fi șterse",
+    "delete_confirm_cta": "Șterge permanent",
     "scenario": {
       "label": "Scenariu demo",
       "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo."
@@ -324,7 +332,11 @@
     "tap_to_open": "Apasă pentru dashboard",
     "tariff_hint_cheapest": "Cel mai ieftin moment:",
     "tariff_hint_save": "economisești",
-    "tariff_hint_unit": "ct/kWh față de acum"
+    "tariff_hint_unit": "ct/kWh față de acum",
+    "menu_deactivate": "Dezactivează",
+    "deactivate_confirm_title": "Dezactivezi vehiculul?",
+    "deactivate_confirm_desc": "Vehiculul va fi ascuns din garaj. Toate datele sunt păstrate și îl poți reactiva oricând din Setări.",
+    "deactivate_confirm_cta": "Dezactivează"
   },
   "costs": {
     "kpi_cost_per_km": "Cost per km",

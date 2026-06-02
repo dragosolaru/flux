@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Plus, Sparkles, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleModelImage } from "@/components/vehicle/VehicleModelImage";
+import { VehicleCardMenu } from "@/components/garage/VehicleCardMenu";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { apiFetch } from "@/lib/api-fetch";
@@ -34,14 +35,20 @@ function getCardGradient(brand: string, model: string | null): string {
   return "from-blue-950/90 to-teal-900/80";
 }
 
-function VehicleHeroCard({ vehicle }: { vehicle: VehicleListItem }) {
+function VehicleHeroCard({
+  vehicle,
+  onDeactivated,
+}: {
+  vehicle: VehicleListItem;
+  onDeactivated: () => void;
+}) {
   const tg = useTranslations("garage");
   const gradient = getCardGradient(vehicle.brand, vehicle.model);
   const displayName = vehicle.nickname ?? vehicle.displayName;
   const subtitle = [vehicle.model, vehicle.year?.toString()].filter(Boolean).join(" · ");
 
   return (
-    <motion.div variants={cardVariants}>
+    <motion.div variants={cardVariants} className="relative">
       <Link href={`/dashboard?v=${vehicle.id}`} className="block">
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -84,6 +91,13 @@ function VehicleHeroCard({ vehicle }: { vehicle: VehicleListItem }) {
           </div>
         </motion.div>
       </Link>
+
+      {/* Menu button — outside the Link so clicks don't navigate */}
+      <VehicleCardMenu
+        vehicleId={vehicle.id}
+        vehicleName={displayName}
+        onDeactivated={onDeactivated}
+      />
     </motion.div>
   );
 }
@@ -117,6 +131,7 @@ function AddVehicleCard() {
 
 export function GarageClient() {
   const tg = useTranslations("garage");
+  const queryClient = useQueryClient();
   const { data: vehicles, isLoading } = useVehicles();
   const { data: caps } = useCapabilities();
 
@@ -126,6 +141,10 @@ export function GarageClient() {
     staleTime: 5 * 60 * 1000,
     enabled: Boolean(caps?.hasTariff),
   });
+
+  function handleDeactivated() {
+    void queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+  }
 
   if (!isLoading && vehicles && vehicles.length === 0) {
     return <OnboardingHero />;
@@ -184,7 +203,7 @@ export function GarageClient() {
           className="space-y-4"
         >
           {vehicles?.map((v: VehicleListItem) => (
-            <VehicleHeroCard key={v.id} vehicle={v} />
+            <VehicleHeroCard key={v.id} vehicle={v} onDeactivated={handleDeactivated} />
           ))}
           <AddVehicleCard />
         </motion.div>

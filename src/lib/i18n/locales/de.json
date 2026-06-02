@@ -186,6 +186,14 @@
       "empty": "Noch keine Fahrzeuge hinzugefügt. Besuche die Garage, um eines hinzuzufügen.",
       "go_to_garage": "Fahrzeuge verwalten"
     },
+    "deactivate": "Deaktivieren",
+    "inactive_vehicles_title": "Inaktive Fahrzeuge",
+    "reactivate": "Reaktivieren",
+    "reactivate_blocked": "Upgrade auf Pro, um weitere Fahrzeuge zu reaktivieren",
+    "delete_permanently": "Dauerhaft löschen",
+    "delete_confirm_title": "Fahrzeug dauerhaft löschen?",
+    "delete_confirm_checkbox": "Ich verstehe, dass diese Aktion nicht rückgängig gemacht werden kann und alle Daten gelöscht werden",
+    "delete_confirm_cta": "Dauerhaft löschen",
     "scenario": {
       "label": "Demo-Szenario",
       "help": "Ändert das simulierte Fahrverhalten für dieses Demo-Fahrzeug."
@@ -324,7 +332,11 @@
     "tap_to_open": "Tippen für Dashboard",
     "tariff_hint_cheapest": "Günstigster Ladezeitpunkt:",
     "tariff_hint_save": "sparen",
-    "tariff_hint_unit": "ct/kWh gegenüber jetzt"
+    "tariff_hint_unit": "ct/kWh gegenüber jetzt",
+    "menu_deactivate": "Deaktivieren",
+    "deactivate_confirm_title": "Fahrzeug deaktivieren?",
+    "deactivate_confirm_desc": "Das Fahrzeug wird aus deiner Garage ausgeblendet. Alle Daten bleiben erhalten und du kannst es jederzeit in den Einstellungen reaktivieren.",
+    "deactivate_confirm_cta": "Deaktivieren"
   },
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",
