@@ -31,6 +31,7 @@ interface AddVehicleModalProps {
 
 export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }: AddVehicleModalProps) {
   const t = useTranslations("onboarding");
+  const tScenarios = useTranslations("scenarios");
 
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -226,8 +227,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                               : "hover:bg-muted",
                           )}
                         >
-                          <div className="text-xs font-semibold">{t(`scenarios.${sv}.label`)}</div>
-                          <div className="mt-0.5 text-[11px] text-muted-foreground">{t(`scenarios.${sv}.desc`)}</div>
+                          <div className="text-xs font-semibold">{tScenarios(`${sv}.label`)}</div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">{tScenarios(`${sv}.desc`)}</div>
                         </button>
                       ))}
                     </div>
@@ -256,7 +257,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       Tesla · {model} · {year}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {t(`scenarios.${scenario}.label`)}
+                      {tScenarios(`${scenario}.label`)}
                     </p>
                   </div>
                   <div className="flex w-full gap-2 pt-2">

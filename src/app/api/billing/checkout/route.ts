@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     .from("profiles")
     .select("stripe_customer_id")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
   let customerId = (profile as { stripe_customer_id: string | null } | null)?.stripe_customer_id;
 
