@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import type { ChargingStation } from "@/app/(dashboard)/charging-map/charging-map-client";
+import type { Charger } from "@/lib/chargers/types";
 
 // Fix Leaflet default icon paths broken by webpack — done once per mount instead
 // of on module load to avoid HMR races and SSR side effects.
@@ -25,12 +25,12 @@ function useLeafletIconFix() {
   }, []);
 }
 
-// Green = operational, grey = out of service
+// Green = likely operational (confidence >= 0.5), grey = low confidence
 const OPERATIONAL_COLOR = "#16a34a";
 const OFFLINE_COLOR = "#6b7280";
 
-function makeIcon(isOperational: boolean) {
-  const color = isOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
+function makeIcon(likelyOperational: boolean) {
+  const color = likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
     <path fill="${color}" stroke="white" stroke-width="1.5"
       d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"/>
@@ -141,10 +141,10 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
 }
 
 interface StationMapProps {
-  stations: ChargingStation[];
+  stations: Charger[];
   center: { lat: number; lng: number };
-  selected: ChargingStation | null;
-  onSelect: (s: ChargingStation) => void;
+  selected: Charger | null;
+  onSelect: (s: Charger) => void;
   userLocation?: { lat: number; lng: number } | null;
   onUserLocate?: (lat: number, lng: number) => void;
   onAreaChange?: (lat: number, lng: number, radiusKm: number) => void;
@@ -181,29 +181,35 @@ export default function StationMap({ stations, center, selected: _selected, onSe
           </Popup>
         </Marker>
       )}
-      {stations.map((s) => (
-        <Marker
-          key={s.id}
-          position={[s.lat, s.lng]}
-          icon={makeIcon(s.isOperational)}
-          eventHandlers={{ click: () => onSelect(s) }}
-        >
-          <Popup>
-            <div className="text-xs">
-              <strong>{s.name}</strong>
-              <br />
-              {s.maxPowerKw != null ? `${s.maxPowerKw} kW · ` : ""}
-              {s.connectorCount} connector{s.connectorCount !== 1 ? "s" : ""}
-              {!s.isOperational && (
-                <>
-                  <br />
-                  <span style={{ color: "#dc2626" }}>Out of service</span>
-                </>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {stations.map((s) => {
+        const label = s.name ?? s.operator ?? "Stație încărcare";
+        const connectorTypes = s.connectors.map((c) => c.type).join(", ");
+        const likelyOperational = s.confidence >= 0.5;
+        return (
+          <Marker
+            key={s.id}
+            position={[s.lat, s.lng]}
+            icon={makeIcon(likelyOperational)}
+            eventHandlers={{ click: () => onSelect(s) }}
+          >
+            <Popup>
+              <div className="text-xs">
+                <strong>{label}</strong>
+                <br />
+                {s.maxPowerKw != null ? `${s.maxPowerKw} kW` : ""}
+                {s.maxPowerKw != null && connectorTypes ? " · " : ""}
+                {connectorTypes}
+                {!likelyOperational && (
+                  <>
+                    <br />
+                    <span style={{ color: "#dc2626" }}>Out of service</span>
+                  </>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </MapContainer>
   );
 }
