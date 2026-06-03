@@ -3,9 +3,62 @@ import type { ModelSpec } from "@/lib/brands/models";
 import type { ChargingStop, RoutePoint, TripPlan } from "./types";
 import { haversine } from "./providers/mock-router";
 import { computeOsrmRoute } from "./providers/osrm-router";
+import { fetchCorridorStations } from "./corridor-stations";
 
 const SAFETY_RESERVE_PCT = 10;   // Minimum SoC to arrive at any waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
+
+type Polyline = { type: "LineString"; coordinates: [number, number][] } | null;
+
+/**
+ * Find the lat/lng at `targetKm` along the actual road polyline by walking
+ * segment-by-segment and accumulating haversine distance. Falls back to
+ * straight-line interpolation when the polyline is null (OSRM fell back).
+ */
+function pointAlongRoute(
+  polyline: Polyline,
+  targetKm: number,
+  origin: RoutePoint,
+  destination: RoutePoint,
+  totalDistanceKm: number,
+): RoutePoint {
+  const coords = polyline?.coordinates;
+  if (!coords || coords.length < 2) {
+    const t = totalDistanceKm > 0 ? Math.min(1, Math.max(0, targetKm / totalDistanceKm)) : 0;
+    return {
+      lat: origin.lat + (destination.lat - origin.lat) * t,
+      lng: origin.lng + (destination.lng - origin.lng) * t,
+    };
+  }
+
+  let acc = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const [prevLng, prevLat] = coords[i - 1]!;
+    const [lng, lat] = coords[i]!;
+    const a = { lat: prevLat, lng: prevLng };
+    const b = { lat, lng };
+    const segKm = haversine(a, b);
+    if (segKm <= 0) continue;
+    if (acc + segKm >= targetKm) {
+      const f = (targetKm - acc) / segKm;
+      return {
+        lat: a.lat + (b.lat - a.lat) * f,
+        lng: a.lng + (b.lng - a.lng) * f,
+      };
+    }
+    acc += segKm;
+  }
+
+  const [lastLng, lastLat] = coords[coords.length - 1]!;
+  return { lat: lastLat, lng: lastLng };
+}
+
+function mergeStations(a: ChargingStation[], b: ChargingStation[]): ChargingStation[] {
+  const byId = new Map<string, ChargingStation>();
+  for (const s of a) byId.set(s.id, s);
+  for (const s of b) byId.set(s.id, s);
+  return [...byId.values()];
+}
 
 interface PlanInput {
   origin: RoutePoint;
@@ -27,6 +80,14 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
 
   const osrm = await computeOsrmRoute(origin, destination);
   const { distanceKm, drivingMinutes } = osrm;
+  const polyline = osrm.polyline;
+
+  const corridor = await fetchCorridorStations(
+    polyline?.coordinates ?? null,
+    origin,
+    destination,
+  );
+  const allStations = mergeStations(stations, corridor);
 
   const idealRangeKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
   const deratedFullRangeKm = idealRangeKm * (1 + deratingPct / 100);
@@ -55,15 +116,13 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     }
 
     // Need to charge. Find a station near the point where we'd run out.
-    // Approximate point along the great-circle line at `kmFromStart + rangeNow * 0.85`
+    // Sample the search center on the actual road polyline (not a straight line).
     const targetKm = kmFromStart + rangeNow * 0.85;
-    const t = Math.min(1, targetKm / distanceKm);
-    const targetLat = origin.lat + (destination.lat - origin.lat) * t;
-    const targetLng = origin.lng + (destination.lng - origin.lng) * t;
+    const searchCenter = pointAlongRoute(polyline, targetKm, origin, destination, distanceKm);
 
     // Find compatible station within 80km detour, prefer high power
-    const candidates = stations
-      .map((st) => ({ st, dist: haversine({ lat: targetLat, lng: targetLng }, st) }))
+    const candidates = allStations
+      .map((st) => ({ st, dist: haversine(searchCenter, st) }))
       .filter((c) => c.dist < 80)
       .sort((a, b) => (b.st.maxKw - a.st.maxKw) || (a.dist - b.dist));
 
@@ -126,7 +185,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     stops,
     feasible,
     warning,
-    polyline: osrm.polyline,
-    approxRoute: osrm.polyline === null,
+    polyline,
+    approxRoute: polyline === null,
   };
 }

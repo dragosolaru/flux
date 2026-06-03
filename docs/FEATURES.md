@@ -156,19 +156,19 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 9. Charging map
 
-**What:** Map of ~70 real-world EU charging stations (IONITY, Tesla SC, EnBW/Renovatio, Fastned, Allego, etc.) including full Romanian coverage (Cluj-Napoca, Sibiu, Brașov, Pitești, Ploiești, Timișoara, Iași, Constanța, Oradea, Craiova + highway IONITY/EnBW/Fastned). Network/power/plug filters and availability overlay.
+**What:** Live station map powered by OpenChargeMap + OpenStreetMap/Overpass aggregation. Both sources are queried **in parallel** and de-duplicated by position (~11m grid), giving dense real-world coverage equivalent to Chargemap/PlugShare — including Romania, Cluj, Florești. Default radius 25 km, up to 200 results. Falls back to a ~70-station static EU dataset only when both live sources are empty.
 
-**How to use:** UI `/charging-map` (`StationMap`, Leaflet). API: `GET /api/charging-map` (filter by `network`, `minKw`, `plug`; adds network metadata + availability), `GET /api/charging-stations` (accepts `lat`, `lng`, `radius` params).
+**How to use:** UI `/charging-map` (`StationMap`, Leaflet). API: `GET /api/charging-map` (filter by `network`, `minKw`, `plug`; adds network metadata + availability), `GET /api/charging-stations?lat=&lng=&radius=&maxResults=`.
 
-**Fallback behaviour:** `GET /api/charging-stations` first tries OpenChargeMap. On any error (403, network, timeout) it falls back to the static `STATIONS` dataset filtered by haversine distance within the requested radius. No error is returned to the client.
+**Station aggregation:** `src/lib/external/charging-networks/live-stations.ts` — `fetchLiveStations(lat, lng, radius, max)` runs `Promise.allSettled([fetchOcmStations, fetchOverpassStations])`, merges results, de-dupes by `lat.toFixed(4),lng.toFixed(4)`, preserves richer power/connector data on conflicts. OCM honours `OPEN_CHARGE_MAP_API_KEY` env var. Overpass POST to `overpass-api.de`, no key needed. `AbortSignal.timeout(22000)`.
 
 **i18n:** `chargingMap.disclaimer`, `chargingMap.locate_me`, `chargingMap.location_error` keys present in all 5 locales.
 
 **User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On click it calls `navigator.geolocation`, pans the map to the user's position (`flyTo` zoom 13), drops a blue dot marker (Leaflet `divIcon`), and reloads stations for the new center. On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast. i18n keys: `chargingMap.locate_me`, `chargingMap.location_error`.
 
-**Key files:** `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/lib/external/charging-networks/stations.ts`, `.../availability.ts`, `.../meta.ts`, `src/app/api/charging-map/route.ts`, `src/app/api/charging-stations/route.ts`.
+**Key files:** `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/lib/external/charging-networks/live-stations.ts` (new aggregator), `.../stations.ts` (static fallback), `src/app/api/charging-stations/route.ts`.
 
-**Dependencies:** Leaflet/react-leaflet, sonner. Station data is a **static seeded dataset**; availability is simulated.
+**Dependencies:** Leaflet/react-leaflet, sonner, OpenChargeMap API (optional key), Overpass/OpenStreetMap (free).
 
 ---
 
@@ -178,11 +178,17 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **How to use:** UI `/trip` (`GeocodingSearch`, `TripMap`, `TripPlanResult`, `StopCard`, `CostSummary`, `TripComparison`). API: `POST /api/trip-plan` (vehicle/origin/SOC/destination → `planTrip`), `GET /api/geocode` (Nominatim search, edge runtime).
 
+**Real-road station search:** The planner now samples charging-stop search points along the **actual OSRM polyline** (not a great-circle straight line). `pointAlongRoute()` in `planner.ts` walks polyline segments accumulating haversine distance to find the exact lat/lng at `targetKm`. Falls back to linear interpolation only when OSRM itself fell back. This was the root cause of "route infeasible" on mountain-crossing trips (Cluj→Roman).
+
+**Corridor stations:** `src/lib/external/routing/corridor-stations.ts` — `fetchCorridorStations(polyline, origin, destination)` computes a bounding box around the route (padded 0.15°) and queries Overpass for all `amenity=charging_station` nodes/ways. Prefers DC fast chargers (≥40 kW), returns up to 400 stations. These are merged (by id) with the static `STATIONS` set before planning. Falls back to `[]` silently on any error.
+
 **Use my location (origin):** The "From" field has a `LocateFixed` icon button on the right. On click it calls `navigator.geolocation`, then reverse-geocodes via Nominatim (`/reverse`) to get a readable address, and sets that as the origin. Spinner shown while locating. Errors shown via `sonner` toast. i18n keys: `trip.use_my_location`, `trip.locating`.
 
-**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
+**Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 vh). Tapping the drag-handle bar collapses it to a slim 3rem summary showing origin→destination + distance/time. Tapping again expands. i18n keys: `trip.see_map`, `trip.see_plan`.
 
-**Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).
+**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts` (new), `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
+
+**Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Overpass/OpenStreetMap (corridor stations, no key), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).
 
 ---
 
