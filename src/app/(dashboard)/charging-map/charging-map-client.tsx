@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,11 +39,19 @@ function useSilentAutoLocate(onSuccess: (coords: GeoCoords) => void) {
   }, []);
 }
 
+interface QueryArea {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+}
+
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<ChargingStation | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
+  // The query follows the visible map area; updated on pan/zoom via MoveWatcher.
+  const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 25 });
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
@@ -55,20 +63,26 @@ export function ChargingMapClient() {
     setUserLocation(coords);
   }, []);
 
+  const handleAreaChange = useCallback((lat: number, lng: number, radiusKm: number) => {
+    setArea({ lat, lng, radiusKm });
+  }, []);
+
   useSilentAutoLocate(handleSilentLocate);
 
   const {
     data: stations = [],
     isLoading,
+    isFetching,
     isError,
     error,
   } = useQuery({
-    queryKey: ["charging-stations", center.lat, center.lng],
+    queryKey: ["charging-stations", area.lat.toFixed(2), area.lng.toFixed(2), Math.round(area.radiusKm)],
     queryFn: () =>
       apiFetch<ChargingStation[]>(
-        `/api/charging-stations?lat=${center.lat}&lng=${center.lng}`,
+        `/api/charging-stations?lat=${area.lat}&lng=${area.lng}&radius=${Math.round(area.radiusKm)}`,
       ),
     staleTime: 300_000,
+    placeholderData: keepPreviousData,
   });
 
   return (
@@ -81,7 +95,9 @@ export function ChargingMapClient() {
               ? "Loading stations…"
               : isError
                 ? "Could not load stations"
-                : `${stations.length} stations near you`}
+                : isFetching
+                  ? `${stations.length} stations · updating…`
+                  : `${stations.length} stations in view`}
           </p>
         </div>
       </div>
@@ -112,6 +128,7 @@ export function ChargingMapClient() {
                   onSelect={setSelected}
                   userLocation={userLocation}
                   onUserLocate={handleLocate}
+                  onAreaChange={handleAreaChange}
                 />
               )}
             </div>

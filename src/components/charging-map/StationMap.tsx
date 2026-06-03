@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -61,6 +61,30 @@ function SetView({ centre }: CentreProps) {
   useEffect(() => {
     map.setView([centre.lat, centre.lng], 11);
   }, [centre.lat, centre.lng, map]);
+  return null;
+}
+
+interface MoveWatcherProps {
+  onAreaChange: (lat: number, lng: number, radiusKm: number) => void;
+}
+
+// Refetch stations for the visible area whenever the user pans/zooms.
+// Radius = distance from centre to the NE corner, clamped to a sane range.
+function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const map = useMapEvents({
+    moveend() {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        const c = map.getCenter();
+        const ne = map.getBounds().getNorthEast();
+        const radiusKm = Math.min(100, Math.max(5, map.distance(c, ne) / 1000));
+        onAreaChange(c.lat, c.lng, radiusKm);
+      }, 500);
+    },
+  });
+
   return null;
 }
 
@@ -123,9 +147,10 @@ interface StationMapProps {
   onSelect: (s: ChargingStation) => void;
   userLocation?: { lat: number; lng: number } | null;
   onUserLocate?: (lat: number, lng: number) => void;
+  onAreaChange?: (lat: number, lng: number, radiusKm: number) => void;
 }
 
-export default function StationMap({ stations, center, selected: _selected, onSelect, userLocation, onUserLocate }: StationMapProps) {
+export default function StationMap({ stations, center, selected: _selected, onSelect, userLocation, onUserLocate, onAreaChange }: StationMapProps) {
   useLeafletIconFix();
   const t = useTranslations("chargingMap");
 
@@ -141,6 +166,7 @@ export default function StationMap({ stations, center, selected: _selected, onSe
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <SetView centre={center} />
+      {onAreaChange && <MoveWatcher onAreaChange={onAreaChange} />}
       <LocationButton
         onLocate={onUserLocate ?? (() => undefined)}
         errorMessage={t("location_error")}

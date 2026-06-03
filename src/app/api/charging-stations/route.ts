@@ -11,6 +11,9 @@ import type { ChargingStation } from "@/lib/external/charging-networks/live-stat
 // Re-exported so existing importers of `@/app/api/charging-stations/route` keep working.
 export type { ChargingStation };
 
+// Give the external station lookups room to finish (Overpass mirrors).
+export const maxDuration = 30;
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {

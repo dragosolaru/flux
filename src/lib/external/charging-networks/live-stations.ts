@@ -135,6 +135,14 @@ function parseMaxPowerKw(tags: Record<string, string>): number | null {
   return val > 1000 ? val / 1000 : val;
 }
 
+// Multiple Overpass mirrors raced in parallel — the main instance is often
+// queued/slow, so we take whichever mirror responds first within the budget.
+const OVERPASS_MIRRORS = [
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
+
 async function fetchOverpassStations(
   lat: number,
   lng: number,
@@ -142,18 +150,29 @@ async function fetchOverpassStations(
   max: number,
 ): Promise<ChargingStation[]> {
   const radiusM = Math.round(radiusKm * 1000);
-  const query = `[out:json][timeout:20];(node["amenity"="charging_station"](around:${radiusM},${lat},${lng});way["amenity"="charging_station"](around:${radiusM},${lat},${lng}););out body center ${max};`;
+  const query = `[out:json][timeout:15];(node["amenity"="charging_station"](around:${radiusM},${lat},${lng});way["amenity"="charging_station"](around:${radiusM},${lat},${lng}););out body center ${max};`;
+  const body = `data=${encodeURIComponent(query)}`;
 
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `data=${encodeURIComponent(query)}`,
-    signal: AbortSignal.timeout(22000),
+  // Race the mirrors: resolve with the first that returns a usable payload.
+  const attempts = OVERPASS_MIRRORS.map(async (url) => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      signal: AbortSignal.timeout(9000),
+    });
+    if (!res.ok) throw new Error(`overpass ${res.status}`);
+    const data = (await res.json()) as { elements?: OverpassElement[] };
+    if (!data.elements) throw new Error("overpass no elements");
+    return data.elements;
   });
-  if (!res.ok) return [];
 
-  const data = (await res.json()) as { elements?: OverpassElement[] };
-  const elements = data.elements ?? [];
+  let elements: OverpassElement[];
+  try {
+    elements = await Promise.any(attempts);
+  } catch {
+    return [];
+  }
 
   return elements.flatMap((el): ChargingStation[] => {
     const elLat = el.lat ?? el.center?.lat;
