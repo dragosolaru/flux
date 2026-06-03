@@ -24,6 +24,7 @@ import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
 import { InactiveVehiclesList } from "@/components/settings/InactiveVehiclesList";
 import { DeactivateButton } from "@/components/settings/DeactivateButton";
+import { VehicleSectionBoundary } from "@/components/settings/VehicleSectionBoundary";
 import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
 import { auth } from "@/lib/auth";
@@ -180,67 +181,82 @@ export default async function SettingsPage() {
       {/* Vehicles section */}
       <section>
         <SectionHeader label={t("settings.section.vehicles")} />
-        <GlassCard className="divide-y divide-white/5">
-          {activeVehicles.length === 0 ? (
-            <SettingsRow
-              icon={<Car className="size-4 text-blue-400" />}
-              iconBg="bg-blue-500/20"
-              label={t("settings.vehicles.empty")}
-            />
-          ) : (
-            activeVehicles.map((v) =>
-              v.data_source === "mock" ? (
-                <SettingsRowExpanded
-                  key={v.id}
-                  icon={<Car className="size-4 text-blue-400" />}
-                  iconBg="bg-blue-500/20"
-                  label={v.nickname ?? v.display_name}
-                >
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      {t("settings.scenario.help")}
-                    </p>
-                    <ScenarioPicker
-                      vehicleId={v.id}
-                      currentScenarioId={scenarioByVehicleId[v.id] ?? null}
-                    />
-                    <div className="mt-1">
-                      <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
+        <VehicleSectionBoundary
+          fallback={
+            <GlassCard className="divide-y divide-white/5">
+              <Link href="/garage" className="block">
+                <SettingsRow
+                  icon={<ChevronRight className="size-4 text-muted-foreground" />}
+                  iconBg="bg-white/5"
+                  label={t("settings.vehicles.go_to_garage")}
+                  chevron
+                />
+              </Link>
+            </GlassCard>
+          }
+        >
+          <GlassCard className="divide-y divide-white/5">
+            {activeVehicles.length === 0 ? (
+              <SettingsRow
+                icon={<Car className="size-4 text-blue-400" />}
+                iconBg="bg-blue-500/20"
+                label={t("settings.vehicles.empty")}
+              />
+            ) : (
+              activeVehicles.map((v) =>
+                v.data_source === "mock" ? (
+                  <SettingsRowExpanded
+                    key={v.id}
+                    icon={<Car className="size-4 text-blue-400" />}
+                    iconBg="bg-blue-500/20"
+                    label={v.nickname ?? v.display_name}
+                  >
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {t("settings.scenario.help")}
+                      </p>
+                      <ScenarioPicker
+                        vehicleId={v.id}
+                        currentScenarioId={scenarioByVehicleId[v.id] ?? null}
+                      />
+                      <div className="mt-1">
+                        <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
+                      </div>
                     </div>
+                  </SettingsRowExpanded>
+                ) : (
+                  <div key={v.id} className="flex min-h-[52px] items-center gap-3 px-4 py-2">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
+                      <Car className="size-4 text-blue-400" />
+                    </div>
+                    <span className="flex-1 text-sm font-medium">
+                      {v.nickname ?? v.display_name}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {v.brand}{v.model ? ` · ${v.model}` : ""}
+                    </span>
+                    <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
                   </div>
-                </SettingsRowExpanded>
-              ) : (
-                <div key={v.id} className="flex min-h-[52px] items-center gap-3 px-4 py-2">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
-                    <Car className="size-4 text-blue-400" />
-                  </div>
-                  <span className="flex-1 text-sm font-medium">
-                    {v.nickname ?? v.display_name}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {v.brand}{v.model ? ` · ${v.model}` : ""}
-                  </span>
-                  <DeactivateButton vehicleId={v.id} label={t("settings.deactivate")} />
-                </div>
-              ),
-            )
-          )}
-          <Link href="/garage" className="block">
-            <SettingsRow
-              icon={<ChevronRight className="size-4 text-muted-foreground" />}
-              iconBg="bg-white/5"
-              label={t("settings.vehicles.go_to_garage")}
-              chevron
-            />
-          </Link>
-        </GlassCard>
+                ),
+              )
+            )}
+            <Link href="/garage" className="block">
+              <SettingsRow
+                icon={<ChevronRight className="size-4 text-muted-foreground" />}
+                iconBg="bg-white/5"
+                label={t("settings.vehicles.go_to_garage")}
+                chevron
+              />
+            </Link>
+          </GlassCard>
 
-        {inactiveVehicles.length > 0 && (
-          <InactiveVehiclesList
-            inactiveVehicles={inactiveVehicles}
-            hasActiveFreeSlot={hasActiveFreeSlot}
-          />
-        )}
+          {inactiveVehicles.length > 0 && (
+            <InactiveVehiclesList
+              inactiveVehicles={inactiveVehicles}
+              hasActiveFreeSlot={hasActiveFreeSlot}
+            />
+          )}
+        </VehicleSectionBoundary>
       </section>
 
       {/* Energy tariff section */}
