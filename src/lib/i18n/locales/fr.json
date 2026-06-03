@@ -544,7 +544,12 @@
     "see_map": "Voir la carte",
     "see_plan": "Voir le plan",
     "variant_fastest": "Le plus rapide",
-    "variant_balanced": "Moins d'arrêts"
+    "variant_balanced": "Moins d'arrêts",
+    "share_to_tesla": "Envoyer vers Tesla",
+    "share_success": "Envoyé vers la navigation Tesla",
+    "share_error": "Échec de l'envoi vers Tesla",
+    "precondition_auto": "Préconditionnement auto",
+    "precondition_manual": "Préconditionner la batterie"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

@@ -544,7 +544,12 @@
     "see_map": "Vezi harta",
     "see_plan": "Vezi planul",
     "variant_fastest": "Cel mai rapid",
-    "variant_balanced": "Mai puține opriri"
+    "variant_balanced": "Mai puține opriri",
+    "share_to_tesla": "Trimite la Tesla",
+    "share_success": "Trimis în navigația Tesla",
+    "share_error": "Nu s-a putut trimite la Tesla",
+    "precondition_auto": "Precondiționare automată",
+    "precondition_manual": "Precondiționează bateria"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

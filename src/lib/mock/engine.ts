@@ -307,6 +307,7 @@ export function applyCommand(
     case "schedule_charging":  break; // no mock state mutation needed
     case "schedule_departure": break; // no mock state mutation needed
     case "precondition_max":   break; // no mock state mutation needed
+    case "share_navigation":   break; // accepted; no mock state mutation needed
   }
 
   return { ...snapshot, state };

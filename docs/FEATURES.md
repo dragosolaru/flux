@@ -190,7 +190,23 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 vh). Tapping the drag-handle bar collapses it to a slim 3rem summary showing origin→destination + distance/time. Tapping again expands. i18n keys: `trip.see_map`, `trip.see_plan`.
 
-**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts` (new), `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
+**Share to Tesla + preconditioning marks:** Each charging stop with a DC fast
+charger (≥50 kW) shows a battery-preconditioning badge on its `StopCard` —
+"Auto-preconditioning" (blue) for Superchargers (Tesla warms the pack
+automatically when navigating), "Precondition battery" (amber) for other fast
+networks (manual recommendation). When the planned vehicle is a real connected
+Tesla and the route is feasible, a **"Send to Tesla"** button appears under the
+cost summary; it POSTs the new `share_navigation` command. The command follows
+the standard chain (`CommandName` → `CommandCapabilities.shareNavigation` →
+`COMMAND_CAP_MAP` → `TESLA_COMMAND_MAP` → `TeslaCommand "navigation_gps_request"`
+→ tesla profile → mock engine no-op + `VALID_COMMANDS`). `buildBody` sends the
+next waypoint (first stop, or the destination if stops-free) as a Fleet API
+`navigation_gps_request` GPS target; mock vehicles accept it as a success no-op.
+Helpers `needsPreconditioning(maxKw)` / `isSuperchargerNetwork(networkId)` are
+exported from `StopCard.tsx`. i18n: `trip.share_to_tesla`, `trip.share_success`,
+`trip.share_error`, `trip.precondition_auto`, `trip.precondition_manual`.
+
+**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts` (new), `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/components/trip/StopCard.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/brands/tesla/command-map.ts` (share_navigation), `src/app/api/vehicles/[vehicleId]/commands/route.ts`.
 
 **Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Overpass/OpenStreetMap (corridor stations, no key), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).
 

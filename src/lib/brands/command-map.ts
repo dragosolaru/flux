@@ -28,4 +28,5 @@ export const COMMAND_CAP_MAP: Record<CommandName, keyof CommandCapabilities> = {
   schedule_charging:  "scheduleCharging",
   schedule_departure: "scheduleDeparture",
   precondition_max:   "preconditionMax",
+  share_navigation:   "shareNavigation",
 };

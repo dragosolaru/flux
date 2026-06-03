@@ -1,6 +1,21 @@
 "use client";
 
-import { Zap, Clock, MapPin } from "lucide-react";
+import { Zap, Clock, MapPin, Thermometer } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+// A stop benefits from battery preconditioning when it's a DC fast charger
+// (warming the pack before a fast charge cuts charge time). Tesla does this
+// automatically when navigating to a Supercharger; other networks are a manual
+// recommendation surfaced here.
+const PRECONDITION_MIN_KW = 50;
+
+export function needsPreconditioning(maxKw: number): boolean {
+  return maxKw >= PRECONDITION_MIN_KW;
+}
+
+export function isSuperchargerNetwork(networkId: string): boolean {
+  return networkId === "tesla-sc";
+}
 
 interface StopCardProps {
   stop: {
@@ -23,7 +38,10 @@ interface StopCardProps {
 }
 
 export function StopCard({ stop, index }: StopCardProps) {
+  const t = useTranslations("trip");
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
+  const precondition = needsPreconditioning(station.maxKw);
+  const autoPrecondition = isSuperchargerNetwork(station.networkId);
 
   return (
     <div className="flex gap-3 rounded-xl border border-white/8 bg-white/5 p-3 backdrop-blur-sm">
@@ -70,6 +88,20 @@ export function StopCard({ stop, index }: StopCardProps) {
             km {distanceFromStartKm}
           </span>
         </div>
+
+        {/* Battery preconditioning hint for fast-charging stops */}
+        {precondition && (
+          <div
+            className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs ${
+              autoPrecondition
+                ? "bg-blue-500/15 text-blue-300"
+                : "bg-amber-500/15 text-amber-300"
+            }`}
+          >
+            <Thermometer className="size-3" />
+            {autoPrecondition ? t("precondition_auto") : t("precondition_manual")}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -544,7 +544,12 @@
     "see_map": "See map",
     "see_plan": "See plan",
     "variant_fastest": "Fastest",
-    "variant_balanced": "Fewer stops"
+    "variant_balanced": "Fewer stops",
+    "share_to_tesla": "Send to Tesla",
+    "share_success": "Sent to your Tesla's navigation",
+    "share_error": "Could not send to Tesla",
+    "precondition_auto": "Auto-preconditioning",
+    "precondition_manual": "Precondition battery"
   },
   "notFoundPage": {
     "heading": "Page not found",

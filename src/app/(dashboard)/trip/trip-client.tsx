@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -52,6 +52,7 @@ export function TripClient() {
   const [formCollapsed, setFormCollapsed] = useState(false);
   const [planExpanded, setPlanExpanded] = useState(true);
   const [locating, setLocating] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const canPlan = origin !== null && destination !== null;
@@ -111,6 +112,42 @@ export function TripClient() {
 
   const variants = plan?.variants ?? [];
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
+
+  // Share to Tesla is only possible for a real, connected Tesla vehicle.
+  const teslaVehicle =
+    plan?.vehicle && plan.vehicle.brand === "tesla" ? plan.vehicle : null;
+  const canShare =
+    teslaVehicle !== null && activePlan !== null && activePlan.feasible !== false;
+
+  async function handleShareToTesla() {
+    if (!teslaVehicle || !activePlan || !destination) return;
+    setSharing(true);
+    try {
+      await apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
+        method: "POST",
+        body: JSON.stringify({
+          command: "share_navigation",
+          args: {
+            stops: activePlan.stops.map((s) => ({
+              lat: s.station.lat,
+              lng: s.station.lng,
+              name: s.station.name,
+            })),
+            destination: {
+              lat: destination.lat,
+              lng: destination.lng,
+              name: destination.name,
+            },
+          },
+        }),
+      });
+      toast.success(t("share_success"));
+    } catch {
+      toast.error(t("share_error"));
+    } finally {
+      setSharing(false);
+    }
+  }
 
   const stops = activePlan?.stops.map((s) => ({
     lat: s.station.lat,
@@ -364,6 +401,21 @@ export function TripClient() {
                   stopsCount={activePlan.stops.length}
                   approxRoute={activePlan.approxRoute}
                 />
+
+                {canShare && (
+                  <button
+                    onClick={handleShareToTesla}
+                    disabled={sharing}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {sharing ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Send className="size-4" />
+                    )}
+                    {t("share_to_tesla")}
+                  </button>
+                )}
 
                 {activePlan.warning && (
                   <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 backdrop-blur-sm">

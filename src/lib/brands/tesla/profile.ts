@@ -63,6 +63,7 @@ export const teslaProfile: BrandProfile = {
       scheduleCharging: true,
       scheduleDeparture: true,
       preconditionMax: true,
+      shareNavigation: true,
     },
     history: {
       chargingSessions: true,

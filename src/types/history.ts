@@ -70,7 +70,8 @@ export type CommandName =
   | "remote_start"
   | "schedule_charging"
   | "schedule_departure"
-  | "precondition_max";
+  | "precondition_max"
+  | "share_navigation";
 
 export interface CommandEvent {
   id: string;

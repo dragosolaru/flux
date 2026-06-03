@@ -20,7 +20,7 @@ const VALID_COMMANDS: CommandName[] = [
   "honk", "flash", "set_charge_limit", "set_charge_amps",
   "start_charging", "stop_charging", "open_charge_port", "close_charge_port",
   "vent_windows", "close_windows", "activate_sentry", "deactivate_sentry", "remote_start",
-  "schedule_charging", "schedule_departure", "precondition_max",
+  "schedule_charging", "schedule_departure", "precondition_max", "share_navigation",
 ];
 
 const bodySchema = z.object({

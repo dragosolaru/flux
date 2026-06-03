@@ -57,4 +57,24 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
     teslaCmd: "set_preconditioning_max",
     buildBody: (args) => ({ on: args?.on !== false }),
   },
+  // Send the next waypoint (first charging stop, or the destination if the trip
+  // needs no stops) to the car's nav. Tesla auto-preconditions the battery when
+  // navigating to a Supercharger; the UI flags non-SC fast stops for a manual
+  // precondition. Fleet API navigation_gps_request takes a single GPS target.
+  share_navigation: {
+    teslaCmd: "navigation_gps_request",
+    buildBody: (args) => {
+      const stops = Array.isArray(args?.stops) ? (args.stops as Waypoint[]) : [];
+      const dest = (args?.destination ?? null) as Waypoint | null;
+      const next = stops[0] ?? dest;
+      if (!next) return undefined;
+      return { lat: Number(next.lat), lon: Number(next.lng), order: 0 };
+    },
+  },
 };
+
+interface Waypoint {
+  lat: number;
+  lng: number;
+  name?: string;
+}

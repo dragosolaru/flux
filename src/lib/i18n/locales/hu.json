@@ -544,7 +544,12 @@
     "see_map": "Térkép megtekintése",
     "see_plan": "Terv megtekintése",
     "variant_fastest": "Leggyorsabb",
-    "variant_balanced": "Kevesebb megálló"
+    "variant_balanced": "Kevesebb megálló",
+    "share_to_tesla": "Küldés a Teslának",
+    "share_success": "Elküldve a Tesla navigációba",
+    "share_error": "Nem sikerült elküldeni a Teslának",
+    "precondition_auto": "Automatikus előkondicionálás",
+    "precondition_manual": "Akkumulátor előkondicionálása"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

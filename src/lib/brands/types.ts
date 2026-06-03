@@ -81,6 +81,7 @@ export interface CommandCapabilities {
   scheduleCharging: boolean;
   scheduleDeparture: boolean;
   preconditionMax: boolean;
+  shareNavigation: boolean;
 }
 
 export type HistoryRetention =
