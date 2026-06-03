@@ -443,7 +443,23 @@
   "chargingMap": {
     "disclaimer": "Az adatokat az OpenChargeMap biztosítja. Az elérhetőség változhat.",
     "locate_me": "Saját helyzet",
-    "location_error": "Nem sikerült meghatározni a helyzetet"
+    "location_error": "Nem sikerült meghatározni a helyzetet",
+    "title": "Töltőtérkép",
+    "loading": "Állomások betöltése…",
+    "load_error": "Az állomásokat nem sikerült betölteni",
+    "load_error_detail": "Az állomások betöltése sikertelen",
+    "unknown_error": "Ismeretlen hiba",
+    "stations_in_view": "{count} állomás a nézetben",
+    "updating": "{count} állomás · frissítés…",
+    "max_power": "Max. teljesítmény",
+    "unknown_power": "Ismeretlen",
+    "connectors": "Csatlakozók",
+    "status": "Állapot",
+    "operational": "Működik",
+    "out_of_service": "Üzemen kívül",
+    "close": "Bezárás",
+    "select_hint": "Kattints egy állomásra a térképen a részletekért",
+    "station_fallback": "Töltőállomás"
   },
   "auth": {
     "title_login": "Üdv újra",
