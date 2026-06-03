@@ -58,17 +58,20 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
     buildBody: (args) => ({ on: args?.on !== false }),
   },
   // Send the next waypoint (first charging stop, or the destination if the trip
-  // needs no stops) to the car's nav. Tesla auto-preconditions the battery when
-  // navigating to a Supercharger; the UI flags non-SC fast stops for a manual
-  // precondition. Fleet API navigation_gps_request takes a single GPS target.
+  // needs no stops) to the car's nav — Fleet API navigation_gps_request takes a
+  // single GPS target, so the driver navigates stop-by-stop. Tesla auto-
+  // preconditions the battery when navigating to a Supercharger; the UI flags
+  // non-SC fast stops for a manual precondition.
   share_navigation: {
     teslaCmd: "navigation_gps_request",
     buildBody: (args) => {
-      const stops = Array.isArray(args?.stops) ? (args.stops as Waypoint[]) : [];
-      const dest = (args?.destination ?? null) as Waypoint | null;
-      const next = stops[0] ?? dest;
+      const rawStops = Array.isArray(args?.stops) ? args.stops : [];
+      const stops = rawStops
+        .map(toWaypoint)
+        .filter((w): w is Waypoint => w !== null);
+      const next = stops[0] ?? toWaypoint(args?.destination ?? null);
       if (!next) return undefined;
-      return { lat: Number(next.lat), lon: Number(next.lng), order: 0 };
+      return { lat: next.lat, lon: next.lng, order: 0 };
     },
   },
 };
@@ -76,5 +79,12 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
 interface Waypoint {
   lat: number;
   lng: number;
-  name?: string;
+}
+
+function toWaypoint(value: unknown): Waypoint | null {
+  if (typeof value !== "object" || value === null) return null;
+  const o = value as Record<string, unknown>;
+  if (typeof o.lat !== "number" || typeof o.lng !== "number") return null;
+  if (!Number.isFinite(o.lat) || !Number.isFinite(o.lng)) return null;
+  return { lat: o.lat, lng: o.lng };
 }
