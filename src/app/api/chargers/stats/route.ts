@@ -27,11 +27,11 @@ export async function GET(_req: NextRequest) {
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ count: totalChargers }, { count: fastChargers }, lastRun] = await Promise.all([
-    supabase.from("chargers").select("*", { count: "exact", head: true }),
+  const [totalRes, fastRes, lastRun] = await Promise.all([
+    supabase.from("chargers").select("id", { count: "exact", head: true }),
     supabase
       .from("chargers")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .gte("max_power_kw", 50),
     supabase
       .from("ingest_runs")
@@ -42,11 +42,17 @@ export async function GET(_req: NextRequest) {
       .maybeSingle(),
   ]);
 
+  // Surface a genuine outage (e.g. tables missing before migrations are applied)
+  // instead of masking it as a healthy "0 stations" card.
+  if (totalRes.error) {
+    return NextResponse.json({ message: "stats-unavailable" }, { status: 503 });
+  }
+
   const run = (lastRun.data as LastRunRow | null) ?? null;
 
   return NextResponse.json({
-    totalChargers: totalChargers ?? 0,
-    fastChargers: fastChargers ?? 0,
+    totalChargers: totalRes.count ?? 0,
+    fastChargers: fastRes.count ?? 0,
     lastRefresh: run?.finished_at ?? run?.started_at ?? null,
   });
 }
