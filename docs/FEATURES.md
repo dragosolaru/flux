@@ -184,13 +184,23 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 11. Settings
 
-**What:** Preferences (locale, currency), home location, tariff provider, WhatsApp phone, billing controls, and account danger zone (export / delete).
+**What:** Preferences (locale, currency), home location, tariff provider, WhatsApp phone, billing controls, and account danger zone (export / delete). Uses a client-driven data loading pattern for crash resilience — the server component only does an auth check, then delegates all data fetching to TanStack Query in the client component.
 
-**How to use:** UI `/settings`. API: `GET/PATCH /api/me/preferences`, `GET /api/user/export` (GDPR export), `DELETE /api/user/delete` (account deletion), `GET/POST /api/tariffs/settings`.
+**Architecture:** `page.tsx` (server) → auth check only → `<SettingsClient>` (client) fetches all data via TanStack Query:
+- `GET /api/vehicles?include_inactive=true` — all vehicles (active + inactive, includes `scenarioId` for mock vehicles)
+- `GET /api/tariffs/settings` — active tariff provider + provider list
+- `GET /api/me/capabilities` — subscription tier (`hasProSubscription`)
 
-**Key files:** `src/app/(dashboard)/settings/page.tsx`, `src/app/(dashboard)/settings/danger-zone.tsx`, `src/components/settings/*` (CurrencyPicker, HomeLocationPicker, LocalePicker, WhatsAppPhonePicker), `src/app/api/user/*`.
+While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any individual API call fails, defaults are used — the page renders rather than crashing.
 
-**Dependencies:** Supabase. `/about-data` is a companion read-only transparency page.
+**How to use:** UI `/settings`. API: `GET/PATCH /api/me/preferences`, `GET /api/user/export` (GDPR export), `DELETE /api/user/delete` (account deletion), `GET/PUT /api/tariffs/settings`.
+
+**Key files:**
+- `src/app/(dashboard)/settings/page.tsx` — minimal server component (auth check + redirect only)
+- `src/app/(dashboard)/settings/settings-client.tsx` — full client component with TanStack Query data loading and all sections
+- `src/app/(dashboard)/settings/danger-zone.tsx`, `src/components/settings/*`
+
+**Dependencies:** TanStack Query, Supabase (via API routes), next-intl. `/about-data` is a companion read-only transparency page.
 
 ---
 
