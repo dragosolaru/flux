@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -46,6 +46,7 @@ export function TripClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [planExpanded, setPlanExpanded] = useState(true);
   const [locating, setLocating] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +95,7 @@ export function TripClient() {
       });
       setPlan(result);
       setFormCollapsed(true);
+      setPlanExpanded(true);
       setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("infeasible_hint"));
@@ -229,22 +231,48 @@ export function TripClient() {
         )}
       </div>
 
-      {/* Results panel — bottom slide-up */}
+      {/* Results panel — bottom slide-up, collapsible */}
       {plan && (
         <div
           ref={panelRef}
-          className="absolute bottom-0 left-0 right-0 z-[1000] max-h-[45vh] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl"
+          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-all duration-300"
+          style={{ maxHeight: planExpanded ? "45vh" : "3rem", overflow: planExpanded ? "auto" : "hidden" }}
         >
-          {/* Drag handle + edit link */}
-          <div className="sticky top-0 flex items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
-            <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
-            <button
-              onClick={() => setFormCollapsed(false)}
-              className="absolute right-4 text-xs text-muted-foreground hover:text-foreground"
-            >
-              {t("edit_btn")}
-            </button>
-          </div>
+          {/* Drag handle row — tap to toggle */}
+          <button
+            onClick={() => setPlanExpanded((v) => !v)}
+            className="sticky top-0 z-10 flex w-full items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl"
+            aria-label={planExpanded ? t("see_map") : t("see_plan")}
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {!planExpanded && (
+                <span className="truncate text-sm font-medium text-foreground">
+                  {originShort} → {destinationShort}
+                  {plan.plan.totalDistanceKm > 0 && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {Math.round(plan.plan.totalDistanceKm)} km · {Math.floor(plan.plan.drivingMinutes / 60)}h {plan.plan.drivingMinutes % 60}min
+                    </span>
+                  )}
+                </span>
+              )}
+              {planExpanded && <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />}
+            </div>
+            <div className="ml-2 flex shrink-0 items-center gap-2">
+              {planExpanded && (
+                <span
+                  onClick={(e) => { e.stopPropagation(); setFormCollapsed(false); }}
+                  className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {t("edit_btn")}
+                </span>
+              )}
+              {planExpanded ? (
+                <ChevronDown className="size-4 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="size-4 text-muted-foreground" />
+              )}
+            </div>
+          </button>
 
           <div className="space-y-4 px-4 pb-6 pt-2">
             {plan.plan.feasible === false ? (
