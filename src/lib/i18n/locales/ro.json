@@ -459,7 +459,10 @@
     "out_of_service": "Indisponibilă",
     "close": "Închide",
     "select_hint": "Apasă pe o stație de pe hartă pentru detalii",
-    "station_fallback": "Stație încărcare"
+    "station_fallback": "Stație încărcare",
+    "filter_power": "Putere",
+    "filter_connector": "Conector",
+    "filter_all": "Toate"
   },
   "auth": {
     "title_login": "Bine ai revenit",

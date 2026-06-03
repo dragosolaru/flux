@@ -10,9 +10,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
 import { cardVariants, slideUp } from "@/lib/animations/variants";
-import type { Charger } from "@/lib/chargers/types";
+import type { Charger, ConnectorType } from "@/lib/chargers/types";
 
 export type { Charger };
+
+// Filter options. Power is a minimum-kW threshold; connector maps to the
+// canonical ConnectorType the /nearby endpoint accepts.
+const POWER_OPTIONS: { value: number; label: string }[] = [
+  { value: 0, label: "filter_all" },
+  { value: 50, label: "50+ kW" },
+  { value: 150, label: "150+ kW" },
+  { value: 350, label: "350 kW" },
+];
+
+const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
+  { value: "all", label: "filter_all" },
+  { value: "ccs2", label: "CCS" },
+  { value: "type2", label: "Type 2" },
+  { value: "chademo", label: "CHAdeMO" },
+  { value: "tesla", label: "Tesla" },
+];
 
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
@@ -68,6 +85,8 @@ export function ChargingMapClient() {
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
   // The query follows the visible map area; updated on pan/zoom via MoveWatcher.
   const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 25 });
+  const [minKw, setMinKw] = useState(0);
+  const [connector, setConnector] = useState<ConnectorType | "all">("all");
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
@@ -92,11 +111,24 @@ export function ChargingMapClient() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["chargers-nearby", area.lat.toFixed(2), area.lng.toFixed(2), Math.round(area.radiusKm)],
-    queryFn: () =>
-      apiFetch<Charger[]>(
-        `/api/chargers/nearby?lat=${area.lat}&lng=${area.lng}&radius=${Math.round(area.radiusKm)}`,
-      ),
+    queryKey: [
+      "chargers-nearby",
+      area.lat.toFixed(2),
+      area.lng.toFixed(2),
+      Math.round(area.radiusKm),
+      minKw,
+      connector,
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        lat: String(area.lat),
+        lng: String(area.lng),
+        radius: String(Math.round(area.radiusKm)),
+      });
+      if (minKw > 0) params.set("minKw", String(minKw));
+      if (connector !== "all") params.set("connector", connector);
+      return apiFetch<Charger[]>(`/api/chargers/nearby?${params}`);
+    },
     staleTime: 300_000,
     placeholderData: keepPreviousData,
   });
@@ -130,6 +162,44 @@ export function ChargingMapClient() {
       </div>
 
       <p className="text-xs text-muted-foreground/70">{t("disclaimer")}</p>
+
+      {/* Filter bar — minimum power + connector type */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          <span className="shrink-0 text-xs text-muted-foreground">{t("filter_power")}</span>
+          {POWER_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setMinKw(opt.value)}
+              aria-pressed={minKw === opt.value}
+              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                minKw === opt.value
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+              }`}
+            >
+              {opt.label === "filter_all" ? t("filter_all") : opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          <span className="shrink-0 text-xs text-muted-foreground">{t("filter_connector")}</span>
+          {CONNECTOR_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setConnector(opt.value)}
+              aria-pressed={connector === opt.value}
+              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                connector === opt.value
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+              }`}
+            >
+              {opt.label === "filter_all" ? t("filter_all") : opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Map */}

@@ -459,7 +459,10 @@
     "out_of_service": "Hors service",
     "close": "Fermer",
     "select_hint": "Cliquez sur une station de la carte pour les détails",
-    "station_fallback": "Station de recharge"
+    "station_fallback": "Station de recharge",
+    "filter_power": "Puissance",
+    "filter_connector": "Connecteur",
+    "filter_all": "Tous"
   },
   "auth": {
     "title_login": "Bon retour",

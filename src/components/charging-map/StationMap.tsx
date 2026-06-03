@@ -25,13 +25,18 @@ function useLeafletIconFix() {
   }, []);
 }
 
-// Green = likely operational (confidence >= 0.5), grey = low confidence
+// Green = likely operational (confidence >= 0.5), grey = low confidence.
+// Selected marker is drawn larger with a primary-coloured ring.
 const OPERATIONAL_COLOR = "#16a34a";
 const OFFLINE_COLOR = "#6b7280";
+const SELECTED_COLOR = "#2563eb";
 
-function makeIcon(likelyOperational: boolean) {
-  const color = likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+function makeIcon(likelyOperational: boolean, selected: boolean) {
+  const color = selected ? SELECTED_COLOR : likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
+  const scale = selected ? 1.4 : 1;
+  const w = Math.round(24 * scale);
+  const h = Math.round(36 * scale);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="${w}" height="${h}">
     <path fill="${color}" stroke="white" stroke-width="1.5"
       d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"/>
     <circle cx="12" cy="12" r="5" fill="white" fill-opacity="0.9"/>
@@ -39,9 +44,9 @@ function makeIcon(likelyOperational: boolean) {
   return L.divIcon({
     html: svg,
     className: "",
-    iconSize: [24, 36],
-    iconAnchor: [12, 36],
-    popupAnchor: [0, -36],
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h],
+    popupAnchor: [0, -h],
   });
 }
 
@@ -150,7 +155,7 @@ interface StationMapProps {
   onAreaChange?: (lat: number, lng: number, radiusKm: number) => void;
 }
 
-export default function StationMap({ stations, center, selected: _selected, onSelect, userLocation, onUserLocate, onAreaChange }: StationMapProps) {
+export default function StationMap({ stations, center, selected, onSelect, userLocation, onUserLocate, onAreaChange }: StationMapProps) {
   useLeafletIconFix();
   const t = useTranslations("chargingMap");
 
@@ -185,11 +190,13 @@ export default function StationMap({ stations, center, selected: _selected, onSe
         const label = s.name ?? s.operator ?? t("station_fallback");
         const connectorTypes = s.connectors.map((c) => c.type).join(", ");
         const likelyOperational = s.confidence >= 0.5;
+        const isSelected = selected?.id === s.id;
         return (
           <Marker
             key={s.id}
             position={[s.lat, s.lng]}
-            icon={makeIcon(likelyOperational)}
+            icon={makeIcon(likelyOperational, isSelected)}
+            zIndexOffset={isSelected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(s) }}
           >
             <Popup>

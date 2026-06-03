@@ -459,7 +459,10 @@
     "out_of_service": "Üzemen kívül",
     "close": "Bezárás",
     "select_hint": "Kattints egy állomásra a térképen a részletekért",
-    "station_fallback": "Töltőállomás"
+    "station_fallback": "Töltőállomás",
+    "filter_power": "Teljesítmény",
+    "filter_connector": "Csatlakozó",
+    "filter_all": "Összes"
   },
   "auth": {
     "title_login": "Üdv újra",

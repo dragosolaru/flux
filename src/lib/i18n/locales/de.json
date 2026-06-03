@@ -459,7 +459,10 @@
     "out_of_service": "Außer Betrieb",
     "close": "Schließen",
     "select_hint": "Wähle eine Station auf der Karte für Details",
-    "station_fallback": "Ladestation"
+    "station_fallback": "Ladestation",
+    "filter_power": "Leistung",
+    "filter_connector": "Anschluss",
+    "filter_all": "Alle"
   },
   "auth": {
     "title_login": "Willkommen zurück",
