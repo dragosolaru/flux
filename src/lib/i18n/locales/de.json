@@ -134,7 +134,8 @@
       "notifications": "Benachrichtigungen",
       "vehicles": "Fahrzeuge",
       "billing": "Abonnement",
-      "danger": "Gefahrenzone"
+      "danger": "Gefahrenzone",
+      "charger": "Ladenetz"
     },
     "locale": {
       "label": "Sprache",
@@ -217,6 +218,15 @@
       "description": "Energiequittungen per WhatsApp senden, um sie automatisch zu verarbeiten.",
       "save": "Speichern",
       "invalid": "Gültige internationale Nummer eingeben (z. B. +40712345678)"
+    },
+    "charger": {
+      "label": "Datenstatus",
+      "loading": "Wird geladen…",
+      "unavailable": "Statistiken nicht verfügbar",
+      "total": "Indexierte Stationen",
+      "fast": "Schnell (≥50 kW)",
+      "last_refresh": "Zuletzt aktualisiert",
+      "never": "Noch nicht aktualisiert"
     }
   },
   "ingest": {

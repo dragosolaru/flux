@@ -134,7 +134,8 @@
       "notifications": "Notifications",
       "vehicles": "Véhicules",
       "billing": "Abonnement",
-      "danger": "Zone dangereuse"
+      "danger": "Zone dangereuse",
+      "charger": "Réseau de recharge"
     },
     "locale": {
       "label": "Langue",
@@ -217,6 +218,15 @@
       "description": "Envoyez des reçus d'énergie via WhatsApp pour un traitement automatique.",
       "save": "Enregistrer",
       "invalid": "Entrez un numéro international valide (ex: +40712345678)"
+    },
+    "charger": {
+      "label": "État des données",
+      "loading": "Chargement…",
+      "unavailable": "Statistiques indisponibles",
+      "total": "Stations indexées",
+      "fast": "Rapides (≥50 kW)",
+      "last_refresh": "Dernière mise à jour",
+      "never": "Pas encore actualisé"
     }
   },
   "ingest": {

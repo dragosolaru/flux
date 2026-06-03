@@ -134,7 +134,8 @@
       "notifications": "Értesítések",
       "vehicles": "Járművek",
       "billing": "Előfizetés",
-      "danger": "Veszélyzóna"
+      "danger": "Veszélyzóna",
+      "charger": "Töltőhálózat"
     },
     "locale": {
       "label": "Nyelv",
@@ -217,6 +218,15 @@
       "description": "Küldjön energiaszámlákat WhatsApp-on keresztül az automatikus feldolgozáshoz.",
       "save": "Mentés",
       "invalid": "Adjon meg érvényes nemzetközi számot (pl. +40712345678)"
+    },
+    "charger": {
+      "label": "Adatállapot",
+      "loading": "Betöltés…",
+      "unavailable": "Statisztika nem érhető el",
+      "total": "Indexelt állomások",
+      "fast": "Gyors (≥50 kW)",
+      "last_refresh": "Utolsó frissítés",
+      "never": "Még nincs frissítve"
     }
   },
   "ingest": {

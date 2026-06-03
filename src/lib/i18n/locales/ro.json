@@ -134,7 +134,8 @@
       "notifications": "Notificări",
       "vehicles": "Vehicule",
       "billing": "Abonament",
-      "danger": "Zonă periculoasă"
+      "danger": "Zonă periculoasă",
+      "charger": "Rețea de încărcare"
     },
     "locale": {
       "label": "Limbă",
@@ -217,6 +218,15 @@
       "description": "Trimite bonuri de energie pe WhatsApp pentru a fi procesate automat.",
       "save": "Salvează",
       "invalid": "Introdu un număr internațional valid (ex: +40712345678)"
+    },
+    "charger": {
+      "label": "Stare date",
+      "loading": "Se încarcă…",
+      "unavailable": "Statistici indisponibile",
+      "total": "Stații indexate",
+      "fast": "Rapide (≥50 kW)",
+      "last_refresh": "Ultima actualizare",
+      "never": "Neactualizat încă"
     }
   },
   "ingest": {

@@ -134,7 +134,8 @@
       "notifications": "Notifications",
       "vehicles": "Vehicles",
       "billing": "Subscription",
-      "danger": "Danger Zone"
+      "danger": "Danger Zone",
+      "charger": "Charger network"
     },
     "locale": {
       "label": "Language",
@@ -217,6 +218,15 @@
       "description": "Send energy receipts via WhatsApp to be processed automatically.",
       "save": "Save",
       "invalid": "Enter a valid international number (e.g. +40712345678)"
+    },
+    "charger": {
+      "label": "Data health",
+      "loading": "Loading…",
+      "unavailable": "Stats unavailable",
+      "total": "Indexed stations",
+      "fast": "Fast (≥50 kW)",
+      "last_refresh": "Last refreshed",
+      "never": "Not yet refreshed"
     }
   },
   "ingest": {

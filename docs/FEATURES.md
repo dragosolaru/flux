@@ -677,6 +677,22 @@ working before the charger migrations are applied. Same function signature and
 return type — planner callers are unchanged. Key file:
 `src/lib/external/routing/corridor-stations.ts`.
 
+**Map filters + selected highlight (complete):** the charging map has a filter
+bar (minimum power All/50+/150+/350 kW; connector All/CCS/Type 2/CHAdeMO/Tesla)
+that flows into the `/api/chargers/nearby` query (`minKw`, `connector`) and the
+React Query key. The selected marker renders larger (1.4×) in a blue ring above
+its siblings (`zIndexOffset`). Icons are cached (3 variants) to avoid per-marker
+re-allocation. Key files: `charging-map-client.tsx` (FilterChips), `StationMap.tsx`.
+
+**M7 UI — charger health card (complete):** Settings → "Charger network" section
+shows indexed-station counts and last-refresh time via a session-authed
+`GET /api/chargers/stats` (`auth()` + rate-limit; returns
+`{ totalChargers, fastChargers, lastRefresh }`; counts via Supabase
+`head:true` + last ok `ingest_runs` row). Key files:
+`src/app/api/chargers/stats/route.ts`, `src/components/settings/ChargerHealthCard.tsx`,
+`src/app/(dashboard)/settings/settings-client.tsx`.
+
 **Status:** backend complete (M0–M7 + BNetzA/NDW connectors) + M6 (UI rewiring)
-complete, 75 tests pass. Trip corridor search reads from the PostGIS platform
-(Overpass fallback). ABRP-grade planner reading from this data is spec #2.
++ map filters/highlight + M7 health card, 75 tests pass. Trip corridor search
+reads from the PostGIS platform (Overpass fallback). ABRP-grade planner reading
+from this data is spec #2.

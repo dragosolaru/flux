@@ -23,6 +23,7 @@ import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
 import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
 import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
+import { ChargerHealthCard } from "@/components/settings/ChargerHealthCard";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
 import { InactiveVehiclesList } from "@/components/settings/InactiveVehiclesList";
 import { DeactivateButton } from "@/components/settings/DeactivateButton";
@@ -279,6 +280,20 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
             label={t("tariff.label")}
           >
             <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
+          </SettingsRowExpanded>
+        </GlassCard>
+      </section>
+
+      {/* Charger data health section */}
+      <section id="charger-health">
+        <SectionHeader label={t("section.charger")} />
+        <GlassCard className="divide-y divide-white/5">
+          <SettingsRowExpanded
+            icon={<Zap className="size-4 text-amber-400" />}
+            iconBg="bg-amber-500/20"
+            label={t("charger.label")}
+          >
+            <ChargerHealthCard />
           </SettingsRowExpanded>
         </GlassCard>
       </section>
