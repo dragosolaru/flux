@@ -128,14 +128,14 @@ export function ChargingClient({
         ) : (
           <>
             <CircularProgress
-              value={data.batteryLevel ?? 0}
+              value={Math.round(data.batteryLevel ?? 0)}
               size={180}
               strokeWidth={12}
               color={ringColor(data.chargingState)}
             >
               <div className="flex flex-col items-center gap-0.5 text-center">
                 <span className="text-4xl font-bold tabular-nums leading-none">
-                  {data.batteryLevel ?? 0}%
+                  {Math.round(data.batteryLevel ?? 0)}%
                 </span>
                 {isCharging && (
                   <>
