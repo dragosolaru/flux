@@ -184,6 +184,8 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Route through stations:** After charging stops are chosen, the planner runs a **second OSRM pass** through `[origin, …stops, destination]` (`computeOsrmRouteVia`) so the displayed polyline actually passes through each station and the total distance/driving time reflect the detours. `CostSummary` shows driving time, charging time, and charging cost (with petrol comparison).
 
+**Route variants:** `planTripVariants()` plans across **alternative roads** (`computeOsrmAlternatives`, up to 2) × **charging strategies** (`fastest` = top up ~70%, more frequent shorter stops; `balanced` = charge ~95%, fewer stops). Corridor stations are fetched once and shared. Results are deduped (by stop-count + total-time signature), sorted fastest-first, capped at 4, and returned as `variants[]` (plus `plan` = the recommended first variant). The UI shows selectable chips (time · stops · €); picking one updates the map polyline and the plan details. i18n: `trip.variant_fastest`, `trip.variant_balanced`. Route handler has `maxDuration = 30`.
+
 **Use my location (origin):** The "From" field has a `LocateFixed` icon button on the right. On click it calls `navigator.geolocation`, then reverse-geocodes via Nominatim (`/reverse`) to get a readable address, and sets that as the origin. Spinner shown while locating. Errors shown via `sonner` toast. i18n keys: `trip.use_my_location`, `trip.locating`.
 
 **Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 vh). Tapping the drag-handle bar collapses it to a slim 3rem summary showing origin→destination + distance/time. Tapping again expands. i18n keys: `trip.see_map`, `trip.see_plan`.

@@ -11,12 +11,13 @@ import { StopCard } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
-import type { TripPlan } from "@/lib/external/routing/types";
+import type { TripPlan, TripVariant } from "@/lib/external/routing/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
 interface TripResponse {
   plan: TripPlan;
+  variants: TripVariant[];
   vehicle: { id: string; displayName: string; brand: string; model: string | null } | null;
   deratingPct: number;
 }
@@ -43,6 +44,7 @@ export function TripClient() {
   const [destination, setDestination] = useState<GeoPoint | null>(null);
   const [startSoc, setStartSoc] = useState(80);
   const [plan, setPlan] = useState<TripResponse | null>(null);
+  const [activeVariant, setActiveVariant] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formCollapsed, setFormCollapsed] = useState(false);
@@ -94,6 +96,7 @@ export function TripClient() {
         }),
       });
       setPlan(result);
+      setActiveVariant(0);
       setFormCollapsed(true);
       setPlanExpanded(true);
       setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -104,7 +107,10 @@ export function TripClient() {
     }
   }
 
-  const stops = plan?.plan.stops.map((s) => ({
+  const variants = plan?.variants ?? [];
+  const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
+
+  const stops = activePlan?.stops.map((s) => ({
     lat: s.station.lat,
     lng: s.station.lng,
     name: s.station.name,
@@ -122,7 +128,7 @@ export function TripClient() {
           origin={origin}
           destination={destination}
           stops={stops}
-          polyline={plan?.plan.polyline ?? null}
+          polyline={activePlan?.polyline ?? null}
           className="h-full w-full"
         />
       </div>
@@ -232,7 +238,7 @@ export function TripClient() {
       </div>
 
       {/* Results panel — bottom slide-up, collapsible */}
-      {plan && (
+      {plan && activePlan && (
         <div
           ref={panelRef}
           className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-all duration-300"
@@ -248,9 +254,9 @@ export function TripClient() {
               {!planExpanded && (
                 <span className="truncate text-sm font-medium text-foreground">
                   {originShort} → {destinationShort}
-                  {plan.plan.totalDistanceKm > 0 && (
+                  {activePlan.totalDistanceKm > 0 && (
                     <span className="ml-2 text-xs text-muted-foreground">
-                      {Math.round(plan.plan.totalDistanceKm)} km · {Math.floor(plan.plan.drivingMinutes / 60)}h {plan.plan.drivingMinutes % 60}min
+                      {Math.round(activePlan.totalDistanceKm)} km · {Math.floor(activePlan.drivingMinutes / 60)}h {activePlan.drivingMinutes % 60}min
                     </span>
                   )}
                 </span>
@@ -275,7 +281,39 @@ export function TripClient() {
           </button>
 
           <div className="space-y-4 px-4 pb-6 pt-2">
-            {plan.plan.feasible === false ? (
+            {/* Variant selector — alternative roads × charging strategies */}
+            {variants.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {variants.map((v, i) => {
+                  const h = Math.floor(v.plan.totalMinutes / 60);
+                  const m = v.plan.totalMinutes % 60;
+                  const active = i === activeVariant;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => setActiveVariant(i)}
+                      className={`flex shrink-0 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10"
+                          : "border-white/10 bg-white/5 hover:bg-white/10"
+                      }`}
+                    >
+                      <span className="text-xs font-semibold">{t(`variant_${v.strategy}`)}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {h}h {m}min · {v.plan.stops.length === 0
+                          ? t("stops_count_zero")
+                          : v.plan.stops.length === 1
+                            ? t("stops_count_one")
+                            : t("stops_count_other", { count: v.plan.stops.length })}
+                        {v.plan.totalChargingCostEur > 0 && ` · €${v.plan.totalChargingCostEur.toFixed(0)}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {activePlan.feasible === false ? (
               /* Infeasible route — prominent error card */
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 backdrop-blur-sm">
                 <div className="flex items-start gap-2">
@@ -284,16 +322,16 @@ export function TripClient() {
                     <p className="text-sm font-semibold text-amber-400">
                       {t("infeasible_title")}
                     </p>
-                    {plan.plan.warning && (
-                      <p className="text-xs text-amber-400/80">{plan.plan.warning}</p>
+                    {activePlan.warning && (
+                      <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
                     )}
                     <p className="text-xs text-amber-500/70">
                       {t("infeasible_hint")}
                     </p>
-                    {plan.plan.totalDistanceKm > 0 && (
+                    {activePlan.totalDistanceKm > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        {Math.round(plan.plan.totalDistanceKm)} km ·{" "}
-                        {Math.floor(plan.plan.drivingMinutes / 60)}h {plan.plan.drivingMinutes % 60}min
+                        {Math.round(activePlan.totalDistanceKm)} km ·{" "}
+                        {Math.floor(activePlan.drivingMinutes / 60)}h {activePlan.drivingMinutes % 60}min
                       </p>
                     )}
                   </div>
@@ -305,28 +343,28 @@ export function TripClient() {
                 <CostSummary
                   origin={originShort}
                   destination={destinationShort}
-                  totalDistanceKm={plan.plan.totalDistanceKm}
-                  drivingMinutes={plan.plan.drivingMinutes}
-                  chargingMinutes={plan.plan.chargingMinutes}
-                  totalEnergyKwh={plan.plan.totalEnergyKwh}
-                  totalChargingCostEur={plan.plan.totalChargingCostEur}
-                  stopsCount={plan.plan.stops.length}
-                  approxRoute={plan.plan.approxRoute}
+                  totalDistanceKm={activePlan.totalDistanceKm}
+                  drivingMinutes={activePlan.drivingMinutes}
+                  chargingMinutes={activePlan.chargingMinutes}
+                  totalEnergyKwh={activePlan.totalEnergyKwh}
+                  totalChargingCostEur={activePlan.totalChargingCostEur}
+                  stopsCount={activePlan.stops.length}
+                  approxRoute={activePlan.approxRoute}
                 />
 
-                {plan.plan.warning && (
+                {activePlan.warning && (
                   <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 backdrop-blur-sm">
                     <AlertCircle className="size-3.5 shrink-0" />
-                    {plan.plan.warning}
+                    {activePlan.warning}
                   </div>
                 )}
 
-                {plan.plan.stops.length > 0 ? (
+                {activePlan.stops.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {t("stops_label")}
                     </p>
-                    {plan.plan.stops.map((stop, i) => (
+                    {activePlan.stops.map((stop, i) => (
                       <StopCard key={i} stop={stop} index={i} />
                     ))}
                   </div>

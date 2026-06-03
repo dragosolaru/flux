@@ -511,7 +511,11 @@
     "stops_count_other": "{count} stops",
     "charging_time_label": "+{duration} charging",
     "use_my_location": "Use my location",
-    "locating": "Getting location…"
+    "locating": "Getting location…",
+    "see_map": "See map",
+    "see_plan": "See plan",
+    "variant_fastest": "Fastest",
+    "variant_balanced": "Fewer stops"
   },
   "notFoundPage": {
     "heading": "Page not found",

@@ -511,7 +511,11 @@
     "stops_count_other": "{count} opriri",
     "charging_time_label": "+{duration} încărcare",
     "use_my_location": "Folosește locația mea",
-    "locating": "Se determină locația…"
+    "locating": "Se determină locația…",
+    "see_map": "Vezi harta",
+    "see_plan": "Vezi planul",
+    "variant_fastest": "Cel mai rapid",
+    "variant_balanced": "Mai puține opriri"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

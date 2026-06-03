@@ -511,7 +511,11 @@
     "stops_count_other": "{count} arrêts",
     "charging_time_label": "+{duration} de charge",
     "use_my_location": "Utiliser ma position",
-    "locating": "Localisation en cours…"
+    "locating": "Localisation en cours…",
+    "see_map": "Voir la carte",
+    "see_plan": "Voir le plan",
+    "variant_fastest": "Le plus rapide",
+    "variant_balanced": "Moins d'arrêts"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

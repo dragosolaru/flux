@@ -511,7 +511,11 @@
     "stops_count_other": "{count} megálló",
     "charging_time_label": "+{duration} töltés",
     "use_my_location": "Saját helyzet használata",
-    "locating": "Helyzet meghatározása…"
+    "locating": "Helyzet meghatározása…",
+    "see_map": "Térkép megtekintése",
+    "see_plan": "Terv megtekintése",
+    "variant_fastest": "Leggyorsabb",
+    "variant_balanced": "Kevesebb megálló"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

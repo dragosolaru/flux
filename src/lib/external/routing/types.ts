@@ -32,6 +32,15 @@ export interface TripPlan {
   approxRoute: boolean;
 }
 
+export type TripStrategy = "fastest" | "balanced";
+
+export interface TripVariant {
+  id: string;
+  strategy: TripStrategy;
+  roadIndex: number;
+  plan: TripPlan;
+}
+
 export interface RouteProvider {
   id: string;
   displayName: string;

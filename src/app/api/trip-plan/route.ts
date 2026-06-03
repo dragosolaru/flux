@@ -9,8 +9,11 @@ import { getModelSpec } from "@/lib/brands/models";
 import { mockWeather } from "@/lib/external/weather/providers/mock-weather";
 import { derateRange } from "@/lib/external/weather/derating";
 import { STATIONS } from "@/lib/external/charging-networks/stations";
-import { planTrip } from "@/lib/external/routing/planner";
+import { planTripVariants } from "@/lib/external/routing/planner";
 import type { BrandKey } from "@/lib/brands/types";
+
+// Allow time for OSRM alternatives + per-variant routing + Overpass corridor.
+export const maxDuration = 30;
 
 const coordSchema = z.object({
   lat: z.number(),
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
     const idealKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
     const derating = derateRange(idealKm, weather);
 
-    const plan = await planTrip({
+    const variants = await planTripVariants({
       origin,
       destination,
       spec,
@@ -102,7 +105,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      plan,
+      plan: variants[0]!.plan,
+      variants,
       vehicle: {
         id: vehicle.id,
         displayName: vehicle.nickname ?? vehicle.display_name,
@@ -121,7 +125,7 @@ export async function POST(req: NextRequest) {
   const idealKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
   const derating = derateRange(idealKm, weather);
 
-  const plan = await planTrip({
+  const variants = await planTripVariants({
     origin,
     destination,
     spec,
@@ -131,7 +135,8 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    plan,
+    plan: variants[0]!.plan,
+    variants,
     vehicle: null,
     deratingPct: derating.totalPct,
   });
