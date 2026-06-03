@@ -441,7 +441,9 @@
     "preconditioned": "Actif ✓"
   },
   "chargingMap": {
-    "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier."
+    "disclaimer": "Données fournies par OpenChargeMap. La disponibilité peut varier.",
+    "locate_me": "Ma position",
+    "location_error": "Impossible d'obtenir votre position"
   },
   "auth": {
     "title_login": "Bon retour",
@@ -507,7 +509,9 @@
     "stops_count_zero": "Aucun arrêt",
     "stops_count_one": "1 arrêt",
     "stops_count_other": "{count} arrêts",
-    "charging_time_label": "+{duration} de charge"
+    "charging_time_label": "+{duration} de charge",
+    "use_my_location": "Utiliser ma position",
+    "locating": "Localisation en cours…"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

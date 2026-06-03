@@ -3,7 +3,10 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { LocateFixed, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import type { ChargingStation } from "@/app/(dashboard)/charging-map/charging-map-client";
 
 // Fix Leaflet default icon paths broken by webpack — done once per mount instead
@@ -42,6 +45,13 @@ function makeIcon(isOperational: boolean) {
   });
 }
 
+const USER_MARKER_ICON = L.divIcon({
+  html: '<div class="w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-lg"></div>',
+  className: "",
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
 interface CentreProps {
   centre: { lat: number; lng: number };
 }
@@ -54,15 +64,71 @@ function SetView({ centre }: CentreProps) {
   return null;
 }
 
+interface LocationButtonProps {
+  onLocate: (lat: number, lng: number) => void;
+  errorMessage: string;
+}
+
+function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
+  const map = useMap();
+  const t = useTranslations("chargingMap");
+  const [locating, setLocating] = useState(false);
+
+  function handleClick() {
+    if (!navigator.geolocation) {
+      toast.error(errorMessage);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        map.flyTo([lat, lng], 13);
+        onLocate(lat, lng);
+        setLocating(false);
+      },
+      () => {
+        toast.error(errorMessage);
+        setLocating(false);
+      },
+      { timeout: 10000 },
+    );
+  }
+
+  return (
+    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: "80px" }}>
+      <div className="leaflet-control">
+        <button
+          onClick={handleClick}
+          title={t("locate_me")}
+          className="flex items-center justify-center bg-background/80 backdrop-blur-sm border border-white/10 rounded-lg p-2 shadow-lg hover:bg-background/90 transition-colors"
+          style={{ width: "34px", height: "34px" }}
+        >
+          {locating ? (
+            <Loader2 className="size-4 animate-spin text-foreground" />
+          ) : (
+            <LocateFixed className="size-4 text-foreground" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface StationMapProps {
   stations: ChargingStation[];
   center: { lat: number; lng: number };
   selected: ChargingStation | null;
   onSelect: (s: ChargingStation) => void;
+  userLocation?: { lat: number; lng: number } | null;
+  onUserLocate?: (lat: number, lng: number) => void;
 }
 
-export default function StationMap({ stations, center, selected: _selected, onSelect }: StationMapProps) {
+export default function StationMap({ stations, center, selected: _selected, onSelect, userLocation, onUserLocate }: StationMapProps) {
   useLeafletIconFix();
+  const t = useTranslations("chargingMap");
+
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -75,6 +141,20 @@ export default function StationMap({ stations, center, selected: _selected, onSe
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <SetView centre={center} />
+      <LocationButton
+        onLocate={onUserLocate ?? (() => undefined)}
+        errorMessage={t("location_error")}
+      />
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={USER_MARKER_ICON}
+        >
+          <Popup>
+            <div className="text-xs font-medium">{t("locate_me")}</div>
+          </Popup>
+        </Marker>
+      )}
       {stations.map((s) => (
         <Marker
           key={s.id}
