@@ -2,7 +2,7 @@ import type { ChargingStation } from "@/lib/external/charging-networks/types";
 import type { ModelSpec } from "@/lib/brands/models";
 import type { ChargingStop, RoutePoint, TripPlan } from "./types";
 import { haversine } from "./providers/mock-router";
-import { computeOsrmRoute } from "./providers/osrm-router";
+import { computeOsrmRoute, computeOsrmRouteVia } from "./providers/osrm-router";
 import { fetchCorridorStations } from "./corridor-stations";
 
 const SAFETY_RESERVE_PCT = 10;   // Minimum SoC to arrive at any waypoint
@@ -173,19 +173,37 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     warning = "Route planner exceeded maximum iterations; result may be incomplete.";
   }
 
+  // Second pass: re-route THROUGH the chosen charging stops so the polyline
+  // actually passes through each station and distance/time reflect the detours.
+  let finalDistanceKm = distanceKm;
+  let finalDrivingMinutes = drivingMinutes;
+  let finalPolyline = polyline;
+  if (feasible && stops.length > 0) {
+    const via = await computeOsrmRouteVia([
+      origin,
+      ...stops.map((s) => ({ lat: s.station.lat, lng: s.station.lng })),
+      destination,
+    ]);
+    if (via.distanceKm > 0) {
+      finalDistanceKm = via.distanceKm;
+      finalDrivingMinutes = via.drivingMinutes;
+      finalPolyline = via.polyline;
+    }
+  }
+
   return {
     origin,
     destination,
-    totalDistanceKm: distanceKm,
-    drivingMinutes,
+    totalDistanceKm: finalDistanceKm,
+    drivingMinutes: finalDrivingMinutes,
     chargingMinutes: totalChargingMinutes,
-    totalMinutes: drivingMinutes + totalChargingMinutes,
+    totalMinutes: finalDrivingMinutes + totalChargingMinutes,
     totalEnergyKwh: Math.round(totalEnergyKwh * 10) / 10,
     totalChargingCostEur: Math.round(totalChargingCostEur * 100) / 100,
     stops,
     feasible,
     warning,
-    polyline,
-    approxRoute: polyline === null,
+    polyline: finalPolyline,
+    approxRoute: finalPolyline === null,
   };
 }

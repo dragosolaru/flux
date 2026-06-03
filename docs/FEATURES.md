@@ -182,6 +182,8 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Corridor stations:** `src/lib/external/routing/corridor-stations.ts` — `fetchCorridorStations(polyline, origin, destination)` computes a bounding box around the route (padded 0.15°) and queries Overpass for all `amenity=charging_station` nodes/ways. Prefers DC fast chargers (≥40 kW), returns up to 400 stations. These are merged (by id) with the static `STATIONS` set before planning. Falls back to `[]` silently on any error.
 
+**Route through stations:** After charging stops are chosen, the planner runs a **second OSRM pass** through `[origin, …stops, destination]` (`computeOsrmRouteVia`) so the displayed polyline actually passes through each station and the total distance/driving time reflect the detours. `CostSummary` shows driving time, charging time, and charging cost (with petrol comparison).
+
 **Use my location (origin):** The "From" field has a `LocateFixed` icon button on the right. On click it calls `navigator.geolocation`, then reverse-geocodes via Nominatim (`/reverse`) to get a readable address, and sets that as the origin. Spinner shown while locating. Errors shown via `sonner` toast. i18n keys: `trip.use_my_location`, `trip.locating`.
 
 **Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 vh). Tapping the drag-handle bar collapses it to a slim 3rem summary showing origin→destination + distance/time. Tapping again expands. i18n keys: `trip.see_map`, `trip.see_plan`.
