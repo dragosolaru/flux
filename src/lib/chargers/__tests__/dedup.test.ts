@@ -21,7 +21,6 @@ function raw(overrides: Partial<RawCharger>): RawCharger {
     address: { ...emptyAddress },
     connectors: [{ type: "ccs2", powerKw: 350, count: 4 }],
     pricing: null,
-    raw: {},
     ...overrides,
   };
 }

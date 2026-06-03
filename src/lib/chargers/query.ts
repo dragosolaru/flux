@@ -52,7 +52,7 @@ const CONNECTOR_TYPES: ReadonlySet<string> = new Set<ConnectorType>([
   "other",
 ]);
 
-const SOURCE_IDS: ReadonlySet<string> = new Set<ChargerSourceId>(["ocm", "osm", "chargeprice"]);
+const SOURCE_IDS: ReadonlySet<string> = new Set<ChargerSourceId>(["ocm", "osm", "chargeprice", "bnetza", "ndw"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -86,7 +86,7 @@ function mapConnectors(value: unknown): ChargerConnector[] {
   return value.filter(isRecord).map((c) => ({
     type: toConnectorType(c.type),
     powerKw: asNumber(c.powerKw),
-    count: asNumber(c.count) ?? 1,
+    count: Math.max(1, asNumber(c.count) ?? 1),
   }));
 }
 

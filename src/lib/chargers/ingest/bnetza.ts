@@ -77,7 +77,6 @@ function mapFeature(f: BNetzAFeature): RawCharger | null {
     },
     connectors,
     pricing: null,
-    raw: f,
   };
 }
 

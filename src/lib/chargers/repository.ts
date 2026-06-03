@@ -61,25 +61,26 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
   const existing: Charger[] = await findInBBox({ bbox, limit: 500 });
   const clusters = clusterChargers(raws, existing);
 
-  let upserted = 0;
-  for (const c of clusters) {
-    const { error } = await supabase.rpc("upsert_charger", {
-      p_id: c.matchedExistingId,
-      p_lat: c.lat,
-      p_lng: c.lng,
-      p_name: c.name,
-      p_operator: c.operator,
-      p_operator_id: c.operatorId,
-      p_country: c.address.country,
-      p_address: c.address,
-      p_max_power_kw: c.maxPowerKw,
-      p_pricing: c.pricing,
-      p_confidence: c.confidence,
-      p_connectors: c.connectors,
-      p_sources: c.sources,
-    });
-    if (!error) upserted++;
-  }
+  const results = await Promise.all(
+    clusters.map((c) =>
+      supabase.rpc("upsert_charger", {
+        p_id: c.matchedExistingId,
+        p_lat: c.lat,
+        p_lng: c.lng,
+        p_name: c.name,
+        p_operator: c.operator,
+        p_operator_id: c.operatorId,
+        p_country: c.address.country,
+        p_address: c.address,
+        p_max_power_kw: c.maxPowerKw,
+        p_pricing: c.pricing,
+        p_confidence: c.confidence,
+        p_connectors: c.connectors,
+        p_sources: c.sources,
+      }),
+    ),
+  );
+  const upserted = results.filter((r) => !r.error).length;
 
   await Promise.all(tiles.map(markTileFresh));
 

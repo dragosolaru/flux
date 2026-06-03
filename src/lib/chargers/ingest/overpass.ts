@@ -84,7 +84,6 @@ export function mapOverpassElement(el: OverpassElement): RawCharger | null {
     },
     connectors: buildConnectors(tags),
     pricing: null,
-    raw: el,
   };
 }
 

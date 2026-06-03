@@ -71,7 +71,6 @@ export interface RawCharger {
   address: ChargerAddress;
   connectors: ChargerConnector[];
   pricing: ChargerPricing | null;
-  raw: unknown;
 }
 
 /** Geographic bounding box (WGS84). */

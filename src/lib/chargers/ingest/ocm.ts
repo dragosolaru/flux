@@ -82,7 +82,6 @@ export function mapOcmPoi(poi: OcmPoi): RawCharger | null {
     },
     connectors: connections.map(mapConnection),
     pricing: null,
-    raw: poi,
   };
 }
 

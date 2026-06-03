@@ -100,7 +100,6 @@ function mapFeature(f: NdwFeature): RawCharger | null {
     },
     connectors: extractConnectors(p),
     pricing: null,
-    raw: f,
   };
 }
 
