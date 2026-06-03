@@ -211,11 +211,19 @@ export function ChargingMapClient() {
                 </Card>
               </motion.div>
             ) : (
-              <Card>
-                <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                  {t("select_hint")}
-                </CardContent>
-              </Card>
+              <motion.div
+                key="placeholder"
+                variants={isDesktop ? cardVariants : slideUp}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <Card>
+                  <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                    {t("select_hint")}
+                  </CardContent>
+                </Card>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

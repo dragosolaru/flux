@@ -254,47 +254,42 @@ export function TripClient() {
           className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-[max-height] duration-300"
           style={{ maxHeight: planExpanded ? "45vh" : "3rem", overflow: planExpanded ? "auto" : "hidden" }}
         >
-          {/* Handle row: toggle button + separate edit button (no nested interactives) */}
-          <div className="sticky top-0 z-10 flex w-full items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
+          {/* Handle row: ONE toggle button (contains the chevron) + a separate
+              edit button — no nested interactive elements. */}
+          <div className="sticky top-0 z-10 flex w-full items-center justify-between gap-2 rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
             <button
               onClick={() => setPlanExpanded((v) => !v)}
               className="flex min-w-0 flex-1 items-center gap-2"
               aria-expanded={planExpanded}
               aria-label={planExpanded ? t("see_map") : t("see_plan")}
             >
-              {!planExpanded && (
-                <span className="truncate text-sm font-medium text-foreground">
-                  {originShort} → {destinationShort}
-                  {activePlan.totalDistanceKm > 0 && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {Math.round(activePlan.totalDistanceKm)} km · {Math.floor(activePlan.drivingMinutes / 60)}h {activePlan.drivingMinutes % 60}min
-                    </span>
-                  )}
-                </span>
+              {planExpanded ? (
+                <>
+                  <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                </>
+              ) : (
+                <>
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {originShort} → {destinationShort}
+                    {activePlan.totalDistanceKm > 0 && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {Math.round(activePlan.totalDistanceKm)} km · {Math.floor(activePlan.drivingMinutes / 60)}h {activePlan.drivingMinutes % 60}min
+                      </span>
+                    )}
+                  </span>
+                  <ChevronUp className="ml-auto size-4 shrink-0 text-muted-foreground" />
+                </>
               )}
-              {planExpanded && <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />}
             </button>
-            <div className="ml-2 flex shrink-0 items-center gap-2">
-              {planExpanded && (
-                <button
-                  onClick={() => setFormCollapsed(false)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {t("edit_btn")}
-                </button>
-              )}
+            {planExpanded && (
               <button
-                onClick={() => setPlanExpanded((v) => !v)}
-                aria-expanded={planExpanded}
-                aria-label={planExpanded ? t("see_map") : t("see_plan")}
+                onClick={() => setFormCollapsed(false)}
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
-                {planExpanded ? (
-                  <ChevronDown className="size-4 text-muted-foreground" />
-                ) : (
-                  <ChevronUp className="size-4 text-muted-foreground" />
-                )}
+                {t("edit_btn")}
               </button>
-            </div>
+            )}
           </div>
 
           <div className="space-y-4 px-4 pb-6 pt-2">

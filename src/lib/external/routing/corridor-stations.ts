@@ -194,22 +194,36 @@ function chargerToStation(charger: Charger): ChargingStation {
  * first); on any error or empty result falls back to the live Overpass query so
  * trips still work before the charger migrations are applied.
  */
+// Cap cold-area ingestion so a long, un-ingested corridor degrades to the fast
+// Overpass fallback instead of blocking the trip-plan request while every tile
+// is fetched + upserted.
+const ENSURE_FRESH_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("ensureAreaFresh timeout")), ms),
+    ),
+  ]);
+}
+
 export async function fetchCorridorStations(
   polyline: [number, number][] | null,
   origin: RoutePoint,
   destination: RoutePoint,
 ): Promise<ChargingStation[]> {
+  const bbox = computeBBox(polyline, origin, destination);
   try {
-    const bbox = computeBBox(polyline, origin, destination);
-    await ensureAreaFresh(bbox);
+    await withTimeout(ensureAreaFresh(bbox), ENSURE_FRESH_TIMEOUT_MS);
+    // ensureAreaFresh succeeded → trust the PostGIS result, even when empty
+    // (a genuinely empty area shouldn't trigger a redundant Overpass round-trip).
     const chargers = await findInBBox({ bbox, limit: 500 });
-    if (chargers.length > 0) {
-      return preferFast(chargers.map(chargerToStation));
-    }
+    return preferFast(chargers.map(chargerToStation));
   } catch {
-    // fall through to Overpass below
+    // Cold-area timeout, RPC missing (pre-migration), or query error → Overpass.
+    return fetchCorridorStationsOverpass(polyline, origin, destination);
   }
-  return fetchCorridorStationsOverpass(polyline, origin, destination);
 }
 
 /**
