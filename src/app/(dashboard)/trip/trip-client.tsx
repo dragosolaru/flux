@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { StopCard } from "@/components/trip/StopCard";
@@ -20,6 +21,20 @@ interface TripResponse {
   deratingPct: number;
 }
 
+interface NominatimReverseResult {
+  display_name: string;
+}
+
+async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Flux-TripPlanner/1.0" },
+  });
+  if (!res.ok) throw new Error("reverse geocode failed");
+  const data = await res.json() as NominatimReverseResult;
+  return data.display_name;
+}
+
 export function TripClient() {
   const t = useTranslations("trip");
   const { data: vehicles } = useVehicles();
@@ -31,9 +46,37 @@ export function TripClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [locating, setLocating] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const canPlan = origin !== null && destination !== null;
+
+  function handleLocateOrigin() {
+    if (!navigator.geolocation) {
+      toast.error(t("use_my_location"));
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const name = await reverseGeocode(lat, lng);
+          setOrigin({ name, lat, lng });
+        } catch {
+          toast.error(t("use_my_location"));
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        toast.error(t("use_my_location"));
+        setLocating(false);
+      },
+      { timeout: 10000 },
+    );
+  }
 
   async function handlePlan() {
     if (!canPlan) return;
@@ -111,6 +154,9 @@ export function TripClient() {
               value={origin}
               onChange={setOrigin}
               icon={<Navigation className="size-4" />}
+              onLocate={handleLocateOrigin}
+              locating={locating}
+              locateTitle={locating ? t("locating") : t("use_my_location")}
             />
 
             <GeocodingSearch

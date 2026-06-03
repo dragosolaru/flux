@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MapPin, X, Loader2 } from "lucide-react";
+import { MapPin, X, Loader2, LocateFixed } from "lucide-react";
 
 export interface GeoPoint {
   name: string;
@@ -14,6 +14,9 @@ interface GeocodingSearchProps {
   value: GeoPoint | null;
   onChange: (point: GeoPoint | null) => void;
   icon?: React.ReactNode;
+  locating?: boolean;
+  onLocate?: () => void;
+  locateTitle?: string;
 }
 
 interface NominatimResult {
@@ -26,7 +29,7 @@ function shortName(displayName: string): string {
   return displayName.split(",")[0]?.trim() ?? displayName;
 }
 
-export function GeocodingSearch({ placeholder, value, onChange, icon }: GeocodingSearchProps) {
+export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle }: GeocodingSearchProps) {
   const [inputValue, setInputValue] = useState(value ? shortName(value.name) : "");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,6 +100,11 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
     setOpen(false);
   }
 
+  // Determine right slot content and input padding
+  const hasLocateBtn = !!onLocate;
+  // When locate button is present: pr-16 to make room for two icons on the right
+  const inputPr = hasLocateBtn ? "pr-16" : "pr-9";
+
   return (
     <div ref={containerRef} className="relative">
       <div className="relative flex items-center">
@@ -109,9 +117,9 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
           onChange={handleInputChange}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder={placeholder}
-          className="w-full rounded-lg border bg-background py-2 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className={`w-full rounded-lg border bg-background py-2 pl-9 ${inputPr} text-sm focus:outline-none focus:ring-2 focus:ring-ring`}
         />
-        <span className="absolute right-3">
+        <span className="absolute right-3 flex items-center gap-1">
           {loading ? (
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
           ) : value ? (
@@ -119,6 +127,19 @@ export function GeocodingSearch({ placeholder, value, onChange, icon }: Geocodin
               <X className="size-4" />
             </button>
           ) : null}
+          {hasLocateBtn && (
+            <button
+              onClick={onLocate}
+              title={locateTitle}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {locating ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <LocateFixed className="size-4" />
+              )}
+            </button>
+          )}
         </span>
       </div>
 
