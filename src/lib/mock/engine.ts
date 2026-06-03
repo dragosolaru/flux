@@ -167,11 +167,17 @@ export function tick(
   const elapsedMs = now.getTime() - fromTime.getTime();
   if (elapsedMs <= 0) return snapshot;
 
+  // Cap simulation to max 24 hours to avoid runaway loops on stale lastTickAt
+  const MAX_SIMULATE_MS = 24 * 60 * 60 * 1000;
+  const simulateFrom = elapsedMs > MAX_SIMULATE_MS
+    ? new Date(now.getTime() - MAX_SIMULATE_MS)
+    : fromTime;
+
   const scenario = getScenario(snapshot.scenarioId);
   if (!scenario) return { ...snapshot, lastTickAt: now.toISOString() };
 
   let current = snapshot;
-  let cursor = fromTime;
+  let cursor = simulateFrom;
   let prevMotion: MotionState = snapshot.motionState;
 
   while (cursor < now) {

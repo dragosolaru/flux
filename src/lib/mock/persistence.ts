@@ -79,28 +79,29 @@ export async function saveSnapshot(
   next: MockVehicleSnapshot,
 ): Promise<void> {
   const supabase = createSupabaseAdminClient();
+  const sanitized: MockVehicleSnapshot = { ...next, state: sanitizeState(next.state) };
 
   // Detect session boundaries by comparing open-session fields
   if (prev) {
-    await maybeCloseChargingSession(supabase, vehicleId, prev, next);
-    await maybeCloseTrip(supabase, vehicleId, prev, next);
+    await maybeCloseChargingSession(supabase, vehicleId, prev, sanitized);
+    await maybeCloseTrip(supabase, vehicleId, prev, sanitized);
   }
 
   // Upsert the snapshot row
   await supabase.from("mock_vehicle_state").upsert({
     vehicle_id: vehicleId,
-    state: next.state,
-    motion_state: next.motionState,
-    scenario_id: next.scenarioId,
-    last_tick_at: next.lastTickAt,
-    vehicle_spec: next.vehicleSpec ?? null,
-    active_charging_session_start: next.activeChargingSessionStart,
-    active_charging_session_network: next.activeChargingSessionNetwork,
-    active_charging_session_start_soc: next.activeChargingSessionStartSoc,
-    active_trip_start: next.activeTripStart,
-    active_trip_start_lat: next.activeTripStartLat,
-    active_trip_start_lng: next.activeTripStartLng,
-    active_trip_start_odometer_km: next.activeTripStartOdometerKm,
+    state: sanitized.state,
+    motion_state: sanitized.motionState,
+    scenario_id: sanitized.scenarioId,
+    last_tick_at: sanitized.lastTickAt,
+    vehicle_spec: sanitized.vehicleSpec ?? null,
+    active_charging_session_start: sanitized.activeChargingSessionStart,
+    active_charging_session_network: sanitized.activeChargingSessionNetwork,
+    active_charging_session_start_soc: sanitized.activeChargingSessionStartSoc,
+    active_trip_start: sanitized.activeTripStart,
+    active_trip_start_lat: sanitized.activeTripStartLat,
+    active_trip_start_lng: sanitized.activeTripStartLng,
+    active_trip_start_odometer_km: sanitized.activeTripStartOdometerKm,
   });
 }
 
