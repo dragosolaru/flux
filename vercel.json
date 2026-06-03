@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/internal/warm?region=ro", "schedule": "0 3 * * *" },
+    { "path": "/api/internal/warm?region=eu", "schedule": "30 3 * * *" }
+  ]
+}

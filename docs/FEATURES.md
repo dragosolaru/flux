@@ -591,19 +591,58 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 ---
 
-## 33. Charger Data Platform — Ingestion & Normalization (M1)
+## 33. Charger Data Platform (PostGIS, deduped, multi-source)
 
-**What it does:** Fetches charging stations for a bounding box from multiple public sources and normalizes them into a single `RawCharger[]` shape (the input to dedup/merge, built in a later milestone). Sources: OpenChargeMap (primary discovery), OpenStreetMap/Overpass (secondary discovery), and ChargePrice (pricing enrichment only, keyed by OCM id). Connector types are canonicalized to a shared enum, power is normalized to kW (handling messy OSM `maxpower` strings), and operator names are slugified with a small alias map. Every source connector returns `[]` on error and never throws, so a failing source degrades gracefully.
+**What it does:** A fast, deduplicated, confidence-scored charging-station dataset
+stored in **PostGIS**, fed by **hybrid ingestion** (lazy cache-through on request
++ scheduled hot-region warm-refresh) from OpenChargeMap (primary), OpenStreetMap/
+Overpass (secondary), and ChargePrice (pricing enrichment). Replaces the slow
+per-request live aggregation with stored, queryable data. Europe/Romania scope,
+global-ready. Design: `docs/superpowers/specs/2026-06-03-charger-data-platform-design.md`.
 
-**How to use:** `fetchAllSources(bbox)` from `src/lib/chargers/ingest/index.ts` runs OCM + Overpass in parallel (`Promise.allSettled`), concatenates fulfilled results, and runs ChargePrice enrichment over the combined list. This is what the repository orchestrator (`ingestArea`, M3) calls. Individual connectors (`ocmConnector`, `overpassConnector`) expose `fetchTile(bbox)`; `enrichPricing(raws)` enriches OCM rows.
+**Pipeline:** `fetchAllSources(bbox)` (OCM+Overpass in parallel + ChargePrice
+enrich) → `clusterChargers(raws, existing)` (spatial ≤60m + fuzzy operator/
+connector/name matching, merge by source priority, connector union) →
+`computeConfidence` (independent-source agreement + completeness − conflict) →
+`upsert_charger` RPC (geography construction server-side). Orchestrated by
+`ingestArea(bbox)` in `repository.ts`; `ensureAreaFresh(bbox)` runs it only for
+stale tiles (Redis freshness keys, 7-day lazy TTL).
 
-**Key files:**
-- `src/lib/chargers/normalize.ts` — `canonicalConnectorType`, `parsePowerKw`, `slugifyOperator`, `mergeConnectors`
-- `src/lib/chargers/ingest/ocm.ts` — `ocmConnector` + `mapOcmPoi`
-- `src/lib/chargers/ingest/overpass.ts` — `overpassConnector` + `mapOverpassElement`
-- `src/lib/chargers/ingest/chargeprice.ts` — `enrichPricing`
-- `src/lib/chargers/ingest/index.ts` — `fetchAllSources`
-- `src/lib/chargers/types.ts` — shared `RawCharger`/`ChargerConnector`/`SourceConnector` contracts
-- `src/lib/chargers/__tests__/` — `normalize.test.ts`, `ingest.test.ts` (mapper unit tests with inline fixtures, no live network)
+**Query APIs** (auth + rate-limited `chargers` bucket, Zod-validated; return
+`Charger[]`):
+- `GET /api/chargers/nearby?lat&lng&radius&minKw&connector&minConfidence&limit` — `ST_DWithin` + distance sort; triggers lazy ingest.
+- `GET /api/chargers?bbox=minLng,minLat,maxLng,maxLat&…` — viewport query; triggers lazy ingest.
+- `GET /api/chargers/search?q&country&limit` — trigram name/operator search (DB only, no ingest).
+- `GET /api/chargers/[id]` — single canonical charger.
 
-**Dependencies:** Env: `OPEN_CHARGE_MAP_API_KEY` (optional, recommended for reliable OCM), `CHARGEPRICE_API_KEY` (optional; pricing stays null if unset). No new npm packages.
+**Scheduled refresh:** `vercel.json` crons hit `GET /api/internal/warm?region=ro|eu`
+(Vercel `Authorization: Bearer $CRON_SECRET`, or manual `x-webhook-secret`
+with `INGEST_WEBHOOK_SECRET`; fails closed 503 if neither set) → `ingestArea` over
+predefined hot bboxes.
+
+**Tiles & cache:** `tiles.ts` quantizes bboxes to a ~0.1° grid; Upstash Redis
+stores per-tile freshness so overlapping requests reuse ingestion work.
+
+**Key files:** `src/lib/chargers/{types,tiles,normalize,dedup,confidence,query,repository}.ts`,
+`src/lib/chargers/ingest/{ocm,overpass,chargeprice,index}.ts`,
+`src/app/api/chargers/{route,nearby/route,search/route,[id]/route}.ts`,
+`src/app/api/internal/warm/route.ts`, `vercel.json`,
+`supabase/migrations/017_chargers.sql` (tables + GIST/trigram indexes),
+`018_charger_queries.sql` (read RPCs), `019_charger_upsert.sql` (upsert RPC),
+`src/lib/chargers/__tests__/` (normalize, ingest, dedup, confidence, query).
+
+**Deployment prerequisites:** apply migrations 017–019 to Supabase (enables
+`postgis` + `pg_trgm`). Env: `OPEN_CHARGE_MAP_API_KEY` (recommended),
+`CHARGEPRICE_API_KEY` (optional), `CRON_SECRET` and/or `INGEST_WEBHOOK_SECRET`,
+existing Upstash vars. **Until migrations are applied the `/api/chargers/*`
+routes error;** the existing live `/api/charging-stations` map endpoint is
+unchanged and keeps working in the meantime. Wiring the map/planner UI onto this
+platform is the next milestone (M6).
+
+**Charger tables are shared reference data — not user-scoped** (no per-user RLS);
+this is a deliberate, documented exception to the `.eq(user_id)` rule, which
+applies only to user data.
+
+**Status:** backend complete (M0–M5), 75 tests pass. M6 (UI rewiring) + M7
+(observability surfacing) pending. ABRP-grade planner reading from this data is
+spec #2.
