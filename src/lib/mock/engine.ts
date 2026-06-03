@@ -146,8 +146,6 @@ function applyChunk(
   if (step.climateOn !== undefined) state.isClimateOn = step.climateOn;
   if (step.driverTempC !== undefined) state.driverTempC = step.driverTempC;
 
-  state.recordedAt = new Date().toISOString();
-
   return { ...snapshot, state, motionState: step.motionState };
 }
 
@@ -198,7 +196,13 @@ export function tick(
     cursor = new Date(cursor.getTime() + chunkSeconds * 1000);
   }
 
-  return { ...current, lastTickAt: now.toISOString() };
+  // Stamp recordedAt from the simulation clock (deterministic for a given
+  // `now`) rather than wall-clock time inside the chunk loop.
+  return {
+    ...current,
+    state: { ...current.state, recordedAt: now.toISOString() },
+    lastTickAt: now.toISOString(),
+  };
 }
 
 // ---------------------------------------------------------------------------
