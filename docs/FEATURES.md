@@ -545,3 +545,22 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 - `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `garage.menu_deactivate/deactivate_confirm_*` and `settings.inactive_vehicles_title/reactivate/delete_*` keys
 
 **Dependencies:** `canAddVehicle` from `src/lib/subscription.ts`; `DropdownMenu` + `AlertDialog` from shadcn/ui (already present); no new npm packages.
+
+---
+
+## 32. Dashboard Display Polish
+
+**What it does:** Four display improvements to the main dashboard:
+
+1. **Location label:** The location stat chip now shows a human-readable city name (e.g. "Prague", "Munich") instead of raw coordinates. Uses a coordinate → city mapping for all mock scenario locations. Coordinates outside the mapping fall back to `"lat, lng"` format.
+2. **Defensive battery display:** The big SOC number only renders if `batteryLevel` is 0–100. Any out-of-range or corrupt value shows `—` instead of a horror number.
+3. **Odometer polish:** 0 or null odometer shows `— km`; non-zero values are shown to 1 decimal place.
+4. **Temperature chip icon colour:** Thermometer icon is blue below 5 °C, default/gray for 5–20 °C, and amber above 20 °C.
+
+**How to use:** Visible automatically on `/dashboard`.
+
+**Key files:**
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — all display logic
+- `src/lib/mock/location-label.ts` — `mockLocationLabel(lat, lng)` utility
+
+**Dependencies:** No new npm packages.

@@ -26,6 +26,7 @@ import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BrandKey } from "@/lib/brands/types";
+import { mockLocationLabel } from "@/lib/mock/location-label";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 
@@ -60,7 +61,12 @@ function getSocColor(level: number): string {
 // --------------------------------------------------------------------------
 function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string }) {
   const td = useTranslations("dashboard");
-  const soc = state?.batteryLevel ?? 0;
+  const rawSoc = state?.batteryLevel;
+  const displayBattery =
+    typeof rawSoc === "number" && rawSoc >= 0 && rawSoc <= 100
+      ? Math.round(rawSoc)
+      : "—";
+  const soc = typeof displayBattery === "number" ? displayBattery : 0;
   const fresh = state ? isDataFresh(state.recordedAt) : false;
 
   return (
@@ -91,8 +97,10 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
         ) : (
           <>
             <div className="text-7xl font-bold tabular-nums leading-none">
-              {soc}
-              <span className="ml-1 text-3xl text-muted-foreground">%</span>
+              {displayBattery}
+              {typeof displayBattery === "number" && (
+                <span className="ml-1 text-3xl text-muted-foreground">%</span>
+              )}
             </div>
             {state?.batteryRangeKm != null && (
               <div className="text-2xl text-muted-foreground">
@@ -186,7 +194,7 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
       ? {
           key: "location",
           icon: <MapPin className="size-4 text-primary" />,
-          value: `${state.latitude.toFixed(2)}, ${state.longitude.toFixed(2)}`,
+          value: mockLocationLabel(state.latitude, state.longitude),
           label: td("chip_location"),
         }
       : null,
