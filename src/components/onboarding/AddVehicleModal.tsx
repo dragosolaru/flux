@@ -4,7 +4,7 @@ import { cloneElement, isValidElement, useEffect, useState, type ChangeEvent, ty
 import type { ReactElement, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Lock, PlusCircle, X } from "lucide-react";
+import { CheckCircle, CheckCircle2, Lock, PlusCircle, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
   }
 
   const [step, setStep] = useState<Step>("details");
-  const [model, setModel] = useState(TESLA_MODELS[0]);
+  const [model, setModel] = useState(TESLA_MODELS[0]!);
   const [nickname, setNickname] = useState("");
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [scenario, setScenario] = useState<ScenarioValue>("commuter");
@@ -65,7 +65,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
   function reset() {
     setStep("details");
-    setModel(TESLA_MODELS[0]);
+    setModel(TESLA_MODELS[0]!);
     setNickname("");
     setYear(String(new Date().getFullYear()));
     setScenario("commuter");
@@ -84,6 +84,13 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
       setModel(decoded.model);
       if (decoded.year !== null) setYear(String(decoded.year));
     }
+  }
+
+  function clearVin() {
+    setVin("");
+    setVinInfo(null);
+    setModel(TESLA_MODELS[0]!);
+    setYear(String(new Date().getFullYear()));
   }
 
   function close() {
@@ -202,23 +209,17 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="vin">{t("add_vehicle.vin_label")}</Label>
-                    <Input
-                      id="vin"
-                      placeholder={t("add_vehicle.vin_placeholder")}
-                      value={vin}
-                      onChange={handleVinChange}
-                      maxLength={17}
-                      className="font-mono uppercase"
-                    />
-                    {vinInfo && (
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        {t("add_vehicle.vin_detected", {
-                          variant: `${vinInfo.model} ${vinInfo.variant}`,
-                          year: vinInfo.year ?? "—",
-                        })}
-                      </p>
-                    )}
+                    <Label htmlFor="year">{t("add_vehicle.field_year")}</Label>
+                    <select
+                      id="year"
+                      value={year}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setYear(e.target.value)}
+                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                    >
+                      {Array.from({ length: 8 }, (_, i) => 2025 - i).map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">
@@ -235,17 +236,36 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="year">{t("add_vehicle.field_year")}</Label>
-                    <select
-                      id="year"
-                      value={year}
-                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setYear(e.target.value)}
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                    >
-                      {Array.from({ length: 8 }, (_, i) => 2025 - i).map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
+                    <Label htmlFor="vin">{t("add_vehicle.vin_label")}</Label>
+                    <div className="relative">
+                      <Input
+                        id="vin"
+                        placeholder={t("add_vehicle.vin_placeholder")}
+                        value={vin}
+                        onChange={handleVinChange}
+                        maxLength={17}
+                        className="font-mono uppercase pr-8"
+                      />
+                      {vin && (
+                        <button
+                          type="button"
+                          onClick={clearVin}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label="Clear VIN"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    {vinInfo && (
+                      <p className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                        <CheckCircle className="size-4 shrink-0" />
+                        {t("add_vehicle.vin_detected", {
+                          variant: `${vinInfo.model} ${vinInfo.variant}`,
+                          year: vinInfo.year ?? "—",
+                        })}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
