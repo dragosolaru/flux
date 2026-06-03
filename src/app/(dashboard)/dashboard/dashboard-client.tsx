@@ -201,7 +201,17 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
     state.exteriorTempC != null
       ? {
           key: "temp",
-          icon: <Thermometer className="size-4 text-amber-400" />,
+          icon: (
+            <Thermometer
+              className={`size-4 ${
+                state.exteriorTempC < 5
+                  ? "text-blue-400"
+                  : state.exteriorTempC <= 20
+                    ? "text-muted-foreground"
+                    : "text-amber-400"
+              }`}
+            />
+          ),
           value: `${state.exteriorTempC.toFixed(0)}°C`,
           label: td("chip_temp"),
         }
@@ -210,7 +220,10 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
       ? {
           key: "odometer",
           icon: <Zap className="size-4 text-blue-400" />,
-          value: `${Math.round(state.odometerKm).toLocaleString()} km`,
+          value:
+            state.odometerKm > 0
+              ? `${state.odometerKm.toFixed(1)} km`
+              : "— km",
           label: td("chip_odometer"),
         }
       : null,
