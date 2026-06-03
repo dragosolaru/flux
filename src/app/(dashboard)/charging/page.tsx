@@ -31,9 +31,23 @@ export default async function ChargingPage({
   if (!session?.user?.id) redirect("/login");
 
   const { v: vehicleId } = await searchParams;
-  if (!vehicleId) redirect("/garage");
 
   const supabase = createSupabaseAdminClient();
+
+  if (!vehicleId) {
+    const { data: first } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (first) redirect(`/charging?v=${(first as { id: string }).id}`);
+    redirect("/garage");
+  }
+
   const { data: vehicle } = await supabase
     .from("vehicles")
     .select("id, display_name, nickname")
