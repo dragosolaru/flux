@@ -588,3 +588,22 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 - `src/lib/mock/location-label.ts` — `mockLocationLabel(lat, lng)` utility
 
 **Dependencies:** No new npm packages.
+
+---
+
+## 33. Charger Data Platform — Ingestion & Normalization (M1)
+
+**What it does:** Fetches charging stations for a bounding box from multiple public sources and normalizes them into a single `RawCharger[]` shape (the input to dedup/merge, built in a later milestone). Sources: OpenChargeMap (primary discovery), OpenStreetMap/Overpass (secondary discovery), and ChargePrice (pricing enrichment only, keyed by OCM id). Connector types are canonicalized to a shared enum, power is normalized to kW (handling messy OSM `maxpower` strings), and operator names are slugified with a small alias map. Every source connector returns `[]` on error and never throws, so a failing source degrades gracefully.
+
+**How to use:** `fetchAllSources(bbox)` from `src/lib/chargers/ingest/index.ts` runs OCM + Overpass in parallel (`Promise.allSettled`), concatenates fulfilled results, and runs ChargePrice enrichment over the combined list. This is what the repository orchestrator (`ingestArea`, M3) calls. Individual connectors (`ocmConnector`, `overpassConnector`) expose `fetchTile(bbox)`; `enrichPricing(raws)` enriches OCM rows.
+
+**Key files:**
+- `src/lib/chargers/normalize.ts` — `canonicalConnectorType`, `parsePowerKw`, `slugifyOperator`, `mergeConnectors`
+- `src/lib/chargers/ingest/ocm.ts` — `ocmConnector` + `mapOcmPoi`
+- `src/lib/chargers/ingest/overpass.ts` — `overpassConnector` + `mapOverpassElement`
+- `src/lib/chargers/ingest/chargeprice.ts` — `enrichPricing`
+- `src/lib/chargers/ingest/index.ts` — `fetchAllSources`
+- `src/lib/chargers/types.ts` — shared `RawCharger`/`ChargerConnector`/`SourceConnector` contracts
+- `src/lib/chargers/__tests__/` — `normalize.test.ts`, `ingest.test.ts` (mapper unit tests with inline fixtures, no live network)
+
+**Dependencies:** Env: `OPEN_CHARGE_MAP_API_KEY` (optional, recommended for reliable OCM), `CHARGEPRICE_API_KEY` (optional; pricing stays null if unset). No new npm packages.
