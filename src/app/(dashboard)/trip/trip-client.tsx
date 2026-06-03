@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
@@ -11,6 +12,7 @@ import { StopCard } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
+import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant } from "@/lib/external/routing/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
@@ -121,7 +123,10 @@ export function TripClient() {
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
   return (
-    <div className="relative -mx-4 -mt-6 -mb-4 md:-mx-8 md:-mb-6" style={{ height: "calc(100dvh - 3.5rem - 3.75rem)" }}>
+    <div
+      className="relative -mx-4 -mt-6 -mb-4 md:-mx-8 md:-mb-6"
+      style={{ height: "calc(100dvh - 3.5rem - 3.75rem - env(safe-area-inset-bottom))" }}
+    >
       {/* Full-screen map */}
       <div className="absolute inset-0">
         <TripMap
@@ -238,19 +243,25 @@ export function TripClient() {
       </div>
 
       {/* Results panel — bottom slide-up, collapsible */}
+      <AnimatePresence>
       {plan && activePlan && (
-        <div
+        <motion.div
           ref={panelRef}
-          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-all duration-300"
+          variants={slideUp}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-[max-height] duration-300"
           style={{ maxHeight: planExpanded ? "45vh" : "3rem", overflow: planExpanded ? "auto" : "hidden" }}
         >
-          {/* Drag handle row — tap to toggle */}
-          <button
-            onClick={() => setPlanExpanded((v) => !v)}
-            className="sticky top-0 z-10 flex w-full items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl"
-            aria-label={planExpanded ? t("see_map") : t("see_plan")}
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2">
+          {/* Handle row: toggle button + separate edit button (no nested interactives) */}
+          <div className="sticky top-0 z-10 flex w-full items-center justify-between rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
+            <button
+              onClick={() => setPlanExpanded((v) => !v)}
+              className="flex min-w-0 flex-1 items-center gap-2"
+              aria-expanded={planExpanded}
+              aria-label={planExpanded ? t("see_map") : t("see_plan")}
+            >
               {!planExpanded && (
                 <span className="truncate text-sm font-medium text-foreground">
                   {originShort} → {destinationShort}
@@ -262,23 +273,29 @@ export function TripClient() {
                 </span>
               )}
               {planExpanded && <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />}
-            </div>
+            </button>
             <div className="ml-2 flex shrink-0 items-center gap-2">
               {planExpanded && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setFormCollapsed(false); }}
-                  className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+                <button
+                  onClick={() => setFormCollapsed(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
                 >
                   {t("edit_btn")}
-                </span>
+                </button>
               )}
-              {planExpanded ? (
-                <ChevronDown className="size-4 text-muted-foreground" />
-              ) : (
-                <ChevronUp className="size-4 text-muted-foreground" />
-              )}
+              <button
+                onClick={() => setPlanExpanded((v) => !v)}
+                aria-expanded={planExpanded}
+                aria-label={planExpanded ? t("see_map") : t("see_plan")}
+              >
+                {planExpanded ? (
+                  <ChevronDown className="size-4 text-muted-foreground" />
+                ) : (
+                  <ChevronUp className="size-4 text-muted-foreground" />
+                )}
+              </button>
             </div>
-          </button>
+          </div>
 
           <div className="space-y-4 px-4 pb-6 pt-2">
             {/* Variant selector — alternative roads × charging strategies */}
@@ -292,6 +309,7 @@ export function TripClient() {
                     <button
                       key={v.id}
                       onClick={() => setActiveVariant(i)}
+                      aria-pressed={active}
                       className={`flex shrink-0 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
                         active
                           ? "border-primary bg-primary/10"
@@ -382,8 +400,9 @@ export function TripClient() {
               </p>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
