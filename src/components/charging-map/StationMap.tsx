@@ -31,7 +31,15 @@ const OPERATIONAL_COLOR = "#16a34a";
 const OFFLINE_COLOR = "#6b7280";
 const SELECTED_COLOR = "#2563eb";
 
-function makeIcon(likelyOperational: boolean, selected: boolean) {
+// Only three distinct icons exist (operational / offline / selected); cache them
+// so we don't re-parse SVG and allocate a divIcon per marker on every render.
+const iconCache = new Map<string, L.DivIcon>();
+
+function makeIcon(likelyOperational: boolean, selected: boolean): L.DivIcon {
+  const key = selected ? "selected" : likelyOperational ? "operational" : "offline";
+  const cached = iconCache.get(key);
+  if (cached) return cached;
+
   const color = selected ? SELECTED_COLOR : likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
   const scale = selected ? 1.4 : 1;
   const w = Math.round(24 * scale);
@@ -41,13 +49,15 @@ function makeIcon(likelyOperational: boolean, selected: boolean) {
       d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"/>
     <circle cx="12" cy="12" r="5" fill="white" fill-opacity="0.9"/>
   </svg>`;
-  return L.divIcon({
+  const icon = L.divIcon({
     html: svg,
     className: "",
     iconSize: [w, h],
     iconAnchor: [w / 2, h],
     popupAnchor: [0, -h],
   });
+  iconCache.set(key, icon);
+  return icon;
 }
 
 const USER_MARKER_ICON = L.divIcon({

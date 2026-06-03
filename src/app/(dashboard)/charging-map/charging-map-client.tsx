@@ -64,6 +64,42 @@ interface QueryArea {
   radiusKm: number;
 }
 
+// A row of mutually-exclusive filter chips. `filter_all` labels are resolved
+// through i18n; everything else is a literal (kW thresholds, connector names).
+function FilterChips<T extends string | number>({
+  label,
+  options,
+  value,
+  onChange,
+  allLabel,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  allLabel: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto">
+      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
+      {options.map((opt) => (
+        <button
+          key={String(opt.value)}
+          onClick={() => onChange(opt.value)}
+          aria-pressed={value === opt.value}
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+            value === opt.value
+              ? "border-primary bg-primary/10 text-foreground"
+              : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+          }`}
+        >
+          {opt.label === "filter_all" ? allLabel : opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Mobile (below Tailwind `lg`) panel slides up; desktop fades in.
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -165,40 +201,20 @@ export function ChargingMapClient() {
 
       {/* Filter bar — minimum power + connector type */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="shrink-0 text-xs text-muted-foreground">{t("filter_power")}</span>
-          {POWER_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setMinKw(opt.value)}
-              aria-pressed={minKw === opt.value}
-              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                minKw === opt.value
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-              }`}
-            >
-              {opt.label === "filter_all" ? t("filter_all") : opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="shrink-0 text-xs text-muted-foreground">{t("filter_connector")}</span>
-          {CONNECTOR_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setConnector(opt.value)}
-              aria-pressed={connector === opt.value}
-              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                connector === opt.value
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-              }`}
-            >
-              {opt.label === "filter_all" ? t("filter_all") : opt.label}
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          label={t("filter_power")}
+          options={POWER_OPTIONS}
+          value={minKw}
+          onChange={setMinKw}
+          allLabel={t("filter_all")}
+        />
+        <FilterChips
+          label={t("filter_connector")}
+          options={CONNECTOR_OPTIONS}
+          value={connector}
+          onChange={setConnector}
+          allLabel={t("filter_all")}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
