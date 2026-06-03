@@ -11,7 +11,7 @@ export type ConnectorType =
   | "schuko"
   | "other";
 
-export type ChargerSourceId = "ocm" | "osm" | "chargeprice";
+export type ChargerSourceId = "ocm" | "osm" | "chargeprice" | "bnetza" | "ndw";
 
 export interface ChargerAddress {
   street: string | null;

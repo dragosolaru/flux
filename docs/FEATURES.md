@@ -595,14 +595,17 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 **What it does:** A fast, deduplicated, confidence-scored charging-station dataset
 stored in **PostGIS**, fed by **hybrid ingestion** (lazy cache-through on request
-+ scheduled hot-region warm-refresh) from OpenChargeMap (primary), OpenStreetMap/
-Overpass (secondary), and ChargePrice (pricing enrichment). Replaces the slow
-per-request live aggregation with stored, queryable data. Europe/Romania scope,
-global-ready. Design: `docs/superpowers/specs/2026-06-03-charger-data-platform-design.md`.
++ scheduled hot-region warm-refresh) from four open sources: OpenChargeMap (global,
+CC BY 4.0), OpenStreetMap/Overpass (global, ODbL), **BNetzA** (Germany — official
+Ladesäulenregister, ArcGIS REST, no auth, daily updates, DL-DE 2.0 ≈ CC BY), and
+**NDW/DOT-NL** (Netherlands — OCPI GeoJSON bbox API, no auth, near-real-time, Open
+Data). ChargePrice provides pricing enrichment. Replaces slow per-request live
+aggregation with stored, queryable data. Europe/Romania scope, global-ready.
+Design: `docs/superpowers/specs/2026-06-03-charger-data-platform-design.md`.
 
-**Pipeline:** `fetchAllSources(bbox)` (OCM+Overpass in parallel + ChargePrice
-enrich) → `clusterChargers(raws, existing)` (spatial ≤60m + fuzzy operator/
-connector/name matching, merge by source priority, connector union) →
+**Pipeline:** `fetchAllSources(bbox)` (OCM + Overpass + BNetzA + NDW in parallel
++ ChargePrice enrich) → `clusterChargers(raws, existing)` (spatial ≤60m + fuzzy
+operator/connector/name matching, merge by source priority, connector union) →
 `computeConfidence` (independent-source agreement + completeness − conflict) →
 `upsert_charger` RPC (geography construction server-side). Orchestrated by
 `ingestArea(bbox)` in `repository.ts`; `ensureAreaFresh(bbox)` runs it only for
@@ -624,7 +627,7 @@ predefined hot bboxes.
 stores per-tile freshness so overlapping requests reuse ingestion work.
 
 **Key files:** `src/lib/chargers/{types,tiles,normalize,dedup,confidence,query,repository}.ts`,
-`src/lib/chargers/ingest/{ocm,overpass,chargeprice,index}.ts`,
+`src/lib/chargers/ingest/{ocm,overpass,bnetza,ndw,chargeprice,index}.ts`,
 `src/app/api/chargers/{route,nearby/route,search/route,[id]/route}.ts`,
 `src/app/api/internal/warm/route.ts`, `vercel.json`,
 `supabase/migrations/017_chargers.sql` (tables + GIST/trigram indexes),
@@ -643,6 +646,6 @@ platform is the next milestone (M6).
 this is a deliberate, documented exception to the `.eq(user_id)` rule, which
 applies only to user data.
 
-**Status:** backend complete (M0–M5), 75 tests pass. M6 (UI rewiring) + M7
-(observability surfacing) pending. ABRP-grade planner reading from this data is
-spec #2.
+**Status:** backend complete (M0–M5 + BNetzA/NDW connectors), 75 tests pass.
+M6 (UI rewiring) + M7 (observability surfacing) pending. ABRP-grade planner
+reading from this data is spec #2.
