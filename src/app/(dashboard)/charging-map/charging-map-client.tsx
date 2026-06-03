@@ -1,12 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LocateFixed } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
@@ -20,41 +18,44 @@ const StationMap = dynamic(() => import("@/components/charging-map/StationMap"),
 const DEFAULT_LAT = 44.4268;
 const DEFAULT_LNG = 26.1025;
 
-interface UserLocation {
+interface GeoCoords {
   lat: number;
   lng: number;
 }
 
-function useUserLocation() {
-  const [location, setLocation] = useState<UserLocation>({
-    lat: DEFAULT_LAT,
-    lng: DEFAULT_LNG,
-  });
-  const [locating, setLocating] = useState(false);
-
-  const locate = useCallback(() => {
+function useSilentAutoLocate(onSuccess: (coords: GeoCoords) => void) {
+  useEffect(() => {
     if (!navigator.geolocation) return;
-    setLocating(true);
+    // Silent one-shot locate on mount — 3s timeout, no error shown on denial.
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
+        onSuccess({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      () => setLocating(false),
-      { timeout: 8000 },
+      () => undefined,
+      { timeout: 3000 },
     );
+  // onSuccess is stable (useCallback in parent), so this runs once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // No auto-locate on mount: the map already centres on Bucharest, and an
-  // unsolicited geolocation prompt on page load is poor UX. The user triggers
-  // locate() explicitly via the "My location" button.
-  return { location, locate, locating };
 }
 
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<ChargingStation | null>(null);
-  const { location, locate, locating } = useUserLocation();
+  const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+  const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
+
+  const handleLocate = useCallback((lat: number, lng: number) => {
+    setCenter({ lat, lng });
+    setUserLocation({ lat, lng });
+  }, []);
+
+  const handleSilentLocate = useCallback((coords: GeoCoords) => {
+    setCenter(coords);
+    setUserLocation(coords);
+  }, []);
+
+  useSilentAutoLocate(handleSilentLocate);
 
   const {
     data: stations = [],
@@ -62,10 +63,10 @@ export function ChargingMapClient() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["charging-stations", location.lat, location.lng],
+    queryKey: ["charging-stations", center.lat, center.lng],
     queryFn: () =>
       apiFetch<ChargingStation[]>(
-        `/api/charging-stations?lat=${location.lat}&lng=${location.lng}`,
+        `/api/charging-stations?lat=${center.lat}&lng=${center.lng}`,
       ),
     staleTime: 300_000,
   });
@@ -83,10 +84,6 @@ export function ChargingMapClient() {
                 : `${stations.length} stations near you`}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={locate} disabled={locating} className="shrink-0">
-          <LocateFixed className={`size-4 mr-1.5 ${locating ? "animate-pulse" : ""}`} />
-          {locating ? "Locating…" : "My location"}
-        </Button>
       </div>
 
       <p className="text-xs text-muted-foreground/70">{t("disclaimer")}</p>
@@ -110,9 +107,11 @@ export function ChargingMapClient() {
               ) : (
                 <StationMap
                   stations={stations}
-                  center={location}
+                  center={center}
                   selected={selected}
                   onSelect={setSelected}
+                  userLocation={userLocation}
+                  onUserLocate={handleLocate}
                 />
               )}
             </div>

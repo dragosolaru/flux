@@ -441,7 +441,9 @@
     "schedule_no_virtual_key": "Configurează Virtual Key pentru a programa încărcarea"
   },
   "chargingMap": {
-    "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia."
+    "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia.",
+    "locate_me": "Locația mea",
+    "location_error": "Nu s-a putut determina locația"
   },
   "auth": {
     "title_login": "Bine ai revenit",
@@ -507,7 +509,9 @@
     "stops_count_zero": "Fără opriri",
     "stops_count_one": "1 oprire",
     "stops_count_other": "{count} opriri",
-    "charging_time_label": "+{duration} încărcare"
+    "charging_time_label": "+{duration} încărcare",
+    "use_my_location": "Folosește locația mea",
+    "locating": "Se determină locația…"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

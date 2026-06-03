@@ -162,11 +162,13 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Fallback behaviour:** `GET /api/charging-stations` first tries OpenChargeMap. On any error (403, network, timeout) it falls back to the static `STATIONS` dataset filtered by haversine distance within the requested radius. No error is returned to the client.
 
-**i18n:** `chargingMap.disclaimer` key present in all 5 locales — shown as attribution text on the map page.
+**i18n:** `chargingMap.disclaimer`, `chargingMap.locate_me`, `chargingMap.location_error` keys present in all 5 locales.
 
-**Key files:** `src/components/charging-map/StationMap.tsx`, `src/lib/external/charging-networks/stations.ts`, `.../availability.ts`, `.../meta.ts`, `src/app/api/charging-map/route.ts`, `src/app/api/charging-stations/route.ts`.
+**User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On click it calls `navigator.geolocation`, pans the map to the user's position (`flyTo` zoom 13), drops a blue dot marker (Leaflet `divIcon`), and reloads stations for the new center. On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast. i18n keys: `chargingMap.locate_me`, `chargingMap.location_error`.
 
-**Dependencies:** Leaflet/react-leaflet. Station data is a **static seeded dataset**; availability is simulated.
+**Key files:** `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/lib/external/charging-networks/stations.ts`, `.../availability.ts`, `.../meta.ts`, `src/app/api/charging-map/route.ts`, `src/app/api/charging-stations/route.ts`.
+
+**Dependencies:** Leaflet/react-leaflet, sonner. Station data is a **static seeded dataset**; availability is simulated.
 
 ---
 
@@ -176,9 +178,11 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **How to use:** UI `/trip` (`GeocodingSearch`, `TripMap`, `TripPlanResult`, `StopCard`, `CostSummary`, `TripComparison`). API: `POST /api/trip-plan` (vehicle/origin/SOC/destination → `planTrip`), `GET /api/geocode` (Nominatim search, edge runtime).
 
-**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/*`.
+**Use my location (origin):** The "From" field has a `LocateFixed` icon button on the right. On click it calls `navigator.geolocation`, then reverse-geocodes via Nominatim (`/reverse`) to get a readable address, and sets that as the origin. Spinner shown while locating. Errors shown via `sonner` toast. i18n keys: `trip.use_my_location`, `trip.locating`.
 
-**Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Nominatim (geocoding), Leaflet, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).
+**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
+
+**Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).
 
 ---
 

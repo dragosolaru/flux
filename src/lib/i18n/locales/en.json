@@ -441,7 +441,9 @@
     "schedule_no_virtual_key": "Set up Virtual Key to schedule charging"
   },
   "chargingMap": {
-    "disclaimer": "Data provided by OpenChargeMap. Availability may vary."
+    "disclaimer": "Data provided by OpenChargeMap. Availability may vary.",
+    "locate_me": "My location",
+    "location_error": "Could not get your location"
   },
   "auth": {
     "title_login": "Welcome back",
@@ -507,7 +509,9 @@
     "stops_count_zero": "No stops",
     "stops_count_one": "1 stop",
     "stops_count_other": "{count} stops",
-    "charging_time_label": "+{duration} charging"
+    "charging_time_label": "+{duration} charging",
+    "use_my_location": "Use my location",
+    "locating": "Getting location…"
   },
   "notFoundPage": {
     "heading": "Page not found",
