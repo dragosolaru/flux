@@ -4,10 +4,12 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
+import { cardVariants, slideUp } from "@/lib/animations/variants";
 import type { Charger } from "@/lib/chargers/types";
 
 export type { Charger };
@@ -45,8 +47,22 @@ interface QueryArea {
   radiusKm: number;
 }
 
+// Mobile (below Tailwind `lg`) panel slides up; desktop fades in.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
+  const isDesktop = useIsDesktop();
   const [selected, setSelected] = useState<Charger | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
@@ -85,7 +101,7 @@ export function ChargingMapClient() {
     placeholderData: keepPreviousData,
   });
 
-  const displayName = selected ? (selected.name ?? selected.operator ?? "Stație") : null;
+  const displayName = selected ? (selected.name ?? selected.operator ?? t("station_fallback")) : null;
   const displayCity = selected?.address.city ?? null;
   const displayPower =
     selected != null
@@ -100,15 +116,15 @@ export function ChargingMapClient() {
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Charging Map</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
             {isLoading
-              ? "Loading stations…"
+              ? t("loading")
               : isError
-                ? "Could not load stations"
+                ? t("load_error")
                 : isFetching
-                  ? `${stations.length} stations · updating…`
-                  : `${stations.length} stations in view`}
+                  ? t("updating", { count: stations.length })
+                  : t("stations_in_view", { count: stations.length })}
           </p>
         </div>
       </div>
@@ -125,10 +141,10 @@ export function ChargingMapClient() {
               ) : isError ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted">
                   <p className="text-sm font-medium text-destructive">
-                    Failed to load stations
+                    {t("load_error_detail")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {error instanceof Error ? error.message : "Unknown error"}
+                    {error instanceof Error ? error.message : t("unknown_error")}
                   </p>
                 </div>
               ) : (
@@ -148,50 +164,60 @@ export function ChargingMapClient() {
 
         {/* Detail panel */}
         <div>
-          {selected ? (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{displayName}</CardTitle>
-                {displayCity && (
-                  <p className="text-sm text-muted-foreground">{displayCity}</p>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Max power</span>
-                  <span className="font-medium">
-                    {displayPower != null ? `${displayPower} kW` : "Unknown"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Connectors</span>
-                  <span className="font-medium">{totalConnectors}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <span
-                    className={`font-medium ${
-                      isLikelyOperational ? "text-chart-2" : "text-destructive"
-                    }`}
-                  >
-                    {isLikelyOperational ? "Operational" : "Out of service"}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="w-full rounded-md border py-1.5 text-xs hover:bg-muted"
-                >
-                  Close
-                </button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                Click a station on the map to see details
-              </CardContent>
-            </Card>
-          )}
+          <AnimatePresence mode="wait">
+            {selected ? (
+              <motion.div
+                key={selected.id}
+                variants={isDesktop ? cardVariants : slideUp}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{displayName}</CardTitle>
+                    {displayCity && (
+                      <p className="text-sm text-muted-foreground">{displayCity}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("max_power")}</span>
+                      <span className="font-medium">
+                        {displayPower != null ? `${displayPower} kW` : t("unknown_power")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("connectors")}</span>
+                      <span className="font-medium">{totalConnectors}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("status")}</span>
+                      <span
+                        className={`font-medium ${
+                          isLikelyOperational ? "text-chart-2" : "text-destructive"
+                        }`}
+                      >
+                        {isLikelyOperational ? t("operational") : t("out_of_service")}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelected(null)}
+                      className="w-full rounded-md border py-1.5 text-xs hover:bg-muted"
+                    >
+                      {t("close")}
+                    </button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+              <Card>
+                <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                  {t("select_hint")}
+                </CardContent>
+              </Card>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

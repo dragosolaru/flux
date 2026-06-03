@@ -443,7 +443,23 @@
   "chargingMap": {
     "disclaimer": "Date furnizate de OpenChargeMap. Disponibilitatea poate varia.",
     "locate_me": "Locația mea",
-    "location_error": "Nu s-a putut determina locația"
+    "location_error": "Nu s-a putut determina locația",
+    "title": "Hartă încărcare",
+    "loading": "Se încarcă stațiile…",
+    "load_error": "Nu s-au putut încărca stațiile",
+    "load_error_detail": "Încărcarea stațiilor a eșuat",
+    "unknown_error": "Eroare necunoscută",
+    "stations_in_view": "{count} stații vizibile",
+    "updating": "{count} stații · se actualizează…",
+    "max_power": "Putere maximă",
+    "unknown_power": "Necunoscută",
+    "connectors": "Conectori",
+    "status": "Stare",
+    "operational": "Operațională",
+    "out_of_service": "Indisponibilă",
+    "close": "Închide",
+    "select_hint": "Apasă pe o stație de pe hartă pentru detalii",
+    "station_fallback": "Stație încărcare"
   },
   "auth": {
     "title_login": "Bine ai revenit",

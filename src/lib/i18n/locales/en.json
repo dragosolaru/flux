@@ -443,7 +443,23 @@
   "chargingMap": {
     "disclaimer": "Data provided by OpenChargeMap. Availability may vary.",
     "locate_me": "My location",
-    "location_error": "Could not get your location"
+    "location_error": "Could not get your location",
+    "title": "Charging Map",
+    "loading": "Loading stations…",
+    "load_error": "Could not load stations",
+    "load_error_detail": "Failed to load stations",
+    "unknown_error": "Unknown error",
+    "stations_in_view": "{count} stations in view",
+    "updating": "{count} stations · updating…",
+    "max_power": "Max power",
+    "unknown_power": "Unknown",
+    "connectors": "Connectors",
+    "status": "Status",
+    "operational": "Operational",
+    "out_of_service": "Out of service",
+    "close": "Close",
+    "select_hint": "Click a station on the map to see details",
+    "station_fallback": "Charging station"
   },
   "auth": {
     "title_login": "Welcome back",

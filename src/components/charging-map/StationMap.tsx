@@ -182,7 +182,7 @@ export default function StationMap({ stations, center, selected: _selected, onSe
         </Marker>
       )}
       {stations.map((s) => {
-        const label = s.name ?? s.operator ?? "Stație încărcare";
+        const label = s.name ?? s.operator ?? t("station_fallback");
         const connectorTypes = s.connectors.map((c) => c.type).join(", ");
         const likelyOperational = s.confidence >= 0.5;
         return (
@@ -202,7 +202,7 @@ export default function StationMap({ stations, center, selected: _selected, onSe
                 {!likelyOperational && (
                   <>
                     <br />
-                    <span style={{ color: "#dc2626" }}>Out of service</span>
+                    <span style={{ color: "#dc2626" }}>{t("out_of_service")}</span>
                   </>
                 )}
               </div>
