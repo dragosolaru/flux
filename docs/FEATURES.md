@@ -639,13 +639,23 @@ stores per-tile freshness so overlapping requests reuse ingestion work.
 `CHARGEPRICE_API_KEY` (optional), `CRON_SECRET` and/or `INGEST_WEBHOOK_SECRET`,
 existing Upstash vars. **Until migrations are applied the `/api/chargers/*`
 routes error;** the existing live `/api/charging-stations` map endpoint is
-unchanged and keeps working in the meantime. Wiring the map/planner UI onto this
-platform is the next milestone (M6).
+unchanged and keeps working in the meantime (still used by trip corridor search).
 
 **Charger tables are shared reference data — not user-scoped** (no per-user RLS);
 this is a deliberate, documented exception to the `.eq(user_id)` rule, which
 applies only to user data.
 
-**Status:** backend complete (M0–M5 + BNetzA/NDW connectors), 75 tests pass.
-M6 (UI rewiring) + M7 (observability surfacing) pending. ABRP-grade planner
+**M6 — Charging map UI rewired (complete):** `charging-map-client.tsx` and
+`StationMap.tsx` now consume `GET /api/chargers/nearby` (returns `Charger[]`
+from PostGIS) instead of the old live `/api/charging-stations` endpoint.
+Field mapping: `name ?? operator ?? "Stație încărcare"` for display name,
+`address.city` for city, `connectors[0].powerKw ?? maxPowerKw` for power,
+`connectors.map(c => c.type).join(", ")` for connector types, `confidence >= 0.5`
+as proxy for operational status. Viewport-adaptive queries (moveend debounce,
+radius from NE corner) and "N stations in view" count are preserved unchanged.
+Key files changed: `src/app/(dashboard)/charging-map/charging-map-client.tsx`,
+`src/components/charging-map/StationMap.tsx`.
+
+**Status:** backend complete (M0–M5 + BNetzA/NDW connectors) + M6 (UI rewiring)
+complete, 75 tests pass. M7 (observability surfacing) pending. ABRP-grade planner
 reading from this data is spec #2.

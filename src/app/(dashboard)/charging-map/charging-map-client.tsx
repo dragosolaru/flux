@@ -8,9 +8,9 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
-import type { ChargingStation } from "@/app/api/charging-stations/route";
+import type { Charger } from "@/lib/chargers/types";
 
-export type { ChargingStation };
+export type { Charger };
 
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
@@ -47,7 +47,7 @@ interface QueryArea {
 
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
-  const [selected, setSelected] = useState<ChargingStation | null>(null);
+  const [selected, setSelected] = useState<Charger | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
   // The query follows the visible map area; updated on pan/zoom via MoveWatcher.
@@ -76,14 +76,25 @@ export function ChargingMapClient() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["charging-stations", area.lat.toFixed(2), area.lng.toFixed(2), Math.round(area.radiusKm)],
+    queryKey: ["chargers-nearby", area.lat.toFixed(2), area.lng.toFixed(2), Math.round(area.radiusKm)],
     queryFn: () =>
-      apiFetch<ChargingStation[]>(
-        `/api/charging-stations?lat=${area.lat}&lng=${area.lng}&radius=${Math.round(area.radiusKm)}`,
+      apiFetch<Charger[]>(
+        `/api/chargers/nearby?lat=${area.lat}&lng=${area.lng}&radius=${Math.round(area.radiusKm)}`,
       ),
     staleTime: 300_000,
     placeholderData: keepPreviousData,
   });
+
+  const displayName = selected ? (selected.name ?? selected.operator ?? "Stație") : null;
+  const displayCity = selected?.address.city ?? null;
+  const displayPower =
+    selected != null
+      ? (selected.connectors[0]?.powerKw ?? selected.maxPowerKw)
+      : null;
+  const totalConnectors = selected
+    ? selected.connectors.reduce((sum, c) => sum + c.count, 0)
+    : 0;
+  const isLikelyOperational = selected != null && selected.confidence >= 0.5;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
@@ -140,30 +151,30 @@ export function ChargingMapClient() {
           {selected ? (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{selected.name}</CardTitle>
-                {selected.town && (
-                  <p className="text-sm text-muted-foreground">{selected.town}</p>
+                <CardTitle className="text-base">{displayName}</CardTitle>
+                {displayCity && (
+                  <p className="text-sm text-muted-foreground">{displayCity}</p>
                 )}
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max power</span>
                   <span className="font-medium">
-                    {selected.maxPowerKw != null ? `${selected.maxPowerKw} kW` : "Unknown"}
+                    {displayPower != null ? `${displayPower} kW` : "Unknown"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Connectors</span>
-                  <span className="font-medium">{selected.connectorCount}</span>
+                  <span className="font-medium">{totalConnectors}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status</span>
                   <span
                     className={`font-medium ${
-                      selected.isOperational ? "text-chart-2" : "text-destructive"
+                      isLikelyOperational ? "text-chart-2" : "text-destructive"
                     }`}
                   >
-                    {selected.isOperational ? "Operational" : "Out of service"}
+                    {isLikelyOperational ? "Operational" : "Out of service"}
                   </span>
                 </div>
                 <button
