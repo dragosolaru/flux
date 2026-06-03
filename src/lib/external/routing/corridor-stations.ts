@@ -1,3 +1,6 @@
+import { ensureAreaFresh } from "@/lib/chargers/repository";
+import { findInBBox } from "@/lib/chargers/query";
+import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ChargingStation, NetworkId, PlugType } from "@/lib/external/charging-networks/types";
 import type { RoutePoint } from "./types";
 
@@ -141,12 +144,80 @@ function mapElement(el: OverpassElement): ChargingStation | null {
   };
 }
 
+function preferFast(stations: ChargingStation[]): ChargingStation[] {
+  const fast = stations.filter((s) => s.maxKw >= FAST_KW_THRESHOLD);
+  const selected = fast.length >= 3 ? fast : stations;
+  return selected.slice(0, MAX_STATIONS);
+}
+
+const CONNECTOR_TO_PLUG: Record<ConnectorType, PlugType | null> = {
+  ccs2: "CCS",
+  ccs1: "CCS",
+  chademo: "CHAdeMO",
+  type2: "Type2",
+  type1: "Type2",
+  tesla: "Tesla",
+  schuko: null,
+  other: null,
+};
+
+function chargerToPlugTypes(charger: Charger): PlugType[] {
+  const plugs = new Set<PlugType>();
+  for (const c of charger.connectors) {
+    const plug = CONNECTOR_TO_PLUG[c.type];
+    if (plug) plugs.add(plug);
+  }
+  return plugs.size > 0 ? [...plugs] : ["CCS"];
+}
+
+function chargerToStation(charger: Charger): ChargingStation {
+  const operator = charger.operator ?? charger.operatorId;
+  const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
+  return {
+    id: charger.id,
+    networkId,
+    name: charger.name ?? charger.operator ?? "Charging Station",
+    lat: charger.lat,
+    lng: charger.lng,
+    maxKw: charger.maxPowerKw ?? 0,
+    totalStalls: charger.connectors.reduce((sum, c) => sum + c.count, 0) || 1,
+    plugTypes: chargerToPlugTypes(charger),
+    priceEurKwh: charger.pricing?.perKwh ?? null,
+    addressCity: charger.address.city ?? "",
+    addressCountry: charger.address.country ?? "RO",
+  };
+}
+
 /**
  * Fetch real fast-charging stations within a bounding box around the route
- * corridor from OpenStreetMap (Overpass). Returns [] on any error so the
- * caller can fall back to the static station set.
+ * corridor. Reads from the PostGIS charger platform (ensuring the area is fresh
+ * first); on any error or empty result falls back to the live Overpass query so
+ * trips still work before the charger migrations are applied.
  */
 export async function fetchCorridorStations(
+  polyline: [number, number][] | null,
+  origin: RoutePoint,
+  destination: RoutePoint,
+): Promise<ChargingStation[]> {
+  try {
+    const bbox = computeBBox(polyline, origin, destination);
+    await ensureAreaFresh(bbox);
+    const chargers = await findInBBox({ bbox, limit: 500 });
+    if (chargers.length > 0) {
+      return preferFast(chargers.map(chargerToStation));
+    }
+  } catch {
+    // fall through to Overpass below
+  }
+  return fetchCorridorStationsOverpass(polyline, origin, destination);
+}
+
+/**
+ * Legacy fallback: fetch corridor stations directly from OpenStreetMap
+ * (Overpass). Returns [] on any error so the caller can fall back to the static
+ * station set.
+ */
+export async function fetchCorridorStationsOverpass(
   polyline: [number, number][] | null,
   origin: RoutePoint,
   destination: RoutePoint,
@@ -174,10 +245,7 @@ export async function fetchCorridorStations(
       .map(mapElement)
       .filter((s): s is ChargingStation => s !== null);
 
-    const fast = mapped.filter((s) => s.maxKw >= FAST_KW_THRESHOLD);
-    const selected = fast.length >= 3 ? fast : mapped;
-
-    return selected.slice(0, MAX_STATIONS);
+    return preferFast(mapped);
   } catch {
     return [];
   }

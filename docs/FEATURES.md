@@ -656,6 +656,27 @@ radius from NE corner) and "N stations in view" count are preserved unchanged.
 Key files changed: `src/app/(dashboard)/charging-map/charging-map-client.tsx`,
 `src/components/charging-map/StationMap.tsx`.
 
-**Status:** backend complete (M0–M5 + BNetzA/NDW connectors) + M6 (UI rewiring)
-complete, 75 tests pass. M7 (observability surfacing) pending. ABRP-grade planner
-reading from this data is spec #2.
+**M7 — Ingest observability endpoint (complete):**
+`GET /api/internal/ingest-stats` returns the last 50 `ingest_runs` rows
+(ordered by `started_at` desc) plus a `summary`
+`{ totalRuns, okRuns, errorRuns, totalUpserted, lastRunAt }` for monitoring the
+ingestion pipeline. Secret auth identical to the warm cron route
+(`Authorization: Bearer $CRON_SECRET` or `x-webhook-secret: $INGEST_WEBHOOK_SECRET`;
+fails closed 503 if neither set, 401 if not authorized). Reads via
+`createSupabaseAdminClient()` (charger tables are shared reference data).
+`maxDuration = 15`. Key file: `src/app/api/internal/ingest-stats/route.ts`.
+
+**Trip corridor now reads from PostGIS (with Overpass fallback):**
+`fetchCorridorStations` (used by the trip planner) now computes the corridor
+bbox from the route polyline, calls `ensureAreaFresh(bbox)` then
+`findInBBox({ bbox, limit: 500 })`, and maps each `Charger` → `ChargingStation`
+(planner type). The "prefer DC fast ≥40kW, fall back to all if fewer than 3"
+logic is preserved. If the PostGIS query throws or returns empty it falls back to
+the legacy live Overpass query (`fetchCorridorStationsOverpass`), so trips keep
+working before the charger migrations are applied. Same function signature and
+return type — planner callers are unchanged. Key file:
+`src/lib/external/routing/corridor-stations.ts`.
+
+**Status:** backend complete (M0–M7 + BNetzA/NDW connectors) + M6 (UI rewiring)
+complete, 75 tests pass. Trip corridor search reads from the PostGIS platform
+(Overpass fallback). ABRP-grade planner reading from this data is spec #2.
