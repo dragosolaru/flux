@@ -251,13 +251,13 @@
     "free_tier_usage": "{used} din {max} facturi folosite luna aceasta",
     "upgrade_cta": "Upgrade la Pro"
   },
-  “pwa”: {
-    “install_title”: “Instalează Flux”,
-    “install_cta”: “Adaugă pe ecranul de start”,
-    “install_dismiss”: “Închide”,
-    “ios_hint”: “Apasă Share, apoi 'Adaugă pe ecran'”,
-    “cta”: “Adaugă pe ecranul principal”,
-    “dismiss”: “Nu acum”
+  "pwa": {
+    "install_title": "Instalează Flux",
+    "install_cta": "Adaugă pe ecranul de start",
+    "install_dismiss": "Închide",
+    "ios_hint": "Apasă Share, apoi 'Adaugă pe ecran'",
+    "cta": "Adaugă pe ecranul principal",
+    "dismiss": "Nu acum"
   },
   "getting_started": {
     "title": "Primii pași",
