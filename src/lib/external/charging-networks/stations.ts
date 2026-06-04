@@ -83,6 +83,18 @@ export const STATIONS: ChargingStation[] = [
   { id: "ion-bal-005", networkId: "ionity", name: "IONITY Thessaloniki Egnatia", lat: 40.621, lng: 22.956, maxKw: 350, totalStalls: 6, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Thessaloniki", addressCountry: "GR" },
   { id: "ion-bal-006", networkId: "ionity", name: "IONITY Larissa A1", lat: 39.638, lng: 22.419, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Larissa", addressCountry: "GR" },
   { id: "ion-bal-007", networkId: "ionity", name: "IONITY Lamia A1", lat: 38.900, lng: 22.431, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Lamia", addressCountry: "GR" },
+  // Bucharest → Sofia corridor (via Giurgiu / Ruse, A1/E79 Bulgaria)
+  { id: "bg-001", networkId: "enbw", name: "Charge4Europe Ruse A2", lat: 43.847, lng: 25.968, maxKw: 150, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Ruse", addressCountry: "BG" },
+  { id: "bg-002", networkId: "ionity", name: "IONITY Beli Izvor A3", lat: 43.415, lng: 23.946, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Beli Izvor", addressCountry: "BG" },
+  { id: "bg-003", networkId: "enbw", name: "EV Network Pleven E79", lat: 43.409, lng: 24.621, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.52, addressCity: "Pleven", addressCountry: "BG" },
+  { id: "bg-004", networkId: "enbw", name: "EV Network Lovech A3", lat: 43.136, lng: 24.715, maxKw: 100, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.52, addressCity: "Lovech", addressCountry: "BG" },
+  { id: "bg-005", networkId: "ionity", name: "IONITY Stara Zagora A1", lat: 42.432, lng: 25.637, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Stara Zagora", addressCountry: "BG" },
+  // Sofia → Thessaloniki via E79/A3 (Blagoevgrad corridor)
+  { id: "bg-006", networkId: "ionity", name: "IONITY Blagoevgrad A3", lat: 42.022, lng: 23.095, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Blagoevgrad", addressCountry: "BG" },
+  { id: "bg-007", networkId: "enbw", name: "EV Network Sandanski E79", lat: 41.563, lng: 23.280, maxKw: 120, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.52, addressCity: "Sandanski", addressCountry: "BG" },
+  // Kavala / eastern Greece (Thasos ferry gateway)
+  { id: "gr-001", networkId: "ionity", name: "IONITY Kavala Egnatia", lat: 40.937, lng: 24.401, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Kavala", addressCountry: "GR" },
+  { id: "gr-002", networkId: "enbw", name: "EV Network Xanthi E90", lat: 41.135, lng: 24.888, maxKw: 100, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Xanthi", addressCountry: "GR" },
 
   // IONITY Romania
   { id: "ion-ro-001", networkId: "ionity", name: "IONITY Boița", lat: 45.668, lng: 24.329, maxKw: 350, totalStalls: 6, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Boița", addressCountry: "RO" },

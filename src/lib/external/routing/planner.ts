@@ -128,10 +128,10 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const targetKm = kmFromStart + rangeNow * 0.85;
     const searchCenter = pointAlongRoute(polyline, targetKm, origin, destination, distanceKm);
 
-    // Find compatible station within 80km detour, prefer high power
+    // Find compatible station within 100km detour, prefer high power
     const candidates = allStations
       .map((st) => ({ st, dist: haversine(searchCenter, st) }))
-      .filter((c) => c.dist < 80)
+      .filter((c) => c.dist < 100)
       .sort((a, b) => (b.st.maxKw - a.st.maxKw) || (a.dist - b.dist));
 
     if (candidates.length === 0) {
