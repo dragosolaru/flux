@@ -197,7 +197,8 @@
     "delete_confirm_cta": "Supprimer définitivement",
     "scenario": {
       "label": "Scénario démo",
-      "help": "Change le comportement de conduite simulé pour ce véhicule démo."
+      "help": "Change le comportement de conduite simulé pour ce véhicule démo.",
+      "error": "Impossible de changer le scénario"
     },
     "account": {
       "name": "Nom",

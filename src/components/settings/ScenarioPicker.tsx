@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
 import { cn } from "@/lib/utils";
@@ -14,10 +15,12 @@ type ScenarioId = typeof SCENARIOS[number];
 interface ScenarioPickerProps {
   vehicleId: string;
   currentScenarioId: string | null;
+  disabled?: boolean;
 }
 
-export function ScenarioPicker({ vehicleId, currentScenarioId }: ScenarioPickerProps) {
+export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: ScenarioPickerProps) {
   const t = useTranslations();
+  const tSettings = useTranslations("settings");
   const qc = useQueryClient();
   const [selected, setSelected] = useState<ScenarioId>(
     (currentScenarioId as ScenarioId) ?? "commuter",
@@ -28,12 +31,18 @@ export function ScenarioPicker({ vehicleId, currentScenarioId }: ScenarioPickerP
     const next = e.target.value as ScenarioId;
     setSelected(next);
     startTransition(async () => {
-      await apiFetch(`/api/vehicles/${vehicleId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ scenarioId: next }),
-      });
-      // Invalidate vehicle state so dashboard reflects new scenario immediately
-      await qc.invalidateQueries({ queryKey: ["vehicle", vehicleId] });
+      try {
+        await apiFetch(`/api/vehicles/${vehicleId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ scenarioId: next }),
+        });
+        // Invalidate vehicle state so dashboard reflects new scenario immediately
+        await qc.invalidateQueries({ queryKey: ["vehicle", vehicleId] });
+        toast.success(tSettings("scenario.label"));
+      } catch {
+        toast.error(tSettings("scenario.error"));
+        setSelected((currentScenarioId as ScenarioId) ?? "commuter");
+      }
     });
   }
 
@@ -42,7 +51,7 @@ export function ScenarioPicker({ vehicleId, currentScenarioId }: ScenarioPickerP
       <select
         value={selected}
         onChange={handleChange}
-        disabled={isPending}
+        disabled={isPending || disabled}
         className={cn(
           "rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm",
           "disabled:opacity-50",

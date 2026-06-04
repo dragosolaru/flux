@@ -44,8 +44,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
+  const vehicles = data ?? [];
+
+  // Fetch scenario IDs for mock vehicles in a single query
+  const mockIds = vehicles.filter((v) => v.data_source === "mock").map((v) => v.id);
+  const scenarioMap: Record<string, string | null> = {};
+  if (mockIds.length > 0) {
+    const { data: mockStates } = await supabase
+      .from("mock_vehicle_state")
+      .select("vehicle_id, scenario_id")
+      .in("vehicle_id", mockIds);
+    for (const row of mockStates ?? []) {
+      scenarioMap[row.vehicle_id] = (row.scenario_id as string | null) ?? null;
+    }
+  }
+
   return NextResponse.json(
-    (data ?? []).map((v: {
+    vehicles.map((v: {
       id: string;
       brand: string;
       display_name: string;
@@ -65,6 +80,7 @@ export async function GET(req: NextRequest) {
       dataSource: v.data_source,
       virtualKeyPaired: v.virtual_key_paired ?? false,
       isActive: v.is_active,
+      ...(v.data_source === "mock" && { scenarioId: scenarioMap[v.id] ?? null }),
     })),
   );
 }

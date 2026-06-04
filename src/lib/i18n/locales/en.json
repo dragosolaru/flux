@@ -197,7 +197,8 @@
     "delete_confirm_cta": "Delete permanently",
     "scenario": {
       "label": "Demo scenario",
-      "help": "Changes the simulated driving behaviour for this demo vehicle."
+      "help": "Changes the simulated driving behaviour for this demo vehicle.",
+      "error": "Could not switch scenario"
     },
     "account": {
       "name": "Name",

@@ -197,7 +197,8 @@
     "delete_confirm_cta": "Végleges törlés",
     "scenario": {
       "label": "Demo forgatókönyv",
-      "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél."
+      "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél.",
+      "error": "Nem sikerült a forgatókönyv váltása"
     },
     "account": {
       "name": "Név",

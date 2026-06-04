@@ -197,7 +197,8 @@
     "delete_confirm_cta": "Șterge permanent",
     "scenario": {
       "label": "Scenariu demo",
-      "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo."
+      "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo.",
+      "error": "Nu s-a putut schimba scenariul"
     },
     "account": {
       "name": "Nume",

@@ -716,3 +716,23 @@ shows indexed-station counts and last-refresh time via a session-authed
 + map filters/highlight + M7 health card, 75 tests pass. Trip corridor search
 reads from the PostGIS platform (Overpass fallback). ABRP-grade planner reading
 from this data is spec #2.
+
+---
+
+## Scenario Switcher (mock vehicles)
+
+**What it does:** Lets users change the simulated driving behaviour of a demo/mock vehicle without losing odometer continuity. Four scenarios are available: `commuter`, `weekend-errands`, `road-trip`, `vacation`. On switch, the full `mock_vehicle_state` row is reseeded from `createInitialSnapshot` while the existing odometer value is carried over.
+
+**How to use it:** Settings → Vehicles section → expand a mock vehicle → select from the scenario dropdown. The dashboard reflects the new scenario immediately (TanStack Query invalidation).
+
+**API:** `PATCH /api/vehicles/[vehicleId]` with `{ scenarioId: "road-trip" }`. Returns 400 if the vehicle is not `data_source === "mock"` or if the scenario ID is invalid.
+
+**Key files:**
+- `src/app/api/vehicles/[vehicleId]/route.ts` — PATCH handler (scenario switch logic)
+- `src/app/api/vehicles/route.ts` — GET handler now returns `scenarioId` for mock vehicles
+- `src/components/settings/ScenarioPicker.tsx` — client-side `<select>` with loading + toast feedback
+- `src/app/(dashboard)/settings/settings-client.tsx` — wires ScenarioPicker per mock vehicle
+- `src/lib/mock/scenarios.ts` — `listScenarios()`, `getScenario()`
+- `src/lib/mock/seed.ts` — `createInitialSnapshot()`
+
+**Dependencies:** `mock_vehicle_state.scenario_id` column, `sonner` toast, `next-intl` (`settings.scenario.*` keys in all 5 locales).
