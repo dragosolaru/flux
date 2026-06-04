@@ -188,7 +188,9 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Use my location (origin):** The "From" field has a `LocateFixed` icon button on the right. On click it calls `navigator.geolocation`, then reverse-geocodes via Nominatim (`/reverse`) to get a readable address, and sets that as the origin. Spinner shown while locating. Errors shown via `sonner` toast. i18n keys: `trip.use_my_location`, `trip.locating`.
 
-**Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 vh). Tapping the drag-handle bar collapses it to a slim 3rem summary showing origin→destination + distance/time. Tapping again expands. i18n keys: `trip.see_map`, `trip.see_plan`.
+**Collapsible plan panel:** After route calculation the results panel slides up from the bottom (max 45 dvh). The handle bar is rendered **outside** the collapsible content area (separate from the framer-motion height-animated `<motion.div>`) so it is always visible regardless of scroll position. Tapping the handle collapses/expands via a spring animation on the content height. Collapsing resets to a slim handle showing origin→destination + distance/time; tapping re-expands. The previous `overflow: hidden` + sticky approach was dropped because it hid the handle when the user had scrolled before collapsing. i18n keys: `trip.see_map`, `trip.see_plan`.
+
+**Balkan / SEE corridor stations:** The static `STATIONS` dataset (`src/lib/external/charging-networks/stations.ts`) now includes 9 real-world stations covering the Cluj→Greece corridor via Serbia and Bulgaria: IONITY Belgrade, Niš, Sofia, Plovdiv, Thessaloniki, Larissa, Lamia + Tesla SC Sofia and Thessaloniki. This allows long-haul Balkan routes (e.g. Cluj → Athens, ~1700 km) to be planned end-to-end without "no stations found" gaps. `fetchCorridorStationsOverpass` also skips Overpass for bboxes >5°×8° (these always hit the 20s timeout and returned nothing).
 
 **Share to Tesla + preconditioning marks:** Each charging stop with a DC fast
 charger (≥50 kW) shows a battery-preconditioning badge on its `StopCard` —
