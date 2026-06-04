@@ -755,3 +755,30 @@ from this data is spec #2.
 - `src/lib/mock/seed.ts` — `createInitialSnapshot()`
 
 **Dependencies:** `mock_vehicle_state.scenario_id` column, `sonner` toast, `next-intl` (`settings.scenario.*` keys in all 5 locales).
+
+---
+
+## Mobile Layout — iOS / iPhone Safe-Area Fixes
+
+**What it does:** Ensures the app renders correctly on iPhone 15 (and any device with a Dynamic Island, notch, or home indicator gesture bar) by:
+1. **Notch / Dynamic Island padding** — `TopBar` wraps its content in an `<header>` with an extra `<div aria-hidden className="h-[env(safe-area-inset-top)]" />` spacer. On notchless devices this div is zero-height.
+2. **Home indicator / BottomNav** — `BottomNav` adds `pb-[env(safe-area-inset-bottom)]` so its touchable area never sits under the system gesture bar.
+3. **Scroll container isolation** — `main` in the dashboard layout gets `overscroll-behavior-y: contain` (prevents scroll chaining to the body) and `-webkit-overflow-scrolling: touch` (smooth inertia on iOS). `body` gets `overscroll-behavior: none` (prevents the browser's own pull-to-refresh competing with the app's custom pull-to-refresh gesture).
+4. **Scroll-to-top on nav re-tap** — `BottomNav` tapping an already-active tab now scrolls the `<main>` element instead of `window` (the actual scroll container in the layout).
+5. **Viewport** — `viewportFit: "cover"` in `src/app/layout.tsx` `Viewport` export makes iOS return non-zero values for all `env(safe-area-inset-*)` variables.
+
+**Key files:**
+- `src/app/layout.tsx` — `viewport.viewportFit: "cover"`
+- `src/components/layout/TopBar.tsx` — safe-area spacer div
+- `src/components/layout/BottomNav.tsx` — `pb-[env(safe-area-inset-bottom)]`, scroll-to-top fix
+- `src/app/globals.css` — `overscroll-behavior: none` on body, `overscroll-behavior-y: contain` + `-webkit-overflow-scrolling: touch` on main
+
+**Dependencies:** None — all standard CSS / React.
+
+---
+
+## Trip Planner — Multiple Route Variants
+
+**What it does:** Fixes the route variant deduplication logic that was collapsing "fastest" (charge to 70%) and "balanced" (charge to 95%) strategies into a single result when they produced the same stop count and similar total times. The dedup key now includes the strategy name, so the user always sees at least two distinct options (if both are feasible): one with shorter but more frequent stops, one with longer single stops.
+
+**Key file:** `src/lib/external/routing/planner.ts` — `planTripVariants`, dedup `sig` includes `v.strategy`.

@@ -62,7 +62,10 @@ export function TopBar() {
     .toUpperCase();
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b px-4 md:px-6">
+    <header className="shrink-0 bg-background">
+      {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
+      <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
+      <div className="flex h-14 items-center gap-3 border-b px-4 md:px-6">
       <div className="md:hidden flex items-center gap-2 font-semibold">Flux</div>
 
       <VehicleSwitcher />
@@ -148,6 +151,7 @@ export function TopBar() {
         open={addOpen}
         onOpenChange={setAddOpen}
       />
+      </div>
     </header>
   );
 }

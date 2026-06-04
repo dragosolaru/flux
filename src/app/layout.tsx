@@ -35,6 +35,10 @@ export const viewport: Viewport = {
   themeColor: "#09090b",
   width: "device-width",
   initialScale: 1,
+  // Required for env(safe-area-inset-*) to return non-zero values on iOS.
+  // Without this the notch/Dynamic Island overlaps TopBar and the
+  // home-indicator area overlaps BottomNav.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

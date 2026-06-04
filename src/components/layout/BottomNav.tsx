@@ -58,7 +58,7 @@ export function BottomNav() {
         return;
       }
       if (pathname === tab.href || pathname?.startsWith(`${tab.href}/`)) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        (document.querySelector("main") ?? window).scrollTo({ top: 0, behavior: "smooth" });
       } else {
         router.push(tab.href);
       }

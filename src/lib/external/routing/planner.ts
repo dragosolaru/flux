@@ -272,7 +272,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
   const distinct = built
     .sort((a, b) => a.plan.totalMinutes - b.plan.totalMinutes)
     .filter((v) => {
-      const sig = `${v.plan.stops.length}-${Math.round(v.plan.totalMinutes / 10)}`;
+      const sig = `${v.plan.stops.length}-${v.strategy}-${Math.round(v.plan.totalMinutes / 10)}`;
       if (seen.has(sig)) return false;
       seen.add(sig);
       return true;
