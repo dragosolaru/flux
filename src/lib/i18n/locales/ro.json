@@ -261,11 +261,12 @@
   },
   "getting_started": {
     "title": "Primii pași",
-    "dismiss": "Închide",
-    "step_vehicle": "Adaugă primul tău vehicul",
-    "step_receipt": "Încarcă prima factură",
-    "step_home": "Setează adresa de acasă",
-    "step_explore": "Explorează un scenariu demo"
+    "progress": "{done} / {total} completate",
+    "dismiss": "Am înțeles",
+    "step_vehicle": "Adaugă mașina ta",
+    "step_receipt": "Încarcă un bon",
+    "step_home": "Setează locația Acasă",
+    "step_explore": "Explorează demo-ul"
   },
   "dashboard": {
     "live_label": "Live",

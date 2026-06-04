@@ -260,12 +260,13 @@
     "dismiss": "Not now"
   },
   "getting_started": {
-    "title": "Getting started",
-    "dismiss": "Dismiss",
-    "step_vehicle": "Add your first vehicle",
-    "step_receipt": "Upload your first receipt",
-    "step_home": "Set your home address",
-    "step_explore": "Explore a demo scenario"
+    "title": "Getting Started",
+    "progress": "{done} / {total} complete",
+    "dismiss": "Got it",
+    "step_vehicle": "Add your vehicle",
+    "step_receipt": "Upload a receipt",
+    "step_home": "Set home location",
+    "step_explore": "Explore the demo"
   },
   "dashboard": {
     "live_label": "Live",

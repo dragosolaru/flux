@@ -261,11 +261,12 @@
   },
   "getting_started": {
     "title": "Erste Schritte",
-    "dismiss": "Schließen",
-    "step_vehicle": "Erstes Fahrzeug hinzufügen",
-    "step_receipt": "Ersten Beleg hochladen",
-    "step_home": "Heimatadresse festlegen",
-    "step_explore": "Demo-Szenario erkunden"
+    "progress": "{done} / {total} erledigt",
+    "dismiss": "Verstanden",
+    "step_vehicle": "Dein Fahrzeug hinzufügen",
+    "step_receipt": "Rechnung hochladen",
+    "step_home": "Heimstandort festlegen",
+    "step_explore": "Demo erkunden"
   },
   "dashboard": {
     "live_label": "Live",

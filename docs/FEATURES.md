@@ -528,17 +528,17 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 ## 28. Getting Started Checklist
 
-**What it does:** Shows a dismissible "Getting Started" card above the Hero card on the dashboard for new users. Tracks four steps: add a vehicle, upload a receipt, set a home address, and explore a demo scenario (shown only if a mock vehicle exists). The card disappears automatically when all three required steps are done, or when dismissed (persisted in `localStorage`).
+**What it does:** Shows a dismissible "Getting Started" card above the Hero card on the dashboard for new users. Tracks four steps: (1) add a vehicle, (2) upload a receipt, (3) set home location, (4) explore the demo — the last step never auto-completes and always links to `/garage`. Shows a "{done} / {total} complete" progress counter. The card auto-hides when all 4 steps are done, or immediately when dismissed ("Got it" button). Dismissed state is persisted in `localStorage` under key `"onboarding-dismissed"`. Checklist data is resolved server-side (Supabase) and passed as props to avoid a waterfall fetch.
 
-**How to use:** Visible automatically to users who haven't completed the checklist. Each incomplete step is a direct link to the relevant page. Once done or dismissed, it won't appear again (unless `localStorage` is cleared).
+**How to use:** Visible automatically to new users on the dashboard. Each incomplete step is a direct link (with a ChevronRight arrow) to the relevant page. Once dismissed or all steps are complete, the card is gone until `localStorage` is cleared.
 
 **Key files:**
-- `src/components/onboarding/GettingStartedCard.tsx` — client component (dismiss + step list)
+- `src/components/onboarding/GettingStartedCard.tsx` — client component (dismiss + step list + progress counter + motion entrance)
 - `src/app/(dashboard)/dashboard/page.tsx` — fetches checklist state server-side and passes to DashboardClient
 - `src/app/(dashboard)/dashboard/dashboard-client.tsx` — renders card above HeroCard
-- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `getting_started.*` keys
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `getting_started.*` keys (title, progress, dismiss, step_vehicle, step_receipt, step_home, step_explore)
 
-**Dependencies:** Supabase (`vehicles`, `documents`, `user_settings` tables), `GlassCard`.
+**Dependencies:** Supabase (`vehicles`, `documents`, `profiles` tables), `GlassCard`, Framer Motion (`cardVariants`).
 
 ---
 

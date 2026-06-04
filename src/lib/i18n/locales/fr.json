@@ -261,11 +261,12 @@
   },
   "getting_started": {
     "title": "Premiers pas",
-    "dismiss": "Fermer",
-    "step_vehicle": "Ajouter votre premier véhicule",
-    "step_receipt": "Télécharger votre premier reçu",
-    "step_home": "Définir votre adresse domicile",
-    "step_explore": "Explorer un scénario démo"
+    "progress": "{done} / {total} complété",
+    "dismiss": "Compris",
+    "step_vehicle": "Ajouter votre véhicule",
+    "step_receipt": "Télécharger un reçu",
+    "step_home": "Définir la maison",
+    "step_explore": "Explorer la démo"
   },
   "dashboard": {
     "live_label": "Live",
