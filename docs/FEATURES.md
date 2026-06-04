@@ -84,6 +84,16 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Dependencies:** Supabase, Tesla Fleet API (live), mock engine (default). Weather is mock-only (`mock-weather.ts`).
 
+### 3a. Dashboard polish — live badge pulse + pull-to-refresh
+
+**What:** (1) The `LiveBadge` status dot animates with a framer-motion opacity pulse (`[1, 0.4, 1]`) while `isFetching` is true, switching to static blue. (2) Mobile pull-to-refresh: `usePullToRefresh` detects a downward touch drag from `scrollTop === 0` and calls `refetch()` when the threshold (70 px) is crossed. A `Loader2` spinner appears at the top of the dashboard on mobile (`md:hidden`) while pulling or fetching, wrapped in `AnimatePresence` for a smooth fade.
+
+**How to use:** UI `/dashboard` — pull down on mobile to refresh; the Live badge pulses blue during any background fetch.
+
+**Key files:** `src/hooks/usePullToRefresh.ts` (gesture hook, returns `isPulling` + `pullProgress`), `src/app/(dashboard)/dashboard/dashboard-client.tsx` (wires everything), `src/lib/i18n/locales/*.json` (`dashboard.pull_to_refresh`, `dashboard.refreshing`).
+
+**Dependencies:** framer-motion v12, TanStack Query v5 (`isFetching`, `refetch`).
+
 ---
 
 ## 4. Charging

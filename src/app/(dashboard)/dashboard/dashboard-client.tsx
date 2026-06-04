@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   BatteryCharging,
   Fan,
+  Loader2,
   Lock,
   MapPin,
   RefreshCw,
@@ -12,6 +13,7 @@ import {
   Unlock,
   Zap,
 } from "lucide-react";
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -141,7 +143,8 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
   );
 }
 
-function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching: boolean; label: string }) {
+function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: boolean; label: string }) {
+  const dotColor = isFetching ? "bg-blue-400" : fresh ? "bg-emerald-400" : "bg-muted-foreground";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -150,15 +153,17 @@ function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching: b
           : "bg-white/8 text-muted-foreground"
       }`}
     >
-      <span
-        className={`size-1.5 rounded-full transition-colors ${
-          isFetching
-            ? "animate-pulse bg-blue-400"
-            : fresh
-              ? "animate-pulse bg-emerald-400"
-              : "bg-muted-foreground"
-        }`}
-      />
+      {isFetching ? (
+        <motion.span
+          className={`size-1.5 rounded-full ${dotColor}`}
+          animate={{ opacity: [1, 0.4, 1] }}
+          transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ) : (
+        <span
+          className={`size-1.5 rounded-full transition-colors ${fresh ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"}`}
+        />
+      )}
       {label}
     </span>
   );
@@ -426,10 +431,25 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist }: DashboardClientProps) {
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
-  usePullToRefresh(refetch);
+  const containerRef = useRef<HTMLElement>(null);
+  const { isPulling } = usePullToRefresh(containerRef, refetch, { disabled: isFetching });
 
   return (
-    <PageWrapper className="mx-auto max-w-xl gap-4 px-0">
+    <PageWrapper className="relative mx-auto max-w-xl gap-4 px-0">
+      <AnimatePresence>
+        {(isPulling || isFetching) && (
+          <motion.div
+            key="ptr-indicator"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-2 left-1/2 z-10 -translate-x-1/2 md:hidden"
+          >
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <VehicleNotifications vehicleId={vehicleId} />
 
       <GettingStartedCard data={checklist} />

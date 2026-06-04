@@ -1,50 +1,80 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const THRESHOLD_PX = 70;
+const DEFAULT_THRESHOLD = 70;
 
-// Attaches pull-to-refresh touch listeners to the nearest scrollable parent
-// (the layout's <main> element). Only activates when already at the top.
-export function usePullToRefresh(onRefresh: () => void) {
+export function usePullToRefresh(
+  containerRef: React.RefObject<HTMLElement | null>,
+  onRefresh: () => void,
+  options?: { threshold?: number; disabled?: boolean },
+): { isPulling: boolean; pullProgress: number } {
+  const threshold = options?.threshold ?? DEFAULT_THRESHOLD;
+  const disabled = options?.disabled ?? false;
+
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullProgress, setPullProgress] = useState(0);
+
   const startYRef = useRef<number | null>(null);
-  const pullingRef = useRef(false);
+  const isPullingRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
+  const disabledRef = useRef(disabled);
 
   useEffect(() => {
     onRefreshRef.current = onRefresh;
   });
 
   useEffect(() => {
-    // Find the scrollable <main> container the layout renders into
-    const el = document.querySelector("main");
+    disabledRef.current = disabled;
+  });
+
+  useEffect(() => {
+    isPullingRef.current = isPulling;
+  });
+
+  useEffect(() => {
+    const el: HTMLElement | null = containerRef.current ?? document.querySelector("main");
     if (!el) return;
 
     function onTouchStart(e: TouchEvent) {
+      if (disabledRef.current) return;
       if ((el as HTMLElement).scrollTop > 0) return;
       startYRef.current = e.touches[0].clientY;
-      pullingRef.current = false;
+      setIsPulling(false);
+      setPullProgress(0);
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (startYRef.current === null) return;
+      if (disabledRef.current || startYRef.current === null) return;
       const delta = e.touches[0].clientY - startYRef.current;
-      if (delta > THRESHOLD_PX) pullingRef.current = true;
+      if (delta <= 0) return;
+      const progress = Math.min(delta / threshold, 1);
+      setPullProgress(progress);
+      if (progress >= 1) {
+        setIsPulling(true);
+        e.preventDefault();
+      }
     }
 
     function onTouchEnd() {
-      if (pullingRef.current) onRefreshRef.current();
+      if (startYRef.current !== null && isPullingRef.current) {
+        onRefreshRef.current();
+      }
       startYRef.current = null;
-      pullingRef.current = false;
+      setIsPulling(false);
+      setPullProgress(0);
     }
 
     el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
     el.addEventListener("touchend", onTouchEnd);
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threshold]);
+
+  return { isPulling, pullProgress };
 }
