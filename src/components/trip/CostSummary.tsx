@@ -56,7 +56,6 @@ export function CostSummary({
     <div className="space-y-2">
       {/* Route header */}
       <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("route_label")}</p>
         <h2 className="text-base font-semibold leading-tight">
           {origin} → {destination}
         </h2>

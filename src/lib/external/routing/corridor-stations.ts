@@ -238,6 +238,9 @@ export async function fetchCorridorStationsOverpass(
 ): Promise<ChargingStation[]> {
   try {
     const bbox = computeBBox(polyline, origin, destination);
+    // Skip Overpass for very large corridors — query would hit the 20s timeout
+    // and return zero results. The static STATIONS list covers these long routes.
+    if (bbox.maxLat - bbox.minLat > 5 || bbox.maxLng - bbox.minLng > 8) return [];
     const box = `${bbox.minLat},${bbox.minLng},${bbox.maxLat},${bbox.maxLng}`;
     const query = `[out:json][timeout:20];(node["amenity"="charging_station"](${box});way["amenity"="charging_station"](${box}););out body center 500;`;
 

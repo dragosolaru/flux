@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -53,7 +53,6 @@ export function TripClient() {
   const [planExpanded, setPlanExpanded] = useState(true);
   const [locating, setLocating] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const canPlan = origin !== null && destination !== null;
 
@@ -102,7 +101,6 @@ export function TripClient() {
       setActiveVariant(0);
       setFormCollapsed(true);
       setPlanExpanded(true);
-      setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("infeasible_hint"));
     } finally {
@@ -283,17 +281,15 @@ export function TripClient() {
       <AnimatePresence>
       {plan && activePlan && (
         <motion.div
-          ref={panelRef}
           variants={slideUp}
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl transition-[max-height] duration-300"
-          style={{ maxHeight: planExpanded ? "45vh" : "3rem", overflow: planExpanded ? "auto" : "hidden" }}
+          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl"
         >
-          {/* Handle row: ONE toggle button (contains the chevron) + a separate
-              edit button — no nested interactive elements. */}
-          <div className="sticky top-0 z-10 flex w-full items-center justify-between gap-2 rounded-t-2xl bg-background/95 px-4 pb-1 pt-2 backdrop-blur-xl">
+          {/* Handle — always visible, outside the collapsible area so scroll
+              state never hides it. */}
+          <div className="flex w-full items-center justify-between gap-2 px-4 pb-1 pt-2">
             <button
               onClick={() => setPlanExpanded((v) => !v)}
               className="flex min-w-0 flex-1 items-center gap-2"
@@ -329,6 +325,12 @@ export function TripClient() {
             )}
           </div>
 
+          {/* Collapsible content — framer-motion height, always scrollable */}
+          <motion.div
+            animate={{ height: planExpanded ? "calc(45dvh - 2.5rem)" : 0 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+            className="overflow-y-auto overflow-x-hidden"
+          >
           <div className="space-y-4 px-4 pb-6 pt-2">
             {/* Variant selector — alternative roads × charging strategies */}
             {variants.length > 1 && (
@@ -447,6 +449,7 @@ export function TripClient() {
               </p>
             )}
           </div>
+          </motion.div>
         </motion.div>
       )}
       </AnimatePresence>

@@ -73,6 +73,17 @@ export const STATIONS: ChargingStation[] = [
   { id: "tsc-ro-oradea", networkId: "tesla-sc", name: "Tesla SC Oradea", lat: 47.061, lng: 21.946, maxKw: 150, totalStalls: 6, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Oradea", addressCountry: "RO" },
   { id: "tsc-ro-craiova", networkId: "tesla-sc", name: "Tesla SC Craiova", lat: 44.316, lng: 23.801, maxKw: 150, totalStalls: 4, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Craiova", addressCountry: "RO" },
 
+  // Balkan corridor (RO → GR via Serbia / Bulgaria)
+  { id: "ion-bal-001", networkId: "ionity", name: "IONITY Belgrade A1", lat: 44.797, lng: 20.460, maxKw: 350, totalStalls: 6, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Belgrade", addressCountry: "RS" },
+  { id: "ion-bal-002", networkId: "ionity", name: "IONITY Niš A1", lat: 43.323, lng: 21.899, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Niš", addressCountry: "RS" },
+  { id: "tsc-bal-001", networkId: "tesla-sc", name: "Tesla SC Sofia", lat: 42.680, lng: 23.319, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.46, addressCity: "Sofia", addressCountry: "BG" },
+  { id: "ion-bal-003", networkId: "ionity", name: "IONITY Sofia Ring Road", lat: 42.677, lng: 23.285, maxKw: 350, totalStalls: 6, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Sofia", addressCountry: "BG" },
+  { id: "ion-bal-004", networkId: "ionity", name: "IONITY Plovdiv Trakia", lat: 42.137, lng: 24.743, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Plovdiv", addressCountry: "BG" },
+  { id: "tsc-bal-002", networkId: "tesla-sc", name: "Tesla SC Thessaloniki", lat: 40.628, lng: 22.944, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.46, addressCity: "Thessaloniki", addressCountry: "GR" },
+  { id: "ion-bal-005", networkId: "ionity", name: "IONITY Thessaloniki Egnatia", lat: 40.621, lng: 22.956, maxKw: 350, totalStalls: 6, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Thessaloniki", addressCountry: "GR" },
+  { id: "ion-bal-006", networkId: "ionity", name: "IONITY Larissa A1", lat: 39.638, lng: 22.419, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Larissa", addressCountry: "GR" },
+  { id: "ion-bal-007", networkId: "ionity", name: "IONITY Lamia A1", lat: 38.900, lng: 22.431, maxKw: 350, totalStalls: 4, plugTypes: ["CCS"], priceEurKwh: 0.79, addressCity: "Lamia", addressCountry: "GR" },
+
   // IONITY Romania
   { id: "ion-ro-001", networkId: "ionity", name: "IONITY Boița", lat: 45.668, lng: 24.329, maxKw: 350, totalStalls: 6, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Boița", addressCountry: "RO" },
   { id: "ion-ro-002", networkId: "ionity", name: "IONITY Câmpina", lat: 45.123, lng: 25.741, maxKw: 350, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Câmpina", addressCountry: "RO" },
