@@ -551,6 +551,7 @@
     "variant_balanced": "Fewer stops",
     "share_to_tesla": "Send to Tesla",
     "share_success": "Sent to your Tesla's navigation",
+    "share_success_preconditioned": "Navigation + battery preconditioning sent",
     "share_error": "Could not send to Tesla",
     "precondition_auto": "Auto-preconditioning",
     "precondition_manual": "Precondition battery"

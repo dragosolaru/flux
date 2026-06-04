@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
-import { StopCard } from "@/components/trip/StopCard";
+import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
@@ -53,6 +53,7 @@ export function TripClient() {
   const [planExpanded, setPlanExpanded] = useState(true);
   const [locating, setLocating] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [sharedRoute, setSharedRoute] = useState(false);
 
   const canPlan = origin !== null && destination !== null;
 
@@ -99,6 +100,7 @@ export function TripClient() {
       });
       setPlan(result);
       setActiveVariant(0);
+      setSharedRoute(false);
       setFormCollapsed(true);
       setPlanExpanded(true);
     } catch (err) {
@@ -121,7 +123,14 @@ export function TripClient() {
     if (!teslaVehicle || !activePlan || !destination) return;
     setSharing(true);
     try {
-      await apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
+      // First non-SC fast stop gets auto-preconditioning.
+      const firstStop = activePlan.stops[0] ?? null;
+      const willPrecondition =
+        firstStop !== null &&
+        needsPreconditioning(firstStop.station.maxKw) &&
+        !isSuperchargerNetwork(firstStop.station.networkId);
+
+      const navCmd = apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
         method: "POST",
         body: JSON.stringify({
           command: "share_navigation",
@@ -139,7 +148,17 @@ export function TripClient() {
           },
         }),
       });
-      toast.success(t("share_success"));
+
+      const precondCmd = willPrecondition
+        ? apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
+            method: "POST",
+            body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
+          })
+        : Promise.resolve();
+
+      await Promise.all([navCmd, precondCmd]);
+      setSharedRoute(true);
+      toast.success(willPrecondition ? t("share_success_preconditioned") : t("share_success"));
     } catch {
       toast.error(t("share_error"));
     } finally {
@@ -432,7 +451,17 @@ export function TripClient() {
                       {t("stops_label")}
                     </p>
                     {activePlan.stops.map((stop, i) => (
-                      <StopCard key={i} stop={stop} index={i} />
+                      <StopCard
+                        key={i}
+                        stop={stop}
+                        index={i}
+                        preconditioned={
+                          sharedRoute &&
+                          i === 0 &&
+                          needsPreconditioning(stop.station.maxKw) &&
+                          !isSuperchargerNetwork(stop.station.networkId)
+                        }
+                      />
                     ))}
                   </div>
                 ) : (

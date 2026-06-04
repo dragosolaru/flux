@@ -551,6 +551,7 @@
     "variant_balanced": "Kevesebb megálló",
     "share_to_tesla": "Küldés a Teslának",
     "share_success": "Elküldve a Tesla navigációba",
+    "share_success_preconditioned": "Navigáció + akkumulátor előkondicionálás elküldve",
     "share_error": "Nem sikerült elküldeni a Teslának",
     "precondition_auto": "Automatikus előkondicionálás",
     "precondition_manual": "Akkumulátor előkondicionálása"

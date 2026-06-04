@@ -551,6 +551,7 @@
     "variant_balanced": "Mai puține opriri",
     "share_to_tesla": "Trimite la Tesla",
     "share_success": "Trimis în navigația Tesla",
+    "share_success_preconditioned": "Navigație + precondiționare baterie trimise",
     "share_error": "Nu s-a putut trimite la Tesla",
     "precondition_auto": "Precondiționare automată",
     "precondition_manual": "Precondiționează bateria"

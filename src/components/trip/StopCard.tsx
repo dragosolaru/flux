@@ -35,13 +35,16 @@ interface StopCardProps {
     distanceFromStartKm: number;
   };
   index: number;
+  /** True when the app auto-sent a precondition_max command for this stop. */
+  preconditioned?: boolean;
 }
 
-export function StopCard({ stop, index }: StopCardProps) {
+export function StopCard({ stop, index, preconditioned = false }: StopCardProps) {
   const t = useTranslations("trip");
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
   const precondition = needsPreconditioning(station.maxKw);
-  const autoPrecondition = isSuperchargerNetwork(station.networkId);
+  // Treat as auto when it's a Supercharger OR the app already sent precondition_max.
+  const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
 
   return (
     <div className="flex gap-3 rounded-xl border border-white/8 bg-white/5 p-3 backdrop-blur-sm">
