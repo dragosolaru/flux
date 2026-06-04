@@ -228,6 +228,9 @@
       "fast": "Rapide (≥50 kW)",
       "last_refresh": "Ultima actualizare",
       "never": "Neactualizat încă"
+    },
+    "install_app": {
+      "label": "Instalează aplicația"
     }
   },
   "ingest": {
@@ -257,7 +260,9 @@
     "install_dismiss": "Închide",
     "ios_hint": "Apasă Share, apoi 'Adaugă pe ecran'",
     "cta": "Adaugă pe ecranul principal",
-    "dismiss": "Nu acum"
+    "dismiss": "Nu acum",
+    "installed": "Instalat",
+    "unsupported_hint": "Folosește meniul browserului pentru a instala"
   },
   "getting_started": {
     "title": "Primii pași",

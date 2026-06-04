@@ -522,17 +522,20 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 ## 27. PWA — Installable App
 
-**What it does:** Makes Flux installable as a home-screen app on Android and iOS. A network-first service worker (`flux-v1` cache) pre-caches `/` and `/dashboard` on install and serves them as fallback when offline. Old caches are pruned on activate. An animated install banner (framer-motion `slideUp`) handles Android (`beforeinstallprompt`) and iOS (Share-sheet hint). iOS detection covers both classic UA string and iPadOS (MacIntel + touch). The iOS hint re-shows after 7 days; Android dismissal is permanent (localStorage key `pwa-install-dismissed`).
+**What it does:** Makes Flux installable as a home-screen app on Android and iOS. A network-first service worker (`flux-v1` cache) pre-caches `/` and `/dashboard` on install and serves them as fallback when offline. Old caches are pruned on activate. An animated install banner (framer-motion `slideUp`) handles Android (`beforeinstallprompt`) and iOS (Share-sheet hint). iOS detection covers both classic UA string and iPadOS (MacIntel + touch). The iOS hint re-shows after 7 days; Android dismissal is permanent (localStorage key `pwa-install-dismissed`). The `beforeinstallprompt` event is captured at module scope (`use-install-prompt.ts`, exposed via `useSyncExternalStore`) so both the banner and the Settings entry can trigger install regardless of mount order.
 
-**How to use:** On Android Chrome, a banner slides up from the bottom inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. Both can be dismissed. The canonical manifest is served by Next.js from `src/app/manifest.ts`. To test: open DevTools → Application → Manifest / Service Workers.
+**How to use:** On Android Chrome, a banner slides up from the bottom inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. Both can be dismissed. Additionally, **Settings → Preferences → Install app** always offers install: a button on Android (when installable), the Share-sheet hint on iOS, an "Installed" badge once running standalone, or a browser-menu hint otherwise. The canonical manifest is served by Next.js from `src/app/manifest.ts`. To test: open DevTools → Application → Manifest / Service Workers.
 
 **Key files:**
 - `public/sw.js` — network-first service worker (cache: `flux-v1`, app shell: `/`, `/dashboard`)
+- `src/lib/pwa/use-install-prompt.ts` — module-scope `beforeinstallprompt` capture + `useSyncExternalStore` hook + `promptInstall()` + `isIOS`/`isStandalone` helpers
 - `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount (client-only)
 - `src/components/pwa/InstallPrompt.tsx` — animated install banner (Android + iOS hint, `md:hidden`)
-- `src/app/(dashboard)/layout.tsx` — mounts both components
+- `src/components/pwa/InstallAppButton.tsx` — Settings control (install button / iOS hint / installed badge)
+- `src/app/(dashboard)/layout.tsx` — mounts SW registrar + banner
+- `src/app/(dashboard)/settings/settings-client.tsx` — "Install app" row in Preferences
 - `src/app/manifest.ts` — Web App Manifest (Next.js route handler)
-- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys (`install_title`, `install_cta`, `install_dismiss`, `ios_hint`)
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys (`install_title`, `install_cta`, `install_dismiss`, `ios_hint`, `installed`, `unsupported_hint`) + `settings.install_app.label`
 
 **Dependencies:** `framer-motion` (already in use). Requires HTTPS in production for SW registration.
 

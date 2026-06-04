@@ -1,58 +1,48 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Download, X } from "lucide-react";
 import { slideUp } from "@/lib/animations/variants";
+import { useInstallPrompt, promptInstall, isStandalone, isIOS } from "@/lib/pwa/use-install-prompt";
 
 const DISMISSED_KEY = "pwa-install-dismissed";
 const DISMISSED_IOS_KEY = "flux-pwa-ios-dismissed-at";
 const IOS_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
 type ShowState = "hidden" | "ios" | "native";
 
 export function InstallPrompt() {
   const t = useTranslations("pwa");
-  const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
-  const [show, setShow] = useState<ShowState>("hidden");
+  const { canInstall } = useInstallPrompt();
+  const [dismissed, setDismissed] = useState(false);
+  const [suppressed, setSuppressed] = useState(false); // standalone or snoozed
+  const [iosEligible, setIosEligible] = useState(false);
 
+  // One-time setup: decide iOS eligibility / suppression. setState is deferred
+  // via queueMicrotask to keep it out of the effect body.
   useEffect(() => {
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true);
-    if (isStandalone) return;
-
-    const ios =
-      (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) &&
-      !("MSStream" in window);
-
-    if (ios) {
-      const dismissedAt = localStorage.getItem(DISMISSED_IOS_KEY);
-      if (dismissedAt) {
-        const elapsed = Date.now() - Number(dismissedAt);
-        if (elapsed < IOS_SNOOZE_MS) return;
-      }
-      queueMicrotask(() => setShow("ios"));
+    if (isStandalone()) {
+      queueMicrotask(() => setSuppressed(true));
       return;
     }
-
-    if (localStorage.getItem(DISMISSED_KEY)) return;
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      promptRef.current = e as BeforeInstallPromptEvent;
-      setShow("native");
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    if (isIOS()) {
+      const dismissedAt = localStorage.getItem(DISMISSED_IOS_KEY);
+      if (dismissedAt && Date.now() - Number(dismissedAt) < IOS_SNOOZE_MS) {
+        queueMicrotask(() => setSuppressed(true));
+      } else {
+        queueMicrotask(() => setIosEligible(true));
+      }
+    } else if (localStorage.getItem(DISMISSED_KEY)) {
+      queueMicrotask(() => setSuppressed(true));
+    }
   }, []);
+
+  // Derive visibility during render so the native banner reacts to canInstall
+  // without a setState-in-effect.
+  const show: ShowState =
+    dismissed || suppressed ? "hidden" : iosEligible ? "ios" : canInstall ? "native" : "hidden";
 
   function dismiss() {
     if (show === "ios") {
@@ -60,13 +50,11 @@ export function InstallPrompt() {
     } else {
       localStorage.setItem(DISMISSED_KEY, "1");
     }
-    setShow("hidden");
+    setDismissed(true);
   }
 
   async function install() {
-    if (!promptRef.current) return;
-    await promptRef.current.prompt();
-    await promptRef.current.userChoice;
+    await promptInstall();
     dismiss();
   }
 

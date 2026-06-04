@@ -228,6 +228,9 @@
       "fast": "Fast (≥50 kW)",
       "last_refresh": "Last refreshed",
       "never": "Not yet refreshed"
+    },
+    "install_app": {
+      "label": "Install app"
     }
   },
   "ingest": {
@@ -257,7 +260,9 @@
     "install_dismiss": "Dismiss",
     "ios_hint": "Tap Share then 'Add to Home Screen'",
     "cta": "Add to Home Screen",
-    "dismiss": "Not now"
+    "dismiss": "Not now",
+    "installed": "Installed",
+    "unsupported_hint": "Use your browser menu to install"
   },
   "getting_started": {
     "title": "Getting Started",

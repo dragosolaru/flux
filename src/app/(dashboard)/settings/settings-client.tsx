@@ -15,6 +15,7 @@ import {
   Car,
   ChevronRight,
   Trash2,
+  Smartphone,
 } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
@@ -22,6 +23,7 @@ import { PageWrapper } from "@/components/layout/page-wrapper";
 import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
 import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
 import { ChargerHealthCard } from "@/components/settings/ChargerHealthCard";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
@@ -164,6 +166,12 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
             iconBg="bg-yellow-500/20"
             label={t("currency.label")}
             control={<CurrencyPicker />}
+          />
+          <SettingsRow
+            icon={<Smartphone className="size-4 text-cyan-400" />}
+            iconBg="bg-cyan-500/20"
+            label={t("install_app.label")}
+            control={<InstallAppButton />}
           />
         </GlassCard>
       </section>

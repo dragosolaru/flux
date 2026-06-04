@@ -228,6 +228,9 @@
       "fast": "Gyors (≥50 kW)",
       "last_refresh": "Utolsó frissítés",
       "never": "Még nincs frissítve"
+    },
+    "install_app": {
+      "label": "Alkalmazás telepítése"
     }
   },
   "ingest": {
@@ -257,7 +260,9 @@
     "install_dismiss": "Bezárás",
     "ios_hint": "Koppintson a Megosztásra, majd 'Főképernyőre'",
     "cta": "Főképernyőre adás",
-    "dismiss": "Most nem"
+    "dismiss": "Most nem",
+    "installed": "Telepítve",
+    "unsupported_hint": "Telepítés a böngésző menüjéből"
   },
   "getting_started": {
     "title": "Első lépések",

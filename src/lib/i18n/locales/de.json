@@ -228,6 +228,9 @@
       "fast": "Schnell (≥50 kW)",
       "last_refresh": "Zuletzt aktualisiert",
       "never": "Noch nicht aktualisiert"
+    },
+    "install_app": {
+      "label": "App installieren"
     }
   },
   "ingest": {
@@ -257,7 +260,9 @@
     "install_dismiss": "Schließen",
     "ios_hint": "Teilen antippen, dann 'Zum Startbildschirm'",
     "cta": "Zum Startbildschirm hinzufügen",
-    "dismiss": "Nicht jetzt"
+    "dismiss": "Nicht jetzt",
+    "installed": "Installiert",
+    "unsupported_hint": "Über das Browsermenü installieren"
   },
   "getting_started": {
     "title": "Erste Schritte",

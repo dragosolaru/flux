@@ -228,6 +228,9 @@
       "fast": "Rapides (≥50 kW)",
       "last_refresh": "Dernière mise à jour",
       "never": "Pas encore actualisé"
+    },
+    "install_app": {
+      "label": "Installer l'application"
     }
   },
   "ingest": {
@@ -257,7 +260,9 @@
     "install_dismiss": "Fermer",
     "ios_hint": "Appuyer sur Partager puis 'Sur l'écran d'accueil'",
     "cta": "Ajouter à l'écran d'accueil",
-    "dismiss": "Pas maintenant"
+    "dismiss": "Pas maintenant",
+    "installed": "Installée",
+    "unsupported_hint": "Utilisez le menu du navigateur pour installer"
   },
   "getting_started": {
     "title": "Premiers pas",
