@@ -252,9 +252,11 @@
   },
   "pwa": {
     "install_title": "Install Flux",
+    "install_cta": "Add to Home Screen",
+    "install_dismiss": "Dismiss",
+    "ios_hint": "Tap Share then 'Add to Home Screen'",
     "cta": "Add to Home Screen",
-    "dismiss": "Not now",
-    "ios_hint": "Tap Share → \"Add to Home Screen\" to install."
+    "dismiss": "Not now"
   },
   "getting_started": {
     "title": "Getting started",

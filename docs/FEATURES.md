@@ -508,18 +508,19 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 ## 27. PWA — Installable App
 
-**What it does:** Makes Flux installable as a home-screen app on Android and iOS. The service worker is a kill-switch (`public/sw.js`) that unregisters itself and clears all caches — a proper versioned SW can be reintroduced later. An install banner handles Android (`beforeinstallprompt`) and iOS (Share-sheet hint). iOS detection covers both classic UA string and iPadOS (MacIntel + touch). The iOS hint re-shows after 7 days; Android dismissal is permanent.
+**What it does:** Makes Flux installable as a home-screen app on Android and iOS. A network-first service worker (`flux-v1` cache) pre-caches `/` and `/dashboard` on install and serves them as fallback when offline. Old caches are pruned on activate. An animated install banner (framer-motion `slideUp`) handles Android (`beforeinstallprompt`) and iOS (Share-sheet hint). iOS detection covers both classic UA string and iPadOS (MacIntel + touch). The iOS hint re-shows after 7 days; Android dismissal is permanent (localStorage key `pwa-install-dismissed`).
 
-**How to use:** On Android Chrome, a banner appears at the bottom of the screen inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. The banner can be dismissed. The canonical manifest is served by Next.js from `src/app/manifest.ts`.
+**How to use:** On Android Chrome, a banner slides up from the bottom inviting the user to add to home screen. On iOS Safari, a hint instructs using Share → Add to Home Screen. Both can be dismissed. The canonical manifest is served by Next.js from `src/app/manifest.ts`. To test: open DevTools → Application → Manifest / Service Workers.
 
 **Key files:**
-- `public/sw.js` — kill-switch service worker (unregisters and clears caches)
-- `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount
-- `src/components/pwa/InstallPrompt.tsx` — install banner (Android + iOS hint, `md:hidden`)
+- `public/sw.js` — network-first service worker (cache: `flux-v1`, app shell: `/`, `/dashboard`)
+- `src/components/pwa/ServiceWorkerRegistrar.tsx` — registers the SW on mount (client-only)
+- `src/components/pwa/InstallPrompt.tsx` — animated install banner (Android + iOS hint, `md:hidden`)
 - `src/app/(dashboard)/layout.tsx` — mounts both components
-- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys
+- `src/app/manifest.ts` — Web App Manifest (Next.js route handler)
+- `src/lib/i18n/locales/{en,ro,de,fr,hu}.json` — `pwa.*` keys (`install_title`, `install_cta`, `install_dismiss`, `ios_hint`)
 
-**Dependencies:** No new npm packages. Requires HTTPS in production for SW registration.
+**Dependencies:** `framer-motion` (already in use). Requires HTTPS in production for SW registration.
 
 ---
 

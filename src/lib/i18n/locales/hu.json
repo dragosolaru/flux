@@ -250,11 +250,13 @@
     "free_tier_usage": "{used} / {max} nyugta felhasználva ebben a hónapban",
     "upgrade_cta": "Váltás Pro-ra"
   },
-  "pwa": {
-    "install_title": "Flux telepítése",
-    "cta": "Főképernyőre adás",
-    "dismiss": "Most nem",
-    "ios_hint": "Érintsd meg a Megosztás → „Főképernyőre” gombot a telepítéshez."
+  “pwa”: {
+    “install_title”: “Telepítsd a Fluxot”,
+    “install_cta”: “Hozzáadás a főképernyőhöz”,
+    “install_dismiss”: “Bezárás”,
+    “ios_hint”: “Koppintson a Megosztásra, majd 'Főképernyőre'”,
+    “cta”: “Főképernyőre adás”,
+    “dismiss”: “Most nem”
   },
   "getting_started": {
     "title": "Első lépések",

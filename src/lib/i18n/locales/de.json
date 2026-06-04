@@ -250,11 +250,13 @@
     "free_tier_usage": "{used} von {max} Belegen diesen Monat verwendet",
     "upgrade_cta": "Auf Pro upgraden"
   },
-  "pwa": {
-    "install_title": "Flux installieren",
-    "cta": "Zum Startbildschirm hinzufügen",
-    "dismiss": "Nicht jetzt",
-    "ios_hint": "Tippe auf Teilen → „Zum Home-Bildschirm“ zum Installieren."
+  “pwa”: {
+    “install_title”: “Flux installieren”,
+    “install_cta”: “Zum Startbildschirm hinzufügen”,
+    “install_dismiss”: “Schließen”,
+    “ios_hint”: “Teilen antippen, dann 'Zum Startbildschirm'”,
+    “cta”: “Zum Startbildschirm hinzufügen”,
+    “dismiss”: “Nicht jetzt”
   },
   "getting_started": {
     "title": "Erste Schritte",

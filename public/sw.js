@@ -1,29 +1,30 @@
-// Kill-switch service worker.
-//
-// An earlier service worker cached HTML navigations network-first with no
-// versioning or update flow. After a deploy, returning users were served stale
-// HTML that referenced JS chunks which no longer existed — breaking the app.
-//
-// This replacement unregisters itself and deletes every cache so any device
-// stuck on the old worker is freed and starts loading fresh content directly
-// from the network. A proper, versioned PWA worker can be reintroduced later.
-self.addEventListener("install", () => {
+const CACHE_NAME = "flux-v1";
+const APP_SHELL = ["/", "/dashboard"];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-      await self.registration.unregister();
-      const clients = await self.clients.matchAll({ type: "window" });
-      for (const client of clients) {
-        client.navigate(client.url);
-      }
-    })(),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
+  self.clients.claim();
 });
 
-// Pass every request straight through to the network — never serve from cache.
-self.addEventListener("fetch", () => {});
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode !== "navigate") return;
+
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((cached) => cached ?? caches.match("/dashboard")),
+    ),
+  );
+});

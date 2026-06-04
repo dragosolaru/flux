@@ -252,9 +252,11 @@
   },
   "pwa": {
     "install_title": "Installer Flux",
+    "install_cta": "Ajouter à l'écran d'accueil",
+    "install_dismiss": "Fermer",
+    "ios_hint": "Appuyer sur Partager puis 'Sur l'écran d'accueil'",
     "cta": "Ajouter à l'écran d'accueil",
-    "dismiss": "Pas maintenant",
-    "ios_hint": "Appuyez sur Partager → « Sur l'écran d'accueil » pour installer."
+    "dismiss": "Pas maintenant"
   },
   "getting_started": {
     "title": "Premiers pas",
