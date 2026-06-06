@@ -619,7 +619,17 @@
     "share_success_preconditioned": "Navigation + préconditionnement batterie envoyés",
     "share_error": "Échec de l'envoi vers Tesla",
     "precondition_auto": "Préconditionnement auto",
-    "precondition_manual": "Préconditionner la batterie"
+    "precondition_manual": "Préconditionner la batterie",
+    "arrival_soc": "Arriver avec",
+    "arrival_soc_pct": "Arriver avec {pct}%",
+    "variant": {
+      "fastest": "Le plus rapide",
+      "fewest_stops": "Moins d'arrêts",
+      "cheapest": "Le moins cher"
+    },
+    "recents": "Récent",
+    "clear_recents": "Effacer",
+    "no_recents": "Aucune destination récente"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

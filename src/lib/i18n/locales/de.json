@@ -619,7 +619,17 @@
     "share_success_preconditioned": "Navigation + Batterievorkonditionierung gesendet",
     "share_error": "Senden an Tesla fehlgeschlagen",
     "precondition_auto": "Auto-Vorkonditionierung",
-    "precondition_manual": "Batterie vorkonditionieren"
+    "precondition_manual": "Batterie vorkonditionieren",
+    "arrival_soc": "Ankommen mit",
+    "arrival_soc_pct": "Ankommen mit {pct}%",
+    "variant": {
+      "fastest": "Schnellste",
+      "fewest_stops": "Wenigste Stopps",
+      "cheapest": "Günstigste"
+    },
+    "recents": "Zuletzt",
+    "clear_recents": "Löschen",
+    "no_recents": "Keine letzten Ziele"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",
