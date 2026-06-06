@@ -10,8 +10,10 @@ interface CostSummaryProps {
   totalDistanceKm: number;
   drivingMinutes: number;
   chargingMinutes: number;
-  totalEnergyKwh: number;
-  totalChargingCostEur: number;
+  // Total energy consumed over the route + its cost at home price. These are
+  // non-zero even when no charging stop is needed — driving is never free.
+  tripEnergyKwh: number;
+  tripEnergyCostEur: number;
   stopsCount: number;
   approxRoute: boolean;
 }
@@ -33,8 +35,8 @@ export function CostSummary({
   totalDistanceKm,
   drivingMinutes,
   chargingMinutes,
-  totalEnergyKwh,
-  totalChargingCostEur,
+  tripEnergyKwh,
+  tripEnergyCostEur,
   stopsCount,
   approxRoute,
 }: CostSummaryProps) {
@@ -43,7 +45,7 @@ export function CostSummary({
 
   const totalMinutes = drivingMinutes + chargingMinutes;
   const petrolCostEur = (totalDistanceKm / 100) * PETROL_L_PER_100KM * PETROL_PRICE_EUR_L;
-  const savingsEur = petrolCostEur - totalChargingCostEur;
+  const savingsEur = petrolCostEur - tripEnergyCostEur;
 
   const stopsLabel =
     stopsCount === 0
@@ -70,10 +72,10 @@ export function CostSummary({
           {stopsLabel}
         </span>
         <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 font-medium">
-          {totalEnergyKwh.toFixed(1)} kWh
+          {tripEnergyKwh.toFixed(1)} kWh
         </span>
         <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-1 font-medium text-green-400">
-          €{totalChargingCostEur.toFixed(2)}
+          €{tripEnergyCostEur.toFixed(2)}
         </span>
         {chargingMinutes > 0 && (
           <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 font-medium">
@@ -104,7 +106,7 @@ export function CostSummary({
         <div className="space-y-1.5 rounded-xl border border-white/8 bg-white/5 p-3 text-sm backdrop-blur-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("ev_cost_label")}</span>
-            <span className="font-medium text-green-400">€{totalChargingCostEur.toFixed(2)}</span>
+            <span className="font-medium text-green-400">€{tripEnergyCostEur.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">

@@ -25,6 +25,13 @@ export interface TripPlan {
   totalMinutes: number;
   totalEnergyKwh: number;
   totalChargingCostEur: number;
+  // Total energy the car consumes to cover the whole route (distance × derated
+  // consumption — accounts for weather/temperature). This is what the trip
+  // costs you in energy even when no mid-trip charging is needed.
+  tripEnergyKwh: number;
+  // Cost to put that energy back at the home electricity price. Non-zero even
+  // for short trips with zero charging stops — driving is never free.
+  tripEnergyCostEur: number;
   stops: ChargingStop[];
   feasible: boolean;
   warning: string | null;

@@ -10,7 +10,28 @@ import { mockWeather } from "@/lib/external/weather/providers/mock-weather";
 import { derateRange } from "@/lib/external/weather/derating";
 import { STATIONS } from "@/lib/external/charging-networks/stations";
 import { planTripVariants } from "@/lib/external/routing/planner";
+import { DEFAULT_PROVIDER_ID, getProvider } from "@/lib/external/tariffs/registry";
 import type { BrandKey } from "@/lib/brands/types";
+
+// Average of the user's configured tariff across the day — the price we use to
+// estimate what a trip's energy costs to recharge at home.
+async function getHomePriceEurKwh(userId: string): Promise<number | undefined> {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data } = await supabase
+      .from("user_settings")
+      .select("tariff_provider")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const providerId = (data as { tariff_provider?: string } | null)?.tariff_provider ?? DEFAULT_PROVIDER_ID;
+    const prices = getProvider(providerId).getTodayPrices();
+    if (prices.length === 0) return undefined;
+    const avg = prices.reduce((s, p) => s + p.priceEurKwh, 0) / prices.length;
+    return avg > 0 ? avg : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 // Allow time for OSRM alternatives + per-variant routing + Overpass corridor.
 export const maxDuration = 30;
@@ -102,6 +123,7 @@ export async function POST(req: NextRequest) {
       currentSocPct,
       deratingPct: derating.totalPct,
       stations: STATIONS,
+      homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
     });
 
     return NextResponse.json({
@@ -132,6 +154,7 @@ export async function POST(req: NextRequest) {
     currentSocPct,
     deratingPct: derating.totalPct,
     stations: STATIONS,
+    homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
   });
 
   return NextResponse.json({

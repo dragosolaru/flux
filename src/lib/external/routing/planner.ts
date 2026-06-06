@@ -7,6 +7,10 @@ import { fetchCorridorStations } from "./corridor-stations";
 
 const SAFETY_RESERVE_PCT = 10;   // Minimum SoC to arrive at any waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
+// Fallback home electricity price (EUR/kWh) when no tariff is configured.
+// ~1 RON/kWh ≈ €0.20. Used to price the energy a trip consumes so the cost is
+// never shown as €0 just because no public charging stop was needed.
+const DEFAULT_HOME_PRICE_EUR_KWH = 0.20;
 
 type Polyline = { type: "LineString"; coordinates: [number, number][] } | null;
 
@@ -68,6 +72,7 @@ interface PlanInput {
   deratingPct?: number; // negative = reduction (e.g. -10 for −10%)
   stations: ChargingStation[];
   chargeTargetPct?: number;          // SoC to charge up to mid-trip (strategy lever)
+  homePriceEurKwh?: number;          // price to recharge consumed energy at home
   baseRoute?: {                      // precomputed road — skips the initial OSRM call
     distanceKm: number;
     drivingMinutes: number;
@@ -200,6 +205,16 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     }
   }
 
+  // Energy consumed to cover the whole route, accounting for weather/temp via
+  // the derated range. Independent of whether we charged mid-trip — this is the
+  // real cost of the distance, priced at the home electricity rate.
+  const homePrice = input.homePriceEurKwh ?? DEFAULT_HOME_PRICE_EUR_KWH;
+  const tripEnergyKwh =
+    deratedFullRangeKm > 0
+      ? (finalDistanceKm / deratedFullRangeKm) * spec.batteryCapacityKwh
+      : 0;
+  const tripEnergyCostEur = tripEnergyKwh * homePrice;
+
   return {
     origin,
     destination,
@@ -209,6 +224,8 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     totalMinutes: finalDrivingMinutes + totalChargingMinutes,
     totalEnergyKwh: Math.round(totalEnergyKwh * 10) / 10,
     totalChargingCostEur: Math.round(totalChargingCostEur * 100) / 100,
+    tripEnergyKwh: Math.round(tripEnergyKwh * 10) / 10,
+    tripEnergyCostEur: Math.round(tripEnergyCostEur * 100) / 100,
     stops,
     feasible,
     warning,
@@ -224,6 +241,7 @@ interface VariantsInput {
   currentSocPct: number;
   deratingPct?: number;
   stations: ChargingStation[];
+  homePriceEurKwh?: number;
 }
 
 const STRATEGIES: { id: TripStrategy; target: number }[] = [
@@ -237,7 +255,7 @@ const STRATEGIES: { id: TripStrategy; target: number }[] = [
  * fetched once and shared across every variant.
  */
 export async function planTripVariants(input: VariantsInput): Promise<TripVariant[]> {
-  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations } = input;
+  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, homePriceEurKwh } = input;
 
   const roads = (await computeOsrmAlternatives(origin, destination, 3)).slice(0, 2);
   const primary = roads[0] ?? null;
@@ -261,6 +279,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
         stations: allStations,
         baseRoute: roads[r],
         chargeTargetPct: s.target,
+        homePriceEurKwh,
         skipCorridorFetch: true,
       });
       if (plan.feasible) built.push({ id: `${r}-${s.id}`, strategy: s.id, roadIndex: r, plan });
@@ -290,6 +309,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
     deratingPct,
     stations: allStations,
     baseRoute: primary ?? undefined,
+    homePriceEurKwh,
     skipCorridorFetch: true,
   });
   return [{ id: "0-balanced", strategy: "balanced", roadIndex: 0, plan }];

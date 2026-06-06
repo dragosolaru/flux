@@ -818,3 +818,21 @@ from this data is spec #2.
 - `src/components/vehicle/CommandPanel.tsx` — loading skeleton, deduped toasts
 
 **Dependencies:** None — uses TanStack Query's optimistic-update pattern and Next.js App Router Suspense.
+
+---
+
+## Trip Cost — Energy Cost of the Distance (not just charging)
+
+**What it does:** Fixes a bug where a trip that needed no charging stop showed "0.0 kWh · €0.00", implying the distance was free. Driving always consumes energy from the battery that must be recharged later. The planner now computes:
+- **`tripEnergyKwh`** — total energy consumed over the whole route, derived from `distance / deratedFullRange × batteryCapacity`. This already accounts for **weather/temperature** (via range derating) and **road type/distance** (via the actual OSRM route polyline).
+- **`tripEnergyCostEur`** — cost to put that energy back, priced at the user's **configured home tariff** (averaged across the day from `getProvider(tariff_provider).getTodayPrices()`), falling back to ~€0.20/kWh when no tariff is set.
+
+The trip cost summary (`CostSummary`), the variant selector chips, and the petrol-savings comparison now use these distance-based figures, so the cost is always realistic — non-zero even for short, no-stop trips.
+
+**Key files:**
+- `src/lib/external/routing/planner.ts` — computes `tripEnergyKwh` / `tripEnergyCostEur`; `homePriceEurKwh` input + `DEFAULT_HOME_PRICE_EUR_KWH`
+- `src/lib/external/routing/types.ts` — `TripPlan.tripEnergyKwh` / `tripEnergyCostEur`
+- `src/app/api/trip-plan/route.ts` — `getHomePriceEurKwh()` reads the user's tariff provider
+- `src/components/trip/CostSummary.tsx`, `src/app/(dashboard)/trip/trip-client.tsx` — display
+
+**Dependencies:** tariff registry (`src/lib/external/tariffs/registry.ts`), `user_settings.tariff_provider`.

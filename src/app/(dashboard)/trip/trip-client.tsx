@@ -400,7 +400,7 @@ export function TripClient() {
                           : v.plan.stops.length === 1
                             ? t("stops_count_one")
                             : t("stops_count_other", { count: v.plan.stops.length })}
-                        {v.plan.totalChargingCostEur > 0 && ` · €${v.plan.totalChargingCostEur.toFixed(0)}`}
+                        {v.plan.tripEnergyCostEur > 0 && ` · €${v.plan.tripEnergyCostEur.toFixed(2)}`}
                       </span>
                     </button>
                   );
@@ -441,8 +441,8 @@ export function TripClient() {
                   totalDistanceKm={activePlan.totalDistanceKm}
                   drivingMinutes={activePlan.drivingMinutes}
                   chargingMinutes={activePlan.chargingMinutes}
-                  totalEnergyKwh={activePlan.totalEnergyKwh}
-                  totalChargingCostEur={activePlan.totalChargingCostEur}
+                  tripEnergyKwh={activePlan.tripEnergyKwh}
+                  tripEnergyCostEur={activePlan.tripEnergyCostEur}
                   stopsCount={activePlan.stops.length}
                   approxRoute={activePlan.approxRoute}
                 />
