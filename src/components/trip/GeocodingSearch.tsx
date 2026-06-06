@@ -17,6 +17,8 @@ interface GeocodingSearchProps {
   locating?: boolean;
   onLocate?: () => void;
   locateTitle?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 interface NominatimResult {
@@ -29,7 +31,7 @@ function shortName(displayName: string): string {
   return displayName.split(",")[0]?.trim() ?? displayName;
 }
 
-export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle }: GeocodingSearchProps) {
+export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle, onFocus, onBlur }: GeocodingSearchProps) {
   const [inputValue, setInputValue] = useState(value ? shortName(value.name) : "");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,6 +102,15 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
     setOpen(false);
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && open && results.length > 0) {
+      e.preventDefault();
+      handleSelect(results[0]);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
   // Determine right slot content and input padding
   const hasLocateBtn = !!onLocate;
   // When locate button is present: pr-16 to make room for two icons on the right
@@ -115,7 +126,12 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => results.length > 0 && setOpen(true)}
+          onFocus={() => {
+            if (results.length > 0) setOpen(true);
+            onFocus?.();
+          }}
+          onBlur={onBlur}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={`w-full rounded-lg border bg-background py-2 pl-9 ${inputPr} text-sm focus:outline-none focus:ring-2 focus:ring-ring`}
         />

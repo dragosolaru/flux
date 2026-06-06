@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -28,6 +28,40 @@ interface NominatimReverseResult {
   display_name: string;
 }
 
+interface RecentDestination {
+  lat: number;
+  lng: number;
+  label: string;
+}
+
+const RECENT_KEY = "flux_recent_destinations";
+const RECENT_MAX = 5;
+
+function getRecentDestinations(): RecentDestination[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as RecentDestination[];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentDestination(coord: RecentDestination): void {
+  const existing = getRecentDestinations().filter(
+    (r) => r.lat !== coord.lat || r.lng !== coord.lng,
+  );
+  const next = [coord, ...existing].slice(0, RECENT_MAX);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+}
+
+function removeRecentDestination(index: number): void {
+  const existing = getRecentDestinations();
+  existing.splice(index, 1);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(existing));
+}
+
 async function reverseGeocode(lat: number, lon: number): Promise<string> {
   const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
   const res = await fetch(url, {
@@ -38,6 +72,30 @@ async function reverseGeocode(lat: number, lon: number): Promise<string> {
   return data.display_name;
 }
 
+interface VariantLabel {
+  key: "fastest" | "fewest_stops" | "cheapest";
+  color: "accent" | "green" | "yellow";
+}
+
+function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): VariantLabel | null {
+  if (allVariants.length < 2) return null;
+
+  const minMinutes = Math.min(...allVariants.map((v) => v.plan.totalMinutes));
+  const minStops = Math.min(...allVariants.map((v) => v.plan.stops.length));
+  const minCost = Math.min(...allVariants.map((v) => v.plan.tripEnergyCostEur));
+
+  if (variant.plan.totalMinutes === minMinutes) {
+    return { key: "fastest", color: "accent" };
+  }
+  if (variant.plan.stops.length === minStops) {
+    return { key: "fewest_stops", color: "green" };
+  }
+  if (variant.plan.tripEnergyCostEur === minCost) {
+    return { key: "cheapest", color: "yellow" };
+  }
+  return null;
+}
+
 export function TripClient() {
   const t = useTranslations("trip");
   const { data: vehicles } = useVehicles();
@@ -45,6 +103,7 @@ export function TripClient() {
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);
   const [startSoc, setStartSoc] = useState(80);
+  const [arrivalSoc, setArrivalSoc] = useState(10);
   const [plan, setPlan] = useState<TripResponse | null>(null);
   const [activeVariant, setActiveVariant] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -55,6 +114,10 @@ export function TripClient() {
   const [locating, setLocating] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [sharedRoute, setSharedRoute] = useState(false);
+  const [destFocused, setDestFocused] = useState(false);
+  const [recents, setRecents] = useState<RecentDestination[]>(getRecentDestinations);
+
+  const showRecents = destFocused && destination === null && recents.length > 0;
 
   const canPlan = origin !== null && destination !== null;
 
@@ -85,6 +148,10 @@ export function TripClient() {
     );
   }
 
+  const handleDestinationChange = useCallback((point: GeoPoint | null) => {
+    setDestination(point);
+  }, []);
+
   async function handlePlan() {
     if (!canPlan) return;
     setLoading(true);
@@ -96,9 +163,12 @@ export function TripClient() {
           ...(vehicleId ? { vehicleId } : {}),
           origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
           startSoc,
+          arrivalSocPct: arrivalSoc,
           destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
         }),
       });
+      addRecentDestination({ lat: destination.lat, lng: destination.lng, label: destination.name });
+      setRecents(getRecentDestinations());
       setPlan(result);
       setActiveVariant(0);
       setSharedRoute(false);
@@ -228,11 +298,62 @@ export function TripClient() {
               locateTitle={locating ? t("locating") : t("use_my_location")}
             />
 
-            <GeocodingSearch
-              placeholder={t("destination_placeholder")}
-              value={destination}
-              onChange={setDestination}
-            />
+            <div className="relative">
+              <GeocodingSearch
+                placeholder={t("destination_placeholder")}
+                value={destination}
+                onChange={handleDestinationChange}
+                onFocus={() => setDestFocused(true)}
+                onBlur={() => setTimeout(() => setDestFocused(false), 150)}
+              />
+
+              {/* Recent destinations dropdown */}
+              {showRecents && (
+                <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
+                  <div className="flex items-center justify-between px-3 py-1.5">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("recents")}
+                    </span>
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        recents.forEach((_, i) => removeRecentDestination(i));
+                        setRecents([]);
+                      }}
+                      className="text-[11px] text-muted-foreground hover:text-foreground"
+                    >
+                      {t("clear_recents")}
+                    </button>
+                  </div>
+                  {recents.map((r, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleDestinationChange({ name: r.label, lat: r.lat, lng: r.lng });
+                          setDestFocused(false);
+                        }}
+                        className="flex min-w-0 flex-1 items-start gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                      >
+                        <Clock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                        <span className="line-clamp-1">{r.label}</span>
+                      </button>
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          removeRecentDestination(i);
+                          setRecents(getRecentDestinations());
+                        }}
+                        className="pr-3 text-muted-foreground hover:text-foreground"
+                        aria-label="Remove"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Options disclosure — battery + vehicle are secondary; keep the
                 first interaction to just origin → destination → plan. */}
@@ -254,7 +375,7 @@ export function TripClient() {
 
             {optionsOpen && (
               <div className="space-y-2.5">
-                {/* Battery slider — label and value inline, slider below */}
+                {/* Starting battery slider */}
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{t("battery_label")}</span>
@@ -267,6 +388,23 @@ export function TripClient() {
                     step={5}
                     value={startSoc}
                     onChange={(e) => setStartSoc(Number(e.target.value))}
+                    className="mt-1 w-full accent-primary"
+                  />
+                </div>
+
+                {/* Arrival SOC slider */}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{t("arrival_soc")}</span>
+                    <span className="font-medium text-foreground">{arrivalSoc}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={30}
+                    step={5}
+                    value={arrivalSoc}
+                    onChange={(e) => setArrivalSoc(Number(e.target.value))}
                     className="mt-1 w-full accent-primary"
                   />
                 </div>
@@ -382,6 +520,7 @@ export function TripClient() {
                   const h = Math.floor(v.plan.totalMinutes / 60);
                   const m = v.plan.totalMinutes % 60;
                   const active = i === activeVariant;
+                  const label = getVariantLabel(v, variants);
                   return (
                     <button
                       key={v.id}
@@ -402,6 +541,19 @@ export function TripClient() {
                             : t("stops_count_other", { count: v.plan.stops.length })}
                         {v.plan.tripEnergyCostEur > 0 && ` · €${v.plan.tripEnergyCostEur.toFixed(2)}`}
                       </span>
+                      {label && (
+                        <span
+                          className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                            label.color === "accent"
+                              ? "bg-primary/20 text-primary"
+                              : label.color === "green"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-yellow-500/20 text-yellow-400"
+                          }`}
+                        >
+                          {t(`variant.${label.key}`)}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
