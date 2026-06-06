@@ -898,3 +898,17 @@ them.
 
 **Key files:** `src/lib/external/routing/planner.ts` (`planTripVariants`),
 `src/app/(dashboard)/trip/trip-client.tsx` (variant chip).
+
+---
+
+## Trip Planner — Parallelized Variant Calculation + `arrivalSocPct`
+
+**What it does:**
+
+1. **Performance: parallelized variant calculation (Promise.all)** — `planTripVariants` now fetches OSRM alternatives and corridor stations concurrently, then plans all road × strategy combinations in parallel (`Promise.all`). Previously each combination ran sequentially; with 3 roads × 2 strategies this cuts latency by ~5× on the planner hot path.
+
+2. **`arrivalSocPct` parameter** — callers can now specify the minimum battery percentage required at the destination (and at each intermediate charging stop). Defaults to 10%. The planner computes available range as `(currentSocPct − arrivalSocPct) / 100 × deratedFullRangeKm`, and charges each stop to at least `arrivalSocPct` % above the next waypoint's need. Ensures drivers arrive with a user-controlled safety buffer instead of a hardcoded 0%.
+
+**How to use:** `POST /api/trip-plan` with optional body field `arrivalSocPct` (number, 0–50).
+
+**Key files:** `src/lib/external/routing/planner.ts` (`planTrip`, `planTripVariants`, `PlanInput`, `VariantsInput`), `src/app/api/trip-plan/route.ts` (`bodySchema`, both `planTripVariants` calls).
