@@ -73,6 +73,7 @@ interface PlanInput {
   stations: ChargingStation[];
   chargeTargetPct?: number;          // SoC to charge up to mid-trip (strategy lever)
   homePriceEurKwh?: number;          // price to recharge consumed energy at home
+  efficiencyKwhPer100km?: number;    // personal consumption (overrides spec)
   baseRoute?: {                      // precomputed road — skips the initial OSRM call
     distanceKm: number;
     drivingMinutes: number;
@@ -102,7 +103,11 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
         await fetchCorridorStations(polyline?.coordinates ?? null, origin, destination),
       );
 
-  const idealRangeKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
+  // Prefer the driver's measured consumption (from real charging + trip
+  // history) over the model's spec figure — a cold-climate / heavy-foot driver
+  // gets a shorter, accurate range estimate instead of the optimistic spec.
+  const efficiencyKwhPer100km = input.efficiencyKwhPer100km ?? spec.efficiencyKwhPer100km;
+  const idealRangeKm = (spec.batteryCapacityKwh / efficiencyKwhPer100km) * 100;
   const deratedFullRangeKm = idealRangeKm * (1 + deratingPct / 100);
   const currentRangeKm = (currentSocPct / 100) * deratedFullRangeKm - (deratedFullRangeKm * SAFETY_RESERVE_PCT / 100);
 
@@ -242,6 +247,7 @@ interface VariantsInput {
   deratingPct?: number;
   stations: ChargingStation[];
   homePriceEurKwh?: number;
+  efficiencyKwhPer100km?: number;
 }
 
 const STRATEGIES: { id: TripStrategy; target: number }[] = [
@@ -255,7 +261,7 @@ const STRATEGIES: { id: TripStrategy; target: number }[] = [
  * fetched once and shared across every variant.
  */
 export async function planTripVariants(input: VariantsInput): Promise<TripVariant[]> {
-  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, homePriceEurKwh } = input;
+  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, homePriceEurKwh, efficiencyKwhPer100km } = input;
 
   const roads = (await computeOsrmAlternatives(origin, destination, 3)).slice(0, 2);
   const primary = roads[0] ?? null;
@@ -280,6 +286,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
         baseRoute: roads[r],
         chargeTargetPct: s.target,
         homePriceEurKwh,
+        efficiencyKwhPer100km,
         skipCorridorFetch: true,
       });
       if (plan.feasible) built.push({ id: `${r}-${s.id}`, strategy: s.id, roadIndex: r, plan });
@@ -310,6 +317,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
     stations: allStations,
     baseRoute: primary ?? undefined,
     homePriceEurKwh,
+    efficiencyKwhPer100km,
     skipCorridorFetch: true,
   });
   return [{ id: "0-balanced", strategy: "balanced", roadIndex: 0, plan }];

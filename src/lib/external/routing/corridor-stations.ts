@@ -5,6 +5,7 @@ import type { ChargingStation, NetworkId, PlugType } from "@/lib/external/chargi
 import type { RoutePoint } from "./types";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const OCM_URL = "https://api.openchargemap.io/v3/poi/";
 const BBOX_PAD_DEG = 0.15;
 const FAST_KW_THRESHOLD = 40;
 const MAX_STATIONS = 400;
@@ -221,8 +222,91 @@ export async function fetchCorridorStations(
     const chargers = await findInBBox({ bbox, limit: 500 });
     return preferFast(chargers.map(chargerToStation));
   } catch {
-    // Cold-area timeout, RPC missing (pre-migration), or query error → Overpass.
+    // Cold-area timeout, RPC missing (pre-migration), or query error → fall back
+    // to a live API. Open Charge Map is the primary fallback (global, reliable,
+    // well-maintained); Overpass is the secondary in case OCM is unreachable.
+    const ocm = await fetchCorridorStationsOCM(bbox);
+    if (ocm.length > 0) return ocm;
     return fetchCorridorStationsOverpass(polyline, origin, destination);
+  }
+}
+
+interface OcmConnection {
+  PowerKW?: number | null;
+}
+
+interface OcmPoi {
+  ID: number;
+  AddressInfo?: {
+    Title?: string | null;
+    Latitude?: number | null;
+    Longitude?: number | null;
+    Town?: string | null;
+  } | null;
+  OperatorInfo?: { Title?: string | null } | null;
+  Connections?: OcmConnection[] | null;
+}
+
+function ocmToStation(poi: OcmPoi): ChargingStation | null {
+  const info = poi.AddressInfo;
+  if (!info || info.Latitude == null || info.Longitude == null) return null;
+
+  const maxKw = (poi.Connections ?? []).reduce(
+    (max, c) => (c.PowerKW != null && c.PowerKW > max ? c.PowerKW : max),
+    0,
+  );
+  const operator = poi.OperatorInfo?.Title ?? null;
+  const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
+
+  return {
+    id: `ocm-${poi.ID}`,
+    networkId,
+    name: info.Title ?? operator ?? "Charging Station",
+    lat: info.Latitude,
+    lng: info.Longitude,
+    maxKw: Math.round(maxKw),
+    totalStalls: (poi.Connections ?? []).length || 1,
+    // Plug type doesn't affect routing feasibility (planner filters on power +
+    // distance only); default to CCS to keep the mapping simple.
+    plugTypes: ["CCS"],
+    priceEurKwh: null,
+    addressCity: info.Town ?? "",
+    addressCountry: "",
+  };
+}
+
+/**
+ * Fetch corridor stations from Open Charge Map — a dedicated, well-maintained
+ * global EV charging registry. More reliable from serverless than Overpass.
+ * Returns [] on any error so the caller can fall back further.
+ */
+export async function fetchCorridorStationsOCM(bbox: BBox): Promise<ChargingStation[]> {
+  try {
+    const params = new URLSearchParams({
+      output: "json",
+      // OCM boundingbox: (lat,lng),(lat,lng) — top-left, bottom-right.
+      boundingbox: `(${bbox.maxLat},${bbox.minLng}),(${bbox.minLat},${bbox.maxLng})`,
+      maxresults: "500",
+      compact: "true",
+      verbose: "false",
+    });
+    const key = process.env.OPEN_CHARGE_MAP_API_KEY;
+    if (key) params.set("key", key);
+
+    const res = await fetch(`${OCM_URL}?${params.toString()}`, {
+      headers: { "User-Agent": "Flux-TripPlanner/1.0" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return [];
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) return [];
+
+    const mapped = (data as OcmPoi[])
+      .map(ocmToStation)
+      .filter((s): s is ChargingStation => s !== null);
+    return preferFast(mapped);
+  } catch {
+    return [];
   }
 }
 

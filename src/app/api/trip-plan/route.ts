@@ -33,6 +33,47 @@ async function getHomePriceEurKwh(userId: string): Promise<number | undefined> {
   }
 }
 
+// Personal consumption (kWh/100km) measured from the driver's own history:
+// total energy charged ÷ total distance driven. Requires a meaningful sample
+// (≥200 km, ≥5 kWh) and a plausible result (8–45 kWh/100km) — otherwise returns
+// undefined so the planner falls back to the model's spec efficiency.
+async function getPersonalEfficiency(vehicleId: string): Promise<number | undefined> {
+  try {
+    const supabase = createSupabaseAdminClient();
+
+    const { data: sessions } = await supabase
+      .from("charging_sessions")
+      .select("energy_added_kwh")
+      .eq("vehicle_id", vehicleId);
+    const totalKwh = (sessions ?? []).reduce(
+      (s: number, r: { energy_added_kwh: number | null }) => s + (r.energy_added_kwh ?? 0),
+      0,
+    );
+
+    const { data: trips } = await supabase
+      .from("trips")
+      .select("distance_km, start_odometer_km, end_odometer_km")
+      .eq("vehicle_id", vehicleId);
+    const totalKm = (trips ?? []).reduce(
+      (s: number, t: { distance_km: number | null; start_odometer_km: number | null; end_odometer_km: number | null }) => {
+        const km =
+          t.distance_km ??
+          (t.end_odometer_km != null && t.start_odometer_km != null
+            ? t.end_odometer_km - t.start_odometer_km
+            : null);
+        return s + (km ?? 0);
+      },
+      0,
+    );
+
+    if (totalKm < 200 || totalKwh < 5) return undefined;
+    const kwhPer100 = (totalKwh / totalKm) * 100;
+    return kwhPer100 >= 8 && kwhPer100 <= 45 ? Math.round(kwhPer100 * 10) / 10 : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Allow time for OSRM alternatives + per-variant routing + Overpass corridor.
 export const maxDuration = 30;
 
@@ -112,8 +153,10 @@ export async function POST(req: NextRequest) {
     }
 
     const spec = getModelSpec(vehicle.brand as BrandKey, vehicle.model);
+    const personalEfficiency = await getPersonalEfficiency(vehicleId);
+    const effEfficiency = personalEfficiency ?? spec.efficiencyKwhPer100km;
     const weather = mockWeather.getCurrent(origin.lat, origin.lng);
-    const idealKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
+    const idealKm = (spec.batteryCapacityKwh / effEfficiency) * 100;
     const derating = derateRange(idealKm, weather);
 
     const variants = await planTripVariants({
@@ -124,6 +167,7 @@ export async function POST(req: NextRequest) {
       deratingPct: derating.totalPct,
       stations: STATIONS,
       homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
+      efficiencyKwhPer100km: personalEfficiency,
     });
 
     return NextResponse.json({

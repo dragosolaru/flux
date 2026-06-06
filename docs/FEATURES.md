@@ -836,3 +836,43 @@ The trip cost summary (`CostSummary`), the variant selector chips, and the petro
 - `src/components/trip/CostSummary.tsx`, `src/app/(dashboard)/trip/trip-client.tsx` — display
 
 **Dependencies:** tariff registry (`src/lib/external/tariffs/registry.ts`), `user_settings.tariff_provider`.
+
+---
+
+## Trip Planner — Personal Consumption Calibration
+
+**What it does:** The planner now estimates range and trip energy from the
+driver's **measured consumption**, not just the model's spec sheet. A
+cold-climate or heavy-footed driver gets an accurate (shorter) range and a
+realistic energy cost instead of the optimistic spec figure.
+
+`getPersonalEfficiency(vehicleId)` in the trip-plan API computes kWh/100km as
+`total charged energy ÷ total distance driven` from the vehicle's
+`charging_sessions` (energy_added_kwh) and `trips` (distance_km / odometer
+delta). It requires a meaningful sample (≥200 km, ≥5 kWh) and a plausible result
+(8–45 kWh/100km); otherwise it returns undefined and the planner falls back to
+`spec.efficiencyKwhPer100km`. The measured figure feeds both the range/feasibility
+math and the weather-derating baseline.
+
+**Key files:** `src/app/api/trip-plan/route.ts` (`getPersonalEfficiency`),
+`src/lib/external/routing/planner.ts` (`efficiencyKwhPer100km` input).
+
+---
+
+## Charging Stations — Open Charge Map source + Moldova corridor
+
+**What it does:** Fixes "No charging station found near km N" on routes through
+sparsely-covered regions (e.g. Cluj → Iași through Moldova).
+
+1. **Open Charge Map** (`fetchCorridorStationsOCM`) is now the primary live
+   fallback for corridor stations — a dedicated, well-maintained global EV
+   charging registry that's far more reliable from serverless than Overpass.
+   Fallback chain: PostGIS platform → Open Charge Map → Overpass → static list.
+   Optional `OPEN_CHARGE_MAP_API_KEY` env var raises rate limits.
+2. **Static Moldova corridor stations** added to the registry (Târgu Mureș,
+   Reghin, Bistrița, Vatra Dornei, Piatra Neamț, Bacău, Roman, Suceava) so the
+   Cluj → Iași route always has a reachable station even when every live source
+   is unreachable in the demo.
+
+**Key files:** `src/lib/external/routing/corridor-stations.ts`,
+`src/lib/external/charging-networks/stations.ts`.

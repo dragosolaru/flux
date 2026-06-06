@@ -111,6 +111,18 @@ export const STATIONS: ChargingStation[] = [
   // Fastned Romania
   { id: "fast-ro-001", networkId: "fastned", name: "Fastned Balș A1", lat: 44.359, lng: 24.088, maxKw: 300, totalStalls: 8, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.59, addressCity: "Balș", addressCountry: "RO" },
   { id: "fast-ro-002", networkId: "fastned", name: "Fastned Curtea de Argeș", lat: 45.138, lng: 24.681, maxKw: 300, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.59, addressCity: "Curtea de Argeș", addressCountry: "RO" },
+
+  // Moldova corridor (Cluj → Iași, NE Romania). Covers both OSRM variants:
+  // via Târgu Mureș → Bacău, and via Dej → Bistrița → Suceava. Closes the gap
+  // around km ~276 where the route previously found no station.
+  { id: "enbw-ro-005", networkId: "enbw", name: "Renovatio Târgu Mureș", lat: 46.539, lng: 24.558, maxKw: 150, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Târgu Mureș", addressCountry: "RO" },
+  { id: "enbw-ro-006", networkId: "enbw", name: "Renovatio Reghin", lat: 46.775, lng: 24.706, maxKw: 100, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Reghin", addressCountry: "RO" },
+  { id: "enbw-ro-007", networkId: "enbw", name: "Renovatio Bistrița", lat: 47.133, lng: 24.491, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Bistrița", addressCountry: "RO" },
+  { id: "enbw-ro-008", networkId: "enbw", name: "Renovatio Vatra Dornei", lat: 47.341, lng: 25.358, maxKw: 100, totalStalls: 2, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Vatra Dornei", addressCountry: "RO" },
+  { id: "enbw-ro-009", networkId: "enbw", name: "Renovatio Piatra Neamț", lat: 46.928, lng: 26.370, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Piatra Neamț", addressCountry: "RO" },
+  { id: "tsc-ro-bacau", networkId: "tesla-sc", name: "Tesla SC Bacău", lat: 46.567, lng: 26.914, maxKw: 250, totalStalls: 8, plugTypes: ["Tesla", "CCS"], priceEurKwh: 0.39, addressCity: "Bacău", addressCountry: "RO" },
+  { id: "enbw-ro-010", networkId: "enbw", name: "Renovatio Roman", lat: 46.922, lng: 26.927, maxKw: 120, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.55, addressCity: "Roman", addressCountry: "RO" },
+  { id: "ion-ro-005", networkId: "ionity", name: "IONITY Suceava", lat: 47.651, lng: 26.255, maxKw: 350, totalStalls: 4, plugTypes: ["CCS", "CHAdeMO"], priceEurKwh: 0.69, addressCity: "Suceava", addressCountry: "RO" },
 ];
 
 export function getStations() {
