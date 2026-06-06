@@ -87,6 +87,7 @@ const bodySchema = z.object({
   vehicleId: z.string().uuid().optional(),
   origin: coordSchema.optional(),
   startSoc: z.number().min(1).max(100).optional(),
+  arrivalSocPct: z.number().min(0).max(50).optional(),
   destination: coordSchema,
 });
 
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "invalid-body", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { vehicleId, origin: bodyOrigin, startSoc: bodyStartSoc, destination } = parsed.data;
+  const { vehicleId, origin: bodyOrigin, startSoc: bodyStartSoc, arrivalSocPct, destination } = parsed.data;
 
   if (vehicleId) {
     // Vehicle-based flow: fetch vehicle + state
@@ -166,6 +167,7 @@ export async function POST(req: NextRequest) {
       currentSocPct,
       deratingPct: derating.totalPct,
       stations: STATIONS,
+      arrivalSocPct,
       homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
       efficiencyKwhPer100km: personalEfficiency,
     });
@@ -198,6 +200,7 @@ export async function POST(req: NextRequest) {
     currentSocPct,
     deratingPct: derating.totalPct,
     stations: STATIONS,
+    arrivalSocPct,
     homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
   });
 

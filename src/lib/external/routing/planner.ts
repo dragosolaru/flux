@@ -5,7 +5,7 @@ import { haversine } from "./providers/mock-router";
 import { computeOsrmRoute, computeOsrmRouteVia, computeOsrmAlternatives } from "./providers/osrm-router";
 import { fetchCorridorStations } from "./corridor-stations";
 
-const SAFETY_RESERVE_PCT = 10;   // Minimum SoC to arrive at any waypoint
+const DEFAULT_ARRIVAL_SOC_PCT = 10; // Default minimum SoC at destination/waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
 // Fallback home electricity price (EUR/kWh) when no tariff is configured.
 // ~1 RON/kWh ≈ €0.20. Used to price the energy a trip consumes so the cost is
@@ -72,6 +72,7 @@ interface PlanInput {
   deratingPct?: number; // negative = reduction (e.g. -10 for −10%)
   stations: ChargingStation[];
   chargeTargetPct?: number;          // SoC to charge up to mid-trip (strategy lever)
+  arrivalSocPct?: number;            // minimum SoC to arrive at destination (default 10)
   homePriceEurKwh?: number;          // price to recharge consumed energy at home
   efficiencyKwhPer100km?: number;    // personal consumption (overrides spec)
   baseRoute?: {                      // precomputed road — skips the initial OSRM call
@@ -91,6 +92,7 @@ interface PlanInput {
 export async function planTrip(input: PlanInput): Promise<TripPlan> {
   const { origin, destination, spec, currentSocPct, deratingPct = 0, stations } = input;
   const chargeTarget = input.chargeTargetPct ?? DEFAULT_CHARGE_TARGET;
+  const arrivalSocPct = input.arrivalSocPct ?? DEFAULT_ARRIVAL_SOC_PCT;
 
   const osrm = input.baseRoute ?? await computeOsrmRoute(origin, destination);
   const { distanceKm, drivingMinutes } = osrm;
@@ -109,7 +111,8 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   const efficiencyKwhPer100km = input.efficiencyKwhPer100km ?? spec.efficiencyKwhPer100km;
   const idealRangeKm = (spec.batteryCapacityKwh / efficiencyKwhPer100km) * 100;
   const deratedFullRangeKm = idealRangeKm * (1 + deratingPct / 100);
-  const currentRangeKm = (currentSocPct / 100) * deratedFullRangeKm - (deratedFullRangeKm * SAFETY_RESERVE_PCT / 100);
+  // Available range from current SoC down to arrivalSocPct buffer (not 0%).
+  const currentRangeKm = (currentSocPct - arrivalSocPct) / 100 * deratedFullRangeKm;
 
   const stops: ChargingStop[] = [];
   let kmLeft = distanceKm;
@@ -127,7 +130,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
 
   while (kmLeft > 0 && iter++ < 8) {
     if (kmLeft <= rangeNow) {
-      // Can reach destination directly
+      // Can reach destination with at least arrivalSocPct remaining
       kmFromStart += kmLeft;
       kmLeft = 0;
       break;
@@ -159,11 +162,11 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     kmFromStart = targetKm;
     kmLeft = distanceKm - kmFromStart;
 
-    const arriveSoc = Math.max(SAFETY_RESERVE_PCT, Math.round(socNow));
+    const arriveSoc = Math.max(arrivalSocPct, Math.round(socNow));
 
     // Charge to either the strategy target or enough for the remaining leg
-    // (with reserve) — whichever is less.
-    const remainingNeededPct = ((kmLeft + detourKm * 0.3) / deratedFullRangeKm) * 100 + SAFETY_RESERVE_PCT;
+    // including the arrivalSocPct buffer at the next stop/destination.
+    const remainingNeededPct = ((kmLeft + detourKm * 0.3) / deratedFullRangeKm) * 100 + arrivalSocPct;
     const departSoc = Math.min(chargeTarget, Math.max(arriveSoc + 5, Math.min(95, Math.ceil(remainingNeededPct))));
     const energyAddedKwh = ((departSoc - arriveSoc) / 100) * spec.batteryCapacityKwh;
     const effectiveRateKw = Math.min(chosen.maxKw, spec.maxDcChargingRateKw) * 0.75; // avg session rate (curve)
@@ -181,7 +184,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     });
 
     socNow = departSoc;
-    rangeNow = ((socNow - SAFETY_RESERVE_PCT) / 100) * deratedFullRangeKm;
+    rangeNow = ((socNow - arrivalSocPct) / 100) * deratedFullRangeKm;
     totalChargingMinutes += chargingMinutes;
     totalChargingCostEur += costEur;
     totalEnergyKwh += energyAddedKwh;
@@ -246,6 +249,7 @@ interface VariantsInput {
   currentSocPct: number;
   deratingPct?: number;
   stations: ChargingStation[];
+  arrivalSocPct?: number;            // minimum SoC to arrive at destination (default 10)
   homePriceEurKwh?: number;
   efficiencyKwhPer100km?: number;
 }
@@ -258,40 +262,51 @@ const STRATEGIES: { id: TripStrategy; target: number }[] = [
 /**
  * Plan a trip across alternative roads × charging strategies and return the
  * distinct, feasible options sorted fastest-first. Corridor stations are
- * fetched once and shared across every variant.
+ * fetched once and shared across every variant. Both OSRM alternatives and
+ * corridor station fetch run in parallel, and all road×strategy combinations
+ * are planned concurrently via Promise.all.
  */
 export async function planTripVariants(input: VariantsInput): Promise<TripVariant[]> {
-  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, homePriceEurKwh, efficiencyKwhPer100km } = input;
+  const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, arrivalSocPct, homePriceEurKwh, efficiencyKwhPer100km } = input;
 
-  const roads = (await computeOsrmAlternatives(origin, destination, 3)).slice(0, 3);
+  const [roadsAll, corridor] = await Promise.all([
+    computeOsrmAlternatives(origin, destination, 3),
+    fetchCorridorStations(null, origin, destination),
+  ]);
+  const roads = roadsAll.slice(0, 3);
   const primary = roads[0] ?? null;
 
-  const corridor = await fetchCorridorStations(
-    primary?.polyline?.coordinates ?? null,
-    origin,
-    destination,
-  );
-  const allStations = mergeStations(stations, corridor);
+  // Re-fetch corridor using the primary road polyline now that we have it,
+  // then merge with the null-polyline result already fetched above (fast path).
+  const corridorWithPolyline = primary?.polyline?.coordinates
+    ? await fetchCorridorStations(primary.polyline.coordinates, origin, destination)
+    : corridor;
+  const allStations = mergeStations(stations, mergeStations(corridor, corridorWithPolyline));
 
-  const built: TripVariant[] = [];
-  for (let r = 0; r < roads.length; r++) {
-    for (const s of STRATEGIES) {
-      const plan = await planTrip({
+  const combinations = roads.flatMap((road, r) =>
+    STRATEGIES.map((s) => ({ road, r, s }))
+  );
+
+  const results = await Promise.all(
+    combinations.map(({ road, r, s }) =>
+      planTrip({
         origin,
         destination,
         spec,
         currentSocPct,
         deratingPct,
         stations: allStations,
-        baseRoute: roads[r],
+        baseRoute: road,
         chargeTargetPct: s.target,
+        arrivalSocPct,
         homePriceEurKwh,
         efficiencyKwhPer100km,
         skipCorridorFetch: true,
-      });
-      if (plan.feasible) built.push({ id: `${r}-${s.id}`, strategy: s.id, roadIndex: r, plan });
-    }
-  }
+      }).then((plan) => (plan.feasible ? { id: `${r}-${s.id}`, strategy: s.id, roadIndex: r, plan } as TripVariant : null))
+    )
+  );
+
+  const built = results.filter((v): v is TripVariant => v !== null);
 
   // Keep distinct options only. The signature includes roadIndex so two
   // physically different roads (e.g. the Suceava vs Fălticeni corridor) are
@@ -319,6 +334,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
     deratingPct,
     stations: allStations,
     baseRoute: primary ?? undefined,
+    arrivalSocPct,
     homePriceEurKwh,
     efficiencyKwhPer100km,
     skipCorridorFetch: true,
