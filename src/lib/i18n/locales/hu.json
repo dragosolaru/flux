@@ -619,7 +619,17 @@
     "share_success_preconditioned": "Navigáció + akkumulátor előkondicionálás elküldve",
     "share_error": "Nem sikerült elküldeni a Teslának",
     "precondition_auto": "Automatikus előkondicionálás",
-    "precondition_manual": "Akkumulátor előkondicionálása"
+    "precondition_manual": "Akkumulátor előkondicionálása",
+    "arrival_soc": "Megérkezés",
+    "arrival_soc_pct": "Megérkezés {pct}%",
+    "variant": {
+      "fastest": "Leggyorsabb",
+      "fewest_stops": "Legkevesebb megálló",
+      "cheapest": "Legolcsóbb"
+    },
+    "recents": "Legutóbbi",
+    "clear_recents": "Törlés",
+    "no_recents": "Nincs korábbi célpont"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

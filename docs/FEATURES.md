@@ -225,6 +225,14 @@ stops-free) — the driver navigates stop-by-stop. Waypoint parsing uses a
 from `StopCard.tsx`. i18n: `trip.share_to_tesla`, `trip.share_success`,
 `trip.share_error`, `trip.precondition_auto`, `trip.precondition_manual`.
 
+**Arrival SOC target:** A second slider in the Options panel (`trip.arrival_soc`) lets the user specify the minimum battery % to arrive with (0–30%, step 5, default 10%). Value is sent as `arrivalSocPct` in the `POST /api/trip-plan` body.
+
+**Semantic variant badges:** Each variant chip gets an auto-computed label: "Fastest" (accent, lowest `totalMinutes`), "Fewest stops" (green, lowest stop count), or "Cheapest" (yellow, lowest `tripEnergyCostEur`). Only one badge per chip; priority is fastest > fewest-stops > cheapest. Implemented in `getVariantLabel()` in `trip-client.tsx`. i18n: `trip.variant.fastest`, `trip.variant.fewest_stops`, `trip.variant.cheapest`.
+
+**Recent destinations:** Up to 5 recent destinations are persisted in `localStorage["flux_recent_destinations"]` (LIFO). They appear as a dropdown under the destination input when the input is focused and empty. Click a recent to set it as destination; the × button removes individual entries; "Clear" removes all. Helper functions `getRecentDestinations()`, `addRecentDestination()`, `removeRecentDestination()` are defined in `trip-client.tsx`. i18n: `trip.recents`, `trip.clear_recents`, `trip.no_recents`.
+
+**Enter/Escape key on GeocodingSearch:** `onKeyDown` handler on the geocoding input: Enter selects the first result when the dropdown is open; Escape closes the dropdown. Implemented in `GeocodingSearch.tsx`.
+
 **Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts` (new), `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/components/trip/StopCard.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/brands/tesla/command-map.ts` (share_navigation), `src/app/api/vehicles/[vehicleId]/commands/route.ts`.
 
 **Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Overpass/OpenStreetMap (corridor stations, no key), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).

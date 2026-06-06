@@ -619,7 +619,17 @@
     "share_success_preconditioned": "Navigație + precondiționare baterie trimise",
     "share_error": "Nu s-a putut trimite la Tesla",
     "precondition_auto": "Precondiționare automată",
-    "precondition_manual": "Precondiționează bateria"
+    "precondition_manual": "Precondiționează bateria",
+    "arrival_soc": "Baterie la sosire",
+    "arrival_soc_pct": "Sosești cu {pct}%",
+    "variant": {
+      "fastest": "Cel mai rapid",
+      "fewest_stops": "Cele mai puține opriri",
+      "cheapest": "Cel mai ieftin"
+    },
+    "recents": "Recente",
+    "clear_recents": "Șterge",
+    "no_recents": "Fără destinații recente"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",
