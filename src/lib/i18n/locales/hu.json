@@ -105,6 +105,18 @@
       "vin_label": "VIN (opcionális)",
       "vin_placeholder": "pl.: 5YJ3E1EA1LF000001",
       "vin_detected": "Felismert: {variant} ({year})"
+    },
+    "connectTesla": {
+      "permission": [
+        "Jármű állapotának, helyének és töltöttségének olvasása",
+        "Járműparancsok küldése (zárás, klíma, duda, villogás)",
+        "Töltés kezelése — töltési limit beállítása, munkamenetek indítása/leállítása",
+        "Hozzáférési tokenek megújítása a nevedben a háttérben"
+      ],
+      "title": "Csatlakoztasd a Teslát",
+      "description": "A Flux a hivatalos Tesla Fleet API-t használja. Soha nem látjuk a jelszavadat — közvetlenül a Teslánál jelentkezel be.",
+      "error": "Nem sikerült befejezni az előző próbálkozást ({code}). Kérjük, próbáld újra.",
+      "cta": "Tesla-fiók csatlakoztatása"
     }
   },
   "scenarios": {
@@ -167,7 +179,10 @@
         "octopus-mock": "Octopus Energy (demó)",
         "awattar-mock": "aWATTar (demó)",
         "tibber": "Tibber"
-      }
+      },
+      "updated": "Tarifaszolgáltató frissítve",
+      "updateError": "Nem sikerült frissíteni a tarifaszolgáltatót",
+      "mockNote": "Csak demó adatok — nincs szükség valódi API-kulcsokra."
     },
     "danger_zone": {
       "export_button": "Adataim exportálása",
@@ -232,6 +247,13 @@
     },
     "install_app": {
       "label": "Alkalmazás telepítése"
+    },
+    "disconnect": {
+      "confirm": "Leválasztod ezt a járművet a Fluxról?",
+      "success": "Jármű leválasztva",
+      "error": "Nem sikerült leválasztani a járművet",
+      "pending": "Leválasztás…",
+      "label": "Leválasztás"
     }
   },
   "ingest": {
@@ -323,7 +345,8 @@
     "history_cost": "Költség",
     "history_home": "Otthon",
     "history_public": "Nyilvános",
-    "history_sync_success": "{count} munkamenet szinkronizálva"
+    "history_sync_success": "{count} munkamenet szinkronizálva",
+    "syncSuccess": "{count} munkamenet szinkronizálva"
   },
   "commands": {
     "title": "Parancsok",
@@ -417,7 +440,42 @@
     "blended": "Vegyes",
     "km_driven": "km megtett",
     "no_chart_data": "Még nincs havi adat",
-    "add_receipt": "Nyugta hozzáadása"
+    "add_receipt": "Nyugta hozzáadása",
+    "docStatus": {
+      "type": {
+        "gasBill": "Gázszámla",
+        "petrolReceipt": "Üzemanyagblokk",
+        "other": "Ismeretlen dokumentum"
+      },
+      "hint": {
+        "gasBill": "Nem tartalmaz villamosenergia-adatokat. Tartalmaz EV-töltési munkamenetet is?",
+        "petrolReceipt": "Üzemanyagblokk. Tartalmaz EV-töltési munkamenetet is?",
+        "other": "Nem sikerült azonosítani a típust. Tartalmaz villamosenergia-adatokat?"
+      },
+      "friendlyError": {
+        "unknown": "Ismeretlen hiba.",
+        "insufficientCredits": "Nincs elég Anthropic kredit. Adj hozzá kreditet a console.anthropic.com/settings/billing oldalon, majd töltsd fel újra a dokumentumot.",
+        "invalidKey": "Az Anthropic API-kulcs érvénytelen. Ellenőrizd az ANTHROPIC_API_KEY változót a Vercelben.",
+        "rateLimit": "Túl sok kérés. Próbáld újra néhány másodperc múlva.",
+        "overloaded": "Az AI-szolgáltatás átmenetileg túlterhelt. Próbáld újra."
+      },
+      "status": {
+        "done": "Feldolgozva",
+        "needsReview": "Ellenőrzés szükséges",
+        "error": "Hiba",
+        "processing": "Feldolgozás…",
+        "pending": "Függőben…"
+      },
+      "fallbackName": "Dokumentum",
+      "addManually": "Igen, hozzáadom kézzel",
+      "lowConfidence": "Néhány mező alacsony megbízhatóságú. Ellenőrizd és javítsd, ha szükséges.",
+      "fieldCost": "Villamosenergia-költség (RON)",
+      "fieldKwh": "Villamosenergia kWh",
+      "confirmDelete": "Biztos vagy benne?",
+      "ariaOpen": "Dokumentum megnyitása",
+      "ariaEdit": "Szerkesztés",
+      "ariaDelete": "Dokumentum törlése"
+    }
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -573,5 +631,92 @@
     "description": "Váratlan hiba történt. Kérjük, próbálja újra.",
     "retry": "Próbálja újra",
     "back_to_dashboard": "Vissza az irányítópultra"
+  },
+  "pricing": {
+    "heading": "Egyszerű árazás",
+    "subheading": "Kezdd ingyen. Válts magasabb csomagra, amikor többre van szükséged.",
+    "freeTier": "Ingyenes",
+    "proTier": "Pro",
+    "freeDesc": "Teljes hozzáférés az alapfunkciókhoz",
+    "proDesc": "Minden korlátlanul + AI-funkciók",
+    "perMonth": "/ hó",
+    "annualNote": "vagy 39 € / év (35% megtakarítás)",
+    "currentPlan": "Jelenlegi csomag",
+    "includedInPro": "A Pro tartalmazza",
+    "getStartedFree": "Kezdés ingyen",
+    "mostPopular": "Legnépszerűbb",
+    "getStarted": "Kezdés",
+    "disclaimer": "Az árak EUR-ban. ÁFA felszámítható. Bármikor lemondható.",
+    "backToApp": "Vissza az alkalmazáshoz",
+    "feature": {
+      "free_vehicle": "1 jármű (demó vagy élő)",
+      "free_ocr": "3 OCR-dokumentum / hó",
+      "free_dashboard": "Teljes töltési irányítópult",
+      "free_map": "Töltési térkép",
+      "free_trip": "Útvonaltervező",
+      "free_scheduler": "Intelligens töltésütemező",
+      "free_tariff": "Energiatarifa-árak",
+      "pro_vehicles": "Korlátlan jármű",
+      "pro_ocr": "Korlátlan OCR-dokumentum",
+      "pro_ai": "Energiaszámla-elemzés AI-val",
+      "pro_whatsapp": "Dokumentumimport WhatsAppon",
+      "pro_email": "Dokumentumimport e-mailben",
+      "pro_battery": "Akkumulátorállapot-követés",
+      "pro_digest": "Heti költségösszegző e-mail",
+      "pro_export": "Költségadatok exportálása (CSV)",
+      "pro_support": "Elsőbbségi támogatás"
+    }
+  },
+  "aboutData": {
+    "live": "Élő",
+    "mock": "Demó",
+    "heading": "Az adataidról",
+    "subheading": "Átláthatósági áttekintés — mi élő és mi szimulált a flottádban és a platformszolgáltatásokban.",
+    "yourVehicles": "A járműveid",
+    "noVehicles": "Még nincs hozzáadott jármű.",
+    "platformServices": "Platformszolgáltatások",
+    "footer": "Csatlakoztass egy valódi járművet a Beállításokban, hogy az adott járműnél demóról élő adatokra válts. A platformszolgáltatások (tarifa, töltőhálózat, időjárás, útvonaltervezés) ebben a demóban szimulált szolgáltatókat használnak.",
+    "category": {
+      "telemetry": {
+        "label": "Jármű-telemetria",
+        "liveDesc": "Valós idejű az OEM API-ból",
+        "mockDesc": "Tier-3 forgatókönyv-szimulátor"
+      },
+      "commands": {
+        "label": "Távoli parancsok",
+        "liveDesc": "A járműnek küldve az OEM API-n keresztül",
+        "mockDesc": "A szimulátor állapotára alkalmazva"
+      },
+      "chargingHistory": {
+        "label": "Töltési előzmények",
+        "liveDesc": "Az OEM API-ból + munkamenet-rekordok",
+        "mockDesc": "Mozgási átmeneteknél generálva"
+      },
+      "trips": {
+        "label": "Utazási előzmények",
+        "liveDesc": "Az OEM API-ból + GPS-naplók",
+        "mockDesc": "Vezetési átmeneteknél generálva"
+      },
+      "tariff": {
+        "label": "Energiatarifa-árak",
+        "liveDesc": "Élő a szolgáltató API-jából",
+        "mockDesc": "Determinisztikus demó görbék"
+      },
+      "chargingNetwork": {
+        "label": "Töltőhálózati térkép",
+        "liveDesc": "Élő elérhetőségi API-k",
+        "mockDesc": "Statikus demó állomásregiszter"
+      },
+      "weather": {
+        "label": "Időjárás & hatótáv-csökkenés",
+        "liveDesc": "Élő az időjárás API-ból",
+        "mockDesc": "Demó időjárás-szolgáltató"
+      },
+      "routing": {
+        "label": "Útvonaltervezés",
+        "liveDesc": "Élő útvonaltervező API",
+        "mockDesc": "Nagykör-heurisztika"
+      }
+    }
   }
 }

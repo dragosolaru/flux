@@ -105,6 +105,18 @@
       "vin_label": "VIN (optional)",
       "vin_placeholder": "e.g. 5YJ3E1EA1LF000001",
       "vin_detected": "Detected: {variant} ({year})"
+    },
+    "connectTesla": {
+      "permission": [
+        "Read vehicle status, location, and charge state",
+        "Send vehicle commands (lock, climate, horn, flash)",
+        "Manage charging — set charge limit, start/stop sessions",
+        "Refresh access tokens on your behalf in the background"
+      ],
+      "title": "Connect your Tesla",
+      "description": "Flux uses the official Tesla Fleet API. We never see your password — you sign in directly with Tesla.",
+      "error": "We couldn't complete the previous attempt ({code}). Please try again.",
+      "cta": "Connect Tesla account"
     }
   },
   "scenarios": {
@@ -167,7 +179,10 @@
         "tibber-mock": "Tibber (demo)",
         "octopus-mock": "Octopus Energy (demo)",
         "awattar-mock": "aWATTar (demo)"
-      }
+      },
+      "updated": "Tariff provider updated",
+      "updateError": "Failed to update tariff provider",
+      "mockNote": "Mock data only — no real API keys required."
     },
     "danger_zone": {
       "export_button": "Export my data",
@@ -232,6 +247,13 @@
     },
     "install_app": {
       "label": "Install app"
+    },
+    "disconnect": {
+      "confirm": "Disconnect this vehicle from Flux?",
+      "success": "Vehicle disconnected",
+      "error": "Could not disconnect vehicle",
+      "pending": "Disconnecting…",
+      "label": "Disconnect"
     }
   },
   "ingest": {
@@ -323,7 +345,8 @@
     "history_kwh": "kWh added",
     "history_cost": "Cost",
     "history_home": "Home",
-    "history_public": "Public"
+    "history_public": "Public",
+    "syncSuccess": "Synced {count} sessions"
   },
   "commands": {
     "title": "Commands",
@@ -417,7 +440,42 @@
     "status_error": "Error",
     "status_processing": "Processing",
     "status_pending": "Pending",
-    "no_chart_data": "No monthly data yet"
+    "no_chart_data": "No monthly data yet",
+    "docStatus": {
+      "type": {
+        "gasBill": "Gas bill",
+        "petrolReceipt": "Petrol receipt",
+        "other": "Unknown document"
+      },
+      "hint": {
+        "gasBill": "Doesn't contain electricity data. Does it also include an EV charging session?",
+        "petrolReceipt": "Fuel receipt. Does it also include an EV charging session?",
+        "other": "We couldn't identify the type. Does it contain electricity data?"
+      },
+      "friendlyError": {
+        "unknown": "Unknown error.",
+        "insufficientCredits": "Insufficient Anthropic credits. Add credits at console.anthropic.com/settings/billing, then re-upload the document.",
+        "invalidKey": "The Anthropic API key is invalid. Check the ANTHROPIC_API_KEY variable in Vercel.",
+        "rateLimit": "Too many requests. Try again in a few seconds.",
+        "overloaded": "The AI service is temporarily overloaded. Try again."
+      },
+      "status": {
+        "done": "Processed",
+        "needsReview": "Review needed",
+        "error": "Error",
+        "processing": "Processing…",
+        "pending": "Pending…"
+      },
+      "fallbackName": "Document",
+      "addManually": "Yes, add manually",
+      "lowConfidence": "Some fields have low confidence. Review and correct if needed.",
+      "fieldCost": "Electricity cost (RON)",
+      "fieldKwh": "Electricity kWh",
+      "confirmDelete": "Are you sure?",
+      "ariaOpen": "Open document",
+      "ariaEdit": "Edit",
+      "ariaDelete": "Delete document"
+    }
   },
   "departure": {
     "title": "Departure & Preconditioning",
@@ -573,5 +631,92 @@
     "description": "An unexpected error occurred. Please try again.",
     "retry": "Try again",
     "back_to_dashboard": "Back to dashboard"
+  },
+  "pricing": {
+    "heading": "Simple pricing",
+    "subheading": "Start free. Upgrade when you need more.",
+    "freeTier": "Free",
+    "proTier": "Pro",
+    "freeDesc": "Full access to core features",
+    "proDesc": "Unlimited everything + AI features",
+    "perMonth": "/ month",
+    "annualNote": "or €39 / year (save 35%)",
+    "currentPlan": "Current plan",
+    "includedInPro": "Included in Pro",
+    "getStartedFree": "Get started free",
+    "mostPopular": "Most popular",
+    "getStarted": "Get started",
+    "disclaimer": "Prices in EUR. VAT may apply. Cancel anytime.",
+    "backToApp": "Back to app",
+    "feature": {
+      "free_vehicle": "1 vehicle (mock or live)",
+      "free_ocr": "3 OCR documents / month",
+      "free_dashboard": "Full charging dashboard",
+      "free_map": "Charging map",
+      "free_trip": "Trip planner",
+      "free_scheduler": "Smart charge scheduler",
+      "free_tariff": "Energy tariff prices",
+      "pro_vehicles": "Unlimited vehicles",
+      "pro_ocr": "Unlimited OCR documents",
+      "pro_ai": "Energy bill analysis via AI",
+      "pro_whatsapp": "WhatsApp document ingest",
+      "pro_email": "Email document ingest",
+      "pro_battery": "Battery health tracking",
+      "pro_digest": "Weekly cost digest email",
+      "pro_export": "Export cost data (CSV)",
+      "pro_support": "Priority support"
+    }
+  },
+  "aboutData": {
+    "live": "Live",
+    "mock": "Mock",
+    "heading": "About your data",
+    "subheading": "Transparency breakdown — what's live vs simulated across your fleet and platform services.",
+    "yourVehicles": "Your vehicles",
+    "noVehicles": "No vehicles added yet.",
+    "platformServices": "Platform services",
+    "footer": "Connect a real vehicle via Settings to switch from mock to live data for that vehicle. Platform services (tariff, charging network, weather, routing) use mock providers in this demo.",
+    "category": {
+      "telemetry": {
+        "label": "Vehicle telemetry",
+        "liveDesc": "Real-time from OEM API",
+        "mockDesc": "Tier-3 scenario simulator"
+      },
+      "commands": {
+        "label": "Remote commands",
+        "liveDesc": "Sent to vehicle via OEM API",
+        "mockDesc": "Applied to simulator state"
+      },
+      "chargingHistory": {
+        "label": "Charging history",
+        "liveDesc": "From OEM API + session records",
+        "mockDesc": "Generated on motion transitions"
+      },
+      "trips": {
+        "label": "Trip history",
+        "liveDesc": "From OEM API + GPS logs",
+        "mockDesc": "Generated on driving transitions"
+      },
+      "tariff": {
+        "label": "Energy tariff prices",
+        "liveDesc": "Live from provider API",
+        "mockDesc": "Deterministic mock curves"
+      },
+      "chargingNetwork": {
+        "label": "Charging network map",
+        "liveDesc": "Live availability APIs",
+        "mockDesc": "Static mock station registry"
+      },
+      "weather": {
+        "label": "Weather & range derating",
+        "liveDesc": "Live from weather API",
+        "mockDesc": "Mock weather provider"
+      },
+      "routing": {
+        "label": "Trip routing",
+        "liveDesc": "Live routing API",
+        "mockDesc": "Great-circle heuristic"
+      }
+    }
   }
 }

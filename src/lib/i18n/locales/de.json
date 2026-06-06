@@ -105,6 +105,18 @@
       "vin_label": "VIN (optional)",
       "vin_placeholder": "z.B. 5YJ3E1EA1LF000001",
       "vin_detected": "Erkannt: {variant} ({year})"
+    },
+    "connectTesla": {
+      "permission": [
+        "Fahrzeugstatus, Standort und Ladezustand lesen",
+        "Fahrzeugbefehle senden (Verriegeln, Klima, Hupe, Blinken)",
+        "Laden verwalten — Ladelimit setzen, Sitzungen starten/stoppen",
+        "Zugriffstokens in deinem Namen im Hintergrund erneuern"
+      ],
+      "title": "Verbinde deinen Tesla",
+      "description": "Flux nutzt die offizielle Tesla Fleet API. Wir sehen niemals dein Passwort — du meldest dich direkt bei Tesla an.",
+      "error": "Wir konnten den vorherigen Versuch nicht abschließen ({code}). Bitte versuche es erneut.",
+      "cta": "Tesla-Konto verbinden"
     }
   },
   "scenarios": {
@@ -167,7 +179,10 @@
         "octopus-mock": "Octopus Energy (Demo)",
         "awattar-mock": "aWATTar (Demo)",
         "tibber": "Tibber"
-      }
+      },
+      "updated": "Tarifanbieter aktualisiert",
+      "updateError": "Tarifanbieter konnte nicht aktualisiert werden",
+      "mockNote": "Nur Demo-Daten — keine echten API-Schlüssel erforderlich."
     },
     "danger_zone": {
       "export_button": "Meine Daten exportieren",
@@ -232,6 +247,13 @@
     },
     "install_app": {
       "label": "App installieren"
+    },
+    "disconnect": {
+      "confirm": "Dieses Fahrzeug von Flux trennen?",
+      "success": "Fahrzeug getrennt",
+      "error": "Fahrzeug konnte nicht getrennt werden",
+      "pending": "Wird getrennt…",
+      "label": "Trennen"
     }
   },
   "ingest": {
@@ -323,7 +345,8 @@
     "history_cost": "Kosten",
     "history_home": "Zuhause",
     "history_public": "Öffentlich",
-    "history_sync_success": "{count} Sitzungen synchronisiert"
+    "history_sync_success": "{count} Sitzungen synchronisiert",
+    "syncSuccess": "{count} Sitzungen synchronisiert"
   },
   "commands": {
     "title": "Befehle",
@@ -417,7 +440,42 @@
     "blended": "Gemischt",
     "km_driven": "km gefahren",
     "no_chart_data": "Noch keine Monatsdaten",
-    "add_receipt": "Bon hinzufügen"
+    "add_receipt": "Bon hinzufügen",
+    "docStatus": {
+      "type": {
+        "gasBill": "Gasrechnung",
+        "petrolReceipt": "Tankbeleg",
+        "other": "Unbekanntes Dokument"
+      },
+      "hint": {
+        "gasBill": "Enthält keine Stromdaten. Enthält es auch eine EV-Ladesitzung?",
+        "petrolReceipt": "Kraftstoffbeleg. Enthält es auch eine EV-Ladesitzung?",
+        "other": "Wir konnten den Typ nicht erkennen. Enthält es Stromdaten?"
+      },
+      "friendlyError": {
+        "unknown": "Unbekannter Fehler.",
+        "insufficientCredits": "Unzureichendes Anthropic-Guthaben. Füge Guthaben unter console.anthropic.com/settings/billing hinzu und lade das Dokument erneut hoch.",
+        "invalidKey": "Der Anthropic-API-Schlüssel ist ungültig. Überprüfe die Variable ANTHROPIC_API_KEY in Vercel.",
+        "rateLimit": "Zu viele Anfragen. Versuche es in ein paar Sekunden erneut.",
+        "overloaded": "Der KI-Dienst ist vorübergehend überlastet. Versuche es erneut."
+      },
+      "status": {
+        "done": "Verarbeitet",
+        "needsReview": "Überprüfung nötig",
+        "error": "Fehler",
+        "processing": "Wird verarbeitet…",
+        "pending": "Ausstehend…"
+      },
+      "fallbackName": "Dokument",
+      "addManually": "Ja, manuell hinzufügen",
+      "lowConfidence": "Einige Felder haben geringe Zuverlässigkeit. Bei Bedarf überprüfen und korrigieren.",
+      "fieldCost": "Stromkosten (RON)",
+      "fieldKwh": "Strom kWh",
+      "confirmDelete": "Bist du sicher?",
+      "ariaOpen": "Dokument öffnen",
+      "ariaEdit": "Bearbeiten",
+      "ariaDelete": "Dokument löschen"
+    }
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -573,5 +631,92 @@
     "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
     "retry": "Erneut versuchen",
     "back_to_dashboard": "Zurück zum Dashboard"
+  },
+  "pricing": {
+    "heading": "Einfache Preise",
+    "subheading": "Kostenlos starten. Upgrade, wenn du mehr brauchst.",
+    "freeTier": "Kostenlos",
+    "proTier": "Pro",
+    "freeDesc": "Voller Zugriff auf Kernfunktionen",
+    "proDesc": "Alles unbegrenzt + KI-Funktionen",
+    "perMonth": "/ Monat",
+    "annualNote": "oder €39 / Jahr (35% sparen)",
+    "currentPlan": "Aktueller Plan",
+    "includedInPro": "In Pro enthalten",
+    "getStartedFree": "Kostenlos starten",
+    "mostPopular": "Am beliebtesten",
+    "getStarted": "Loslegen",
+    "disclaimer": "Preise in EUR. Zzgl. evtl. MwSt. Jederzeit kündbar.",
+    "backToApp": "Zurück zur App",
+    "feature": {
+      "free_vehicle": "1 Fahrzeug (Demo oder live)",
+      "free_ocr": "3 OCR-Dokumente / Monat",
+      "free_dashboard": "Vollständiges Lade-Dashboard",
+      "free_map": "Ladekarte",
+      "free_trip": "Routenplaner",
+      "free_scheduler": "Intelligenter Ladeplaner",
+      "free_tariff": "Energietarifpreise",
+      "pro_vehicles": "Unbegrenzte Fahrzeuge",
+      "pro_ocr": "Unbegrenzte OCR-Dokumente",
+      "pro_ai": "Energierechnungsanalyse per KI",
+      "pro_whatsapp": "Dokumentenimport per WhatsApp",
+      "pro_email": "Dokumentenimport per E-Mail",
+      "pro_battery": "Batteriezustandsüberwachung",
+      "pro_digest": "Wöchentliche Kostenübersicht per E-Mail",
+      "pro_export": "Kostendaten exportieren (CSV)",
+      "pro_support": "Prioritäts-Support"
+    }
+  },
+  "aboutData": {
+    "live": "Live",
+    "mock": "Demo",
+    "heading": "Über deine Daten",
+    "subheading": "Transparenz-Übersicht — was live vs. simuliert ist über deine Flotte und Plattformdienste.",
+    "yourVehicles": "Deine Fahrzeuge",
+    "noVehicles": "Noch keine Fahrzeuge hinzugefügt.",
+    "platformServices": "Plattformdienste",
+    "footer": "Verbinde ein echtes Fahrzeug über die Einstellungen, um für dieses Fahrzeug von Demo- auf Live-Daten umzuschalten. Plattformdienste (Tarif, Ladenetz, Wetter, Routing) verwenden in dieser Demo Mock-Anbieter.",
+    "category": {
+      "telemetry": {
+        "label": "Fahrzeugtelemetrie",
+        "liveDesc": "Echtzeit von der OEM-API",
+        "mockDesc": "Tier-3-Szenariosimulator"
+      },
+      "commands": {
+        "label": "Fernbefehle",
+        "liveDesc": "An das Fahrzeug über die OEM-API gesendet",
+        "mockDesc": "Auf den Simulatorzustand angewendet"
+      },
+      "chargingHistory": {
+        "label": "Ladeverlauf",
+        "liveDesc": "Von der OEM-API + Sitzungsaufzeichnungen",
+        "mockDesc": "Bei Bewegungsübergängen generiert"
+      },
+      "trips": {
+        "label": "Fahrtverlauf",
+        "liveDesc": "Von der OEM-API + GPS-Logs",
+        "mockDesc": "Bei Fahrtübergängen generiert"
+      },
+      "tariff": {
+        "label": "Energietarifpreise",
+        "liveDesc": "Live von der Anbieter-API",
+        "mockDesc": "Deterministische Demo-Kurven"
+      },
+      "chargingNetwork": {
+        "label": "Ladenetz-Karte",
+        "liveDesc": "Live-Verfügbarkeits-APIs",
+        "mockDesc": "Statisches Demo-Stationsregister"
+      },
+      "weather": {
+        "label": "Wetter & Reichweitenminderung",
+        "liveDesc": "Live von der Wetter-API",
+        "mockDesc": "Demo-Wetteranbieter"
+      },
+      "routing": {
+        "label": "Routenplanung",
+        "liveDesc": "Live-Routing-API",
+        "mockDesc": "Großkreis-Heuristik"
+      }
+    }
   }
 }

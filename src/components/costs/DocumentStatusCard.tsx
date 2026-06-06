@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, Flame, Fuel,
   HelpCircle, Home, Loader2, Pencil, Trash2, XCircle, Zap,
@@ -25,16 +26,11 @@ function isNonElectricity(t: string | null | undefined): t is NonElectricityType
   return NON_ELECTRICITY_TYPES.includes(t as NonElectricityType);
 }
 
-const NON_ELECTRICITY_LABEL: Record<NonElectricityType, string> = {
-  gas_bill: "Factură de gaz",
-  petrol_receipt: "Bon benzinărie",
-  other: "Document necunoscut",
-};
-
-const NON_ELECTRICITY_HINT: Record<NonElectricityType, string> = {
-  gas_bill: "Nu conține date despre curent electric. Conține și o sesiune de încărcare EV?",
-  petrol_receipt: "Bon de carburant. Conține și o sesiune de încărcare EV?",
-  other: "Nu am putut identifica tipul. Conține date despre curent electric?",
+// Map enum values to i18n key suffixes (keys live under costs.docStatus.*).
+const TYPE_KEY: Record<NonElectricityType, string> = {
+  gas_bill: "gasBill",
+  petrol_receipt: "petrolReceipt",
+  other: "other",
 };
 
 function NonElectricityIcon({ type }: { type: NonElectricityType }) {
@@ -43,17 +39,14 @@ function NonElectricityIcon({ type }: { type: NonElectricityType }) {
   return <HelpCircle className="size-4 text-muted-foreground" />;
 }
 
-function friendlyError(raw: string | null): string {
-  if (!raw) return "Eroare necunoscută.";
-  if (raw.includes("credit balance") || raw.includes("too low"))
-    return "Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing, apoi re-uploadează documentul.";
-  if (raw.includes("invalid_api_key") || raw.includes("401"))
-    return "Cheia API Anthropic este invalidă. Verifică variabila ANTHROPIC_API_KEY în Vercel.";
-  if (raw.includes("rate_limit") || raw.includes("429"))
-    return "Prea multe cereri. Încearcă din nou în câteva secunde.";
-  if (raw.includes("overloaded") || raw.includes("529"))
-    return "Serviciul AI este temporar suprasolicitat. Încearcă din nou.";
-  return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
+// Returns the friendlyError i18n key suffix, or null to show the raw message.
+function friendlyErrorKey(raw: string | null): string | null {
+  if (!raw) return "unknown";
+  if (raw.includes("credit balance") || raw.includes("too low")) return "insufficientCredits";
+  if (raw.includes("invalid_api_key") || raw.includes("401")) return "invalidKey";
+  if (raw.includes("rate_limit") || raw.includes("429")) return "rateLimit";
+  if (raw.includes("overloaded") || raw.includes("529")) return "overloaded";
+  return null;
 }
 
 function StatusIcon({ status }: { status: Document["status"] }) {
@@ -63,19 +56,28 @@ function StatusIcon({ status }: { status: Document["status"] }) {
   return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
 }
 
-function statusLabel(status: Document["status"]) {
-  if (status === "done") return "Procesat";
-  if (status === "needs_review") return "Verificare necesară";
-  if (status === "error") return "Eroare";
-  if (status === "processing") return "Se procesează…";
-  return "În așteptare…";
-}
+const STATUS_KEY: Record<Document["status"], string> = {
+  done: "done",
+  needs_review: "needsReview",
+  error: "error",
+  processing: "processing",
+  pending: "pending",
+};
 
 export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCardProps) {
+  const t = useTranslations("costs.docStatus");
+  const tc = useTranslations("common");
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [costRon, setCostRon] = useState(String(doc.parsed_json?.cost_total ?? ""));
   const [kwh, setKwh] = useState(String(doc.parsed_json?.total_kwh ?? ""));
+
+  const errorKey = friendlyErrorKey(doc.error_message);
+  const errorText = errorKey
+    ? t(`friendlyError.${errorKey}`)
+    : doc.error_message && doc.error_message.length > 120
+      ? doc.error_message.slice(0, 120) + "…"
+      : doc.error_message ?? t("friendlyError.unknown");
 
   const parsed = doc.parsed_json;
   const docType = parsed?.document_type ?? null;
@@ -125,7 +127,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <StatusIcon status={doc.status} />
-              <span className="text-xs text-muted-foreground">{statusLabel(doc.status)}</span>
+              <span className="text-xs text-muted-foreground">{t(`status.${STATUS_KEY[doc.status]}`)}</span>
               {doc.source === "email" && (
                 <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">email</span>
               )}
@@ -138,8 +140,8 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <div className="mt-1">
                 <p className="text-sm font-medium leading-tight">
                   {nonElec
-                    ? NON_ELECTRICITY_LABEL[nonElec]
-                    : (parsed.provider_name ?? parsed.charger_network ?? doc.original_filename ?? "Document")}
+                    ? t(`type.${TYPE_KEY[nonElec]}`)
+                    : (parsed.provider_name ?? parsed.charger_network ?? doc.original_filename ?? t("fallbackName"))}
                 </p>
                 {!nonElec && (
                   <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
@@ -164,13 +166,13 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
 
             {!parsed && doc.status !== "error" && (
               <p className="mt-1 text-xs text-muted-foreground">
-                {doc.original_filename ?? "Document"}
+                {doc.original_filename ?? t("fallbackName")}
               </p>
             )}
 
             {doc.status === "error" && (
               <p className="mt-1 text-xs text-destructive leading-snug">
-                {friendlyError(doc.error_message)}
+                {errorText}
               </p>
             )}
 
@@ -178,7 +180,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {nonElec && !editing && (
               <div className="mt-2 space-y-2">
                 <p className="text-xs text-orange-600 dark:text-orange-400">
-                  {NON_ELECTRICITY_HINT[nonElec]}
+                  {t(`hint.${TYPE_KEY[nonElec]}`)}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -187,7 +189,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                     className="h-7 text-xs"
                     onClick={() => setEditing(true)}
                   >
-                    Da, adaug manual
+                    {t("addManually")}
                   </Button>
                   {!confirmDelete && (
                     <Button
@@ -196,7 +198,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       className="h-7 text-xs text-destructive hover:text-destructive"
                       onClick={() => setConfirmDelete(true)}
                     >
-                      Șterge
+                      {tc("delete")}
                     </Button>
                   )}
                 </div>
@@ -206,7 +208,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {/* Needs review hint (electricity docs only) */}
             {doc.status === "needs_review" && !editing && !nonElec && (
               <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
-                Unele câmpuri au încredere scăzută. Verifică și corectează dacă e necesar.
+                {t("lowConfidence")}
               </p>
             )}
 
@@ -215,7 +217,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <form onSubmit={handleEdit} className="mt-2 space-y-2">
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1">
-                    <Label htmlFor={`cost-${doc.id}`} className="text-xs">Cost curent (RON)</Label>
+                    <Label htmlFor={`cost-${doc.id}`} className="text-xs">{t("fieldCost")}</Label>
                     <Input
                       id={`cost-${doc.id}`}
                       type="number"
@@ -226,7 +228,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                     />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <Label htmlFor={`kwh-${doc.id}`} className="text-xs">kWh electricitate</Label>
+                    <Label htmlFor={`kwh-${doc.id}`} className="text-xs">{t("fieldKwh")}</Label>
                     <Input
                       id={`kwh-${doc.id}`}
                       type="number"
@@ -238,7 +240,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button type="submit" size="sm" className="h-6 text-xs">Salvează</Button>
+                  <Button type="submit" size="sm" className="h-6 text-xs">{tc("save")}</Button>
                   <Button
                     type="button"
                     size="sm"
@@ -246,7 +248,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                     className="h-6 text-xs"
                     onClick={() => setEditing(false)}
                   >
-                    Anulează
+                    {tc("cancel")}
                   </Button>
                 </div>
               </form>
@@ -255,14 +257,14 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {/* Delete confirmation (inline) */}
             {confirmDelete && (
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-destructive">Ești sigur?</span>
+                <span className="text-xs text-destructive">{t("confirmDelete")}</span>
                 <Button
                   size="sm"
                   variant="destructive"
                   className="h-6 text-xs"
                   onClick={handleDelete}
                 >
-                  Șterge
+                  {tc("delete")}
                 </Button>
                 <Button
                   size="sm"
@@ -270,7 +272,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                   className="h-6 text-xs"
                   onClick={() => setConfirmDelete(false)}
                 >
-                  Anulează
+                  {tc("cancel")}
                 </Button>
               </div>
             )}
@@ -284,8 +286,8 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded p-1 text-muted-foreground hover:text-foreground"
-                aria-label="Deschide documentul"
-                title="Deschide documentul"
+                aria-label={t("ariaOpen")}
+                title={t("ariaOpen")}
               >
                 <ExternalLink className="size-3.5" />
               </a>
@@ -294,8 +296,8 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <button
                 onClick={() => setEditing(true)}
                 className="rounded p-1 text-muted-foreground hover:text-foreground"
-                aria-label="Editează"
-                title="Editează"
+                aria-label={t("ariaEdit")}
+                title={t("ariaEdit")}
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -304,8 +306,8 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <button
                 onClick={() => setConfirmDelete(true)}
                 className="rounded p-1 text-muted-foreground hover:text-destructive"
-                aria-label="Șterge"
-                title="Șterge documentul"
+                aria-label={t("ariaDelete")}
+                title={t("ariaDelete")}
               >
                 <Trash2 className="size-3.5" />
               </button>

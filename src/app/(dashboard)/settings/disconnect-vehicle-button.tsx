@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,19 +10,20 @@ import { Button } from "@/components/ui/button";
 export function DisconnectVehicleButton({ vehicleId }: { vehicleId: string }) {
   const [pending, setPending] = useState(false);
   const router = useRouter();
+  const t = useTranslations("settings.disconnect");
 
   async function onClick() {
-    if (!confirm("Disconnect this vehicle from Flux?")) return;
+    if (!confirm(t("confirm"))) return;
     setPending(true);
     const res = await fetch(`/api/vehicles/${vehicleId}`, {
       method: "DELETE",
     });
     setPending(false);
     if (res.ok) {
-      toast.success("Vehicle disconnected");
+      toast.success(t("success"));
       router.replace("/connect/tesla");
     } else {
-      toast.error("Could not disconnect vehicle");
+      toast.error(t("error"));
     }
   }
 
@@ -32,7 +34,7 @@ export function DisconnectVehicleButton({ vehicleId }: { vehicleId: string }) {
       onClick={onClick}
       disabled={pending}
     >
-      {pending ? "Disconnecting…" : "Disconnect"}
+      {pending ? t("pending") : t("label")}
     </Button>
   );
 }

@@ -268,7 +268,7 @@ export function ChargingClient({
                 onClick={() => {
                   syncMutation.mutate(undefined, {
                     onSuccess: (result) => {
-                      toast.success(`Synced ${result.synced} sessions`);
+                      toast.success(tc("syncSuccess", { count: result.synced }));
                     },
                   });
                 }}

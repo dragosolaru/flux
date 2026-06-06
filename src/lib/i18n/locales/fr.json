@@ -105,6 +105,18 @@
       "vin_label": "NIV (optionnel)",
       "vin_placeholder": "ex : 5YJ3E1EA1LF000001",
       "vin_detected": "Détecté : {variant} ({year})"
+    },
+    "connectTesla": {
+      "permission": [
+        "Lire l'état du véhicule, la localisation et l'état de charge",
+        "Envoyer des commandes au véhicule (verrouillage, climatisation, klaxon, appels de phares)",
+        "Gérer la recharge — définir la limite, démarrer/arrêter les sessions",
+        "Renouveler les jetons d'accès en votre nom en arrière-plan"
+      ],
+      "title": "Connectez votre Tesla",
+      "description": "Flux utilise l'API officielle Tesla Fleet. Nous ne voyons jamais votre mot de passe — vous vous connectez directement avec Tesla.",
+      "error": "Nous n'avons pas pu terminer la tentative précédente ({code}). Veuillez réessayer.",
+      "cta": "Connecter le compte Tesla"
     }
   },
   "scenarios": {
@@ -167,7 +179,10 @@
         "octopus-mock": "Octopus Energy (démo)",
         "awattar-mock": "aWATTar (démo)",
         "tibber": "Tibber"
-      }
+      },
+      "updated": "Fournisseur de tarif mis à jour",
+      "updateError": "Échec de la mise à jour du fournisseur de tarif",
+      "mockNote": "Données démo uniquement — aucune clé API réelle requise."
     },
     "danger_zone": {
       "export_button": "Exporter mes données",
@@ -232,6 +247,13 @@
     },
     "install_app": {
       "label": "Installer l'application"
+    },
+    "disconnect": {
+      "confirm": "Déconnecter ce véhicule de Flux ?",
+      "success": "Véhicule déconnecté",
+      "error": "Impossible de déconnecter le véhicule",
+      "pending": "Déconnexion…",
+      "label": "Déconnecter"
     }
   },
   "ingest": {
@@ -323,7 +345,8 @@
     "history_cost": "Coût",
     "history_home": "Domicile",
     "history_public": "Public",
-    "history_sync_success": "{count} sessions synchronisées"
+    "history_sync_success": "{count} sessions synchronisées",
+    "syncSuccess": "{count} sessions synchronisées"
   },
   "commands": {
     "title": "Commandes",
@@ -417,7 +440,42 @@
     "blended": "Mixte",
     "km_driven": "km parcourus",
     "no_chart_data": "Pas encore de données mensuelles",
-    "add_receipt": "Ajouter un reçu"
+    "add_receipt": "Ajouter un reçu",
+    "docStatus": {
+      "type": {
+        "gasBill": "Facture de gaz",
+        "petrolReceipt": "Reçu de carburant",
+        "other": "Document inconnu"
+      },
+      "hint": {
+        "gasBill": "Ne contient pas de données d'électricité. Inclut-il aussi une session de recharge EV ?",
+        "petrolReceipt": "Reçu de carburant. Inclut-il aussi une session de recharge EV ?",
+        "other": "Nous n'avons pas pu identifier le type. Contient-il des données d'électricité ?"
+      },
+      "friendlyError": {
+        "unknown": "Erreur inconnue.",
+        "insufficientCredits": "Crédits Anthropic insuffisants. Ajoutez des crédits sur console.anthropic.com/settings/billing, puis re-téléversez le document.",
+        "invalidKey": "La clé API Anthropic est invalide. Vérifiez la variable ANTHROPIC_API_KEY dans Vercel.",
+        "rateLimit": "Trop de requêtes. Réessayez dans quelques secondes.",
+        "overloaded": "Le service IA est temporairement surchargé. Réessayez."
+      },
+      "status": {
+        "done": "Traité",
+        "needsReview": "Vérification requise",
+        "error": "Erreur",
+        "processing": "Traitement…",
+        "pending": "En attente…"
+      },
+      "fallbackName": "Document",
+      "addManually": "Oui, ajouter manuellement",
+      "lowConfidence": "Certains champs ont une faible confiance. Vérifiez et corrigez si nécessaire.",
+      "fieldCost": "Coût électricité (RON)",
+      "fieldKwh": "kWh électricité",
+      "confirmDelete": "Êtes-vous sûr ?",
+      "ariaOpen": "Ouvrir le document",
+      "ariaEdit": "Modifier",
+      "ariaDelete": "Supprimer le document"
+    }
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",
@@ -573,5 +631,92 @@
     "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
     "retry": "Réessayer",
     "back_to_dashboard": "Retour au tableau de bord"
+  },
+  "pricing": {
+    "heading": "Tarification simple",
+    "subheading": "Commencez gratuitement. Passez à l'offre supérieure quand vous en avez besoin.",
+    "freeTier": "Gratuit",
+    "proTier": "Pro",
+    "freeDesc": "Accès complet aux fonctionnalités de base",
+    "proDesc": "Tout illimité + fonctionnalités IA",
+    "perMonth": "/ mois",
+    "annualNote": "ou 39 € / an (économisez 35%)",
+    "currentPlan": "Forfait actuel",
+    "includedInPro": "Inclus dans Pro",
+    "getStartedFree": "Commencer gratuitement",
+    "mostPopular": "Le plus populaire",
+    "getStarted": "Commencer",
+    "disclaimer": "Prix en EUR. TVA éventuellement applicable. Annulez à tout moment.",
+    "backToApp": "Retour à l'application",
+    "feature": {
+      "free_vehicle": "1 véhicule (démo ou réel)",
+      "free_ocr": "3 documents OCR / mois",
+      "free_dashboard": "Tableau de bord de recharge complet",
+      "free_map": "Carte de recharge",
+      "free_trip": "Planificateur d'itinéraire",
+      "free_scheduler": "Planificateur de recharge intelligent",
+      "free_tariff": "Prix des tarifs d'énergie",
+      "pro_vehicles": "Véhicules illimités",
+      "pro_ocr": "Documents OCR illimités",
+      "pro_ai": "Analyse de facture d'énergie par IA",
+      "pro_whatsapp": "Import de documents par WhatsApp",
+      "pro_email": "Import de documents par e-mail",
+      "pro_battery": "Suivi de l'état de la batterie",
+      "pro_digest": "Résumé hebdomadaire des coûts par e-mail",
+      "pro_export": "Export des données de coûts (CSV)",
+      "pro_support": "Support prioritaire"
+    }
+  },
+  "aboutData": {
+    "live": "Live",
+    "mock": "Démo",
+    "heading": "À propos de vos données",
+    "subheading": "Détail de transparence — ce qui est en direct vs simulé dans votre flotte et les services de la plateforme.",
+    "yourVehicles": "Vos véhicules",
+    "noVehicles": "Aucun véhicule ajouté pour le moment.",
+    "platformServices": "Services de la plateforme",
+    "footer": "Connectez un véhicule réel via les Paramètres pour passer des données démo aux données en direct pour ce véhicule. Les services de la plateforme (tarif, réseau de recharge, météo, routage) utilisent des fournisseurs fictifs dans cette démo.",
+    "category": {
+      "telemetry": {
+        "label": "Télémétrie du véhicule",
+        "liveDesc": "En temps réel depuis l'API OEM",
+        "mockDesc": "Simulateur de scénarios Tier-3"
+      },
+      "commands": {
+        "label": "Commandes à distance",
+        "liveDesc": "Envoyées au véhicule via l'API OEM",
+        "mockDesc": "Appliquées à l'état du simulateur"
+      },
+      "chargingHistory": {
+        "label": "Historique de recharge",
+        "liveDesc": "Depuis l'API OEM + enregistrements de sessions",
+        "mockDesc": "Généré lors des transitions de mouvement"
+      },
+      "trips": {
+        "label": "Historique des trajets",
+        "liveDesc": "Depuis l'API OEM + journaux GPS",
+        "mockDesc": "Généré lors des transitions de conduite"
+      },
+      "tariff": {
+        "label": "Prix des tarifs d'énergie",
+        "liveDesc": "En direct depuis l'API du fournisseur",
+        "mockDesc": "Courbes démo déterministes"
+      },
+      "chargingNetwork": {
+        "label": "Carte du réseau de recharge",
+        "liveDesc": "API de disponibilité en direct",
+        "mockDesc": "Registre de stations démo statique"
+      },
+      "weather": {
+        "label": "Météo & réduction d'autonomie",
+        "liveDesc": "En direct depuis l'API météo",
+        "mockDesc": "Fournisseur météo démo"
+      },
+      "routing": {
+        "label": "Routage de trajet",
+        "liveDesc": "API de routage en direct",
+        "mockDesc": "Heuristique de grand cercle"
+      }
+    }
   }
 }

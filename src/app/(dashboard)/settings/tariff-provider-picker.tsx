@@ -3,6 +3,7 @@
 import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
@@ -16,6 +17,7 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState(activeProvider);
+  const t = useTranslations("settings.tariff");
 
   async function handleChange(e: ChangeEvent<HTMLSelectElement>) {
     const providerId = e.target.value;
@@ -26,9 +28,9 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
         body: JSON.stringify({ providerId }),
       });
       startTransition(() => router.refresh());
-      toast.success("Tariff provider updated");
+      toast.success(t("updated"));
     } catch {
-      toast.error("Failed to update tariff provider");
+      toast.error(t("updateError"));
       setSelected(activeProvider);
     }
   }
@@ -46,7 +48,7 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
         ))}
       </select>
       <p className="text-xs text-muted-foreground">
-        Mock data only — no real API keys required.
+        {t("mockNote")}
       </p>
     </div>
   );

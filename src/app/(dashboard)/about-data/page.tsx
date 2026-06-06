@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { FlaskConical, Wifi } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
@@ -8,18 +9,13 @@ import { cn } from "@/lib/utils";
 
 export const metadata = { title: "About your data · Flux" };
 
-const CATEGORIES = [
-  { key: "telemetry",        label: "Vehicle telemetry",       liveDesc: "Real-time from OEM API",         mockDesc: "Tier-3 scenario simulator" },
-  { key: "commands",         label: "Remote commands",         liveDesc: "Sent to vehicle via OEM API",     mockDesc: "Applied to simulator state" },
-  { key: "charging-history", label: "Charging history",        liveDesc: "From OEM API + session records",  mockDesc: "Generated on motion transitions" },
-  { key: "trips",            label: "Trip history",            liveDesc: "From OEM API + GPS logs",         mockDesc: "Generated on driving transitions" },
-  { key: "tariff",           label: "Energy tariff prices",    liveDesc: "Live from provider API",          mockDesc: "Deterministic mock curves" },
-  { key: "charging-network", label: "Charging network map",    liveDesc: "Live availability APIs",          mockDesc: "Static mock station registry" },
-  { key: "weather",          label: "Weather & range derating",liveDesc: "Live from weather API",           mockDesc: "Mock weather provider" },
-  { key: "routing",          label: "Trip routing",            liveDesc: "Live routing API",                mockDesc: "Great-circle heuristic" },
+// i18n key suffixes under aboutData.category.* — order is the display order.
+const CATEGORY_KEYS = [
+  "telemetry", "commands", "chargingHistory", "trips",
+  "tariff", "chargingNetwork", "weather", "routing",
 ] as const;
 
-function StatusBadge({ live }: { live: boolean }) {
+function StatusBadge({ live, label }: { live: boolean; label: string }) {
   return (
     <span
       className={cn(
@@ -30,14 +26,18 @@ function StatusBadge({ live }: { live: boolean }) {
       )}
     >
       {live ? <Wifi className="size-3" /> : <FlaskConical className="size-3" />}
-      {live ? "Live" : "Mock"}
+      {label}
     </span>
   );
 }
 
 export default async function AboutDataPage() {
+  const t = await getTranslations("aboutData");
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const liveLabel = t("live");
+  const mockLabel = t("mock");
 
   const supabase = createSupabaseAdminClient();
   const { data: vehicles } = await supabase
@@ -51,20 +51,20 @@ export default async function AboutDataPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">About your data</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("heading")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Transparency breakdown — what&apos;s live vs simulated across your fleet and platform services.
+          {t("subheading")}
         </p>
       </div>
 
       {/* Per-vehicle status */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Your vehicles</CardTitle>
+          <CardTitle className="text-base">{t("yourVehicles")}</CardTitle>
         </CardHeader>
         <CardContent>
           {activeVehicles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No vehicles added yet.</p>
+            <p className="text-sm text-muted-foreground">{t("noVehicles")}</p>
           ) : (
             <div className="divide-y">
               {activeVehicles.map((v: { id: string; display_name: string; brand: string; model: string | null; data_source: string; nickname: string | null }) => {
@@ -78,16 +78,16 @@ export default async function AboutDataPage() {
                         {v.brand}{v.model ? ` · ${v.model}` : ""}
                       </div>
                       <div className="mt-1">
-                        <StatusBadge live={isLive} />
+                        <StatusBadge live={isLive} label={isLive ? liveLabel : mockLabel} />
                       </div>
                     </div>
                     <div className="grid flex-1 grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-                      {CATEGORIES.slice(0, 4).map((cat) => (
-                        <div key={cat.key} className="space-y-0.5">
-                          <div className="font-medium text-muted-foreground">{cat.label}</div>
-                          <StatusBadge live={isLive} />
+                      {CATEGORY_KEYS.slice(0, 4).map((key) => (
+                        <div key={key} className="space-y-0.5">
+                          <div className="font-medium text-muted-foreground">{t(`category.${key}.label`)}</div>
+                          <StatusBadge live={isLive} label={isLive ? liveLabel : mockLabel} />
                           <div className="text-muted-foreground/70">
-                            {isLive ? cat.liveDesc : cat.mockDesc}
+                            {isLive ? t(`category.${key}.liveDesc`) : t(`category.${key}.mockDesc`)}
                           </div>
                         </div>
                       ))}
@@ -103,17 +103,17 @@ export default async function AboutDataPage() {
       {/* Platform services */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Platform services</CardTitle>
+          <CardTitle className="text-base">{t("platformServices")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
-            {CATEGORIES.slice(4).map((cat) => (
-              <div key={cat.key} className="space-y-1 rounded-lg border p-3">
+            {CATEGORY_KEYS.slice(4).map((key) => (
+              <div key={key} className="space-y-1 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{cat.label}</span>
-                  <StatusBadge live={false} />
+                  <span className="text-sm font-medium">{t(`category.${key}.label`)}</span>
+                  <StatusBadge live={false} label={mockLabel} />
                 </div>
-                <p className="text-xs text-muted-foreground">{cat.mockDesc}</p>
+                <p className="text-xs text-muted-foreground">{t(`category.${key}.mockDesc`)}</p>
               </div>
             ))}
           </div>
@@ -121,8 +121,7 @@ export default async function AboutDataPage() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Connect a real vehicle via Settings to switch from mock to live data for that vehicle.
-        Platform services (tariff, charging network, weather, routing) use mock providers in this demo.
+        {t("footer")}
       </p>
     </div>
   );

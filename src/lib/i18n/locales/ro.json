@@ -105,6 +105,18 @@
       "vin_label": "VIN (opțional)",
       "vin_placeholder": "ex: 5YJ3E1EA1LF000001",
       "vin_detected": "Detectat: {variant} ({year})"
+    },
+    "connectTesla": {
+      "permission": [
+        "Citește starea vehiculului, locația și starea de încărcare",
+        "Trimite comenzi vehiculului (blocare, climatizare, claxon, semnalizare)",
+        "Gestionează încărcarea — setează limita, pornește/oprește sesiuni",
+        "Reîmprospătează tokenurile de acces în numele tău, în fundal"
+      ],
+      "title": "Conectează-ți Tesla",
+      "description": "Flux folosește API-ul oficial Tesla Fleet. Nu îți vedem niciodată parola — te autentifici direct cu Tesla.",
+      "error": "Nu am putut finaliza încercarea anterioară ({code}). Te rugăm să încerci din nou.",
+      "cta": "Conectează contul Tesla"
     }
   },
   "scenarios": {
@@ -167,7 +179,10 @@
         "tibber-mock": "Tibber (demo)",
         "octopus-mock": "Octopus Energy (demo)",
         "awattar-mock": "aWATTar (demo)"
-      }
+      },
+      "updated": "Furnizor de tarif actualizat",
+      "updateError": "Nu s-a putut actualiza furnizorul de tarif",
+      "mockNote": "Doar date demo — nu sunt necesare chei API reale."
     },
     "danger_zone": {
       "export_button": "Exportă datele mele",
@@ -232,6 +247,13 @@
     },
     "install_app": {
       "label": "Instalează aplicația"
+    },
+    "disconnect": {
+      "confirm": "Deconectezi acest vehicul de la Flux?",
+      "success": "Vehicul deconectat",
+      "error": "Nu s-a putut deconecta vehiculul",
+      "pending": "Se deconectează…",
+      "label": "Deconectează"
     }
   },
   "ingest": {
@@ -323,7 +345,8 @@
     "history_cost": "Cost",
     "history_home": "Acasă",
     "history_public": "Public",
-    "history_sync_success": "{count} sesiuni sincronizate"
+    "history_sync_success": "{count} sesiuni sincronizate",
+    "syncSuccess": "{count} sesiuni sincronizate"
   },
   "commands": {
     "title": "Comenzi",
@@ -417,7 +440,42 @@
     "status_error": "Eroare",
     "status_processing": "Se procesează",
     "status_pending": "În așteptare",
-    "no_chart_data": "Fără date lunare încă"
+    "no_chart_data": "Fără date lunare încă",
+    "docStatus": {
+      "type": {
+        "gasBill": "Factură de gaz",
+        "petrolReceipt": "Bon benzinărie",
+        "other": "Document necunoscut"
+      },
+      "hint": {
+        "gasBill": "Nu conține date despre curent electric. Conține și o sesiune de încărcare EV?",
+        "petrolReceipt": "Bon de carburant. Conține și o sesiune de încărcare EV?",
+        "other": "Nu am putut identifica tipul. Conține date despre curent electric?"
+      },
+      "friendlyError": {
+        "unknown": "Eroare necunoscută.",
+        "insufficientCredits": "Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing, apoi re-uploadează documentul.",
+        "invalidKey": "Cheia API Anthropic este invalidă. Verifică variabila ANTHROPIC_API_KEY în Vercel.",
+        "rateLimit": "Prea multe cereri. Încearcă din nou în câteva secunde.",
+        "overloaded": "Serviciul AI este temporar suprasolicitat. Încearcă din nou."
+      },
+      "status": {
+        "done": "Procesat",
+        "needsReview": "Verificare necesară",
+        "error": "Eroare",
+        "processing": "Se procesează…",
+        "pending": "În așteptare…"
+      },
+      "fallbackName": "Document",
+      "addManually": "Da, adaug manual",
+      "lowConfidence": "Unele câmpuri au încredere scăzută. Verifică și corectează dacă e necesar.",
+      "fieldCost": "Cost curent (RON)",
+      "fieldKwh": "kWh electricitate",
+      "confirmDelete": "Ești sigur?",
+      "ariaOpen": "Deschide documentul",
+      "ariaEdit": "Editează",
+      "ariaDelete": "Șterge documentul"
+    }
   },
   "departure": {
     "title": "Plecare & Preconditionare",
@@ -573,5 +631,92 @@
     "description": "A apărut o eroare neașteptată. Încearcă din nou.",
     "retry": "Încearcă din nou",
     "back_to_dashboard": "Înapoi la panou"
+  },
+  "pricing": {
+    "heading": "Prețuri simple",
+    "subheading": "Începe gratuit. Fă upgrade când ai nevoie de mai mult.",
+    "freeTier": "Gratuit",
+    "proTier": "Pro",
+    "freeDesc": "Acces complet la funcțiile de bază",
+    "proDesc": "Totul nelimitat + funcții AI",
+    "perMonth": "/ lună",
+    "annualNote": "sau €39 / an (economisești 35%)",
+    "currentPlan": "Planul actual",
+    "includedInPro": "Inclus în Pro",
+    "getStartedFree": "Începe gratuit",
+    "mostPopular": "Cel mai popular",
+    "getStarted": "Începe",
+    "disclaimer": "Prețuri în EUR. Se poate aplica TVA. Anulezi oricând.",
+    "backToApp": "Înapoi la aplicație",
+    "feature": {
+      "free_vehicle": "1 vehicul (demo sau real)",
+      "free_ocr": "3 documente OCR / lună",
+      "free_dashboard": "Dashboard complet de încărcare",
+      "free_map": "Hartă de încărcare",
+      "free_trip": "Planificator de călătorii",
+      "free_scheduler": "Programator inteligent de încărcare",
+      "free_tariff": "Prețuri tarif energie",
+      "pro_vehicles": "Vehicule nelimitate",
+      "pro_ocr": "Documente OCR nelimitate",
+      "pro_ai": "Analiză factură energie prin AI",
+      "pro_whatsapp": "Import documente prin WhatsApp",
+      "pro_email": "Import documente prin email",
+      "pro_battery": "Monitorizare sănătate baterie",
+      "pro_digest": "Rezumat săptămânal al costurilor pe email",
+      "pro_export": "Export date costuri (CSV)",
+      "pro_support": "Suport prioritar"
+    }
+  },
+  "aboutData": {
+    "live": "Live",
+    "mock": "Demo",
+    "heading": "Despre datele tale",
+    "subheading": "Detaliere a transparenței — ce este live vs simulat în flota ta și serviciile platformei.",
+    "yourVehicles": "Vehiculele tale",
+    "noVehicles": "Niciun vehicul adăugat încă.",
+    "platformServices": "Servicii platformă",
+    "footer": "Conectează un vehicul real din Setări pentru a comuta de la date demo la date live pentru acel vehicul. Serviciile platformei (tarif, rețea de încărcare, vreme, rutare) folosesc furnizori demo în această demonstrație.",
+    "category": {
+      "telemetry": {
+        "label": "Telemetrie vehicul",
+        "liveDesc": "În timp real din API-ul OEM",
+        "mockDesc": "Simulator de scenarii Tier-3"
+      },
+      "commands": {
+        "label": "Comenzi la distanță",
+        "liveDesc": "Trimise vehiculului prin API-ul OEM",
+        "mockDesc": "Aplicate stării simulatorului"
+      },
+      "chargingHistory": {
+        "label": "Istoric încărcare",
+        "liveDesc": "Din API-ul OEM + înregistrări sesiuni",
+        "mockDesc": "Generat la tranzițiile de mișcare"
+      },
+      "trips": {
+        "label": "Istoric călătorii",
+        "liveDesc": "Din API-ul OEM + jurnale GPS",
+        "mockDesc": "Generat la tranzițiile de condus"
+      },
+      "tariff": {
+        "label": "Prețuri tarif energie",
+        "liveDesc": "Live din API-ul furnizorului",
+        "mockDesc": "Curbe demo deterministe"
+      },
+      "chargingNetwork": {
+        "label": "Hartă rețea de încărcare",
+        "liveDesc": "API-uri de disponibilitate live",
+        "mockDesc": "Registru static demo de stații"
+      },
+      "weather": {
+        "label": "Vreme & reducere autonomie",
+        "liveDesc": "Live din API-ul meteo",
+        "mockDesc": "Furnizor meteo demo"
+      },
+      "routing": {
+        "label": "Rutare călătorie",
+        "liveDesc": "API de rutare live",
+        "mockDesc": "Euristică cerc-mare"
+      }
+    }
   }
 }
