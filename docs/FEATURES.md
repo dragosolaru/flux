@@ -782,3 +782,22 @@ from this data is spec #2.
 **What it does:** Fixes the route variant deduplication logic that was collapsing "fastest" (charge to 70%) and "balanced" (charge to 95%) strategies into a single result when they produced the same stop count and similar total times. The dedup key now includes the strategy name, so the user always sees at least two distinct options (if both are feasible): one with shorter but more frequent stops, one with longer single stops.
 
 **Key file:** `src/lib/external/routing/planner.ts` — `planTripVariants`, dedup `sig` includes `v.strategy`.
+
+---
+
+## Mobile UX Simplify — Navigation & Trip Planner
+
+**What it does:** Reduces cognitive load on the 90%-mobile app based on a user-research study (JD Power 2025–2026, EAFO, Baymard, NNGroup):
+
+1. **Bottom Nav → 4 tabs** (was 5 + drawer): **Car · Charging · Trip · More**. Trip planner is promoted from the buried "More" drawer (70%+ of EV users want trip planning; 44% never found it before) into the primary bar. `grid-cols-4` for more breathing room (41% of users prefer 4 tabs; NNGroup: hidden nav scores worst on every metric).
+2. **More sheet** now holds the secondary destinations: Costs, Energy, Commands, Charging Map, Settings, About. Settings is no longer duplicated as a primary path.
+3. **Trip Planner — map-first / compressed form:** The first interaction is just origin → destination → Plan. The battery slider and vehicle selector moved behind an "Options" disclosure (collapsed by default), so the form no longer stacks 5 controls over the map on open. Map height calc now also subtracts `env(safe-area-inset-top)` so the notch spacer doesn't push the map under the bottom nav.
+4. **Station pins only after planning:** Confirmed `TripMap` already renders only the chosen `activePlan.stops` (plus origin/destination) — never the full network — so the map stays clean before a route is planned. No change needed.
+
+**Key files:**
+- `src/components/layout/BottomNav.tsx` — 4-tab structure, `grid-cols-4`
+- `src/components/layout/SlideUpMenu.tsx` — More sheet items (Costs, Energy added; Trip removed)
+- `src/app/(dashboard)/trip/trip-client.tsx` — `optionsOpen` disclosure, safe-area height calc
+- `src/lib/i18n/locales/*.json` — `nav.mobile.trip`, `trip.options` in all 5 locales
+
+**Dependencies:** None — no new libraries, no schema changes. OpenSpec change: `openspec/changes/mobile-ux-simplify/`.

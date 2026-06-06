@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ export function TripClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [planExpanded, setPlanExpanded] = useState(true);
   const [locating, setLocating] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -179,7 +180,7 @@ export function TripClient() {
   return (
     <div
       className="relative -mx-4 -mt-6 -mb-4 md:-mx-8 md:-mb-6"
-      style={{ height: "calc(100dvh - 3.5rem - 3.75rem - env(safe-area-inset-bottom))" }}
+      style={{ height: "calc(100dvh - 3.5rem - 3.75rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
     >
       {/* Full-screen map */}
       <div className="absolute inset-0">
@@ -232,39 +233,61 @@ export function TripClient() {
               onChange={setDestination}
             />
 
-            {/* Battery slider — label and value inline, slider below */}
-            <div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{t("battery_label")}</span>
+            {/* Options disclosure — battery + vehicle are secondary; keep the
+                first interaction to just origin → destination → plan. */}
+            <button
+              type="button"
+              onClick={() => setOptionsOpen((v) => !v)}
+              aria-expanded={optionsOpen}
+              className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <span className="flex items-center gap-1.5">
+                <SlidersHorizontal className="size-3.5" />
+                {t("options")}
+              </span>
+              <span className="flex items-center gap-1.5">
                 <span className="font-medium text-foreground">{startSoc}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={100}
-                step={5}
-                value={startSoc}
-                onChange={(e) => setStartSoc(Number(e.target.value))}
-                className="mt-1 w-full accent-primary"
-              />
-            </div>
+                {optionsOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+              </span>
+            </button>
 
-            {/* Vehicle selector */}
-            {vehicles && vehicles.length > 0 && (
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">{t("vehicle_label")}</label>
-                <select
-                  value={vehicleId}
-                  onChange={(e) => setVehicleId(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-sm"
-                >
-                  <option value="">{t("vehicle_default")}</option>
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.nickname ?? v.displayName}
-                    </option>
-                  ))}
-                </select>
+            {optionsOpen && (
+              <div className="space-y-2.5">
+                {/* Battery slider — label and value inline, slider below */}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{t("battery_label")}</span>
+                    <span className="font-medium text-foreground">{startSoc}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={10}
+                    max={100}
+                    step={5}
+                    value={startSoc}
+                    onChange={(e) => setStartSoc(Number(e.target.value))}
+                    className="mt-1 w-full accent-primary"
+                  />
+                </div>
+
+                {/* Vehicle selector */}
+                {vehicles && vehicles.length > 0 && (
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">{t("vehicle_label")}</label>
+                    <select
+                      value={vehicleId}
+                      onChange={(e) => setVehicleId(e.target.value)}
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-sm"
+                    >
+                      <option value="">{t("vehicle_default")}</option>
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.nickname ?? v.displayName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 

@@ -38,6 +38,7 @@
     "mobile": {
       "car": "Auto",
       "charging": "Laden",
+      "trip": "Route",
       "costs": "Kosten",
       "energy": "Energie",
       "more": "Mehr"
@@ -527,6 +528,7 @@
     "title": "Routenplaner",
     "origin_placeholder": "Wo startest du?",
     "destination_placeholder": "Wohin fährst du?",
+    "options": "Optionen",
     "battery_label": "Startakku",
     "vehicle_label": "Fahrzeug (optional)",
     "vehicle_default": "Standard (Model 3 LR)",

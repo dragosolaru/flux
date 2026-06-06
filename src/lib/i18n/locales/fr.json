@@ -38,6 +38,7 @@
     "mobile": {
       "car": "Ma voiture",
       "charging": "Recharge",
+      "trip": "Trajet",
       "costs": "Coûts",
       "energy": "Énergie",
       "more": "Plus"
@@ -527,6 +528,7 @@
     "title": "Planificateur de trajets",
     "origin_placeholder": "D'où partez-vous ?",
     "destination_placeholder": "Où allez-vous ?",
+    "options": "Options",
     "battery_label": "Batterie au départ",
     "vehicle_label": "Véhicule (optionnel)",
     "vehicle_default": "Spec par défaut (Model 3 LR)",

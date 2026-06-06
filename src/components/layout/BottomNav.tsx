@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { BatteryCharging, Car, MoreHorizontal, Receipt, Zap } from "lucide-react";
+import { BatteryCharging, Car, MoreHorizontal, Route } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, type ComponentType } from "react";
@@ -30,8 +30,7 @@ interface MobileTab {
 const TABS: MobileTab[] = [
   { key: "car",      href: "/dashboard", labelKey: "nav.mobile.car",      icon: Car,             capability: "VEHICLE" },
   { key: "charging", href: "/charging",  labelKey: "nav.mobile.charging", icon: BatteryCharging, capability: "VEHICLE" },
-  { key: "costs",    href: "/costs",     labelKey: "nav.mobile.costs",    icon: Receipt,         capability: "VEHICLE" },
-  { key: "energy",   href: "/energy",    labelKey: "nav.mobile.energy",   icon: Zap,             capability: "TARIFF" },
+  { key: "trip",     href: "/trip",      labelKey: "nav.mobile.trip",     icon: Route,           capability: "VEHICLE" },
   { key: "more",     href: "__more__",   labelKey: "nav.mobile.more",     icon: MoreHorizontal,  capability: "NONE" },
 ];
 
@@ -72,7 +71,7 @@ export function BottomNav() {
         aria-label="Primary"
         className="shrink-0 border-t border-white/8 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
       >
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-4">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeKey === tab.key;

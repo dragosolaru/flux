@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Gamepad2, Info, MapPin, Route, Settings, X } from "lucide-react";
+import { Gamepad2, Info, MapPin, Receipt, Settings, X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, type ComponentType } from "react";
 
@@ -24,11 +24,12 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { href: "/commands",     labelKey: "nav.commands",    icon: Gamepad2, capability: "COMMANDS" },
+  { href: "/costs",        labelKey: "nav.costs",        icon: Receipt,  capability: "VEHICLE" },
+  { href: "/energy",       labelKey: "nav.energy",       icon: Zap,      capability: "TARIFF" },
+  { href: "/commands",     labelKey: "nav.commands",     icon: Gamepad2, capability: "COMMANDS" },
   { href: "/charging-map", labelKey: "nav.charging_map", icon: MapPin,   capability: "NONE" },
-  { href: "/trip",         labelKey: "nav.trip",        icon: Route,    capability: "VEHICLE" },
-  { href: "/settings",     labelKey: "nav.settings",    icon: Settings, capability: "NONE" },
-  { href: "/about-data",   labelKey: "nav.about",       icon: Info,     capability: "NONE" },
+  { href: "/settings",     labelKey: "nav.settings",     icon: Settings, capability: "NONE" },
+  { href: "/about-data",   labelKey: "nav.about",        icon: Info,     capability: "NONE" },
 ];
 
 export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {

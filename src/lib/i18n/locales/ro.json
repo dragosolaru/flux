@@ -38,6 +38,7 @@
     "mobile": {
       "car": "Mașina",
       "charging": "Încărcare",
+      "trip": "Drum",
       "costs": "Costuri",
       "energy": "Energie",
       "more": "Mai mult"
@@ -527,6 +528,7 @@
     "title": "Planificator de trasee",
     "origin_placeholder": "De unde pleci?",
     "destination_placeholder": "Unde mergi?",
+    "options": "Opțiuni",
     "battery_label": "Baterie la plecare",
     "vehicle_label": "Vehicul (opțional)",
     "vehicle_default": "Spec implicită (Model 3 LR)",

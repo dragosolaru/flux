@@ -38,6 +38,7 @@
     "mobile": {
       "car": "Az autóm",
       "charging": "Töltés",
+      "trip": "Útvonal",
       "costs": "Költségek",
       "energy": "Energia",
       "more": "Több"
@@ -527,6 +528,7 @@
     "title": "Útvonaltervező",
     "origin_placeholder": "Honnan indulsz?",
     "destination_placeholder": "Hova mész?",
+    "options": "Beállítások",
     "battery_label": "Akkumulátor induláskor",
     "vehicle_label": "Jármű (opcionális)",
     "vehicle_default": "Alapértelmezett (Model 3 LR)",

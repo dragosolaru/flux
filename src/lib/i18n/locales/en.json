@@ -38,6 +38,7 @@
     "mobile": {
       "car": "Car",
       "charging": "Charging",
+      "trip": "Trip",
       "costs": "Costs",
       "energy": "Energy",
       "more": "More"
@@ -527,6 +528,7 @@
     "title": "Trip Planner",
     "origin_placeholder": "Where are you starting?",
     "destination_placeholder": "Where are you going?",
+    "options": "Options",
     "battery_label": "Starting battery",
     "vehicle_label": "Vehicle (optional)",
     "vehicle_default": "Default spec (Model 3 LR)",
