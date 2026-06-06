@@ -876,3 +876,25 @@ sparsely-covered regions (e.g. Cluj → Iași through Moldova).
 
 **Key files:** `src/lib/external/routing/corridor-stations.ts`,
 `src/lib/external/charging-networks/stations.ts`.
+
+---
+
+## Trip Planner — More Route Alternatives
+
+**What it does:** Surfaces genuinely different roads (e.g. the Suceava vs
+Fălticeni corridor on Cluj → Iași) as separate selectable variants instead of
+collapsing them into one.
+
+- The planner keeps up to **3 OSRM road alternatives** (was 2).
+- The variant dedup signature now includes `roadIndex`, so two physically
+  different roads with a similar stop count and time are no longer merged — the
+  previous signature (`stops-strategy-time`) hid real alternatives.
+- The variant chip shows **distance** (`h m · km · stops · €`) so roads with the
+  same strategy label are distinguishable at a glance.
+
+Note: alternatives still depend on what OSRM returns for the origin/destination
+pair; the planner now surfaces all distinct ones it gets rather than dropping
+them.
+
+**Key files:** `src/lib/external/routing/planner.ts` (`planTripVariants`),
+`src/app/(dashboard)/trip/trip-client.tsx` (variant chip).

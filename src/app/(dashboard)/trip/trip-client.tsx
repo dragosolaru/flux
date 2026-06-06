@@ -395,7 +395,7 @@ export function TripClient() {
                     >
                       <span className="text-xs font-semibold">{t(`variant_${v.strategy}`)}</span>
                       <span className="text-[11px] text-muted-foreground">
-                        {h}h {m}min · {v.plan.stops.length === 0
+                        {h}h {m}min · {Math.round(v.plan.totalDistanceKm)} km · {v.plan.stops.length === 0
                           ? t("stops_count_zero")
                           : v.plan.stops.length === 1
                             ? t("stops_count_one")

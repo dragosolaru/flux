@@ -263,7 +263,7 @@ const STRATEGIES: { id: TripStrategy; target: number }[] = [
 export async function planTripVariants(input: VariantsInput): Promise<TripVariant[]> {
   const { origin, destination, spec, currentSocPct, deratingPct = 0, stations, homePriceEurKwh, efficiencyKwhPer100km } = input;
 
-  const roads = (await computeOsrmAlternatives(origin, destination, 3)).slice(0, 2);
+  const roads = (await computeOsrmAlternatives(origin, destination, 3)).slice(0, 3);
   const primary = roads[0] ?? null;
 
   const corridor = await fetchCorridorStations(
@@ -293,12 +293,15 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
     }
   }
 
-  // Keep distinct options only (same stop count + similar total time collapse).
+  // Keep distinct options only. The signature includes roadIndex so two
+  // physically different roads (e.g. the Suceava vs Fălticeni corridor) are
+  // never collapsed into one just because their stop count and time are similar
+  // — that previously hid genuine route alternatives from the user.
   const seen = new Set<string>();
   const distinct = built
     .sort((a, b) => a.plan.totalMinutes - b.plan.totalMinutes)
     .filter((v) => {
-      const sig = `${v.plan.stops.length}-${v.strategy}-${Math.round(v.plan.totalMinutes / 10)}`;
+      const sig = `${v.roadIndex}-${v.plan.stops.length}-${v.strategy}-${Math.round(v.plan.totalMinutes / 10)}`;
       if (seen.has(sig)) return false;
       seen.add(sig);
       return true;
