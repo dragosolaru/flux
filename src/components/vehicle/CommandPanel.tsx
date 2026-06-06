@@ -4,8 +4,8 @@ import { Fan, Lock, Loader2, Megaphone, Sparkles, Unlock } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { staggerContainer, cardVariants } from "@/lib/animations/variants";
@@ -24,13 +24,9 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const { mutate, isPending, variables } = useVehicleCommand();
 
   function send(command: CommandName, args?: Record<string, unknown>) {
-    mutate(
-      { vehicleId, command, args },
-      {
-        onSuccess: () => toast.success(t("success")),
-        onError: () => toast.error(t("error")),
-      },
-    );
+    // Toasts + optimistic update are handled centrally in useVehicleCommand;
+    // passing per-call onSuccess/onError here would double-fire the toast.
+    mutate({ vehicleId, command, args });
   }
 
   const inFlight = (cmd: CommandName) =>
@@ -100,6 +96,18 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
       <p className="py-4 text-center text-sm text-muted-foreground">
         {t("no_commands")}
       </p>
+    );
+  }
+
+  // State still loading — show a skeleton grid instead of greyed-out buttons
+  // that look broken/frozen on first load.
+  if (!state) {
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        {buttons.map((_, i) => (
+          <Skeleton key={i} className="min-h-[80px] rounded-2xl" />
+        ))}
+      </div>
     );
   }
 

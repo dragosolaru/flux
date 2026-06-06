@@ -801,3 +801,20 @@ from this data is spec #2.
 - `src/lib/i18n/locales/*.json` — `nav.mobile.trip`, `trip.options` in all 5 locales
 
 **Dependencies:** None — no new libraries, no schema changes. OpenSpec change: `openspec/changes/mobile-ux-simplify/`.
+
+---
+
+## Perceived Performance — Optimistic UI & Loading States
+
+**What it does:** Makes the app feel instant on mobile (speed is the #1 driver of EV-app satisfaction — JD Power 2025; users abandon when feedback takes >2-5s):
+
+1. **Optimistic command UI** — `useVehicleCommand` now patches the `["vehicle", id]` React Query cache the moment a command is sent (lock/unlock, climate on/off, start/stop charging, set_charge_limit), so the dashboard quick actions and command panel reflect the new state instantly instead of waiting for the server round-trip + refetch. On error or server rejection it rolls back to the previous state; `onSettled` reconciles with the real server state. Command toasts are i18n (`commands.success` / `commands.error`).
+2. **Route-level loading skeleton** — `src/app/(dashboard)/loading.tsx` is a Suspense fallback for every dashboard route. Server pages await `auth()` + Supabase before rendering; without this, Next.js froze the previous page until the RSC payload arrived (a dead tap on slow mobile). Now every navigation shows an instant glass skeleton.
+3. **CommandPanel loading skeleton** — shows a skeleton grid while vehicle state loads instead of greyed-out buttons that looked broken. Removed redundant per-call toasts (the hook handles them centrally — was double-firing).
+
+**Key files:**
+- `src/hooks/useVehicleCommand.ts` — optimistic `onMutate` + rollback + i18n toasts
+- `src/app/(dashboard)/loading.tsx` — route-level skeleton
+- `src/components/vehicle/CommandPanel.tsx` — loading skeleton, deduped toasts
+
+**Dependencies:** None — uses TanStack Query's optimistic-update pattern and Next.js App Router Suspense.
