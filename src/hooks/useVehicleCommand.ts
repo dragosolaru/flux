@@ -1,9 +1,11 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { CommandName } from "@/types/history";
+import type { VehicleState } from "@/types/vehicle";
 
 interface CommandInput {
   vehicleId: string;
@@ -16,11 +18,48 @@ interface CommandResult {
   message?: string;
 }
 
+interface MutationContext {
+  previous: VehicleState | undefined;
+  key: readonly unknown[];
+}
+
+// Map a command to the vehicle-state fields it changes so the UI reflects the
+// new state instantly. Sub-2s feedback is the #1 driver of EV-app satisfaction
+// (JD Power 2025); the server response later confirms or rolls back.
+function optimisticPatch(
+  command: CommandName,
+  args?: Record<string, unknown> | null,
+): Partial<VehicleState> | null {
+  switch (command) {
+    case "lock":
+      return { isLocked: true };
+    case "unlock":
+      return { isLocked: false };
+    case "climate_on":
+      return { isClimateOn: true };
+    case "climate_off":
+      return { isClimateOn: false };
+    case "start_charging":
+      return { chargingState: "charging" };
+    case "stop_charging":
+      return { chargingState: "stopped" };
+    case "set_charge_limit": {
+      const limit = args?.limitPct;
+      return typeof limit === "number" && limit >= 0 && limit <= 100
+        ? { chargeLimit: limit }
+        : null;
+    }
+    default:
+      return null;
+  }
+}
+
 export function useVehicleCommand() {
   const queryClient = useQueryClient();
+  const t = useTranslations("commands");
 
-  return useMutation({
-    mutationFn: async ({ vehicleId, command, args }: CommandInput): Promise<CommandResult> => {
+  return useMutation<CommandResult, Error, CommandInput, MutationContext>({
+    mutationFn: async ({ vehicleId, command, args }): Promise<CommandResult> => {
       const res = await fetch(`/api/vehicles/${vehicleId}/commands`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,16 +67,37 @@ export function useVehicleCommand() {
       });
       return (await res.json()) as CommandResult;
     },
-    onSuccess: (data: CommandResult, variables: CommandInput) => {
+    onMutate: async ({ vehicleId, command, args }) => {
+      const key = ["vehicle", vehicleId] as const;
+      // Stop in-flight refetches so they don't clobber the optimistic value.
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<VehicleState>(key);
+      const patch = optimisticPatch(command, args);
+      if (previous && patch) {
+        queryClient.setQueryData<VehicleState>(key, { ...previous, ...patch });
+      }
+      return { previous, key };
+    },
+    onSuccess: (data, _variables, context) => {
       if (data.success) {
-        toast.success(`Command sent: ${variables.command.replace(/_/g, " ")}`);
-        queryClient.invalidateQueries({ queryKey: ["vehicle", variables.vehicleId] });
+        toast.success(t("success"));
       } else {
-        toast.error(data.message ?? "Command failed");
+        // Server rejected the command — undo the optimistic change.
+        if (context?.previous) {
+          queryClient.setQueryData(context.key, context.previous);
+        }
+        toast.error(data.message ?? t("error"));
       }
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(context.key, context.previous);
+      }
+      toast.error(err.message || t("error"));
+    },
+    onSettled: (_data, _err, variables) => {
+      // Reconcile with the real server state regardless of outcome.
+      queryClient.invalidateQueries({ queryKey: ["vehicle", variables.vehicleId] });
     },
   });
 }

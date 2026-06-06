@@ -178,10 +178,11 @@ export function TripClient() {
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
   return (
-    <div
-      className="relative -mx-4 -mt-6 -mb-4 md:-mx-8 md:-mb-6"
-      style={{ height: "calc(100dvh - 3.5rem - 3.75rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
-    >
+    <div className="relative -mx-4 -mt-6 -mb-4 h-full md:-mx-8 md:-mb-6">
+      {/* h-full fills the <main> content box exactly — flexbox already accounts
+          for TopBar, the mock banner, the bottom nav, and safe-area insets, so
+          we no longer hand-compute a fragile 100dvh height that ignored the
+          mock banner and clipped the results sheet. */}
       {/* Full-screen map */}
       <div className="absolute inset-0">
         <TripMap
