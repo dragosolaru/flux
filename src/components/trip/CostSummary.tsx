@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Fuel, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { getFuelComparison, setFuelComparison } from "@/lib/fuel-comparison";
 
 interface CostSummaryProps {
   origin: string;
@@ -26,9 +27,6 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}min`;
 }
 
-const PETROL_L_PER_100KM = 8;
-const PETROL_PRICE_EUR_L = 1.65;
-
 export function CostSummary({
   origin,
   destination,
@@ -42,9 +40,16 @@ export function CostSummary({
 }: CostSummaryProps) {
   const t = useTranslations("trip");
   const [showFuel, setShowFuel] = useState(false);
+  const [fuel, setFuel] = useState(getFuelComparison);
+
+  function updateFuel(patch: Partial<typeof fuel>): void {
+    const next = { ...fuel, ...patch };
+    setFuel(next);
+    setFuelComparison(next);
+  }
 
   const totalMinutes = drivingMinutes + chargingMinutes;
-  const petrolCostEur = (totalDistanceKm / 100) * PETROL_L_PER_100KM * PETROL_PRICE_EUR_L;
+  const petrolCostEur = (totalDistanceKm / 100) * fuel.lPer100km * fuel.priceEurL;
   const savingsEur = petrolCostEur - tripEnergyCostEur;
 
   const stopsLabel =
@@ -111,8 +116,8 @@ export function CostSummary({
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {t("petrol_label", {
-                lPer100km: PETROL_L_PER_100KM,
-                pricePerL: PETROL_PRICE_EUR_L,
+                lPer100km: fuel.lPer100km,
+                pricePerL: fuel.priceEurL,
               })}
             </span>
             <span className="font-medium">€{petrolCostEur.toFixed(2)}</span>
@@ -121,6 +126,45 @@ export function CostSummary({
           <div className="flex justify-between font-semibold">
             <span>{t("savings_label")}</span>
             <span className="text-green-400">€{savingsEur.toFixed(2)}</span>
+          </div>
+
+          <div className="h-px bg-white/8" />
+          <p className="text-xs text-muted-foreground">{t("fuel.edit")}</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+            <label className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">{t("fuel.consumption")}</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step={0.1}
+                value={fuel.lPer100km}
+                onChange={(e) => {
+                  const n = parseFloat(e.target.value);
+                  if (Number.isFinite(n) && n > 0) updateFuel({ lPer100km: n });
+                }}
+                className="w-16 rounded border border-white/8 bg-transparent px-2 py-1 text-sm"
+                aria-label={t("fuel.consumption")}
+              />
+              <span className="text-muted-foreground">{t("fuel.per_100km")}</span>
+            </label>
+            <label className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">{t("fuel.price")}</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step={0.01}
+                value={fuel.priceEurL}
+                onChange={(e) => {
+                  const n = parseFloat(e.target.value);
+                  if (Number.isFinite(n) && n > 0) updateFuel({ priceEurL: n });
+                }}
+                className="w-16 rounded border border-white/8 bg-transparent px-2 py-1 text-sm"
+                aria-label={t("fuel.price")}
+              />
+              <span className="text-muted-foreground">{t("fuel.per_liter")}</span>
+            </label>
           </div>
         </div>
       )}

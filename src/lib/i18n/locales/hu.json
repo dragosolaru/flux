@@ -601,6 +601,13 @@
     "ev_cost_label": "EV költség (töltés)",
     "petrol_label": "Benzin ({lPer100km}L/100km × €{pricePerL}/L)",
     "savings_label": "Megtakarítás",
+    "fuel": {
+      "consumption": "Benzinfogyasztás",
+      "price": "Üzemanyagár",
+      "per_100km": "L/100km",
+      "per_liter": "€/L",
+      "edit": "Összehasonlítás módosítása"
+    },
     "infeasible_title": "Az útvonal nem fejezhető be",
     "infeasible_hint": "Próbálj magasabb akkumulátor százalékot vagy válassz egy adott járművet.",
     "derate_note": "* A hatótáv {pct}%-kal csökkent a hőmérséklet miatt.",
