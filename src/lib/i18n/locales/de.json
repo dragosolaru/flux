@@ -540,7 +540,9 @@
     "station_fallback": "Ladestation",
     "filter_power": "Leistung",
     "filter_connector": "Anschluss",
-    "filter_all": "Alle"
+    "filter_all": "Alle",
+    "connectors_label": "Anschlüsse",
+    "stations_count": "{count} Stationen"
   },
   "auth": {
     "title_login": "Willkommen zurück",

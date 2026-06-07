@@ -540,7 +540,9 @@
     "station_fallback": "Station de recharge",
     "filter_power": "Puissance",
     "filter_connector": "Connecteur",
-    "filter_all": "Tous"
+    "filter_all": "Tous",
+    "connectors_label": "Connecteurs",
+    "stations_count": "{count} stations"
   },
   "auth": {
     "title_login": "Bon retour",

@@ -540,7 +540,9 @@
     "station_fallback": "Charging station",
     "filter_power": "Power",
     "filter_connector": "Connector",
-    "filter_all": "All"
+    "filter_all": "All",
+    "connectors_label": "Connectors",
+    "stations_count": "{count} stations"
   },
   "auth": {
     "title_login": "Welcome back",

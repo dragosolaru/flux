@@ -4,12 +4,9 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { AnimatePresence, motion } from "framer-motion";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api-fetch";
-import { cardVariants, slideUp } from "@/lib/animations/variants";
+import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 
 export type { Charger };
@@ -64,8 +61,7 @@ interface QueryArea {
   radiusKm: number;
 }
 
-// A row of mutually-exclusive filter chips. `filter_all` labels are resolved
-// through i18n; everything else is a literal (kW thresholds, connector names).
+// A row of mutually-exclusive filter chips.
 function FilterChips<T extends string | number>({
   label,
   options,
@@ -80,7 +76,7 @@ function FilterChips<T extends string | number>({
   allLabel: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto">
+    <div className="flex items-center gap-1.5">
       <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
       {options.map((opt) => (
         <button
@@ -100,22 +96,8 @@ function FilterChips<T extends string | number>({
   );
 }
 
-// Mobile (below Tailwind `lg`) panel slides up; desktop fades in.
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return isDesktop;
-}
-
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
-  const isDesktop = useIsDesktop();
   const [selected, setSelected] = useState<Charger | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
@@ -142,10 +124,7 @@ export function ChargingMapClient() {
 
   const {
     data: stations = [],
-    isLoading,
     isFetching,
-    isError,
-    error,
   } = useQuery({
     queryKey: [
       "chargers-nearby",
@@ -169,151 +148,54 @@ export function ChargingMapClient() {
     placeholderData: keepPreviousData,
   });
 
-  const displayName = selected ? (selected.name ?? selected.operator ?? t("station_fallback")) : null;
-  const displayCity = selected?.address.city ?? null;
-  const displayPower =
-    selected != null
-      ? (selected.connectors[0]?.powerKw ?? selected.maxPowerKw)
-      : null;
-  const totalConnectors = selected
-    ? selected.connectors.reduce((sum, c) => sum + c.count, 0)
-    : 0;
-  const isLikelyOperational = selected != null && selected.confidence >= 0.5;
-
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoading
-              ? t("loading")
-              : isError
-                ? t("load_error")
-                : isFetching
-                  ? t("updating", { count: stations.length })
-                  : t("stations_in_view", { count: stations.length })}
-          </p>
+    // Root: fills full main area — parent <main> has `position: relative`.
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Map fills entire area */}
+      <StationMap
+        stations={stations}
+        center={center}
+        selected={selected}
+        onSelect={setSelected}
+        userLocation={userLocation}
+        onUserLocate={handleLocate}
+        onAreaChange={handleAreaChange}
+      />
+
+      {/* Floating filter bar — absolute top of map */}
+      <div className="absolute left-3 right-3 top-3 z-[1000]">
+        <div className="flex items-center gap-3 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-2 shadow-xl backdrop-blur-xl">
+          <FilterChips
+            label={t("filter_power")}
+            options={POWER_OPTIONS}
+            value={minKw}
+            onChange={setMinKw}
+            allLabel={t("filter_all")}
+          />
+          <div className="h-4 w-px shrink-0 bg-white/10" />
+          <FilterChips
+            label={t("filter_connector")}
+            options={CONNECTOR_OPTIONS}
+            value={connector}
+            onChange={setConnector}
+            allLabel={t("filter_all")}
+          />
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground/70">{t("disclaimer")}</p>
-
-      {/* Filter bar — minimum power + connector type */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <FilterChips
-          label={t("filter_power")}
-          options={POWER_OPTIONS}
-          value={minKw}
-          onChange={setMinKw}
-          allLabel={t("filter_all")}
-        />
-        <FilterChips
-          label={t("filter_connector")}
-          options={CONNECTOR_OPTIONS}
-          value={connector}
-          onChange={setConnector}
-          allLabel={t("filter_all")}
-        />
+      {/* Station count — floating bottom-left, above BottomNav */}
+      <div className="absolute bottom-3 left-3 z-[1000]">
+        <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-sm">
+          {isFetching
+            ? t("updating", { count: stations.length })
+            : t("stations_count", { count: stations.length })}
+        </span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Map */}
-        <div className="lg:col-span-2">
-          <Card className="overflow-hidden">
-            <div className="h-[500px]">
-              {isLoading ? (
-                <Skeleton className="h-full w-full rounded-none" />
-              ) : isError ? (
-                <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted">
-                  <p className="text-sm font-medium text-destructive">
-                    {t("load_error_detail")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {error instanceof Error ? error.message : t("unknown_error")}
-                  </p>
-                </div>
-              ) : (
-                <StationMap
-                  stations={stations}
-                  center={center}
-                  selected={selected}
-                  onSelect={setSelected}
-                  userLocation={userLocation}
-                  onUserLocate={handleLocate}
-                  onAreaChange={handleAreaChange}
-                />
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Detail panel */}
-        <div>
-          <AnimatePresence mode="wait">
-            {selected ? (
-              <motion.div
-                key={selected.id}
-                variants={isDesktop ? cardVariants : slideUp}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">{displayName}</CardTitle>
-                    {displayCity && (
-                      <p className="text-sm text-muted-foreground">{displayCity}</p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("max_power")}</span>
-                      <span className="font-medium">
-                        {displayPower != null ? `${displayPower} kW` : t("unknown_power")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("connectors")}</span>
-                      <span className="font-medium">{totalConnectors}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("status")}</span>
-                      <span
-                        className={`font-medium ${
-                          isLikelyOperational ? "text-chart-2" : "text-destructive"
-                        }`}
-                      >
-                        {isLikelyOperational ? t("operational") : t("out_of_service")}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelected(null)}
-                      className="w-full rounded-md border py-1.5 text-xs hover:bg-muted"
-                    >
-                      {t("close")}
-                    </button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="placeholder"
-                variants={isDesktop ? cardVariants : slideUp}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <Card>
-                  <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                    {t("select_hint")}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      {/* Station detail sheet — slides up on tap */}
+      {selected && (
+        <ChargerDetailSheet charger={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }

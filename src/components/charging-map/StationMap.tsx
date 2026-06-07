@@ -26,35 +26,48 @@ function useLeafletIconFix() {
 }
 
 // Green = likely operational (confidence >= 0.5), grey = low confidence.
-// Selected marker is drawn larger with a primary-coloured ring.
+// Selected marker is drawn larger with a blue border.
 const OPERATIONAL_COLOR = "#16a34a";
 const OFFLINE_COLOR = "#6b7280";
 const SELECTED_COLOR = "#2563eb";
 
-// Only three distinct icons exist (operational / offline / selected); cache them
-// so we don't re-parse SVG and allocate a divIcon per marker on every render.
+// Icon cache keyed by "<state>-<powerLabel>" to avoid per-marker re-allocation.
+// Power label (e.g. "50kW", "250kW") is used as suffix so the cache stays bounded
+// relative to the number of distinct rounded power values in the data.
 const iconCache = new Map<string, L.DivIcon>();
 
-function makeIcon(likelyOperational: boolean, selected: boolean): L.DivIcon {
-  const key = selected ? "selected" : likelyOperational ? "operational" : "offline";
+function powerLabel(powerKw: number | null | undefined): string {
+  if (!powerKw) return "?";
+  if (powerKw >= 1000) return `${Math.round(powerKw / 1000)}MW`;
+  return `${Math.round(powerKw)}kW`;
+}
+
+function makeIcon(
+  likelyOperational: boolean,
+  selected: boolean,
+  powerKw: number | null | undefined,
+): L.DivIcon {
+  const label = powerLabel(powerKw);
+  const state = selected ? "s" : likelyOperational ? "o" : "x";
+  const key = `${state}-${label}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
   const color = selected ? SELECTED_COLOR : likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
-  const scale = selected ? 1.4 : 1;
-  const w = Math.round(24 * scale);
-  const h = Math.round(36 * scale);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="${w}" height="${h}">
-    <path fill="${color}" stroke="white" stroke-width="1.5"
-      d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"/>
-    <circle cx="12" cy="12" r="5" fill="white" fill-opacity="0.9"/>
-  </svg>`;
+  const fontSize = selected ? 11 : 10;
+  const paddingH = selected ? 8 : 6;
+  const height = selected ? 32 : 26;
+  // Estimate pill width from label length; min 36px.
+  const width = Math.max(36, label.length * 7 + paddingH * 2 + 4);
+
+  const html = `<div style="background:${color};color:white;font-size:${fontSize}px;font-weight:600;font-family:-apple-system,sans-serif;padding:2px ${paddingH}px;border-radius:6px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);white-space:nowrap;display:flex;align-items:center;justify-content:center;width:${width}px;height:${height}px;box-sizing:border-box;">${label}</div>`;
+
   const icon = L.divIcon({
-    html: svg,
+    html,
     className: "",
-    iconSize: [w, h],
-    iconAnchor: [w / 2, h],
-    popupAnchor: [0, -h],
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
+    popupAnchor: [0, -height],
   });
   iconCache.set(key, icon);
   return icon;
@@ -197,34 +210,16 @@ export default function StationMap({ stations, center, selected, onSelect, userL
         </Marker>
       )}
       {stations.map((s) => {
-        const label = s.name ?? s.operator ?? t("station_fallback");
-        const connectorTypes = s.connectors.map((c) => c.type).join(", ");
         const likelyOperational = s.confidence >= 0.5;
         const isSelected = selected?.id === s.id;
         return (
           <Marker
             key={s.id}
             position={[s.lat, s.lng]}
-            icon={makeIcon(likelyOperational, isSelected)}
+            icon={makeIcon(likelyOperational, isSelected, s.maxPowerKw)}
             zIndexOffset={isSelected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(s) }}
-          >
-            <Popup>
-              <div className="text-xs">
-                <strong>{label}</strong>
-                <br />
-                {s.maxPowerKw != null ? `${s.maxPowerKw} kW` : ""}
-                {s.maxPowerKw != null && connectorTypes ? " · " : ""}
-                {connectorTypes}
-                {!likelyOperational && (
-                  <>
-                    <br />
-                    <span style={{ color: "#dc2626" }}>{t("out_of_service")}</span>
-                  </>
-                )}
-              </div>
-            </Popup>
-          </Marker>
+          />
         );
       })}
     </MapContainer>
