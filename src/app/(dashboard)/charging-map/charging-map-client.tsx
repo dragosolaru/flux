@@ -114,6 +114,7 @@ export function ChargingMapClient() {
         lat: String(area.lat),
         lng: String(area.lng),
         radius: String(Math.round(area.radiusKm)),
+        limit: "2000",
       });
       if (minKw > 0) params.set("minKw", String(minKw));
       if (connector !== "all") params.set("connector", connector);

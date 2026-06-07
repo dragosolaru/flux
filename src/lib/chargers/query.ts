@@ -14,8 +14,8 @@ import type {
   ConnectorType,
 } from "./types";
 
-const DEFAULT_LIMIT = 200;
-const MAX_LIMIT = 500;
+const DEFAULT_LIMIT = 1000;
+const MAX_LIMIT = 2000;
 
 export interface NearbyParams {
   lat: number;
