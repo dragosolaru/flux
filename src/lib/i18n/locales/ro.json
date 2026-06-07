@@ -35,6 +35,10 @@
     "settings": "Setări",
     "about": "Despre",
     "more": "Mai mult",
+    "add_vehicle": "Adaugă vehicul",
+    "garage": "Garaj",
+    "sign_out": "Deconectare",
+    "select_vehicle": "Selectează vehicul",
     "mobile": {
       "car": "Mașina",
       "charging": "Încărcare",

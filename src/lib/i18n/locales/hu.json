@@ -35,6 +35,10 @@
     "settings": "Beállítások",
     "about": "Névjegy",
     "more": "Több",
+    "add_vehicle": "Jármű hozzáadása",
+    "garage": "Garázs",
+    "sign_out": "Kijelentkezés",
+    "select_vehicle": "Jármű kiválasztása",
     "mobile": {
       "car": "Az autóm",
       "charging": "Töltés",

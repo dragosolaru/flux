@@ -1006,3 +1006,11 @@ All responsive — full values restore at `md:` breakpoint.
 **ChargerDetailSheet positioning**: Changed from `position: fixed` to `position: absolute` inside `<main>`. The sheet now slides up within the map area and cannot overlap the BottomNav below it. The backdrop is likewise `absolute`, covering only the map pane so the BottomNav remains tappable.
 
 **Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`.
+
+---
+
+## TopBar — Full i18n (audit fix)
+
+**What it does:** TopBar dropdown now uses `useTranslations("nav")` for all labels previously hardcoded in English: "Add vehicle", "Garage", "Settings", "Sign out", and the vehicle switcher placeholder. Keys added to all 5 locale files (en/ro/de/fr/hu).
+
+**Key files:** `src/components/layout/TopBar.tsx`, `src/lib/i18n/locales/*.json` (`nav.add_vehicle`, `nav.garage`, `nav.sign_out`, `nav.select_vehicle`).

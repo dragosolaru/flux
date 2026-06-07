@@ -35,6 +35,10 @@
     "settings": "Settings",
     "about": "About",
     "more": "More",
+    "add_vehicle": "Add vehicle",
+    "garage": "Garage",
+    "sign_out": "Sign out",
+    "select_vehicle": "Select vehicle",
     "mobile": {
       "car": "Car",
       "charging": "Charging",
