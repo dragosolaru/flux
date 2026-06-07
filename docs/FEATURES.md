@@ -922,3 +922,17 @@ them.
 **How to use:** `POST /api/trip-plan` with optional body field `arrivalSocPct` (number, 0–50).
 
 **Key files:** `src/lib/external/routing/planner.ts` (`planTrip`, `planTripVariants`, `PlanInput`, `VariantsInput`), `src/app/api/trip-plan/route.ts` (`bodySchema`, both `planTripVariants` calls).
+
+## Trip Planner — Charging Station Reliability Badge
+
+**What it does:** Surfaces real station-reliability signals from Open Charge Map to fight the global EV "zombie station" problem (up to 16% of stations report a false status). Each charging stop sourced from OCM gets a small badge derived from OCM's `DateLastVerified` / `DateLastStatusUpdate` and `StatusType.IsOperational`:
+- **offline** (red, `ShieldAlert`) — `IsOperational === false` → "Possibly offline".
+- **stale** (amber, `ShieldAlert`) — last verified more than 90 days ago → "Not recently verified".
+- **good** (green, `ShieldCheck`) — verified within 90 days → "Verified {days}d ago".
+- **unknown** — no signal (static Tesla/IONITY stations) → no badge rendered.
+
+**How to use:** Automatic in the `/trip` planner UI — the badge appears next to the network chip in both `StopCard` (plan list) and `StationDetailSheet` (station detail bottom sheet). No new API surface; the two `ChargingStation` fields flow through `POST /api/trip-plan` from the OCM corridor fetch.
+
+**Key files:** `src/lib/external/routing/reliability.ts` (`stationReliability`, `daysSinceVerified`, `ReliabilityLevel`), `src/components/trip/ReliabilityBadge.tsx` (shared badge), `src/components/trip/StopCard.tsx` + `src/components/trip/StationDetailSheet.tsx` (render sites), `src/lib/external/charging-networks/types.ts` (`ChargingStation.lastVerifiedAt` / `isOperational`), `src/lib/external/routing/corridor-stations.ts` (`OcmPoi` mapping in `ocmToStation`). i18n: `trip.reliability.{offline,stale,verified}` in all 5 locales.
+
+**Dependencies:** Open Charge Map API (already used by `fetchCorridorStationsOCM`); `lucide-react` icons; `next-intl`.

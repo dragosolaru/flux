@@ -245,6 +245,9 @@ interface OcmPoi {
   } | null;
   OperatorInfo?: { Title?: string | null } | null;
   Connections?: OcmConnection[] | null;
+  StatusType?: { IsOperational?: boolean | null } | null;
+  DateLastVerified?: string | null;
+  DateLastStatusUpdate?: string | null;
 }
 
 function ocmToStation(poi: OcmPoi): ChargingStation | null {
@@ -257,6 +260,10 @@ function ocmToStation(poi: OcmPoi): ChargingStation | null {
   );
   const operator = poi.OperatorInfo?.Title ?? null;
   const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
+
+  const lastVerifiedAt = poi.DateLastVerified ?? poi.DateLastStatusUpdate ?? undefined;
+  const isOperational =
+    poi.StatusType?.IsOperational == null ? undefined : poi.StatusType.IsOperational;
 
   return {
     id: `ocm-${poi.ID}`,
@@ -272,6 +279,8 @@ function ocmToStation(poi: OcmPoi): ChargingStation | null {
     priceEurKwh: null,
     addressCity: info.Town ?? "",
     addressCountry: "",
+    lastVerifiedAt,
+    isOperational,
   };
 }
 

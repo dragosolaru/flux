@@ -638,6 +638,11 @@
       "energy_added": "Energie geladen",
       "cost": "Geschätzte Kosten",
       "network": "Netzwerk"
+    },
+    "reliability": {
+      "offline": "Möglicherweise offline",
+      "stale": "Nicht kürzlich geprüft",
+      "verified": "Vor {days} T. geprüft"
     }
   },
   "notFoundPage": {

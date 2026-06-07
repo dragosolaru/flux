@@ -3,6 +3,7 @@
 import { X, Zap, Clock, Battery, BatteryFull } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChargingStop } from "@/lib/external/routing/types";
+import { ReliabilityBadge } from "./ReliabilityBadge";
 
 interface StationDetailSheetProps {
   stop: ChargingStop;
@@ -52,6 +53,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
                 >
                   {station.networkId}
                 </span>
+                <ReliabilityBadge station={station} />
                 <span className="text-xs text-muted-foreground">
                   {station.addressCity}{station.addressCountry ? `, ${station.addressCountry}` : ""}
                 </span>
