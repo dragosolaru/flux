@@ -996,3 +996,13 @@ All responsive — full values restore at `md:` breakpoint.
 **How to use:** Automatic — the chip appears in the scrollable chip row below the HeroCard whenever a past session exists in `charging_sessions`.
 
 **Key files:** `src/app/(dashboard)/dashboard/page.tsx` (server fetch), `src/app/(dashboard)/dashboard/dashboard-client.tsx` (chip render). i18n: `dashboard.chip_last_charge` in all 5 locales.
+
+---
+
+## Charging Map — Station Query Fix + BottomNav Sheet Fix
+
+**Station query on locate**: `handleLocate` and `handleSilentLocate` now also call `setArea()` when the user's location is resolved. Previously, auto-locate moved the map view but left the query area at the default (Bucharest), causing 66 stations to load off-screen. Now the query resets immediately to the user's position.
+
+**ChargerDetailSheet positioning**: Changed from `position: fixed` to `position: absolute` inside `<main>`. The sheet now slides up within the map area and cannot overlap the BottomNav below it. The backdrop is likewise `absolute`, covering only the map pane so the BottomNav remains tappable.
+
+**Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`.

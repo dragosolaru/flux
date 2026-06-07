@@ -27,19 +27,19 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
 
   return (
     <>
-      {/* Backdrop — tap to dismiss */}
+      {/* Backdrop — tap to dismiss. Absolute so it only covers <main>, not BottomNav. */}
       <div
-        className="fixed inset-0 z-[490] bg-black/20 backdrop-blur-[1px]"
+        className="absolute inset-0 z-[490] bg-black/20 backdrop-blur-[1px]"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Bottom sheet */}
+      {/* Bottom sheet — absolute so it stays within <main> above BottomNav. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
-        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
+        className="absolute bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}

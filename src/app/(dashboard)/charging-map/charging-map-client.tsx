@@ -77,11 +77,13 @@ export function ChargingMapClient() {
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
     setUserLocation({ lat, lng });
+    setArea({ lat, lng, radiusKm: 25 });
   }, []);
 
   const handleSilentLocate = useCallback((coords: GeoCoords) => {
     setCenter(coords);
     setUserLocation(coords);
+    setArea({ ...coords, radiusKm: 25 });
   }, []);
 
   const handleAreaChange = useCallback((lat: number, lng: number, radiusKm: number) => {
@@ -117,86 +119,91 @@ export function ChargingMapClient() {
   });
 
   return (
-    // Root: fills full main area — parent <main> has `position: relative`.
-    <div className="absolute inset-0 overflow-hidden">
-      {/* Map fills entire area */}
-      <StationMap
-        stations={stations}
-        center={center}
-        selected={selected}
-        onSelect={setSelected}
-        userLocation={userLocation}
-        onUserLocate={handleLocate}
-        onAreaChange={handleAreaChange}
-      />
+    // Root: fills full main area (parent <main> has position:relative).
+    // No overflow-hidden here so ChargerDetailSheet can sit at the bottom of
+    // <main> without covering the BottomNav below it.
+    <div className="absolute inset-0">
+      {/* Inner div clips Leaflet tiles to the map bounds */}
+      <div className="absolute inset-0 overflow-hidden">
+        <StationMap
+          stations={stations}
+          center={center}
+          selected={selected}
+          onSelect={setSelected}
+          userLocation={userLocation}
+          onUserLocate={handleLocate}
+          onAreaChange={handleAreaChange}
+        />
 
-      {/* Filter toggle — always visible top-left */}
-      <div className="absolute left-3 top-3 z-[1000]">
-        <button
-          onClick={() => setShowFilters((v) => !v)}
-          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-xl backdrop-blur-xl transition-colors ${
-            hasActiveFilter
-              ? "border-primary/40 bg-primary/10 text-foreground"
-              : "border-white/10 bg-background/80 text-muted-foreground"
-          }`}
-        >
-          <SlidersHorizontal className="size-3.5" />
-          {showFilters ? t("hide_filters") : t("show_filters")}
-          {hasActiveFilter && <span className="size-1.5 rounded-full bg-primary" />}
-        </button>
-      </div>
-
-      {/* Floating filter rows — collapsed by default */}
-      {showFilters && (
-        <div className="absolute left-3 right-3 top-12 z-[1000] space-y-1.5">
-          {/* Power filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
-            {POWER_OPTIONS.map((opt) => (
-              <button
-                key={String(opt.value)}
-                onClick={() => setMinKw(opt.value)}
-                aria-pressed={minKw === opt.value}
-                className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
-                  minKw === opt.value
-                    ? "border-primary bg-primary/10 font-semibold text-foreground"
-                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-                }`}
-              >
-                {opt.label === "filter_all" ? t("filter_all") : opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Connector filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
-            {CONNECTOR_OPTIONS.map((opt) => (
-              <button
-                key={String(opt.value)}
-                onClick={() => setConnector(opt.value)}
-                aria-pressed={connector === opt.value}
-                className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
-                  connector === opt.value
-                    ? "border-primary bg-primary/10 font-semibold text-foreground"
-                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-                }`}
-              >
-                {opt.label === "filter_all" ? t("filter_all") : opt.label}
-              </button>
-            ))}
-          </div>
+        {/* Filter toggle — always visible top-left */}
+        <div className="absolute left-3 top-3 z-[1000]">
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-xl backdrop-blur-xl transition-colors ${
+              hasActiveFilter
+                ? "border-primary/40 bg-primary/10 text-foreground"
+                : "border-white/10 bg-background/80 text-muted-foreground"
+            }`}
+          >
+            <SlidersHorizontal className="size-3.5" />
+            {showFilters ? t("hide_filters") : t("show_filters")}
+            {hasActiveFilter && <span className="size-1.5 rounded-full bg-primary" />}
+          </button>
         </div>
-      )}
 
-      {/* Station count — floating bottom-left, above BottomNav */}
-      <div className="absolute bottom-3 left-3 z-[1000]">
-        <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-sm">
-          {isFetching
-            ? t("updating", { count: stations.length })
-            : t("stations_count", { count: stations.length })}
-        </span>
+        {/* Floating filter rows — collapsed by default */}
+        {showFilters && (
+          <div className="absolute left-3 right-3 top-12 z-[1000] space-y-1.5">
+            {/* Power filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+              {POWER_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setMinKw(opt.value)}
+                  aria-pressed={minKw === opt.value}
+                  className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                    minKw === opt.value
+                      ? "border-primary bg-primary/10 font-semibold text-foreground"
+                      : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                  }`}
+                >
+                  {opt.label === "filter_all" ? t("filter_all") : opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Connector filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+              {CONNECTOR_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setConnector(opt.value)}
+                  aria-pressed={connector === opt.value}
+                  className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                    connector === opt.value
+                      ? "border-primary bg-primary/10 font-semibold text-foreground"
+                      : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                  }`}
+                >
+                  {opt.label === "filter_all" ? t("filter_all") : opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Station count badge — floating bottom-left */}
+        <div className="absolute bottom-3 left-3 z-[1000]">
+          <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-sm">
+            {isFetching
+              ? t("updating", { count: stations.length })
+              : t("stations_count", { count: stations.length })}
+          </span>
+        </div>
       </div>
 
-      {/* Station detail sheet — slides up on tap */}
+      {/* ChargerDetailSheet sits at bottom of <main>, not the full viewport,
+          so the BottomNav underneath remains accessible. */}
       {selected && (
         <ChargerDetailSheet charger={selected} onClose={() => setSelected(null)} />
       )}
