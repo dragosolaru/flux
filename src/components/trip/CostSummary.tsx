@@ -60,30 +60,30 @@ export function CostSummary({
         : t("stops_count_other", { count: stopsCount });
 
   return (
-    <div className="space-y-2">
-      {/* Route header */}
-      <div>
-        <h2 className="text-base font-semibold leading-tight">
+    <div className="space-y-1.5">
+      {/* Route header — compact single line */}
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="truncate text-sm font-semibold leading-tight">
           {origin} → {destination}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          {formatDuration(totalMinutes)} total · {Math.round(totalDistanceKm)} km
-        </p>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {formatDuration(totalMinutes)} · {Math.round(totalDistanceKm)} km
+        </span>
       </div>
 
       {/* Stats chips */}
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 font-medium">
+      <div className="flex flex-wrap gap-1.5 text-xs">
+        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
           {stopsLabel}
         </span>
-        <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 font-medium">
+        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
           {tripEnergyKwh.toFixed(1)} kWh
         </span>
-        <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-1 font-medium text-green-400">
+        <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 font-medium text-green-400">
           €{tripEnergyCostEur.toFixed(2)}
         </span>
         {chargingMinutes > 0 && (
-          <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 font-medium">
+          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
             {t("charging_time_label", { duration: formatDuration(chargingMinutes) })}
           </span>
         )}
@@ -91,8 +91,8 @@ export function CostSummary({
 
       {/* Approx route warning */}
       {approxRoute && (
-        <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 backdrop-blur-sm">
-          <AlertTriangle className="size-3.5 shrink-0" />
+        <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-400">
+          <AlertTriangle className="size-3 shrink-0" />
           {t("approx_route_warning")}
         </div>
       )}
@@ -100,7 +100,7 @@ export function CostSummary({
       {/* Fuel comparison toggle */}
       <button
         onClick={() => setShowFuel((v) => !v)}
-        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
       >
         <Fuel className="size-3.5" />
         {t("fuel_comparison")}

@@ -50,9 +50,9 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
   const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
 
   return (
-    <div className="flex gap-3 rounded-xl border border-white/8 bg-white/5 p-3 backdrop-blur-sm">
+    <div className="flex gap-2.5 rounded-xl border border-white/8 bg-white/5 p-2.5 backdrop-blur-sm">
       {/* Step number */}
-      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-xs font-bold text-white">
+      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-[11px] font-bold text-white">
         {index + 1}
       </div>
 
@@ -61,7 +61,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{station.name}</p>
-            <div className="mt-0.5 flex items-center gap-1.5">
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
               <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-muted-foreground">
                 {station.networkId}
               </span>
@@ -73,33 +73,28 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
         </div>
 
         {/* Stats row */}
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {/* Battery range */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="inline-block size-2.5 rounded-sm bg-amber-400/80" />
+            <span className="inline-block size-2 rounded-sm bg-amber-400/80" />
             {arriveSoc}% → {departSoc}%
           </span>
-
           <span className="flex items-center gap-1">
             <Zap className="size-3" />
             {energyAddedKwh.toFixed(1)} kWh
           </span>
-
           <span className="flex items-center gap-1">
             <Clock className="size-3" />
             {chargingMinutes} min
           </span>
-
           <span className="flex items-center gap-1">
             <MapPin className="size-3" />
             km {distanceFromStartKm}
           </span>
         </div>
 
-        {/* Battery preconditioning hint for fast-charging stops */}
         {precondition && (
           <div
-            className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs ${
+            className={`mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs ${
               autoPrecondition
                 ? "bg-blue-500/15 text-blue-300"
                 : "bg-amber-500/15 text-amber-300"

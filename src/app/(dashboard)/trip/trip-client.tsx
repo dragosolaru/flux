@@ -516,7 +516,7 @@ export function TripClient() {
             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
             className="overflow-y-auto overflow-x-hidden"
           >
-          <div className="space-y-4 px-4 pb-6 pt-2">
+          <div className="space-y-3 px-4 pb-4 pt-1.5">
             {/* Variant selector — alternative roads × charging strategies */}
             {variants.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -626,8 +626,8 @@ export function TripClient() {
                 )}
 
                 {activePlan.stops.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                       {t("stops_label")}
                     </p>
                     {activePlan.stops.map((stop, i) => (

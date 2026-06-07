@@ -31,7 +31,7 @@ export async function computeOrsAlternatives(
   if (!apiKey) return [];
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const res = await fetch(ORS_URL, {
@@ -46,7 +46,11 @@ export async function computeOrsAlternatives(
           [origin.lng, origin.lat],
           [destination.lng, destination.lat],
         ],
-        alternative_routes: { target_count: max, share_factor: 0.6, weight_factor: 1.6 },
+        // share_factor 0.7: allow up to 70% shared path — Romanian long-distance
+        // roads overlap heavily near city bypasses so 0.6 rejects real alternatives.
+        // weight_factor 1.4: accept routes up to 40% longer than the fastest.
+        alternative_routes: { target_count: max, share_factor: 0.7, weight_factor: 1.4 },
+        instructions: false,
       }),
     });
     clearTimeout(timeoutId);
