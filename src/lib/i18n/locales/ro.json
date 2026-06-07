@@ -540,7 +540,9 @@
     "station_fallback": "Stație încărcare",
     "filter_power": "Putere",
     "filter_connector": "Conector",
-    "filter_all": "Toate"
+    "filter_all": "Toate",
+    "connectors_label": "Conectori",
+    "stations_count": "{count} stații"
   },
   "auth": {
     "title_login": "Bine ai revenit",

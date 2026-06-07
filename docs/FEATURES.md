@@ -166,17 +166,21 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 9. Charging map
 
-**What:** Live station map powered by OpenChargeMap + OpenStreetMap/Overpass aggregation. Both sources are queried **in parallel** and de-duplicated by position (~11m grid), giving dense real-world coverage equivalent to Chargemap/PlugShare — including Romania, Cluj, Florești. Default radius 25 km, up to 200 results. Falls back to a ~70-station static EU dataset only when both live sources are empty.
+**What:** Full-screen AmpWhere-style station map. The page fills the entire viewport under the top bar with no padding or scrollable page layout. Station pins show power labels (e.g. "50kW", "250kW") directly on the pin as pill-shaped divIcons. Tapping a pin opens a `ChargerDetailSheet` bottom sheet (glassmorphism, `animate-slide-up`) showing power, connector count, connector type chips, and address. A floating filter bar at the top of the map lets users filter by minimum power and connector type. A floating station count is shown at the bottom-left.
 
-**How to use:** UI `/charging-map` (`StationMap`, Leaflet). API: `GET /api/charging-map` (filter by `network`, `minKw`, `plug`; adds network metadata + availability), `GET /api/charging-stations?lat=&lng=&radius=&maxResults=`.
+**How to use:** UI `/charging-map`. API: `GET /api/chargers/nearby?lat=&lng=&radius=[&minKw=][&connector=]` returns `Charger[]` from PostGIS.
 
 **Station aggregation:** `src/lib/external/charging-networks/live-stations.ts` — `fetchLiveStations(lat, lng, radius, max)` runs `Promise.allSettled([fetchOcmStations, fetchOverpassStations])`, merges results, de-dupes by `lat.toFixed(4),lng.toFixed(4)`, preserves richer power/connector data on conflicts. OCM honours `OPEN_CHARGE_MAP_API_KEY` env var. Overpass POST to `overpass-api.de`, no key needed. `AbortSignal.timeout(22000)`.
 
-**i18n:** `chargingMap.disclaimer`, `chargingMap.locate_me`, `chargingMap.location_error` keys present in all 5 locales.
+**Full-screen layout:** Root div uses `absolute inset-0 overflow-hidden` to fill the `<main>` (which has `position: relative`). `StationMap` fills 100% height/width. Filter bar is `absolute left-3 right-3 top-3 z-[1000]`. Station count is `absolute bottom-3 left-3 z-[1000]`. Bottom sheet uses `fixed bottom-0` (same pattern as `StationDetailSheet` in trip planner).
 
-**User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On click it calls `navigator.geolocation`, pans the map to the user's position (`flyTo` zoom 13), drops a blue dot marker (Leaflet `divIcon`), and reloads stations for the new center. On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast. i18n keys: `chargingMap.locate_me`, `chargingMap.location_error`.
+**Labeled pins:** `makeIcon(likelyOperational, selected, powerKw)` renders a pill-shaped `L.divIcon` with power text ("50kW", "250kW", "1MW"). Icon cache key includes the rounded power label to avoid per-marker re-allocation while bounding cache size to the number of distinct power values.
 
-**Key files:** `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/lib/external/charging-networks/live-stations.ts` (new aggregator), `.../stations.ts` (static fallback), `src/app/api/charging-stations/route.ts`.
+**i18n keys in all 5 locales:** `chargingMap.connectors_label`, `chargingMap.stations_count` (added), plus all existing keys.
+
+**User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast.
+
+**Key files:** `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx` (new), `src/app/(dashboard)/charging-map/charging-map-client.tsx`.
 
 **Dependencies:** Leaflet/react-leaflet, sonner, OpenChargeMap API (optional key), Overpass/OpenStreetMap (free).
 

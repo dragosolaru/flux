@@ -540,7 +540,9 @@
     "station_fallback": "Töltőállomás",
     "filter_power": "Teljesítmény",
     "filter_connector": "Csatlakozó",
-    "filter_all": "Összes"
+    "filter_all": "Összes",
+    "connectors_label": "Csatlakozók",
+    "stations_count": "{count} állomás"
   },
   "auth": {
     "title_login": "Üdv újra",
