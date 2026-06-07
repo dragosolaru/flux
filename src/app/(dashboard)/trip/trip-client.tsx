@@ -461,7 +461,7 @@ export function TripClient() {
 
       {/* Results panel — bottom slide-up, collapsible */}
       <AnimatePresence>
-      {plan && activePlan && (
+      {plan && activePlan && formCollapsed && (
         <motion.div
           variants={slideUp}
           initial="hidden"
@@ -534,7 +534,7 @@ export function TripClient() {
                       key={v.id}
                       onClick={() => setActiveVariant(i)}
                       aria-pressed={active}
-                      className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
+                      className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
                         active
                           ? "border-primary bg-primary/10"
                           : "border-white/10 bg-white/5 hover:bg-white/10"

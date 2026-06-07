@@ -44,9 +44,9 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
   const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
 
   return (
-    <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/5 px-3 py-2.5 backdrop-blur-sm">
+    <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/5 px-2.5 py-2 backdrop-blur-sm">
       {/* Step number */}
-      <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-[10px] font-bold text-white">
+      <div className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-[9px] font-bold text-white">
         {index + 1}
       </div>
 
@@ -58,7 +58,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
         </div>
 
         {/* Row 2: all stats in one line */}
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
           <span className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[11px]">{station.networkId}</span>
           <span>{station.maxKw} kW</span>
           <span>{arriveSoc}%→{departSoc}%</span>

@@ -61,41 +61,6 @@ interface QueryArea {
   radiusKm: number;
 }
 
-// A row of mutually-exclusive filter chips.
-function FilterChips<T extends string | number>({
-  label,
-  options,
-  value,
-  onChange,
-  allLabel,
-}: {
-  label: string;
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-  allLabel: string;
-}) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
-      {options.map((opt) => (
-        <button
-          key={String(opt.value)}
-          onClick={() => onChange(opt.value)}
-          aria-pressed={value === opt.value}
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors ${
-            value === opt.value
-              ? "border-primary bg-primary/10 text-foreground"
-              : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-          }`}
-        >
-          {opt.label === "filter_all" ? allLabel : opt.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<Charger | null>(null);
@@ -162,24 +127,42 @@ export function ChargingMapClient() {
         onAreaChange={handleAreaChange}
       />
 
-      {/* Floating filter bar — absolute top of map */}
-      <div className="absolute left-3 right-3 top-3 z-[1000]">
-        <div className="flex items-center gap-3 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-2 shadow-xl backdrop-blur-xl">
-          <FilterChips
-            label={t("filter_power")}
-            options={POWER_OPTIONS}
-            value={minKw}
-            onChange={setMinKw}
-            allLabel={t("filter_all")}
-          />
-          <div className="h-4 w-px shrink-0 bg-white/10" />
-          <FilterChips
-            label={t("filter_connector")}
-            options={CONNECTOR_OPTIONS}
-            value={connector}
-            onChange={setConnector}
-            allLabel={t("filter_all")}
-          />
+      {/* Floating filter bar — two compact rows */}
+      <div className="absolute left-3 right-3 top-3 z-[1000] space-y-1.5">
+        {/* Power filter */}
+        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+          {POWER_OPTIONS.map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => setMinKw(opt.value)}
+              aria-pressed={minKw === opt.value}
+              className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                minKw === opt.value
+                  ? "border-primary bg-primary/10 font-semibold text-foreground"
+                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+              }`}
+            >
+              {opt.label === "filter_all" ? t("filter_all") : opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Connector filter */}
+        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+          {CONNECTOR_OPTIONS.map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => setConnector(opt.value)}
+              aria-pressed={connector === opt.value}
+              className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                connector === opt.value
+                  ? "border-primary bg-primary/10 font-semibold text-foreground"
+                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+              }`}
+            >
+              {opt.label === "filter_all" ? t("filter_all") : opt.label}
+            </button>
+          ))}
         </div>
       </div>
 

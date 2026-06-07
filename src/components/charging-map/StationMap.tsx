@@ -54,19 +54,25 @@ function makeIcon(
   if (cached) return cached;
 
   const color = selected ? SELECTED_COLOR : likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
-  const fontSize = selected ? 11 : 10;
-  const paddingH = selected ? 8 : 6;
-  const height = selected ? 32 : 26;
-  // Estimate pill width from label length; min 36px.
-  const width = Math.max(36, label.length * 7 + paddingH * 2 + 4);
+  const fontSize = selected ? 10 : 9;
+  const padH = 5;
+  const charWidth = fontSize * 0.65;
+  const textW = Math.max(20, label.length * charWidth);
+  const width = Math.round(textW + padH * 2);
+  const height = selected ? 22 : 18;
+  const textY = Math.round(height * 0.70);
+  const strokeW = selected ? 2 : 1.5;
 
-  const html = `<div style="background:${color};color:white;font-size:${fontSize}px;font-weight:600;font-family:-apple-system,sans-serif;padding:2px ${paddingH}px;border-radius:6px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);white-space:nowrap;display:flex;align-items:center;justify-content:center;width:${width}px;height:${height}px;box-sizing:border-box;">${label}</div>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <rect x="${strokeW / 2}" y="${strokeW / 2}" rx="4" ry="4" width="${width - strokeW}" height="${height - strokeW}" fill="${color}" stroke="white" stroke-width="${strokeW}"/>
+    <text x="${width / 2}" y="${textY}" fill="white" font-size="${fontSize}" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif" text-anchor="middle">${label}</text>
+  </svg>`;
 
   const icon = L.divIcon({
-    html,
+    html: svg,
     className: "",
     iconSize: [width, height],
-    iconAnchor: [width / 2, height],
+    iconAnchor: [Math.round(width / 2), height],
     popupAnchor: [0, -height],
   });
   iconCache.set(key, icon);
