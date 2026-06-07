@@ -34,7 +34,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
         role="dialog"
         aria-modal="true"
         aria-label={station.name}
-        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
+        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}

@@ -471,7 +471,7 @@ export function TripClient() {
         >
           {/* Handle — always visible, outside the collapsible area so scroll
               state never hides it. */}
-          <div className="flex w-full items-center justify-between gap-2 px-4 pb-1 pt-2">
+          <div className="flex min-h-11 w-full items-center justify-between gap-2 px-4 pb-1 pt-2">
             <button
               onClick={() => setPlanExpanded((v) => !v)}
               className="flex min-w-0 flex-1 items-center gap-2"
@@ -539,7 +539,7 @@ export function TripClient() {
                           : "border-white/10 bg-white/5 hover:bg-white/10"
                       }`}
                     >
-                      <span className={`text-xs font-semibold ${
+                      <span className={`truncate text-xs font-semibold ${
                         label?.color === "accent" ? "text-primary"
                         : label?.color === "green" ? "text-green-400"
                         : label?.color === "yellow" ? "text-yellow-400"

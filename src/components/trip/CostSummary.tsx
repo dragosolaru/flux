@@ -93,7 +93,7 @@ export function CostSummary({
         <button
           onClick={() => setShowFuel((v) => !v)}
           title={t("fuel_comparison")}
-          className={`shrink-0 rounded-full p-1.5 transition-colors ${showFuel ? "bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
+          className={`shrink-0 rounded-full p-2.5 transition-colors ${showFuel ? "bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
         >
           <Fuel className="size-3.5" />
         </button>

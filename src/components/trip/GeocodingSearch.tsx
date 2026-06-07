@@ -124,6 +124,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
         </span>
         <input
           type="text"
+          inputMode="search"
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
