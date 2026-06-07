@@ -28,7 +28,7 @@ export default async function DashboardLayout({
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar />
           <MockGlobalBanner />
-          <main className="flex-1 overflow-y-auto px-4 py-6 pb-4 md:px-8 md:pb-6">{children}</main>
+          <main className="relative flex-1 overflow-y-auto px-4 py-6 pb-4 md:px-8 md:pb-6">{children}</main>
         </div>
       </div>
       {/* Bottom nav sits at the base of the flex column — no position:fixed needed */}
