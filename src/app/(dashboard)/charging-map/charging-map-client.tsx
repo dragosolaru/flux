@@ -9,6 +9,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
+import type { ViewportBBox } from "@/components/charging-map/StationMap";
 
 export type { Charger };
 
@@ -35,6 +36,18 @@ const StationMap = dynamic(() => import("@/components/charging-map/StationMap"),
 const DEFAULT_LAT = 44.4268;
 const DEFAULT_LNG = 26.1025;
 
+// Initial bbox: ~50 km around the default centre
+const DEFAULT_BBOX: ViewportBBox = {
+  minLat: DEFAULT_LAT - 0.5,
+  minLng: DEFAULT_LNG - 0.7,
+  maxLat: DEFAULT_LAT + 0.5,
+  maxLng: DEFAULT_LNG + 0.7,
+};
+
+function toBBox(lat: number, lng: number): ViewportBBox {
+  return { minLat: lat - 0.5, minLng: lng - 0.7, maxLat: lat + 0.5, maxLng: lng + 0.7 };
+}
+
 interface GeoCoords {
   lat: number;
   lng: number;
@@ -56,19 +69,14 @@ function useSilentAutoLocate(onSuccess: (coords: GeoCoords) => void) {
   }, []);
 }
 
-interface QueryArea {
-  lat: number;
-  lng: number;
-  radiusKm: number;
-}
 
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<Charger | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
-  // The query follows the visible map area; updated on pan/zoom via MoveWatcher.
-  const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 50 });
+  // bbox follows the visible map viewport; updated on pan/zoom via MoveWatcher.
+  const [area, setArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
@@ -79,19 +87,19 @@ export function ChargingMapClient() {
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
     setUserLocation({ lat, lng });
-    setArea({ lat, lng, radiusKm: 50 });
+    setArea(toBBox(lat, lng));
     setResetKey((k) => k + 1);
   }, []);
 
   const handleSilentLocate = useCallback((coords: GeoCoords) => {
     setCenter(coords);
     setUserLocation(coords);
-    setArea({ ...coords, radiusKm: 50 });
+    setArea(toBBox(coords.lat, coords.lng));
     setResetKey((k) => k + 1);
   }, []);
 
-  const handleAreaChange = useCallback((lat: number, lng: number, radiusKm: number) => {
-    setArea({ lat, lng, radiusKm });
+  const handleAreaChange = useCallback((bbox: ViewportBBox) => {
+    setArea(bbox);
   }, []);
 
   useSilentAutoLocate(handleSilentLocate);
@@ -101,24 +109,23 @@ export function ChargingMapClient() {
     isFetching,
   } = useQuery({
     queryKey: [
-      "chargers-nearby",
+      "chargers-bbox",
       resetKey,
-      area.lat.toFixed(2),
-      area.lng.toFixed(2),
-      Math.round(area.radiusKm),
+      area.minLat.toFixed(2),
+      area.minLng.toFixed(2),
+      area.maxLat.toFixed(2),
+      area.maxLng.toFixed(2),
       minKw,
       connector,
     ],
     queryFn: () => {
       const params = new URLSearchParams({
-        lat: String(area.lat),
-        lng: String(area.lng),
-        radius: String(Math.round(area.radiusKm)),
+        bbox: `${area.minLng},${area.minLat},${area.maxLng},${area.maxLat}`,
         limit: "2000",
       });
       if (minKw > 0) params.set("minKw", String(minKw));
       if (connector !== "all") params.set("connector", connector);
-      return apiFetch<Charger[]>(`/api/chargers/nearby?${params}`);
+      return apiFetch<Charger[]>(`/api/chargers?${params}`);
     },
     staleTime: 300_000,
     placeholderData: keepPreviousData,

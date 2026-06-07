@@ -73,27 +73,41 @@ function SetView({ centre }: CentreProps) {
 }
 
 // ---------------------------------------------------------------------------
-// MoveWatcher: refetch when the user pans/zooms. Minimum radius 20 km so we
-// never shrink to a tiny area when zoomed in.
+// MoveWatcher: refetch when the user pans or zooms. Passes the actual map
+// viewport bounds so the query always matches exactly what is visible.
+// Both moveend and zoomend are handled — mobile pinch zoom fires zoomend
+// but may not fire moveend when the centre stays fixed.
 // ---------------------------------------------------------------------------
+export interface ViewportBBox {
+  minLat: number;
+  minLng: number;
+  maxLat: number;
+  maxLng: number;
+}
+
 interface MoveWatcherProps {
-  onAreaChange: (lat: number, lng: number, radiusKm: number) => void;
+  onAreaChange: (bbox: ViewportBBox) => void;
 }
 
 function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  function schedule(m: L.Map) {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const b = m.getBounds();
+      onAreaChange({
+        minLat: b.getSouth(),
+        minLng: b.getWest(),
+        maxLat: b.getNorth(),
+        maxLng: b.getEast(),
+      });
+    }, 500);
+  }
+
   const map = useMapEvents({
-    moveend() {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        const c = map.getCenter();
-        const ne = map.getBounds().getNorthEast();
-        // At least 20 km so zooming in doesn't shrink the query to an empty area.
-        const radiusKm = Math.min(100, Math.max(20, map.distance(c, ne) / 1000));
-        onAreaChange(c.lat, c.lng, radiusKm);
-      }, 500);
-    },
+    moveend() { schedule(map); },
+    zoomend() { schedule(map); },
   });
 
   return null;
@@ -165,7 +179,7 @@ interface StationMapProps {
   onSelect: (s: Charger) => void;
   userLocation?: { lat: number; lng: number } | null;
   onUserLocate?: (lat: number, lng: number) => void;
-  onAreaChange?: (lat: number, lng: number, radiusKm: number) => void;
+  onAreaChange?: (bbox: ViewportBBox) => void;
 }
 
 export default function StationMap({
