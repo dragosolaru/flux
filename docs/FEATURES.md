@@ -787,11 +787,32 @@ from this data is spec #2.
 
 ---
 
-## Trip Planner — Multiple Route Variants
+## Trip Planner — Distinct Route Alternatives (ORS + dedup by output)
 
-**What it does:** Fixes the route variant deduplication logic that was collapsing "fastest" (charge to 70%) and "balanced" (charge to 95%) strategies into a single result when they produced the same stop count and similar total times. The dedup key now includes the strategy name, so the user always sees at least two distinct options (if both are feasible): one with shorter but more frequent stops, one with longer single stops.
+**What it does:** Surfaces genuinely different roads between two points and stops
+showing the same road twice.
 
-**Key file:** `src/lib/external/routing/planner.ts` — `planTripVariants`, dedup `sig` includes `v.strategy`.
+1. **Real alternatives via OpenRouteService.** OSRM's public server rarely
+   returns more than the single fastest road for a long corridor (Cluj→București
+   has the A1-via-Sibiu road and the Brașov/DN1 road, but OSRM surfaced only
+   one). When `OPENROUTESERVICE_API_KEY` is set, `computeRouteAlternatives` uses
+   ORS's `alternative_routes` algorithm (`target_count`, `share_factor`,
+   `weight_factor`) to return roads that are actually different, then falls back
+   to OSRM if ORS is unconfigured or fails. Same opt-in pattern as Open Charge
+   Map. New file: `src/lib/external/routing/providers/ors-router.ts`.
+2. **Dedup by plan output, not strategy.** The previous dedup key included the
+   strategy name, so "fastest" (charge to 70%) and "balanced" (charge to 95%)
+   survived as two chips even when they produced the *identical* road + single
+   stop + time — the user saw two visually identical variants. The key is now
+   `roundedDistance-stopStationIds-roundedTime`, so identical plans collapse
+   while genuinely different roads (different distance and/or station set) stay
+   distinct.
+
+**Key files:** `src/lib/external/routing/planner.ts` (`computeRouteAlternatives`,
+`planTripVariants` dedup), `src/lib/external/routing/providers/ors-router.ts` (new).
+
+**Dependencies:** OpenRouteService (optional, free tier ~2000 req/day — set
+`OPENROUTESERVICE_API_KEY`), OSRM public (fallback).
 
 ---
 
