@@ -25,55 +25,67 @@ function useLeafletIconFix() {
   }, []);
 }
 
-// Green = likely operational (confidence >= 0.5), grey = low confidence.
-// Selected marker is drawn larger with a blue border.
-const OPERATIONAL_COLOR = "#16a34a";
-const OFFLINE_COLOR = "#6b7280";
-const SELECTED_COLOR = "#2563eb";
+// Power-tier color coding for station pins. The teardrop SVG <path> is the
+// proven Leaflet DivIcon approach — both the inline-styled <div> and the
+// <rect>+<text> SVG variants rendered invisibly on mobile WebKit.
+const TIER_ULTRA_COLOR = "#ef4444"; // 350+ kW (red)
+const TIER_FAST_COLOR = "#f97316"; // 150–349 kW (orange)
+const TIER_MEDIUM_COLOR = "#16a34a"; // 50–149 kW (green)
+const TIER_SLOW_COLOR = "#3b82f6"; // <50 kW (blue)
+const TIER_OFFLINE_COLOR = "#6b7280"; // offline / unknown (gray)
+const SELECTED_COLOR = "#2563eb"; // selected (blue)
 
-// Icon cache keyed by "<state>-<powerLabel>" to avoid per-marker re-allocation.
-// Power label (e.g. "50kW", "250kW") is used as suffix so the cache stays bounded
-// relative to the number of distinct rounded power values in the data.
-const iconCache = new Map<string, L.DivIcon>();
+type PowerTier = "ultra" | "fast" | "medium" | "slow" | "offline";
 
-function powerLabel(powerKw: number | null | undefined): string {
-  if (!powerKw) return "?";
-  if (powerKw >= 1000) return `${Math.round(powerKw / 1000)}MW`;
-  return `${Math.round(powerKw)}kW`;
+function getPowerTier(maxPowerKw: number | null | undefined, likelyOperational: boolean): PowerTier {
+  if (!likelyOperational) return "offline";
+  if (!maxPowerKw) return "slow";
+  if (maxPowerKw >= 350) return "ultra";
+  if (maxPowerKw >= 150) return "fast";
+  if (maxPowerKw >= 50) return "medium";
+  return "slow";
 }
 
-function makeIcon(
-  likelyOperational: boolean,
-  selected: boolean,
-  powerKw: number | null | undefined,
-): L.DivIcon {
-  const label = powerLabel(powerKw);
-  const state = selected ? "s" : likelyOperational ? "o" : "x";
-  const key = `${state}-${label}`;
+function tierColor(tier: PowerTier): string {
+  switch (tier) {
+    case "ultra":
+      return TIER_ULTRA_COLOR;
+    case "fast":
+      return TIER_FAST_COLOR;
+    case "medium":
+      return TIER_MEDIUM_COLOR;
+    case "slow":
+      return TIER_SLOW_COLOR;
+    case "offline":
+      return TIER_OFFLINE_COLOR;
+  }
+}
+
+// Icon cache keyed by "<state>-<tier>" — bounded to at most 10 distinct icons.
+const iconCache = new Map<string, L.DivIcon>();
+
+function makeIcon(selected: boolean, tier: PowerTier): L.DivIcon {
+  const key = selected ? `s-${tier}` : tier;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
-  const color = selected ? SELECTED_COLOR : likelyOperational ? OPERATIONAL_COLOR : OFFLINE_COLOR;
-  const fontSize = selected ? 10 : 9;
-  const padH = 5;
-  const charWidth = fontSize * 0.65;
-  const textW = Math.max(20, label.length * charWidth);
-  const width = Math.round(textW + padH * 2);
-  const height = selected ? 22 : 18;
-  const textY = Math.round(height * 0.70);
-  const strokeW = selected ? 2 : 1.5;
+  const color = selected ? SELECTED_COLOR : tierColor(tier);
+  const scale = selected ? 1.3 : 1;
+  const w = Math.round(20 * scale);
+  const h = Math.round(30 * scale);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-    <rect x="${strokeW / 2}" y="${strokeW / 2}" rx="4" ry="4" width="${width - strokeW}" height="${height - strokeW}" fill="${color}" stroke="white" stroke-width="${strokeW}"/>
-    <text x="${width / 2}" y="${textY}" fill="white" font-size="${fontSize}" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,sans-serif" text-anchor="middle">${label}</text>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="${w}" height="${h}">
+    <path fill="${color}" stroke="white" stroke-width="1.5"
+      d="M10 0C4.477 0 0 4.477 0 10c0 7.5 10 20 10 20S20 17.5 20 10C20 4.477 15.523 0 10 0z"/>
+    <circle cx="10" cy="10" r="4" fill="white" fill-opacity="0.9"/>
   </svg>`;
 
   const icon = L.divIcon({
     html: svg,
     className: "",
-    iconSize: [width, height],
-    iconAnchor: [Math.round(width / 2), height],
-    popupAnchor: [0, -height],
+    iconSize: [w, h],
+    iconAnchor: [Math.round(w / 2), h],
+    popupAnchor: [0, -h],
   });
   iconCache.set(key, icon);
   return icon;
@@ -216,13 +228,13 @@ export default function StationMap({ stations, center, selected, onSelect, userL
         </Marker>
       )}
       {stations.map((s) => {
-        const likelyOperational = s.confidence >= 0.5;
+        const tier = getPowerTier(s.maxPowerKw, s.confidence >= 0.5);
         const isSelected = selected?.id === s.id;
         return (
           <Marker
             key={s.id}
             position={[s.lat, s.lng]}
-            icon={makeIcon(likelyOperational, isSelected, s.maxPowerKw)}
+            icon={makeIcon(isSelected, tier)}
             zIndexOffset={isSelected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(s) }}
           />

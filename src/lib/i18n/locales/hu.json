@@ -542,7 +542,9 @@
     "filter_connector": "Csatlakozó",
     "filter_all": "Összes",
     "connectors_label": "Csatlakozók",
-    "stations_count": "{count} állomás"
+    "stations_count": "{count} állomás",
+    "show_filters": "Szűrők",
+    "hide_filters": "Elrejt"
   },
   "auth": {
     "title_login": "Üdv újra",

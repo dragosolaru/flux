@@ -542,7 +542,9 @@
     "filter_connector": "Conector",
     "filter_all": "Toate",
     "connectors_label": "Conectori",
-    "stations_count": "{count} stații"
+    "stations_count": "{count} stații",
+    "show_filters": "Filtre",
+    "hide_filters": "Ascunde"
   },
   "auth": {
     "title_login": "Bine ai revenit",

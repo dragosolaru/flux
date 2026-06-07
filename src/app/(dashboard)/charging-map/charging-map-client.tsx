@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { SlidersHorizontal } from "lucide-react";
 
 import { apiFetch } from "@/lib/api-fetch";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
@@ -70,6 +71,8 @@ export function ChargingMapClient() {
   const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 25 });
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const hasActiveFilter = minKw > 0 || connector !== "all";
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
@@ -127,44 +130,62 @@ export function ChargingMapClient() {
         onAreaChange={handleAreaChange}
       />
 
-      {/* Floating filter bar — two compact rows */}
-      <div className="absolute left-3 right-3 top-3 z-[1000] space-y-1.5">
-        {/* Power filter */}
-        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
-          {POWER_OPTIONS.map((opt) => (
-            <button
-              key={String(opt.value)}
-              onClick={() => setMinKw(opt.value)}
-              aria-pressed={minKw === opt.value}
-              className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
-                minKw === opt.value
-                  ? "border-primary bg-primary/10 font-semibold text-foreground"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-              }`}
-            >
-              {opt.label === "filter_all" ? t("filter_all") : opt.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Connector filter */}
-        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
-          {CONNECTOR_OPTIONS.map((opt) => (
-            <button
-              key={String(opt.value)}
-              onClick={() => setConnector(opt.value)}
-              aria-pressed={connector === opt.value}
-              className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
-                connector === opt.value
-                  ? "border-primary bg-primary/10 font-semibold text-foreground"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
-              }`}
-            >
-              {opt.label === "filter_all" ? t("filter_all") : opt.label}
-            </button>
-          ))}
-        </div>
+      {/* Filter toggle — always visible top-left */}
+      <div className="absolute left-3 top-3 z-[1000]">
+        <button
+          onClick={() => setShowFilters((v) => !v)}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-xl backdrop-blur-xl transition-colors ${
+            hasActiveFilter
+              ? "border-primary/40 bg-primary/10 text-foreground"
+              : "border-white/10 bg-background/80 text-muted-foreground"
+          }`}
+        >
+          <SlidersHorizontal className="size-3.5" />
+          {showFilters ? t("hide_filters") : t("show_filters")}
+          {hasActiveFilter && <span className="size-1.5 rounded-full bg-primary" />}
+        </button>
       </div>
+
+      {/* Floating filter rows — collapsed by default */}
+      {showFilters && (
+        <div className="absolute left-3 right-3 top-12 z-[1000] space-y-1.5">
+          {/* Power filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+            {POWER_OPTIONS.map((opt) => (
+              <button
+                key={String(opt.value)}
+                onClick={() => setMinKw(opt.value)}
+                aria-pressed={minKw === opt.value}
+                className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                  minKw === opt.value
+                    ? "border-primary bg-primary/10 font-semibold text-foreground"
+                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                }`}
+              >
+                {opt.label === "filter_all" ? t("filter_all") : opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Connector filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
+            {CONNECTOR_OPTIONS.map((opt) => (
+              <button
+                key={String(opt.value)}
+                onClick={() => setConnector(opt.value)}
+                aria-pressed={connector === opt.value}
+                className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+                  connector === opt.value
+                    ? "border-primary bg-primary/10 font-semibold text-foreground"
+                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                }`}
+              >
+                {opt.label === "filter_all" ? t("filter_all") : opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Station count — floating bottom-left, above BottomNav */}
       <div className="absolute bottom-3 left-3 z-[1000]">

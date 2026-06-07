@@ -542,7 +542,9 @@
     "filter_connector": "Connecteur",
     "filter_all": "Tous",
     "connectors_label": "Connecteurs",
-    "stations_count": "{count} stations"
+    "stations_count": "{count} stations",
+    "show_filters": "Filtres",
+    "hide_filters": "Masquer"
   },
   "auth": {
     "title_login": "Bon retour",
