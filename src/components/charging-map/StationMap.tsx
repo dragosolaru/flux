@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvents } from "react-leaflet";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
@@ -8,13 +9,14 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Charger } from "@/lib/chargers/types";
 
-// Power-tier fill colours for CircleMarker (Leaflet native renderer — no DivIcon)
+// Power-tier fill colours — CircleMarker uses Leaflet's own SVG/Canvas
+// renderer, bypassing all DivIcon/WebKit rendering issues.
 const TIER_COLORS: Record<string, string> = {
   ultra:   "#ef4444", // 350+ kW
   fast:    "#f97316", // 150–349 kW
   medium:  "#16a34a", // 50–149 kW
   slow:    "#3b82f6", // <50 kW
-  offline: "#6b7280", // offline / unknown
+  offline: "#6b7280",
 };
 
 function getPowerTier(maxPowerKw: number | null | undefined, likelyOperational: boolean): string {
@@ -26,18 +28,54 @@ function getPowerTier(maxPowerKw: number | null | undefined, likelyOperational: 
   return "slow";
 }
 
+// ---------------------------------------------------------------------------
+// Auto-fit: when the first batch of stations loads, fit the map bounds so all
+// markers are visible. After that the user controls the viewport freely.
+// ---------------------------------------------------------------------------
+function FitStations({ stations }: { stations: Charger[] }) {
+  const map = useMap();
+  const prevCount = useRef(0);
+
+  useEffect(() => {
+    const prev = prevCount.current;
+    prevCount.current = stations.length;
+    if (prev === 0 && stations.length > 0) {
+      const bounds = L.latLngBounds(stations.map((s) => [s.lat, s.lng] as [number, number]));
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
+      }
+    }
+  }, [stations, map]);
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// SetView: pan to the user's resolved location ONCE. Does not override user
+// zoom or any subsequent map interactions.
+// ---------------------------------------------------------------------------
 interface CentreProps {
   centre: { lat: number; lng: number };
 }
 
 function SetView({ centre }: CentreProps) {
   const map = useMap();
+  const centred = useRef(false);
+
   useEffect(() => {
-    map.setView([centre.lat, centre.lng], 11);
+    if (centred.current) return;
+    // Pan without changing zoom so FitStations can choose the right zoom.
+    map.panTo([centre.lat, centre.lng]);
+    centred.current = true;
   }, [centre.lat, centre.lng, map]);
+
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// MoveWatcher: refetch when the user pans/zooms. Minimum radius 20 km so we
+// never shrink to a tiny area when zoomed in.
+// ---------------------------------------------------------------------------
 interface MoveWatcherProps {
   onAreaChange: (lat: number, lng: number, radiusKm: number) => void;
 }
@@ -51,7 +89,8 @@ function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
       timer.current = setTimeout(() => {
         const c = map.getCenter();
         const ne = map.getBounds().getNorthEast();
-        const radiusKm = Math.min(100, Math.max(5, map.distance(c, ne) / 1000));
+        // At least 20 km so zooming in doesn't shrink the query to an empty area.
+        const radiusKm = Math.min(100, Math.max(20, map.distance(c, ne) / 1000));
         onAreaChange(c.lat, c.lng, radiusKm);
       }, 500);
     },
@@ -60,6 +99,9 @@ function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// LocationButton
+// ---------------------------------------------------------------------------
 interface LocationButtonProps {
   onLocate: (lat: number, lng: number) => void;
   errorMessage: string;
@@ -80,7 +122,8 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        map.flyTo([lat, lng], 13);
+        // Zoom 11 ≈ city view (~20 km across) — wide enough to show nearby stations.
+        map.flyTo([lat, lng], 11);
         onLocate(lat, lng);
         setLocating(false);
       },
@@ -112,6 +155,9 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// StationMap
+// ---------------------------------------------------------------------------
 interface StationMapProps {
   stations: Charger[];
   center: { lat: number; lng: number };
@@ -136,7 +182,7 @@ export default function StationMap({
   return (
     <MapContainer
       center={[center.lat, center.lng]}
-      zoom={11}
+      zoom={10}
       style={{ height: "100%", width: "100%" }}
       scrollWheelZoom
     >
@@ -144,25 +190,22 @@ export default function StationMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
       <SetView centre={center} />
+      <FitStations stations={stations} />
       {onAreaChange && <MoveWatcher onAreaChange={onAreaChange} />}
+
       <LocationButton
         onLocate={onUserLocate ?? (() => undefined)}
         errorMessage={t("location_error")}
       />
 
-      {/* User location — blue pulsing dot */}
+      {/* User location dot */}
       {userLocation && (
         <CircleMarker
           center={[userLocation.lat, userLocation.lng]}
           radius={8}
-          pathOptions={{
-            fillColor: "#3b82f6",
-            color: "white",
-            weight: 2.5,
-            fillOpacity: 1,
-            opacity: 1,
-          }}
+          pathOptions={{ fillColor: "#3b82f6", color: "white", weight: 2.5, fillOpacity: 1, opacity: 1 }}
         >
           <Popup>
             <div className="text-xs font-medium">{t("locate_me")}</div>
@@ -170,13 +213,11 @@ export default function StationMap({
         </CircleMarker>
       )}
 
-      {/* Station markers — CircleMarker uses Leaflet's own SVG/Canvas renderer,
-          bypassing all DivIcon/WebKit issues. */}
+      {/* Station markers */}
       {stations.map((s) => {
         const tier = getPowerTier(s.maxPowerKw, s.confidence >= 0.5);
         const isSelected = selected?.id === s.id;
         const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
-
         return (
           <CircleMarker
             key={s.id}
