@@ -73,17 +73,21 @@ export function ChargingMapClient() {
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
   const hasActiveFilter = minKw > 0 || connector !== "all";
+  // Incremented on location jumps to drop stale cross-area keepPreviousData.
+  const [resetKey, setResetKey] = useState(0);
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
     setUserLocation({ lat, lng });
     setArea({ lat, lng, radiusKm: 50 });
+    setResetKey((k) => k + 1);
   }, []);
 
   const handleSilentLocate = useCallback((coords: GeoCoords) => {
     setCenter(coords);
     setUserLocation(coords);
     setArea({ ...coords, radiusKm: 50 });
+    setResetKey((k) => k + 1);
   }, []);
 
   const handleAreaChange = useCallback((lat: number, lng: number, radiusKm: number) => {
@@ -98,6 +102,7 @@ export function ChargingMapClient() {
   } = useQuery({
     queryKey: [
       "chargers-nearby",
+      resetKey,
       area.lat.toFixed(2),
       area.lng.toFixed(2),
       Math.round(area.radiusKm),

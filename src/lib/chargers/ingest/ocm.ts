@@ -91,7 +91,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
     url.searchParams.set("output", "json");
     url.searchParams.set("compact", "true");
     url.searchParams.set("verbose", "false");
-    url.searchParams.set("maxresults", "500");
+    url.searchParams.set("maxresults", "2000");
     // OCM boundingbox: (lat1,lng1),(lat2,lng2).
     url.searchParams.set(
       "boundingbox",
