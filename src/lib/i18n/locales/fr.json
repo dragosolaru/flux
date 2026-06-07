@@ -636,6 +636,7 @@
     },
     "recents": "Récent",
     "clear_recents": "Effacer",
+    "route_label": "Itinéraire",
     "no_recents": "Aucune destination récente",
     "station": {
       "power": "Puissance",

@@ -636,6 +636,7 @@
     },
     "recents": "Legutóbbi",
     "clear_recents": "Törlés",
+    "route_label": "Útvonal",
     "no_recents": "Nincs korábbi célpont",
     "station": {
       "power": "Teljesítmény",

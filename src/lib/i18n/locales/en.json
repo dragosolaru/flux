@@ -636,6 +636,7 @@
     },
     "recents": "Recent",
     "clear_recents": "Clear",
+    "route_label": "Route",
     "no_recents": "No recent destinations",
     "station": {
       "power": "Power",

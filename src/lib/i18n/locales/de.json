@@ -636,6 +636,7 @@
     },
     "recents": "Zuletzt",
     "clear_recents": "Löschen",
+    "route_label": "Route",
     "no_recents": "Keine letzten Ziele",
     "station": {
       "power": "Leistung",

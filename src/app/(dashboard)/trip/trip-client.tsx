@@ -519,24 +519,35 @@ export function TripClient() {
           <div className="space-y-3 px-4 pb-4 pt-1.5">
             {/* Variant selector — alternative roads × charging strategies */}
             {variants.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
                 {variants.map((v, i) => {
                   const h = Math.floor(v.plan.totalMinutes / 60);
                   const m = v.plan.totalMinutes % 60;
                   const active = i === activeVariant;
                   const label = getVariantLabel(v, variants);
+                  // Chip title: semantic badge if available, otherwise route letter (A/B/C).
+                  // Avoids showing "Fastest" twice (once as strategy, once as badge) when
+                  // ORS returns two different roads that share the same charging strategy.
+                  const chipTitle = label
+                    ? t(`variant.${label.key}`)
+                    : `${t("route_label")} ${String.fromCharCode(65 + i)}`;
                   return (
                     <button
                       key={v.id}
                       onClick={() => setActiveVariant(i)}
                       aria-pressed={active}
-                      className={`flex shrink-0 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
+                      className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
                         active
                           ? "border-primary bg-primary/10"
                           : "border-white/10 bg-white/5 hover:bg-white/10"
                       }`}
                     >
-                      <span className="text-xs font-semibold">{t(`variant_${v.strategy}`)}</span>
+                      <span className={`text-xs font-semibold ${
+                        label?.color === "accent" ? "text-primary"
+                        : label?.color === "green" ? "text-green-400"
+                        : label?.color === "yellow" ? "text-yellow-400"
+                        : "text-foreground"
+                      }`}>{chipTitle}</span>
                       <span className="text-[11px] text-muted-foreground">
                         {h}h {m}min · {Math.round(v.plan.totalDistanceKm)} km · {v.plan.stops.length === 0
                           ? t("stops_count_zero")
@@ -545,19 +556,6 @@ export function TripClient() {
                             : t("stops_count_other", { count: v.plan.stops.length })}
                         {v.plan.tripEnergyCostEur > 0 && ` · €${v.plan.tripEnergyCostEur.toFixed(2)}`}
                       </span>
-                      {label && (
-                        <span
-                          className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                            label.color === "accent"
-                              ? "bg-primary/20 text-primary"
-                              : label.color === "green"
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-yellow-500/20 text-yellow-400"
-                          }`}
-                        >
-                          {t(`variant.${label.key}`)}
-                        </span>
-                      )}
                     </button>
                   );
                 })}

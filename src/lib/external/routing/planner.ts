@@ -227,7 +227,9 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     if (via.distanceKm > 0) {
       finalDistanceKm = via.distanceKm;
       finalDrivingMinutes = via.drivingMinutes;
-      finalPolyline = via.polyline;
+      // Keep the base-route polyline when via-routing fails (OSRM down) —
+      // better to show the correct road without stop-detours than a straight line.
+      finalPolyline = via.polyline ?? polyline;
     }
   }
 
