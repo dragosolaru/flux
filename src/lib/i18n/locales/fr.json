@@ -629,7 +629,16 @@
     },
     "recents": "Récent",
     "clear_recents": "Effacer",
-    "no_recents": "Aucune destination récente"
+    "no_recents": "Aucune destination récente",
+    "station": {
+      "power": "Puissance",
+      "arrive_soc": "Arriver à",
+      "depart_soc": "Partir à",
+      "charge_time": "Temps de charge",
+      "energy_added": "Énergie ajoutée",
+      "cost": "Coût estimé",
+      "network": "Réseau"
+    }
   },
   "notFoundPage": {
     "heading": "Page introuvable",

@@ -629,7 +629,16 @@
     },
     "recents": "Zuletzt",
     "clear_recents": "Löschen",
-    "no_recents": "Keine letzten Ziele"
+    "no_recents": "Keine letzten Ziele",
+    "station": {
+      "power": "Leistung",
+      "arrive_soc": "Ankunft mit",
+      "depart_soc": "Abfahrt mit",
+      "charge_time": "Ladezeit",
+      "energy_added": "Energie geladen",
+      "cost": "Geschätzte Kosten",
+      "network": "Netzwerk"
+    }
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

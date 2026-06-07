@@ -233,6 +233,8 @@ from `StopCard.tsx`. i18n: `trip.share_to_tesla`, `trip.share_success`,
 
 **Enter/Escape key on GeocodingSearch:** `onKeyDown` handler on the geocoding input: Enter selects the first result when the dropdown is open; Escape closes the dropdown. Implemented in `GeocodingSearch.tsx`.
 
+**Tap a charging stop on the map:** Clicking a gold stop marker on `TripMap` opens `StationDetailSheet` — a glass bottom sheet (z-[500], slide-up animation, tap-backdrop to dismiss) showing the station name + network badge (Tesla red / IONITY purple / other blue), a 2×2 grid (power kW, charging minutes, arrive SoC %, depart SoC %) plus energy added and est. cost. The map now passes each stop's full `ChargingStop` via `TripMap`'s `onStationSelect` callback; `trip-client.tsx` holds `selectedStop` state. Key files: `src/components/trip/StationDetailSheet.tsx` (new), `src/components/trip/TripMap.tsx`, `.animate-slide-up` keyframe in `globals.css`. i18n: `trip.station.*`.
+
 **Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts` (new), `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/components/trip/StopCard.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/brands/tesla/command-map.ts` (share_navigation), `src/app/api/vehicles/[vehicleId]/commands/route.ts`.
 
 **Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), Overpass/OpenStreetMap (corridor stations, no key), Nominatim (geocoding + reverse geocoding), Leaflet, sonner, mock weather derating, static station dataset, model specs (`src/lib/brands/models.ts`).

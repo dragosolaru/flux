@@ -10,10 +10,11 @@ import { toast } from "sonner";
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
+import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
 import { slideUp } from "@/lib/animations/variants";
-import type { TripPlan, TripVariant } from "@/lib/external/routing/types";
+import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
@@ -114,6 +115,7 @@ export function TripClient() {
   const [locating, setLocating] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [sharedRoute, setSharedRoute] = useState(false);
+  const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
   const [destFocused, setDestFocused] = useState(false);
   const [recents, setRecents] = useState<RecentDestination[]>(getRecentDestinations);
 
@@ -242,6 +244,7 @@ export function TripClient() {
     lng: s.station.lng,
     name: s.station.name,
     network: s.station.networkId,
+    fullStop: s,
   })) ?? [];
 
   const originShort = origin?.name.split(",")[0] ?? "";
@@ -261,6 +264,7 @@ export function TripClient() {
           stops={stops}
           polyline={activePlan?.polyline ?? null}
           className="h-full w-full"
+          onStationSelect={setSelectedStop}
         />
       </div>
 
@@ -658,6 +662,13 @@ export function TripClient() {
         </motion.div>
       )}
       </AnimatePresence>
+
+      {selectedStop && (
+        <StationDetailSheet
+          stop={selectedStop}
+          onClose={() => setSelectedStop(null)}
+        />
+      )}
     </div>
   );
 }

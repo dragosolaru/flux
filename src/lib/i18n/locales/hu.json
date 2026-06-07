@@ -629,7 +629,16 @@
     },
     "recents": "Legutóbbi",
     "clear_recents": "Törlés",
-    "no_recents": "Nincs korábbi célpont"
+    "no_recents": "Nincs korábbi célpont",
+    "station": {
+      "power": "Teljesítmény",
+      "arrive_soc": "Megérkezés",
+      "depart_soc": "Indulás",
+      "charge_time": "Töltési idő",
+      "energy_added": "Hozzáadott energia",
+      "cost": "Becsült költség",
+      "network": "Hálózat"
+    }
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

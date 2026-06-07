@@ -629,7 +629,16 @@
     },
     "recents": "Recente",
     "clear_recents": "Șterge",
-    "no_recents": "Fără destinații recente"
+    "no_recents": "Fără destinații recente",
+    "station": {
+      "power": "Putere",
+      "arrive_soc": "Sosești cu",
+      "depart_soc": "Pleci cu",
+      "charge_time": "Timp încărcare",
+      "energy_added": "Energie adăugată",
+      "cost": "Cost estimat",
+      "network": "Rețea"
+    }
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

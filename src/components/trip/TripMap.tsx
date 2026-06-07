@@ -2,8 +2,9 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import { useEffect, useRef } from "react";
+import type { ChargingStop } from "@/lib/external/routing/types";
 
 function useLeafletIconFix() {
   const done = useRef(false);
@@ -28,11 +29,12 @@ function makeDotIcon(color: string, label?: string) {
   return L.divIcon({ html: svg, className: "", iconSize: [24, 36], iconAnchor: [12, 36], popupAnchor: [0, -38] });
 }
 
-interface TripStop {
+export interface TripStop {
   lat: number;
   lng: number;
   name: string;
-  network: string; // networkId value
+  network: string;
+  fullStop?: ChargingStop;
 }
 
 interface MapPoint {
@@ -47,6 +49,7 @@ interface TripMapProps {
   stops: TripStop[];
   polyline: { type: "LineString"; coordinates: [number, number][] } | null;
   className?: string;
+  onStationSelect?: (stop: ChargingStop | null) => void;
 }
 
 function FitBounds({ points }: { points: [number, number][] }) {
@@ -59,7 +62,7 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
-export default function TripMap({ origin, destination, stops, polyline, className }: TripMapProps) {
+export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect }: TripMapProps) {
   useLeafletIconFix();
 
   const allPoints: [number, number][] = [
@@ -92,25 +95,24 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
       )}
 
       {origin && (
-        <Marker position={[origin.lat, origin.lng]} icon={makeDotIcon("#16a34a")}>
-          <Popup>{origin.label ?? "Start"}</Popup>
-        </Marker>
+        <Marker position={[origin.lat, origin.lng]} icon={makeDotIcon("#16a34a")} />
       )}
 
       {destination && (
-        <Marker position={[destination.lat, destination.lng]} icon={makeDotIcon("#dc2626")}>
-          <Popup>{destination.label ?? "Destinație"}</Popup>
-        </Marker>
+        <Marker position={[destination.lat, destination.lng]} icon={makeDotIcon("#dc2626")} />
       )}
 
       {stops.map((stop, i) => (
-        <Marker key={i} position={[stop.lat, stop.lng]} icon={makeDotIcon("#d97706", String(i + 1))}>
-          <Popup>
-            <strong>{stop.name}</strong>
-            <br />
-            {stop.network}
-          </Popup>
-        </Marker>
+        <Marker
+          key={i}
+          position={[stop.lat, stop.lng]}
+          icon={makeDotIcon("#d97706", String(i + 1))}
+          eventHandlers={
+            onStationSelect && stop.fullStop
+              ? { click: () => onStationSelect(stop.fullStop!) }
+              : undefined
+          }
+        />
       ))}
     </MapContainer>
   );

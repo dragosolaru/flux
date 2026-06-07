@@ -629,7 +629,16 @@
     },
     "recents": "Recent",
     "clear_recents": "Clear",
-    "no_recents": "No recent destinations"
+    "no_recents": "No recent destinations",
+    "station": {
+      "power": "Power",
+      "arrive_soc": "Arrive at",
+      "depart_soc": "Depart at",
+      "charge_time": "Charging time",
+      "energy_added": "Energy added",
+      "cost": "Est. cost",
+      "network": "Network"
+    }
   },
   "notFoundPage": {
     "heading": "Page not found",
