@@ -312,6 +312,7 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odometer",
     "chip_last_seen": "Last seen",
+    "chip_last_charge": "Last charge",
     "action_charge": "Charge"
   },
   "charging": {

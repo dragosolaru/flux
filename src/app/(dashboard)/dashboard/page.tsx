@@ -21,7 +21,7 @@ export default async function DashboardPage({
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicle }, { data: vehicles }, { data: profile }, { count: docCount }] =
+  const [{ data: vehicle }, { data: vehicles }, { data: profile }, { count: docCount }, { data: lastChargeRow }] =
     await Promise.all([
       supabase
         .from("vehicles")
@@ -44,6 +44,14 @@ export default async function DashboardPage({
         .from("documents")
         .select("id", { count: "exact", head: true })
         .eq("user_id", session.user.id),
+      supabase
+        .from("charging_sessions")
+        .select("ended_at, energy_added_kwh, start_soc, end_soc")
+        .eq("vehicle_id", vehicleId)
+        .not("ended_at", "is", null)
+        .order("ended_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   if (!vehicle) redirect("/garage");
@@ -57,6 +65,15 @@ export default async function DashboardPage({
     ),
   };
 
+  const lastCharge = lastChargeRow
+    ? {
+        endedAt: lastChargeRow.ended_at as string,
+        energyKwh: lastChargeRow.energy_added_kwh as number | null,
+        startSoc: lastChargeRow.start_soc as number | null,
+        endSoc: lastChargeRow.end_soc as number | null,
+      }
+    : undefined;
+
   return (
     <DashboardClient
       vehicleId={vehicle.id}
@@ -64,6 +81,7 @@ export default async function DashboardPage({
       brand={vehicle.brand as BrandKey}
       model={vehicle.model ?? undefined}
       checklist={checklist}
+      lastCharge={lastCharge}
     />
   );
 }

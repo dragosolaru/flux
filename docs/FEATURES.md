@@ -986,3 +986,13 @@ them.
 All responsive — full values restore at `md:` breakpoint.
 
 **Key files:** `src/components/layout/TopBar.tsx`, `src/components/layout/BottomNav.tsx`, `src/app/(dashboard)/layout.tsx`, `src/components/layout/page-wrapper.tsx`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`.
+
+---
+
+## Dashboard — Last Charge Chip
+
+**What it does:** Fetches the most recent completed charging session for the selected vehicle and displays it as a "Last charge" chip in the StatChips row on the dashboard. Shows energy added (e.g., `+12.4 kWh`) when available, with a green History icon.
+
+**How to use:** Automatic — the chip appears in the scrollable chip row below the HeroCard whenever a past session exists in `charging_sessions`.
+
+**Key files:** `src/app/(dashboard)/dashboard/page.tsx` (server fetch), `src/app/(dashboard)/dashboard/dashboard-client.tsx` (chip render). i18n: `dashboard.chip_last_charge` in all 5 locales.

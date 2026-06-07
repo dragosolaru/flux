@@ -312,6 +312,7 @@
     "chip_temp": "Temp",
     "chip_odometer": "Km-Stand",
     "chip_last_seen": "Zuletzt",
+    "chip_last_charge": "Letzte Ladung",
     "action_charge": "Laden"
   },
   "charging": {

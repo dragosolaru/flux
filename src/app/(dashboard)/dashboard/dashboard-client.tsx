@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   BatteryCharging,
   Fan,
+  History,
   Loader2,
   Lock,
   MapPin,
@@ -32,12 +33,20 @@ import { mockLocationLabel } from "@/lib/mock/location-label";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 
+interface LastCharge {
+  endedAt: string;
+  energyKwh: number | null;
+  startSoc: number | null;
+  endSoc: number | null;
+}
+
 interface DashboardClientProps {
   vehicleId: string;
   vehicleName: string;
   brand: BrandKey;
   model?: string;
   checklist: ChecklistData;
+  lastCharge?: LastCharge;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -179,7 +188,7 @@ interface ChipData {
   label: string;
 }
 
-function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLoading: boolean }) {
+function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | undefined; isLoading: boolean; lastCharge?: LastCharge }) {
   const td = useTranslations("dashboard");
 
   if (isLoading) {
@@ -238,6 +247,16 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
           icon: <RefreshCw className="size-4 text-muted-foreground" />,
           value: formatRelativeTime(state.lastSeenAt),
           label: td("chip_last_seen"),
+        }
+      : null,
+    lastCharge
+      ? {
+          key: "lastcharge",
+          icon: <History className="size-4 text-emerald-400" />,
+          value: lastCharge.energyKwh != null
+            ? `+${lastCharge.energyKwh.toFixed(1)} kWh`
+            : formatRelativeTime(lastCharge.endedAt),
+          label: td("chip_last_charge"),
         }
       : null,
   ].filter(Boolean) as ChipData[];
@@ -428,7 +447,7 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist }: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist, lastCharge }: DashboardClientProps) {
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
   const containerRef = useRef<HTMLElement>(null);
@@ -456,7 +475,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
 
       <HeroCard state={data} isLoading={isLoading} isFetching={isFetching} vehicleName={vehicleName} />
 
-      <StatChips state={data} isLoading={isLoading} />
+      <StatChips state={data} isLoading={isLoading} lastCharge={lastCharge} />
 
       {isError ? (
         <GlassCard animate={false} className="flex flex-col items-center gap-3 p-10 text-center">

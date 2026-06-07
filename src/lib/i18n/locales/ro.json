@@ -312,6 +312,7 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odometru",
     "chip_last_seen": "Văzut",
+    "chip_last_charge": "Ultima încărcare",
     "action_charge": "Încărcare"
   },
   "charging": {

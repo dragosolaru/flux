@@ -312,6 +312,7 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odomètre",
     "chip_last_seen": "Vu",
+    "chip_last_charge": "Dernière recharge",
     "action_charge": "Recharge"
   },
   "charging": {

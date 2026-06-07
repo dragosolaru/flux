@@ -312,6 +312,7 @@
     "chip_temp": "Hőfok",
     "chip_odometer": "Km-óra",
     "chip_last_seen": "Utoljára",
+    "chip_last_charge": "Utolsó töltés",
     "action_charge": "Töltés"
   },
   "charging": {
