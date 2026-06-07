@@ -967,3 +967,22 @@ them.
 **Key files:** `src/lib/external/routing/reliability.ts` (`stationReliability`, `daysSinceVerified`, `ReliabilityLevel`), `src/components/trip/ReliabilityBadge.tsx` (shared badge), `src/components/trip/StopCard.tsx` + `src/components/trip/StationDetailSheet.tsx` (render sites), `src/lib/external/charging-networks/types.ts` (`ChargingStation.lastVerifiedAt` / `isOperational`), `src/lib/external/routing/corridor-stations.ts` (`OcmPoi` mapping in `ocmToStation`). i18n: `trip.reliability.{offline,stale,verified}` in all 5 locales.
 
 **Dependencies:** Open Charge Map API (already used by `fetchCorridorStationsOCM`); `lucide-react` icons; `next-intl`.
+
+---
+
+## Compact Mobile Redesign
+
+**What it does:** Reduces wasted vertical space across the entire dashboard layout for a denser, more native-app-like mobile experience:
+
+- **TopBar**: `h-14 → h-11` on mobile (saves 12px), Avatar `size-8` (32 px).
+- **BottomNav**: tab padding `py-2 → py-1.5`, icons `size-5` (saves ~8px total).
+- **Layout padding**: `py-6 pb-4 → py-4 pb-3` on the main scroll container.
+- **PageWrapper gap**: `gap-4 → gap-3 md:gap-4`.
+- **Dashboard HeroCard**: padding `p-6 → p-4`, SOC text `text-7xl → text-5xl`, range `text-3xl → text-2xl`, progress bar `mt-6 h-2.5 → mt-3 h-2`.
+- **StatChips**: skeleton `h-20 w-28 → h-16 w-24`, chip card `w-[112px] p-4 → w-[96px] p-2.5`.
+- **QuickActions**: grid `gap-3 → gap-2`, button `min-h-[52px] p-3 → min-h-[48px] p-2`.
+- **ChargingOverlayCard**: padding `p-5 → p-4`, CircularProgress `size 80 → 72`.
+
+All responsive — full values restore at `md:` breakpoint.
+
+**Key files:** `src/components/layout/TopBar.tsx`, `src/components/layout/BottomNav.tsx`, `src/app/(dashboard)/layout.tsx`, `src/components/layout/page-wrapper.tsx`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`.

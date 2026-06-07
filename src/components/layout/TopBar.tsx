@@ -65,7 +65,7 @@ export function TopBar() {
     <header className="shrink-0 bg-background">
       {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
       <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
-      <div className="flex h-14 items-center gap-3 border-b px-4 md:px-6">
+      <div className="flex h-11 items-center gap-3 border-b px-4 md:h-14 md:px-6">
       <div className="md:hidden flex items-center gap-2 font-semibold">Flux</div>
 
       <VehicleSwitcher />
@@ -89,7 +89,7 @@ export function TopBar() {
               className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               aria-label="Open profile menu"
             >
-              <Avatar>
+              <Avatar className="size-8">
                 <AvatarImage src={session?.user?.image ?? undefined} alt={name} />
                 <AvatarFallback>{initials || "U"}</AvatarFallback>
               </Avatar>

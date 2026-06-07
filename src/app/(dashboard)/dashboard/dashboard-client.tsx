@@ -73,14 +73,14 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
 
   return (
     <GlassCard
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950/80 to-slate-900/80 p-6"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950/80 to-slate-900/80 p-4 md:p-6"
       animate={false}
     >
       {/* glassmorphism overlay */}
       <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03]" />
 
       {/* Header row */}
-      <div className="relative mb-6 flex items-center justify-between">
+      <div className="relative mb-3 flex items-center justify-between md:mb-6">
         <h1 className="text-lg font-semibold tracking-tight">{vehicleName}</h1>
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
@@ -90,22 +90,22 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       </div>
 
       {/* SOC % */}
-      <div className="relative flex flex-col items-center gap-2">
+      <div className="relative flex flex-col items-center gap-1">
         {isLoading ? (
           <>
-            <Skeleton className="h-20 w-32 rounded-xl" />
+            <Skeleton className="h-16 w-28 rounded-xl" />
             <Skeleton className="h-6 w-24 rounded-xl" />
           </>
         ) : (
           <>
-            <div className="text-7xl font-bold tabular-nums leading-none">
+            <div className="text-5xl font-bold tabular-nums leading-none md:text-7xl">
               {displayBattery}
               {typeof displayBattery === "number" && (
-                <span className="ml-1 text-3xl text-muted-foreground">%</span>
+                <span className="ml-1 text-2xl text-muted-foreground md:text-3xl">%</span>
               )}
             </div>
             {state?.batteryRangeKm != null && (
-              <div className="text-2xl text-muted-foreground">
+              <div className="text-lg text-muted-foreground md:text-2xl">
                 {Math.round(state.batteryRangeKm)} km
               </div>
             )}
@@ -114,7 +114,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       </div>
 
       {/* SOC progress bar */}
-      <div className="relative mt-6 h-2.5 overflow-hidden rounded-full bg-white/10">
+      <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
         <motion.div
           className={`h-full rounded-full ${isLoading ? "bg-white/20" : getSocColor(soc)}`}
           initial={{ width: 0 }}
@@ -184,9 +184,9 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-20 w-28 shrink-0 rounded-2xl" />
+          <Skeleton key={i} className="h-16 w-24 shrink-0 rounded-2xl" />
         ))}
       </div>
     );
@@ -249,13 +249,13 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x"
+      className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x"
     >
       {chips.map((chip) => (
         <motion.div key={chip.key} variants={cardVariants} className="snap-center">
           <GlassCard
             animate={false}
-            className="flex w-[112px] shrink-0 flex-col items-center gap-1.5 p-4"
+            className="flex w-[96px] shrink-0 flex-col items-center gap-1 p-2.5"
           >
             {chip.icon}
             <div className="text-center text-sm font-semibold tabular-nums leading-tight">
@@ -355,7 +355,7 @@ function QuickActions({
   }[];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2">
       {actions.map((action) => (
         <motion.button
           key={action.key}
@@ -368,7 +368,7 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`glass-card flex min-h-[52px] flex-col items-center justify-center gap-1.5 rounded-2xl p-3 transition-colors disabled:opacity-50 ${
+          className={`glass-card flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-colors disabled:opacity-50 ${
             action.active
               ? "border-primary/40 bg-primary/15 text-primary"
               : "text-foreground hover:bg-white/5"
@@ -396,9 +396,9 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible">
-      <GlassCard animate={false} className="p-5">
+      <GlassCard animate={false} className="p-4">
         <div className="flex items-center gap-4">
-          <CircularProgress value={soc} size={80} strokeWidth={6} color="oklch(0.68 0.18 162)">
+          <CircularProgress value={soc} size={72} strokeWidth={6} color="oklch(0.68 0.18 162)">
             <span className="text-sm font-bold tabular-nums">{soc}%</span>
           </CircularProgress>
           <div className="flex-1 space-y-1">

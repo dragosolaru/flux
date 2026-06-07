@@ -79,7 +79,7 @@ export function BottomNav() {
             const needsUnlock = !gate.ok;
 
             const content = (
-              <div className="relative flex flex-col items-center gap-0.5 py-2 text-[11px]">
+              <div className="relative flex flex-col items-center gap-0.5 py-1.5 text-[11px]">
                 {isActive && (
                   <motion.span
                     layoutId="bottom-nav-indicator"
@@ -89,7 +89,7 @@ export function BottomNav() {
                 )}
                 <Icon
                   className={cn(
-                    "relative size-[22px] transition-colors",
+                    "relative size-5 transition-colors",
                     isActive ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "text-muted-foreground",
                   )}
                 />
