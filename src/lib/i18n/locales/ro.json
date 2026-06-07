@@ -601,6 +601,13 @@
     "ev_cost_label": "Cost EV (încărcare)",
     "petrol_label": "Benzină ({lPer100km}L/100km × €{pricePerL}/L)",
     "savings_label": "Economii",
+    "fuel": {
+      "consumption": "Consum benzină",
+      "price": "Preț carburant",
+      "per_100km": "L/100km",
+      "per_liter": "€/L",
+      "edit": "Ajustează comparația"
+    },
     "infeasible_title": "Ruta nu poate fi finalizată",
     "infeasible_hint": "Încearcă cu un procent de baterie mai mare sau selectează un vehicul specific.",
     "derate_note": "* Autonomia redusă cu {pct}% din cauza temperaturilor.",

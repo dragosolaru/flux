@@ -601,6 +601,13 @@
     "ev_cost_label": "Coût VE (charge)",
     "petrol_label": "Essence ({lPer100km}L/100km × €{pricePerL}/L)",
     "savings_label": "Économies",
+    "fuel": {
+      "consumption": "Consommation essence",
+      "price": "Prix carburant",
+      "per_100km": "L/100km",
+      "per_liter": "€/L",
+      "edit": "Ajuster la comparaison"
+    },
     "infeasible_title": "L'itinéraire ne peut pas être complété",
     "infeasible_hint": "Essayez un pourcentage de batterie plus élevé ou sélectionnez un véhicule spécifique.",
     "derate_note": "* Autonomie réduite de {pct}% en raison des températures.",

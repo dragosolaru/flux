@@ -601,6 +601,13 @@
     "ev_cost_label": "EV cost (charging)",
     "petrol_label": "Petrol ({lPer100km}L/100km × €{pricePerL}/L)",
     "savings_label": "Savings",
+    "fuel": {
+      "consumption": "Petrol consumption",
+      "price": "Fuel price",
+      "per_100km": "L/100km",
+      "per_liter": "€/L",
+      "edit": "Adjust comparison"
+    },
     "infeasible_title": "Route cannot be completed",
     "infeasible_hint": "Try a higher starting battery or select a specific vehicle.",
     "derate_note": "* Range reduced by {pct}% due to temperatures.",
