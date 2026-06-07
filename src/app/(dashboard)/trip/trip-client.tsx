@@ -81,19 +81,21 @@ interface VariantLabel {
 function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): VariantLabel | null {
   if (allVariants.length < 2) return null;
 
-  const minMinutes = Math.min(...allVariants.map((v) => v.plan.totalMinutes));
-  const minStops = Math.min(...allVariants.map((v) => v.plan.stops.length));
-  const minCost = Math.min(...allVariants.map((v) => v.plan.tripEnergyCostEur));
+  const allMinutes = allVariants.map((v) => v.plan.totalMinutes);
+  const allStops  = allVariants.map((v) => v.plan.stops.length);
+  const allCosts  = allVariants.map((v) => v.plan.tripEnergyCostEur);
 
-  if (variant.plan.totalMinutes === minMinutes) {
-    return { key: "fastest", color: "accent" };
-  }
-  if (variant.plan.stops.length === minStops) {
-    return { key: "fewest_stops", color: "green" };
-  }
-  if (variant.plan.tripEnergyCostEur === minCost) {
-    return { key: "cheapest", color: "yellow" };
-  }
+  // Only award a label when this variant is strictly better than at least one
+  // other — never when all variants tie (e.g. every route has 2 stops would
+  // give every chip "Fewest stops").
+  const winsUniquely = (arr: number[], val: number) => {
+    const min = Math.min(...arr);
+    return val === min && arr.filter((x) => x === min).length < arr.length;
+  };
+
+  if (winsUniquely(allMinutes, variant.plan.totalMinutes)) return { key: "fastest",      color: "accent" };
+  if (winsUniquely(allStops,   variant.plan.stops.length)) return { key: "fewest_stops", color: "green"  };
+  if (winsUniquely(allCosts,   variant.plan.tripEnergyCostEur)) return { key: "cheapest", color: "yellow" };
   return null;
 }
 
@@ -286,12 +288,7 @@ export function TripClient() {
           </button>
         ) : (
           /* Full form */
-          <div className="space-y-2.5 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center gap-2">
-              <Route className="size-4 text-primary" />
-              <h1 className="text-xs font-semibold">{t("title")}</h1>
-            </div>
-
+          <div className="space-y-2 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl">
             <GeocodingSearch
               placeholder={t("origin_placeholder")}
               value={origin}
@@ -625,9 +622,6 @@ export function TripClient() {
 
                 {activePlan.stops.length > 0 ? (
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {t("stops_label")}
-                    </p>
                     {activePlan.stops.map((stop, i) => (
                       <StopCard
                         key={i}

@@ -1,13 +1,9 @@
 "use client";
 
-import { Zap, Clock, MapPin, Thermometer } from "lucide-react";
+import { Thermometer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ReliabilityBadge } from "./ReliabilityBadge";
 
-// A stop benefits from battery preconditioning when it's a DC fast charger
-// (warming the pack before a fast charge cuts charge time). Tesla does this
-// automatically when navigating to a Supercharger; other networks are a manual
-// recommendation surfaced here.
 const PRECONDITION_MIN_KW = 50;
 
 export function needsPreconditioning(maxKw: number): boolean {
@@ -38,7 +34,6 @@ interface StopCardProps {
     distanceFromStartKm: number;
   };
   index: number;
-  /** True when the app auto-sent a precondition_max command for this stop. */
   preconditioned?: boolean;
 }
 
@@ -46,58 +41,38 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
   const t = useTranslations("trip");
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
   const precondition = needsPreconditioning(station.maxKw);
-  // Treat as auto when it's a Supercharger OR the app already sent precondition_max.
   const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
 
   return (
-    <div className="flex gap-2.5 rounded-xl border border-white/8 bg-white/5 p-2.5 backdrop-blur-sm">
+    <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/5 px-3 py-2.5 backdrop-blur-sm">
       {/* Step number */}
-      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-[11px] font-bold text-white">
+      <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/80 text-[10px] font-bold text-white">
         {index + 1}
       </div>
 
       <div className="min-w-0 flex-1">
-        {/* Station header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{station.name}</p>
-            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-              <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-muted-foreground">
-                {station.networkId}
-              </span>
-              <span className="text-xs text-muted-foreground">{station.maxKw} kW</span>
-              <ReliabilityBadge station={station} />
-            </div>
-          </div>
+        {/* Row 1: name + cost */}
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="truncate text-sm font-medium leading-tight">{station.name}</p>
           <span className="shrink-0 text-sm font-semibold text-green-400">€{costEur.toFixed(2)}</span>
         </div>
 
-        {/* Stats row */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <span className="inline-block size-2 rounded-sm bg-amber-400/80" />
-            {arriveSoc}% → {departSoc}%
-          </span>
-          <span className="flex items-center gap-1">
-            <Zap className="size-3" />
-            {energyAddedKwh.toFixed(1)} kWh
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="size-3" />
-            {chargingMinutes} min
-          </span>
-          <span className="flex items-center gap-1">
-            <MapPin className="size-3" />
-            km {distanceFromStartKm}
-          </span>
+        {/* Row 2: all stats in one line */}
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+          <span className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[11px]">{station.networkId}</span>
+          <span>{station.maxKw} kW</span>
+          <span>{arriveSoc}%→{departSoc}%</span>
+          <span>{energyAddedKwh.toFixed(1)} kWh</span>
+          <span>{chargingMinutes} min</span>
+          <span>km {distanceFromStartKm}</span>
+          <ReliabilityBadge station={station} />
         </div>
 
+        {/* Row 3 (conditional): preconditioning badge */}
         {precondition && (
           <div
-            className={`mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs ${
-              autoPrecondition
-                ? "bg-blue-500/15 text-blue-300"
-                : "bg-amber-500/15 text-amber-300"
+            className={`mt-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs ${
+              autoPrecondition ? "bg-blue-500/15 text-blue-300" : "bg-amber-500/15 text-amber-300"
             }`}
           >
             <Thermometer className="size-3" />

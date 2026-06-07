@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Fuel, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, Fuel } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getFuelComparison, setFuelComparison } from "@/lib/fuel-comparison";
 
@@ -71,22 +71,32 @@ export function CostSummary({
         </span>
       </div>
 
-      {/* Stats chips */}
-      <div className="flex flex-wrap gap-1.5 text-xs">
-        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
-          {stopsLabel}
-        </span>
-        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
-          {tripEnergyKwh.toFixed(1)} kWh
-        </span>
-        <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 font-medium text-green-400">
-          €{tripEnergyCostEur.toFixed(2)}
-        </span>
-        {chargingMinutes > 0 && (
+      {/* Stats chips + fuel toggle on one line */}
+      <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
           <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
-            {t("charging_time_label", { duration: formatDuration(chargingMinutes) })}
+            {stopsLabel}
           </span>
-        )}
+          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
+            {tripEnergyKwh.toFixed(1)} kWh
+          </span>
+          <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 font-medium text-green-400">
+            €{tripEnergyCostEur.toFixed(2)}
+          </span>
+          {chargingMinutes > 0 && (
+            <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
+              {t("charging_time_label", { duration: formatDuration(chargingMinutes) })}
+            </span>
+          )}
+        </div>
+        {/* Fuel toggle as icon-only button at end of row */}
+        <button
+          onClick={() => setShowFuel((v) => !v)}
+          title={t("fuel_comparison")}
+          className={`shrink-0 rounded-full p-1.5 transition-colors ${showFuel ? "bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
+        >
+          <Fuel className="size-3.5" />
+        </button>
       </div>
 
       {/* Approx route warning */}
@@ -96,16 +106,6 @@ export function CostSummary({
           {t("approx_route_warning")}
         </div>
       )}
-
-      {/* Fuel comparison toggle */}
-      <button
-        onClick={() => setShowFuel((v) => !v)}
-        className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-      >
-        <Fuel className="size-3.5" />
-        {t("fuel_comparison")}
-        {showFuel ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
-      </button>
 
       {showFuel && (
         <div className="space-y-1.5 rounded-xl border border-white/8 bg-white/5 p-3 text-sm backdrop-blur-sm">
