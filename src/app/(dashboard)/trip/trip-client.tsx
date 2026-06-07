@@ -253,7 +253,7 @@ export function TripClient() {
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
   return (
-    <div className="relative -mx-4 -mt-6 -mb-4 h-full md:-mx-8 md:-mb-6">
+    <div className="absolute inset-0 overflow-hidden">
       {/* h-full fills the <main> content box exactly — flexbox already accounts
           for TopBar, the mock banner, the bottom nav, and safe-area insets, so
           we no longer hand-compute a fragile 100dvh height that ignored the
@@ -509,9 +509,10 @@ export function TripClient() {
 
           {/* Collapsible content — framer-motion height, always scrollable */}
           <motion.div
-            animate={{ height: planExpanded ? "calc(45dvh - 2.5rem)" : 0 }}
+            animate={{ height: planExpanded ? "auto" : 0 }}
             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
-            className="overflow-y-auto overflow-x-hidden"
+            className="overflow-x-hidden"
+            style={{ maxHeight: "calc(45dvh - 2.5rem)", overflowY: "auto" }}
           >
           <div className="space-y-3 px-4 pb-4 pt-1.5">
             {/* Variant selector — alternative roads × charging strategies */}
