@@ -645,6 +645,11 @@
       "energy_added": "Energy added",
       "cost": "Est. cost",
       "network": "Network"
+    },
+    "reliability": {
+      "offline": "Possibly offline",
+      "stale": "Not recently verified",
+      "verified": "Verified {days}d ago"
     }
   },
   "notFoundPage": {

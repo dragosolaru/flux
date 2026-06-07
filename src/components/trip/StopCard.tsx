@@ -2,6 +2,7 @@
 
 import { Zap, Clock, MapPin, Thermometer } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { ReliabilityBadge } from "./ReliabilityBadge";
 
 // A stop benefits from battery preconditioning when it's a DC fast charger
 // (warming the pack before a fast charge cuts charge time). Tesla does this
@@ -26,6 +27,8 @@ interface StopCardProps {
       lng: number;
       priceEurKwh: number | null;
       maxKw: number;
+      isOperational?: boolean;
+      lastVerifiedAt?: string;
     };
     arriveSoc: number;
     departSoc: number;
@@ -63,6 +66,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
                 {station.networkId}
               </span>
               <span className="text-xs text-muted-foreground">{station.maxKw} kW</span>
+              <ReliabilityBadge station={station} />
             </div>
           </div>
           <span className="shrink-0 text-sm font-semibold text-green-400">€{costEur.toFixed(2)}</span>

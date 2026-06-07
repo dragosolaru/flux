@@ -645,6 +645,11 @@
       "energy_added": "Energie adăugată",
       "cost": "Cost estimat",
       "network": "Rețea"
+    },
+    "reliability": {
+      "offline": "Posibil indisponibilă",
+      "stale": "Neverificată recent",
+      "verified": "Verificată acum {days} zile"
     }
   },
   "notFoundPage": {

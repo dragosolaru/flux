@@ -645,6 +645,11 @@
       "energy_added": "Hozzáadott energia",
       "cost": "Becsült költség",
       "network": "Hálózat"
+    },
+    "reliability": {
+      "offline": "Lehet, hogy offline",
+      "stale": "Nem ellenőrzött nemrég",
+      "verified": "{days} napja ellenőrizve"
     }
   },
   "notFoundPage": {
