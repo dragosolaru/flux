@@ -1014,3 +1014,15 @@ All responsive — full values restore at `md:` breakpoint.
 **What it does:** TopBar dropdown now uses `useTranslations("nav")` for all labels previously hardcoded in English: "Add vehicle", "Garage", "Settings", "Sign out", and the vehicle switcher placeholder. Keys added to all 5 locale files (en/ro/de/fr/hu).
 
 **Key files:** `src/components/layout/TopBar.tsx`, `src/lib/i18n/locales/*.json` (`nav.add_vehicle`, `nav.garage`, `nav.sign_out`, `nav.select_vehicle`).
+
+---
+
+## Charging Map — Station Coverage Fix
+
+**What it does:** Fixes two causes of too few stations appearing on the map after auto-locating to a new city.
+
+1. **`resetKey` — clears stale cross-area data.** When the user auto-locates (mount-time GPS or button), `handleLocate`/`handleSilentLocate` now increment a `resetKey` counter included in the TanStack Query key. This forces a fresh fetch instead of showing `keepPreviousData` from the previous area (Bucharest stations bleeding into a Florești query). The badge previously read "200 stații - se actualizează" while displaying Bucharest pins ~50 km away.
+
+2. **Ingest limits raised to 2000.** OCM `maxresults: 500 → 2000`; Overpass `out body center 500 → 2000` (timeout raised 15s → 25s to match). For large query radii (50–100 km), the previous 500-station cap silently truncated results in dense urban areas.
+
+**Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx` (`resetKey`), `src/lib/chargers/ingest/ocm.ts`, `src/lib/chargers/ingest/overpass.ts`.
