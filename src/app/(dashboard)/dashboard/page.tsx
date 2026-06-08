@@ -21,8 +21,9 @@ export default async function DashboardPage({
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicle }, { data: vehicles }, { data: profile }, { count: docCount }, { data: lastChargeRow }] =
-    await Promise.all([
+  let queryResults;
+  try {
+    queryResults = await Promise.all([
       supabase
         .from("vehicles")
         .select("id, display_name, brand, nickname, model")
@@ -53,6 +54,17 @@ export default async function DashboardPage({
         .limit(1)
         .maybeSingle(),
     ]);
+  } catch {
+    redirect("/garage");
+  }
+
+  const [
+    { data: vehicle },
+    { data: vehicles },
+    { data: profile },
+    { count: docCount },
+    { data: lastChargeRow },
+  ] = queryResults;
 
   if (!vehicle) redirect("/garage");
 
