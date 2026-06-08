@@ -15,12 +15,23 @@ function networkBadgeClass(operatorId: string | null): string {
   return "bg-blue-500/20 text-blue-400 border-blue-500/30";
 }
 
+// Status dot colour + i18n label key per availability state.
+const STATUS_META: Record<
+  Charger["availability"],
+  { color: string; labelKey: string }
+> = {
+  operational: { color: "#22c55e", labelKey: "operational" },
+  offline: { color: "#f87171", labelKey: "out_of_service" },
+  stale: { color: "#f59e0b", labelKey: "status_stale" },
+  unknown: { color: "#9ca3af", labelKey: "status_unknown" },
+};
+
 export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps) {
   const t = useTranslations("chargingMap");
 
   const displayName = charger.name ?? charger.operator ?? t("station_fallback");
   const totalConnectors = charger.connectors.reduce((sum, c) => sum + c.count, 0);
-  const isLikelyOperational = charger.confidence >= 0.5;
+  const status = STATUS_META[charger.availability];
   const addressLine = [charger.address.street, charger.address.city]
     .filter(Boolean)
     .join(", ");
@@ -63,16 +74,14 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
                   </span>
                 )}
                 <span
-                  className={`flex items-center gap-1 text-xs font-medium ${
-                    isLikelyOperational ? "text-green-500" : "text-red-400"
-                  }`}
+                  className="flex items-center gap-1 text-xs font-medium"
+                  style={{ color: status.color }}
                 >
                   <span
-                    className={`inline-block h-1.5 w-1.5 rounded-full ${
-                      isLikelyOperational ? "bg-green-500" : "bg-red-400"
-                    }`}
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: status.color }}
                   />
-                  {isLikelyOperational ? t("operational") : t("out_of_service")}
+                  {t(status.labelKey)}
                 </span>
               </div>
             </div>

@@ -20,8 +20,10 @@ const TIER_COLORS: Record<string, string> = {
   offline: "#6b7280",
 };
 
-function getPowerTier(maxPowerKw: number | null | undefined, likelyOperational: boolean): string {
-  if (!likelyOperational) return "offline";
+function getPowerTier(maxPowerKw: number | null | undefined, availability: Charger["availability"]): string {
+  // Only an explicit offline status greys a pin — most OCM rows are "unknown"
+  // or "stale", and greying those out would wash the whole map grey.
+  if (availability === "offline") return "offline";
   if (!maxPowerKw) return "slow";
   if (maxPowerKw >= 350) return "ultra";
   if (maxPowerKw >= 150) return "fast";
@@ -271,7 +273,7 @@ export default function StationMap({
         chunkedLoading
       >
         {stations.map((s) => {
-          const tier = getPowerTier(s.maxPowerKw, s.confidence >= 0.5);
+          const tier = getPowerTier(s.maxPowerKw, s.availability);
           const isSelected = selected?.id === s.id;
           const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
           return (

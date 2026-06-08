@@ -1044,3 +1044,20 @@ All responsive — full values restore at `md:` breakpoint.
 **Key files:** `src/components/charging-map/StationMap.tsx` (clustering, CSS DivIcon, CARTO tiles, `ViewportBBox`), `src/app/(dashboard)/charging-map/charging-map-client.tsx` (bbox query), `src/app/api/chargers/route.ts` (limit cap raised to 2000).
 
 **Dependencies:** `react-leaflet-cluster`, `leaflet.markercluster`, `@types/leaflet.markercluster`.
+
+---
+
+## Charging Map — Real Operational Status (OCM)
+
+**What it does:** Replaces the fake "operational" proxy (`confidence >= 0.5`) with a real status ingested from Open Charge Map. Each charger now has a populated `availability`: `operational` | `offline` | `stale` | `unknown`.
+
+- **Derivation (ingest):** the OCM mapper reads `StatusType.IsOperational` (or `StatusTypeID` under compact mode — 50/75/150 = operational, 30/100/200/210 = not) and `DateLastVerified`/`DateLastStatusUpdate`. An operational station not verified in the last `STALE_AFTER_DAYS` (90) days is downgraded to `stale`. No signal → `unknown`.
+- **Merge (dedup):** when co-located records from multiple sources cluster, the most informative status wins (`operational` > `offline` > `stale` > `unknown`).
+- **Map:** a pin greys out only when status is explicitly `offline` — `unknown`/`stale` keep their power-tier colour (most OCM rows are unknown; greying them would wash the map grey).
+- **Detail sheet:** a 4-state status dot + label (green operational / red offline / amber stale / grey unknown), i18n `chargingMap.status_stale` + `status_unknown` (added to all 5 locales; `operational`/`out_of_service` reused).
+
+**Tesla Superchargers:** already flow in through OCM — `normalize.ts` maps OCM connection-type **30 (Tesla Supercharger) → `tesla`** and aliases the Tesla operator. OCM has the best openly-available Tesla coverage without Tesla CPO credentials, so Superchargers are ingested and tagged like any other network (red Tesla badge in the detail sheet). A dedicated live Tesla feed would require Tesla's (unofficial) endpoints or a roaming hub.
+
+**⚠️ Deployment:** apply migration `020_charger_availability.sql` (adds `p_availability` to `upsert_charger`) **before/with** this deploy — the ingest path passes the new param, so an un-migrated DB would reject upserts. The read RPCs (018) already returned `availability`, so no read-side migration was needed. Until the cron/lazy ingest re-runs an area, existing rows keep their old `unknown` value.
+
+**Key files:** `src/lib/chargers/types.ts` (`ChargerAvailability`, `STALE_AFTER_DAYS`), `src/lib/chargers/ingest/ocm.ts` (`deriveAvailability`), `src/lib/chargers/dedup.ts` (`mergeAvailability`), `src/lib/chargers/repository.ts` (`p_availability`), `src/lib/chargers/query.ts` (`toAvailability`), `supabase/migrations/020_charger_availability.sql`, `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`.

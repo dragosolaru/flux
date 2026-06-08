@@ -75,6 +75,7 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
         p_max_power_kw: c.maxPowerKw,
         p_pricing: c.pricing,
         p_confidence: c.confidence,
+        p_availability: c.availability,
         p_connectors: c.connectors,
         p_sources: c.sources,
       }),
