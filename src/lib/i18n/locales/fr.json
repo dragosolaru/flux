@@ -534,6 +534,7 @@
     "unknown_error": "Erreur inconnue",
     "stations_in_view": "{count} stations visibles",
     "updating": "{count} stations · mise à jour…",
+    "ingesting_area": "Recherche de stations dans cette zone…",
     "max_power": "Puissance max",
     "unknown_power": "Inconnue",
     "connectors": "Connecteurs",

@@ -534,6 +534,7 @@
     "unknown_error": "Eroare necunoscută",
     "stations_in_view": "{count} stații vizibile",
     "updating": "{count} stații · se actualizează…",
+    "ingesting_area": "Căutăm stații în această zonă…",
     "max_power": "Putere maximă",
     "unknown_power": "Necunoscută",
     "connectors": "Conectori",

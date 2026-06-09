@@ -144,14 +144,26 @@ export function ChargingMapClient() {
   });
 
   // Cold areas return empty immediately while the server ingests in the
-  // background. Refetch once a few seconds later to surface the freshly stored
-  // stations without making the user pan again. Retried at most once per area.
-  const retriedAreas = useRef<Set<string>>(new Set());
+  // background. Poll a few times at short intervals to surface the freshly
+  // stored stations without making the user pan again, and show an indicator
+  // so the empty map reads as "loading" rather than "no stations here".
+  const COLD_POLL_ATTEMPTS = 3;
+  const coldPolls = useRef<Map<string, number>>(new Map());
+  const [ingesting, setIngesting] = useState(false);
   useEffect(() => {
-    if (isFetching || stations.length > 0) return;
+    if (isFetching) return;
+    if (stations.length > 0) {
+      setIngesting(false);
+      return;
+    }
     const key = `${resetKey}:${area.minLat.toFixed(2)},${area.minLng.toFixed(2)}`;
-    if (retriedAreas.current.has(key)) return;
-    retriedAreas.current.add(key);
+    const attempts = coldPolls.current.get(key) ?? 0;
+    if (attempts >= COLD_POLL_ATTEMPTS) {
+      setIngesting(false);
+      return;
+    }
+    coldPolls.current.set(key, attempts + 1);
+    setIngesting(true);
     const id = setTimeout(() => void refetch(), 4000);
     return () => clearTimeout(id);
   }, [isFetching, stations.length, area, resetKey, refetch]);
@@ -265,10 +277,14 @@ export function ChargingMapClient() {
 
         {/* Station count badge — floating bottom-left */}
         <div className="absolute bottom-3 left-3 z-[1000]">
-          <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-sm">
-            {isFetching
-              ? t("updating", { count: stations.length })
-              : t("stations_count", { count: stations.length })}
+          <span
+            className={`rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-sm ${ingesting ? "animate-pulse" : ""}`}
+          >
+            {ingesting
+              ? t("ingesting_area")
+              : isFetching
+                ? t("updating", { count: stations.length })
+                : t("stations_count", { count: stations.length })}
           </span>
         </div>
       </div>

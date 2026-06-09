@@ -1175,3 +1175,13 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 - **MockGlobalBanner**: `py-2.5→py-2`. **CostSummary** (trip): chip gaps `1.5→1`.
 
 **Key files:** `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/components/layout/{page-wrapper,BottomNav,MockGlobalBanner}.tsx`, `src/components/trip/CostSummary.tsx`.
+
+## Charging Map — Cold-Area Polling Indicator (2026-06-09)
+
+**What it does:** When the map shows a cold (never-ingested) area, the server returns `[]` immediately and ingests in the background. The client now polls up to 3 times at 4s intervals (was: a single retry) and shows a pulsing "Looking for stations in this area…" badge instead of a misleading "0 stations" count, so cold areas read as *loading*, not *empty*.
+
+**How to use:** `/charging-map` — pan to an uncached area; the bottom-left badge switches to the searching state until stations arrive or polling gives up.
+
+**Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx` (`COLD_POLL_ATTEMPTS`, `ingesting` state). i18n: `chargingMap.ingesting_area` in all 5 locales.
+
+**Dependencies:** part of the charger-loading speedup (bulk country imports + batched upserts land separately).

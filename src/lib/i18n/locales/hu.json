@@ -534,6 +534,7 @@
     "unknown_error": "Ismeretlen hiba",
     "stations_in_view": "{count} állomás a nézetben",
     "updating": "{count} állomás · frissítés…",
+    "ingesting_area": "Állomások keresése ezen a területen…",
     "max_power": "Max. teljesítmény",
     "unknown_power": "Ismeretlen",
     "connectors": "Csatlakozók",
