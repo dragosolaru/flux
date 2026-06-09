@@ -2,9 +2,10 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
-import { useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, CircleMarker, Polyline, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef } from "react";
 import type { ChargingStop } from "@/lib/external/routing/types";
+import type { Charger } from "@/lib/chargers/types";
 
 function useLeafletIconFix() {
   const done = useRef(false);
@@ -50,6 +51,19 @@ interface TripMapProps {
   polyline: { type: "LineString"; coordinates: [number, number][] } | null;
   className?: string;
   onStationSelect?: (stop: ChargingStop | null) => void;
+  // All chargers near the corridor (from the station platform) shown as subtle
+  // context dots so the planner map reflects real coverage like the main map.
+  nearbyStations?: Charger[];
+}
+
+// Color a context dot by power tier (offline greyed), matching the main map.
+function tierColor(maxKw: number | null, availability: Charger["availability"]): string {
+  if (availability === "offline") return "#9ca3af";
+  if (!maxKw) return "#3b82f6";
+  if (maxKw >= 350) return "#ef4444";
+  if (maxKw >= 150) return "#f97316";
+  if (maxKw >= 50) return "#16a34a";
+  return "#3b82f6";
 }
 
 function FitBounds({ points }: { points: [number, number][] }) {
@@ -62,8 +76,21 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
-export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect }: TripMapProps) {
+export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations }: TripMapProps) {
   useLeafletIconFix();
+
+  // Drop context dots that coincide with a numbered planned stop (~80 m) so the
+  // prominent stop pins aren't doubled. Memoized so the layer is stable.
+  const contextStations = useMemo(() => {
+    const list = nearbyStations ?? [];
+    if (stops.length === 0) return list;
+    return list.filter(
+      (c) =>
+        !stops.some(
+          (s) => Math.abs(s.lat - c.lat) < 0.0007 && Math.abs(s.lng - c.lng) < 0.0007,
+        ),
+    );
+  }, [nearbyStations, stops]);
 
   const allPoints: [number, number][] = [
     ...(origin ? [[origin.lat, origin.lng] as [number, number]] : []),
@@ -84,11 +111,30 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
       className={className}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        maxZoom={20}
       />
 
       {allPoints.length >= 2 && <FitBounds points={allPoints} />}
+
+      {/* Context layer: every charger near the corridor as a small dot, drawn
+          before the route + stops so those stay prominent (airy, uncluttered). */}
+      {contextStations.map((c) => (
+        <CircleMarker
+          key={c.id}
+          center={[c.lat, c.lng]}
+          radius={3.5}
+          pathOptions={{
+            fillColor: tierColor(c.maxPowerKw, c.availability),
+            color: "#ffffff",
+            weight: 1,
+            fillOpacity: 0.85,
+            opacity: 0.6,
+          }}
+        />
+      ))}
 
       {routePositions.length >= 2 && (
         <Polyline positions={routePositions} color="#2563eb" weight={4} opacity={0.8} />

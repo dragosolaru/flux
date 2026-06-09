@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -15,6 +16,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
+import type { Charger } from "@/lib/chargers/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
@@ -188,6 +190,38 @@ export function TripClient() {
   const variants = plan?.variants ?? [];
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
 
+  // Bounding box around the planned route, for the context-station layer. Padded
+  // so chargers slightly off the corridor still show. Rounded to keep the query
+  // key stable across re-renders.
+  const routeBBox = useMemo(() => {
+    const coords = activePlan?.polyline?.coordinates;
+    const pts: { lat: number; lng: number }[] = coords?.length
+      ? coords.map(([lng, lat]) => ({ lat, lng }))
+      : [origin, destination].filter((p): p is GeoPoint => p !== null);
+    if (pts.length === 0) return null;
+    let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+    for (const p of pts) {
+      minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+      minLng = Math.min(minLng, p.lng); maxLng = Math.max(maxLng, p.lng);
+    }
+    const pad = 0.1;
+    return {
+      minLat: +(minLat - pad).toFixed(2), minLng: +(minLng - pad).toFixed(2),
+      maxLat: +(maxLat + pad).toFixed(2), maxLng: +(maxLng + pad).toFixed(2),
+    };
+  }, [activePlan?.polyline, origin, destination]);
+
+  // All chargers near the corridor — same platform endpoint the station map uses.
+  const { data: nearbyStations = [] } = useQuery({
+    queryKey: ["trip-corridor-chargers", routeBBox],
+    queryFn: () =>
+      apiFetch<Charger[]>(
+        `/api/chargers?bbox=${routeBBox!.minLng},${routeBBox!.minLat},${routeBBox!.maxLng},${routeBBox!.maxLat}&limit=1000`,
+      ),
+    enabled: routeBBox !== null && plan !== null,
+    staleTime: 300_000,
+  });
+
   // Share to Tesla is only possible for a real, connected Tesla vehicle.
   const teslaVehicle =
     plan?.vehicle && plan.vehicle.brand === "tesla" ? plan.vehicle : null;
@@ -267,6 +301,7 @@ export function TripClient() {
           polyline={activePlan?.polyline ?? null}
           className="h-full w-full"
           onStationSelect={setSelectedStop}
+          nearbyStations={nearbyStations}
         />
       </div>
 
@@ -546,12 +581,19 @@ export function TripClient() {
                         : label?.color === "yellow" ? "text-yellow-400"
                         : "text-foreground"
                       }`}>{chipTitle}</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {h}h {m}min
+                      </span>
+                      {/* Drive vs charge split + cost — the ABRP-style tradeoff
+                          that makes variants comparable at a glance. */}
                       <span className="text-[11px] text-muted-foreground">
-                        {h}h {m}min · {Math.round(v.plan.totalDistanceKm)} km · {v.plan.stops.length === 0
+                        🚗 {Math.floor(v.plan.drivingMinutes / 60)}h {v.plan.drivingMinutes % 60}m
+                        {v.plan.chargingMinutes > 0 && ` · ⚡ ${v.plan.chargingMinutes}m`}
+                        {` · ${v.plan.stops.length === 0
                           ? t("stops_count_zero")
                           : v.plan.stops.length === 1
                             ? t("stops_count_one")
-                            : t("stops_count_other", { count: v.plan.stops.length })}
+                            : t("stops_count_other", { count: v.plan.stops.length })}`}
                         {v.plan.tripEnergyCostEur > 0 && ` · €${v.plan.tripEnergyCostEur.toFixed(2)}`}
                       </span>
                     </button>
