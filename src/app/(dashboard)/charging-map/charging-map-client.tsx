@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { List, SlidersHorizontal } from "lucide-react";
@@ -148,25 +148,18 @@ export function ChargingMapClient() {
   // stored stations without making the user pan again, and show an indicator
   // so the empty map reads as "loading" rather than "no stations here".
   const COLD_POLL_ATTEMPTS = 3;
-  const coldPolls = useRef<Map<string, number>>(new Map());
-  const [ingesting, setIngesting] = useState(false);
+  const areaKey = `${resetKey}:${area.minLat.toFixed(2)},${area.minLng.toFixed(2)}`;
+  const [coldPolls, setColdPolls] = useState<Record<string, number>>({});
+  const ingesting =
+    !isFetching && stations.length === 0 && (coldPolls[areaKey] ?? 0) < COLD_POLL_ATTEMPTS;
   useEffect(() => {
-    if (isFetching) return;
-    if (stations.length > 0) {
-      setIngesting(false);
-      return;
-    }
-    const key = `${resetKey}:${area.minLat.toFixed(2)},${area.minLng.toFixed(2)}`;
-    const attempts = coldPolls.current.get(key) ?? 0;
-    if (attempts >= COLD_POLL_ATTEMPTS) {
-      setIngesting(false);
-      return;
-    }
-    coldPolls.current.set(key, attempts + 1);
-    setIngesting(true);
-    const id = setTimeout(() => void refetch(), 4000);
+    if (!ingesting) return;
+    const id = setTimeout(() => {
+      setColdPolls((m) => ({ ...m, [areaKey]: (m[areaKey] ?? 0) + 1 }));
+      void refetch();
+    }, 4000);
     return () => clearTimeout(id);
-  }, [isFetching, stations.length, area, resetKey, refetch]);
+  }, [ingesting, areaKey, refetch]);
 
   // Station search (name/operator) — queried server-side, debounced.
   const [showList, setShowList] = useState(false);
