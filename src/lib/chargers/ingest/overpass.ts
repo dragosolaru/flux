@@ -89,7 +89,7 @@ export function mapOverpassElement(el: OverpassElement): RawCharger | null {
 
 async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
   const box = `${bbox.minLat},${bbox.minLng},${bbox.maxLat},${bbox.maxLng}`;
-  const query = `[out:json][timeout:15];(node["amenity"="charging_station"](${box});way["amenity"="charging_station"](${box}););out body center 500;`;
+  const query = `[out:json][timeout:25];(node["amenity"="charging_station"](${box});way["amenity"="charging_station"](${box}););out body center 2000;`;
   const body = `data=${encodeURIComponent(query)}`;
 
   const attempts = OVERPASS_MIRRORS.map(async (url) => {
