@@ -1,8 +1,8 @@
-import { ensureAreaFresh } from "@/lib/chargers/repository";
 import { findInBBox } from "@/lib/chargers/query";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ChargingStation, NetworkId, PlugType } from "@/lib/external/charging-networks/types";
 import type { RoutePoint } from "./types";
+import { haversine } from "./providers/mock-router";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 const OCM_URL = "https://api.openchargemap.io/v3/poi/";
@@ -174,6 +174,14 @@ function chargerToPlugTypes(charger: Charger): PlugType[] {
 function chargerToStation(charger: Charger): ChargingStation {
   const operator = charger.operator ?? charger.operatorId;
   const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
+  // Surface the platform's availability so the trip's reliability badge reflects
+  // real status: operational → up, offline → down, stale/unknown → unspecified.
+  const isOperational =
+    charger.availability === "operational"
+      ? true
+      : charger.availability === "offline"
+        ? false
+        : undefined;
   return {
     id: charger.id,
     networkId,
@@ -186,49 +194,58 @@ function chargerToStation(charger: Charger): ChargingStation {
     priceEurKwh: charger.pricing?.perKwh ?? null,
     addressCity: charger.address.city ?? "",
     addressCountry: charger.address.country ?? "RO",
+    isOperational,
   };
 }
 
-/**
- * Fetch real fast-charging stations within a bounding box around the route
- * corridor. Reads from the PostGIS charger platform (ensuring the area is fresh
- * first); on any error or empty result falls back to the live Overpass query so
- * trips still work before the charger migrations are applied.
- */
-// Cap cold-area ingestion so a long, un-ingested corridor degrades to the fast
-// Overpass fallback instead of blocking the trip-plan request while every tile
-// is fetched + upserted.
-const ENSURE_FRESH_TIMEOUT_MS = 8000;
-
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    p,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("ensureAreaFresh timeout")), ms),
-    ),
-  ]);
+// Merge two station lists, dropping entries from `extra` that sit within ~60 m of
+// one already in `primary` (the same physical site from another source). Primary
+// wins because it's the richer PostGIS row (price, plug types, availability).
+function mergeByProximity(
+  primary: ChargingStation[],
+  extra: ChargingStation[],
+): ChargingStation[] {
+  const SAME_SITE_KM = 0.06;
+  const result = [...primary];
+  for (const e of extra) {
+    const dup = primary.some((p) => haversine(p, e) <= SAME_SITE_KM);
+    if (!dup) result.push(e);
+  }
+  return result;
 }
 
+/**
+ * Fetch fast-charging stations within a bounding box around the route corridor.
+ *
+ * The planner needs comprehensive coverage *now* (so it sees as many stations as
+ * the map and can place stops well), without blocking on a slow full-corridor
+ * ingest. So we query two fast sources in parallel and merge them:
+ *   - the PostGIS platform (whatever the map browsing + warm cron already stored,
+ *     with rich fields: price, plug types, availability), and
+ *   - a direct Open Charge Map corridor query (comprehensive, fast with an API
+ *     key), covering corridor segments that haven't been ingested yet.
+ * Overpass is the last-resort fallback if both come back empty (e.g. OCM down or
+ * the charger migrations not yet applied).
+ */
 export async function fetchCorridorStations(
   polyline: [number, number][] | null,
   origin: RoutePoint,
   destination: RoutePoint,
 ): Promise<ChargingStation[]> {
   const bbox = computeBBox(polyline, origin, destination);
-  try {
-    await withTimeout(ensureAreaFresh(bbox), ENSURE_FRESH_TIMEOUT_MS);
-    // ensureAreaFresh succeeded → trust the PostGIS result, even when empty
-    // (a genuinely empty area shouldn't trigger a redundant Overpass round-trip).
-    const chargers = await findInBBox({ bbox, limit: 500 });
-    return preferFast(chargers.map(chargerToStation));
-  } catch {
-    // Cold-area timeout, RPC missing (pre-migration), or query error → fall back
-    // to a live API. Open Charge Map is the primary fallback (global, reliable,
-    // well-maintained); Overpass is the secondary in case OCM is unreachable.
-    const ocm = await fetchCorridorStationsOCM(bbox);
-    if (ocm.length > 0) return ocm;
-    return fetchCorridorStationsOverpass(polyline, origin, destination);
-  }
+
+  const [dbStations, ocmStations] = await Promise.all([
+    findInBBox({ bbox, limit: 500 })
+      .then((chargers) => chargers.map(chargerToStation))
+      .catch(() => [] as ChargingStation[]),
+    fetchCorridorStationsOCM(bbox).catch(() => [] as ChargingStation[]),
+  ]);
+
+  const merged = mergeByProximity(dbStations, ocmStations);
+  if (merged.length > 0) return preferFast(merged);
+
+  // Both primary sources empty → live Overpass as a final fallback.
+  return fetchCorridorStationsOverpass(polyline, origin, destination);
 }
 
 interface OcmConnection {
