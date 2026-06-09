@@ -1217,3 +1217,16 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/lib/chargers/repository.ts`, `src/lib/chargers/countries.ts`, `supabase/migrations/022_batch_upsert_chargers.sql`.
 
 **Dependencies:** Upstash Redis (`redis.mget`), Supabase RPC, `node:crypto` (SHA-1 hash).
+
+## Charger Speedup — Senior Review Fixes (2026-06-09)
+
+**What it does:** Fixes found in the post-implementation review of the charger-loading speedup.
+
+- **[BLOCKER] ro/hu/at bulk freshness:** countries without a trusted full official source now fetch OCM in **full** (no `modifiedsince`) before being marked country-fresh; previously a 7-day incremental could mark a cold country fresh, suppressing lazy ingest for 48h. `FULL_OFFICIAL_SOURCE` in `bulk.ts` whitelists fr/de/nl for incremental OCM top-ups.
+- **Fail-safe freshness:** `markCountryFresh` now requires `totalUpserted > 0` — a full-country fetch returning 0 rows is always a source failure, never a no-op.
+- **Hash determinism:** `computeClusterHash` sorts connectors/sources before hashing so re-ingest ordering differences don't defeat the unchanged-row skip.
+- **Dense cells:** internal `findInBBox` cap raised 2000→5000 (public API still clamps to 2000) so dedup in dense 1°×1° cells sees all existing rows instead of re-inserting duplicates.
+- **Client:** cold-area polling indicator is gated on no-active-filters — an empty filtered result is "no matches", not a cold area.
+- **Docs:** Austria connector comment corrected (Burgenland state endpoint, not national).
+
+**Key files:** `src/lib/chargers/ingest/bulk.ts`, `src/lib/chargers/repository.ts`, `src/lib/chargers/query.ts`, `src/lib/chargers/ingest/austria.ts`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `supabase/migrations/022_batch_upsert_chargers.sql`.

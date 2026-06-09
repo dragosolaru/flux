@@ -30,6 +30,13 @@ async function fetchOfficialSource(cc: BulkCountry) {
   }
 }
 
+// Countries whose official source covers the full national dataset. For the
+// rest (ro/hu: no official source; at: the ArcGIS endpoint may be regional),
+// OCM must be fetched in full — an incremental-only import would otherwise
+// mark the country fresh while most of it was never ingested, suppressing
+// lazy tile ingest for cold areas for the whole country TTL.
+const FULL_OFFICIAL_SOURCE: ReadonlySet<BulkCountry> = new Set(["fr", "de", "nl"]);
+
 /**
  * Import all chargers for a bulk country.
  * 1. Fetches official source + OCM (modifiedsince 7d) in parallel.
@@ -43,9 +50,10 @@ export async function bulkImportCountry(
   const bbox = BULK_COUNTRIES[cc];
   const supabase = createSupabaseAdminClient();
 
+  const ocmSince = FULL_OFFICIAL_SOURCE.has(cc) ? sevenDaysAgo() : undefined;
   const [officialResult, ocmResult] = await Promise.allSettled([
     fetchOfficialSource(cc),
-    fetchCountryOcm(cc.toUpperCase(), sevenDaysAgo()),
+    fetchCountryOcm(cc.toUpperCase(), ocmSince),
   ]);
 
   const raws = [
@@ -82,14 +90,17 @@ export async function bulkImportCountry(
 
       cells++;
 
-      const existing = await findInBBox({ bbox: cell, limit: 2000 });
+      const existing = await findInBBox({ bbox: cell, limit: 5000 });
       const clusters = clusterChargers(cellRaws, existing);
       const upserted = await persistClusters(clusters);
       totalUpserted += upserted;
     }
   }
 
-  const shouldMarkFresh = totalUpserted > 0 || fetched === 0;
+  // A full-country fetch returning 0 rows is always a source failure (every
+  // covered country has chargers), so freshness requires actual persistence.
+  // Unchanged re-runs still qualify: the batch RPC counts hash-skipped rows.
+  const shouldMarkFresh = totalUpserted > 0;
   if (shouldMarkFresh) {
     await markCountryFresh(cc);
   }
@@ -97,7 +108,7 @@ export async function bulkImportCountry(
   await supabase.from("ingest_runs").insert({
     tile: `bulk:${cc}`,
     source: "bulk",
-    status: fetched > 0 && totalUpserted === 0 ? "error" : "ok",
+    status: totalUpserted === 0 ? "error" : "ok",
     fetched,
     upserted: totalUpserted,
     finished_at: new Date().toISOString(),

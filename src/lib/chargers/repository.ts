@@ -53,6 +53,15 @@ export async function markCountryFresh(cc: BulkCountry): Promise<void> {
 }
 
 function computeClusterHash(c: ChargerCluster): string {
+  // Connectors/sources are merged in arrival order, which varies between
+  // ingests (parallel fetches interleave). Sort them for the hash only, so a
+  // reordering doesn't defeat the unchanged-row skip in the batch RPC.
+  const sortedConnectors = c.connectors
+    .map((x) => JSON.stringify(x))
+    .sort();
+  const sortedSources = c.sources
+    .map((s) => `${s.source}:${s.ref}`)
+    .sort();
   const payload = JSON.stringify([
     c.lat.toFixed(6),
     c.lng.toFixed(6),
@@ -64,8 +73,8 @@ function computeClusterHash(c: ChargerCluster): string {
     c.pricing,
     c.confidence,
     c.availability,
-    c.connectors,
-    c.sources,
+    sortedConnectors,
+    sortedSources,
   ]);
   return createHash("sha1").update(payload).digest("hex");
 }

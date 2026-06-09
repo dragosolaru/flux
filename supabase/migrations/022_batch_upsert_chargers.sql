@@ -8,7 +8,8 @@
 alter table chargers add column if not exists source_hash text;
 
 -- Batch upsert RPC. Accepts an array of charger objects and returns the count
--- of rows processed (inserted or updated). Each element shape:
+-- of rows processed (inserted, updated, or hash-skipped — i.e. the input
+-- length; it is NOT a count of meaningful changes). Each element shape:
 --   {id, lat, lng, name, operator, operatorId, country, address,
 --    maxPowerKw, pricing, confidence, availability, connectors, sources, hash}
 --

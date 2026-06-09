@@ -16,7 +16,10 @@ import type {
 } from "./types";
 
 const DEFAULT_LIMIT = 1000;
-const MAX_LIMIT = 2000;
+// Internal cap only — the public /api/chargers routes clamp to 2000 via Zod.
+// 5000 lets the bulk importer load all existing rows of a dense 1°×1° cell
+// for dedup, so known chargers aren't re-inserted as duplicates.
+const MAX_LIMIT = 5000;
 
 export interface NearbyParams {
   lat: number;

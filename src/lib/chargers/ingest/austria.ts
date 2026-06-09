@@ -9,9 +9,12 @@ import { canonicalConnectorType, parsePowerKw } from "../normalize";
 const AUSTRIA_URL =
   "https://gis.bgld.gv.at/arcgis/rest/services/Oeffentlich/E_Tankstellen/MapServer/0/query";
 
-// Burgenland (easternmost AT state) proxy — data.gv.at aggregates across states.
-// If this specific endpoint is unavailable, the connector silently returns []
-// and the tile stays uncached — the existing fallback (OCM+OSM) still covers AT.
+// CAVEAT: this is the Burgenland state GIS endpoint (gis.bgld.gv.at), NOT a
+// national aggregator — coverage outside Burgenland is unverified. The bulk
+// importer therefore treats AT as having no full official source and fetches
+// OCM in full alongside this (see ingest/bulk.ts FULL_OFFICIAL_SOURCE).
+// If the endpoint is unavailable, the connector silently returns [] and the
+// tile stays uncached — the lazy fallback (OCM+OSM) still covers AT.
 // A future iteration can add the other AT state ArcGIS endpoints.
 
 interface AustriaAttributes {

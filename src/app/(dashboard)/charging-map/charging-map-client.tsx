@@ -150,8 +150,13 @@ export function ChargingMapClient() {
   const COLD_POLL_ATTEMPTS = 3;
   const areaKey = `${resetKey}:${area.minLat.toFixed(2)},${area.minLng.toFixed(2)}`;
   const [coldPolls, setColdPolls] = useState<Record<string, number>>({});
+  // Only unfiltered queries signal a cold area — an empty result under an
+  // active filter is a real "no matches", not data still being ingested.
   const ingesting =
-    !isFetching && stations.length === 0 && (coldPolls[areaKey] ?? 0) < COLD_POLL_ATTEMPTS;
+    !isFetching &&
+    !hasActiveFilter &&
+    stations.length === 0 &&
+    (coldPolls[areaKey] ?? 0) < COLD_POLL_ATTEMPTS;
   useEffect(() => {
     if (!ingesting) return;
     const id = setTimeout(() => {
