@@ -1185,3 +1185,23 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx` (`COLD_POLL_ATTEMPTS`, `ingesting` state). i18n: `chargingMap.ingesting_area` in all 5 locales.
 
 **Dependencies:** part of the charger-loading speedup (bulk country imports + batched upserts land separately).
+---
+
+## Charger Ingest — Batched Hash-Aware Upsert + Country/Tile Freshness (2026-06-09)
+
+**What it does:** Replaces per-charger RPC calls with a single batched DB round-trip per 200-charger chunk, skips DB writes for unchanged rows using a content hash, batches Redis freshness reads, and adds country-level freshness so bulk-imported countries skip lazy tile ingest entirely.
+
+- **`upsert_chargers_batch` RPC** (migration 022): accepts a JSONB array; for each element: inserts new rows, skips all writes (only touches `last_seen_at`) when `source_hash` matches, or performs a full update + connector replace + sources upsert when the hash differs. Returns the count of rows processed.
+- **`persistClusters(clusters)`**: chunks `ChargerCluster[]` into groups of 200, calls `upsert_chargers_batch` per chunk, logs errors per chunk, returns total processed count.
+- **Batched Redis reads in `ensureAreaFresh`**: replaces N sequential `redis.get` calls with one `redis.mget` for all tile freshness keys.
+- **Country freshness**: `markCountryFresh(cc)` sets a 48-hour Redis key (`chargers:country:v1:{cc}`) for a `BulkCountry`. `ensureAreaFresh` checks this key first — if the entire bbox is inside a fresh bulk country, tile-level ingest is skipped entirely.
+- **Tile freshness namespace bumped v3 → v4** to force re-ingest of existing cached tiles with the new pipeline.
+
+**How to use:**
+- Call `persistClusters(clusters)` directly to persist a pre-clustered batch.
+- Call `markCountryFresh("de")` after a bulk country import to block lazy re-ingest for 48 h.
+- `ingestArea` / `ensureAreaFresh` are unchanged in signature; both use the new implementations automatically.
+
+**Key files:** `src/lib/chargers/repository.ts`, `src/lib/chargers/countries.ts`, `supabase/migrations/022_batch_upsert_chargers.sql`.
+
+**Dependencies:** Upstash Redis (`redis.mget`), Supabase RPC, `node:crypto` (SHA-1 hash).
