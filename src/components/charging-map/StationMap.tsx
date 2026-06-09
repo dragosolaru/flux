@@ -233,6 +233,7 @@ export default function StationMap({
       zoom={10}
       style={{ height: "100%", width: "100%" }}
       scrollWheelZoom
+      zoomControl={false}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
