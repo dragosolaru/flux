@@ -113,3 +113,48 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
 }
 
 export const bnetzaConnector: SourceConnector = { id: "bnetza", fetchTile };
+
+const DE_BBOX = { minLng: 5.8, minLat: 47.2, maxLng: 15.1, maxLat: 55.1 };
+const PAGE_SIZE = 2000;
+const BNETZA_MAX_PAGES = 50;
+
+/**
+ * Full-country fetch: pages over the entire DE dataset using resultOffset/resultRecordCount.
+ * The same ArcGIS endpoint used by fetchTile but covering the whole DE bbox.
+ */
+export async function fetchCountryDe(): Promise<RawCharger[]> {
+  const out: RawCharger[] = [];
+  for (let page = 0; page < BNETZA_MAX_PAGES; page++) {
+    try {
+      const params = new URLSearchParams({
+        geometry: `${DE_BBOX.minLng},${DE_BBOX.minLat},${DE_BBOX.maxLng},${DE_BBOX.maxLat}`,
+        geometryType: "esriGeometryEnvelope",
+        spatialRel: "esriSpatialRelIntersects",
+        outFields: "*",
+        f: "json",
+        resultRecordCount: String(PAGE_SIZE),
+        resultOffset: String(page * PAGE_SIZE),
+      });
+
+      const res = await fetch(`${BNETZA_URL}?${params}`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!res.ok) break;
+
+      const data = (await res.json()) as { features?: BNetzAFeature[]; exceededTransferLimit?: boolean };
+      const features = data.features;
+      if (!Array.isArray(features) || features.length === 0) break;
+
+      for (const f of features) {
+        const mapped = mapFeature(f);
+        if (mapped) out.push(mapped);
+      }
+
+      if (!data.exceededTransferLimit) break;
+    } catch {
+      break;
+    }
+  }
+  return out;
+}

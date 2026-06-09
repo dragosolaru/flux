@@ -124,3 +124,47 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
 }
 
 export const austriaConnector: SourceConnector = { id: "austria", fetchTile };
+
+const AT_BBOX = { minLng: 9.5, minLat: 46.3, maxLng: 17.2, maxLat: 49.1 };
+const AT_PAGE_SIZE = 2000;
+const AUSTRIA_MAX_PAGES = 20;
+
+/**
+ * Full-country fetch: pages over the entire AT dataset using resultOffset/resultRecordCount.
+ * Same ArcGIS endpoint as fetchTile but covering the whole AT bbox.
+ */
+export async function fetchCountryAt(): Promise<RawCharger[]> {
+  const out: RawCharger[] = [];
+  for (let page = 0; page < AUSTRIA_MAX_PAGES; page++) {
+    try {
+      const params = new URLSearchParams({
+        geometry: `${AT_BBOX.minLng},${AT_BBOX.minLat},${AT_BBOX.maxLng},${AT_BBOX.maxLat}`,
+        geometryType: "esriGeometryEnvelope",
+        spatialRel: "esriSpatialRelIntersects",
+        outFields: "*",
+        f: "json",
+        resultRecordCount: String(AT_PAGE_SIZE),
+        resultOffset: String(page * AT_PAGE_SIZE),
+      });
+
+      const res = await fetch(`${AUSTRIA_URL}?${params}`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(30000),
+      });
+      if (!res.ok) break;
+
+      const data = (await res.json()) as { features?: AustriaFeature[]; exceededTransferLimit?: boolean };
+      if (!Array.isArray(data.features) || data.features.length === 0) break;
+
+      for (const f of data.features) {
+        const mapped = mapFeature(f);
+        if (mapped) out.push(mapped);
+      }
+
+      if (!data.exceededTransferLimit) break;
+    } catch {
+      break;
+    }
+  }
+  return out;
+}
