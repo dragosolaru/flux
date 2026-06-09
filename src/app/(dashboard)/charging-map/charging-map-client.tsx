@@ -68,7 +68,7 @@ export function ChargingMapClient() {
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
   const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
   // The query follows the visible map area; updated on pan/zoom via MoveWatcher.
-  const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 25 });
+  const [area, setArea] = useState<QueryArea>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG, radiusKm: 50 });
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
@@ -77,13 +77,13 @@ export function ChargingMapClient() {
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
     setUserLocation({ lat, lng });
-    setArea({ lat, lng, radiusKm: 25 });
+    setArea({ lat, lng, radiusKm: 50 });
   }, []);
 
   const handleSilentLocate = useCallback((coords: GeoCoords) => {
     setCenter(coords);
     setUserLocation(coords);
-    setArea({ ...coords, radiusKm: 25 });
+    setArea({ ...coords, radiusKm: 50 });
   }, []);
 
   const handleAreaChange = useCallback((lat: number, lng: number, radiusKm: number) => {
