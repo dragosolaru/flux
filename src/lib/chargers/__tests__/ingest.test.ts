@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { mapOcmPoi } from "../ingest/ocm";
 import { mapOverpassElement } from "../ingest/overpass";
+import { mapTomTomResult } from "../ingest/tomtom";
 
 describe("mapOcmPoi", () => {
   it("maps a full OCM POI to a RawCharger", () => {
@@ -85,6 +86,46 @@ describe("mapOcmPoi", () => {
     expect(mapOcmPoi({ ...base, StatusTypeID: 100 })!.availability).toBe("offline");
     // No signal at all → unknown.
     expect(mapOcmPoi(base)!.availability).toBe("unknown");
+  });
+});
+
+describe("mapTomTomResult", () => {
+  it("maps a TomTom EV result to a RawCharger", () => {
+    const raw = mapTomTomResult({
+      id: "RO-12345",
+      position: { lat: 46.74, lon: 23.49 },
+      poi: { name: "Renovatio Florești", brands: [{ name: "Renovatio" }] },
+      address: {
+        streetName: "Strada Florilor",
+        municipality: "Florești",
+        countrySubdivision: "Cluj",
+        countryCode: "RO",
+        postalCode: "407280",
+      },
+      chargingPark: {
+        connectors: [
+          { connectorType: "IEC62196Type2CCS", ratedPowerKW: 150 },
+          { connectorType: "Chademo", ratedPowerKW: 50 },
+        ],
+      },
+    });
+    expect(raw).not.toBeNull();
+    expect(raw!.source).toBe("tomtom");
+    expect(raw!.sourceRef).toBe("RO-12345");
+    expect(raw!.lat).toBe(46.74);
+    expect(raw!.lng).toBe(23.49);
+    expect(raw!.operator).toBe("Renovatio");
+    expect(raw!.address.city).toBe("Florești");
+    expect(raw!.address.country).toBe("RO");
+    expect(raw!.connectors).toEqual([
+      { type: "ccs2", powerKw: 150, count: 1 },
+      { type: "chademo", powerKw: 50, count: 1 },
+    ]);
+  });
+
+  it("returns null without coordinates or id", () => {
+    expect(mapTomTomResult({ id: "x", position: { lat: 1 } })).toBeNull();
+    expect(mapTomTomResult({ position: { lat: 1, lon: 2 } })).toBeNull();
   });
 });
 

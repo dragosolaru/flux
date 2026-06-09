@@ -27,10 +27,12 @@ export function canonicalConnectorType(input: string | number): ConnectorType {
   const key = normalizeKey(input);
 
   // Order matters: combo/CCS checks must precede the plain type2/type1 checks.
-  if (/ccs.*type\s*2|type\s*2.*combo|ccs2|combo\s*2|combined.*type\s*2/.test(key)) {
+  // TomTom uses "IEC62196Type2CCS" (type token before "ccs"), so match ccs on
+  // either side of the type token.
+  if (/ccs.*type\s*2|type\s*2.*ccs|type\s*2.*combo|ccs2|combo\s*2|combined.*type\s*2/.test(key)) {
     return "ccs2";
   }
-  if (/ccs.*type\s*1|ccs1|combo\s*1/.test(key)) return "ccs1";
+  if (/ccs.*type\s*1|type\s*1.*ccs|ccs1|combo\s*1/.test(key)) return "ccs1";
   if (/\bccs\b|combined charging/.test(key)) return "ccs2";
   if (/chademo/.test(key)) return "chademo";
   if (/tesla|supercharger/.test(key)) return "tesla";

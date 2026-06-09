@@ -44,19 +44,29 @@ function pinLabel(maxPowerKw: number | null, pricing: Charger["pricing"]): strin
   return parts.join(" · ");
 }
 
+// First letter of the operator (or ⚡ when unknown) — a lightweight "logo" glyph
+// inside the pin, AmpWhere-style, without shipping per-operator logo assets.
+function pinGlyph(operator: string | null): string {
+  const ch = operator?.trim()?.[0];
+  return ch ? ch.toUpperCase() : "⚡";
+}
+
 function stationIcon(
   color: string,
   selected: boolean,
   maxPowerKw: number | null,
   pricing: Charger["pricing"],
+  operator: string | null,
 ): L.DivIcon {
   const label = pinLabel(maxPowerKw, pricing);
-  const key = `${color}:${selected ? 1 : 0}:${label}`;
+  const glyph = pinGlyph(operator);
+  const key = `${color}:${selected ? 1 : 0}:${label}:${glyph}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
-  const size = selected ? 24 : 18;
-  const dot = `<div style="width:${size}px;height:${size}px;flex:0 0 auto;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>`;
+  const size = selected ? 30 : 26;
+  const font = selected ? 14 : 12;
+  const dot = `<div style="width:${size}px;height:${size}px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:${color};color:#fff;font-size:${font}px;font-weight:700;line-height:1;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45)">${glyph}</div>`;
   const pill = label
     ? `<span style="background:rgba(17,24,39,.9);color:#fff;font-size:11px;font-weight:600;line-height:1;padding:3px 6px;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap">${label}</span>`
     : "";
@@ -303,7 +313,7 @@ export default function StationMap({
             <Marker
               key={s.id}
               position={[s.lat, s.lng]}
-              icon={stationIcon(color, isSelected, s.maxPowerKw, s.pricing)}
+              icon={stationIcon(color, isSelected, s.maxPowerKw, s.pricing, s.operator)}
               eventHandlers={{ click: () => onSelect(s) }}
             />
           );

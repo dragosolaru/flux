@@ -654,13 +654,22 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 **What it does:** A fast, deduplicated, confidence-scored charging-station dataset
 stored in **PostGIS**, fed by **hybrid ingestion** (lazy cache-through on request
-+ scheduled hot-region warm-refresh) from four open sources: OpenChargeMap (global,
-CC BY 4.0), OpenStreetMap/Overpass (global, ODbL), **BNetzA** (Germany — official
-Ladesäulenregister, ArcGIS REST, no auth, daily updates, DL-DE 2.0 ≈ CC BY), and
-**NDW/DOT-NL** (Netherlands — OCPI GeoJSON bbox API, no auth, near-real-time, Open
-Data). ChargePrice provides pricing enrichment. Replaces slow per-request live
-aggregation with stored, queryable data. Europe/Romania scope, global-ready.
++ scheduled hot-region warm-refresh) from five open/free sources: OpenChargeMap
+(global, CC BY 4.0), OpenStreetMap/Overpass (global, ODbL), **BNetzA** (Germany —
+official Ladesäulenregister, ArcGIS REST, no auth, daily updates, DL-DE 2.0 ≈
+CC BY), **NDW/DOT-NL** (Netherlands — OCPI GeoJSON bbox API, no auth, near-real-time,
+Open Data), and **TomTom EV** (global, EV-station category search, free tier
+~2,500 req/day, strong European/Romania coverage with per-connector type + rated
+power — only active when `TOMTOM_API_KEY` is set). ChargePrice provides pricing
+enrichment. Replaces slow per-request live aggregation with stored, queryable data.
+Europe/Romania scope, global-ready.
 Design: `docs/superpowers/specs/2026-06-03-charger-data-platform-design.md`.
+
+> **Coverage note:** OpenChargeMap is the best free Romanian source but is
+> **IP-rate-limited without an API key** — set `OPEN_CHARGE_MAP_API_KEY` (free) for
+> full results on Vercel's shared IPs. Commercial OCPI operator feeds (as used by
+> apps like AmpWhere) give denser coverage + live prices but require contracts;
+> TomTom's free tier is the closest free substitute and is wired here.
 
 **Pipeline:** `fetchAllSources(bbox)` (OCM + Overpass + BNetzA + NDW in parallel
 + ChargePrice enrich) → `clusterChargers(raws, existing)` (spatial ≤60m + fuzzy
@@ -702,7 +711,7 @@ predefined hot bboxes.
 stores per-tile freshness so overlapping requests reuse ingestion work.
 
 **Key files:** `src/lib/chargers/{types,tiles,normalize,dedup,confidence,query,repository}.ts`,
-`src/lib/chargers/ingest/{ocm,overpass,bnetza,ndw,chargeprice,index}.ts`,
+`src/lib/chargers/ingest/{ocm,overpass,bnetza,ndw,tomtom,chargeprice,index}.ts`,
 `src/app/api/chargers/{route,nearby/route,search/route,[id]/route}.ts`,
 `src/app/api/internal/warm/route.ts`, `vercel.json`,
 `supabase/migrations/017_chargers.sql` (tables + GIST/trigram indexes),
