@@ -11,7 +11,7 @@ export type ConnectorType =
   | "schuko"
   | "other";
 
-export type ChargerSourceId = "ocm" | "osm" | "chargeprice" | "bnetza" | "ndw" | "tomtom";
+export type ChargerSourceId = "ocm" | "osm" | "chargeprice" | "bnetza" | "ndw" | "tomtom" | "austria" | "irve";
 
 /**
  * Operational status. `operational`/`offline` come from a source that reports

@@ -4,6 +4,8 @@ import { overpassConnector } from "./overpass";
 import { bnetzaConnector } from "./bnetza";
 import { ndwConnector } from "./ndw";
 import { tomtomConnector } from "./tomtom";
+import { austriaConnector } from "./austria";
+import { irveConnector } from "./irve";
 import { enrichPricing } from "./chargeprice";
 
 export { ocmConnector } from "./ocm";
@@ -11,13 +13,17 @@ export { overpassConnector } from "./overpass";
 export { bnetzaConnector } from "./bnetza";
 export { ndwConnector } from "./ndw";
 export { tomtomConnector } from "./tomtom";
+export { austriaConnector } from "./austria";
+export { irveConnector } from "./irve";
 export { enrichPricing } from "./chargeprice";
 
 /**
  * Fetch every source for a bbox in parallel, concat the successful results,
  * then run pricing enrichment. Dedup/merge is a separate module — not here.
  * Sources: OCM (global), Overpass/OSM (global), BNetzA (DE), NDW (NL),
- * TomTom (global, EV category — only when TOMTOM_API_KEY is set).
+ * TomTom (global, EV category — only when TOMTOM_API_KEY is set),
+ * Austria (data.gv.at, bbox-gated to AT bounds),
+ * IRVE France (data.gouv.fr, bbox-gated to FR bounds).
  * Each connector is fault-tolerant — failures return [] and don't block others.
  */
 export async function fetchAllSources(bbox: BBox): Promise<RawCharger[]> {
@@ -27,6 +33,8 @@ export async function fetchAllSources(bbox: BBox): Promise<RawCharger[]> {
     bnetzaConnector.fetchTile(bbox),
     ndwConnector.fetchTile(bbox),
     tomtomConnector.fetchTile(bbox),
+    austriaConnector.fetchTile(bbox),
+    irveConnector.fetchTile(bbox),
   ]);
 
   const combined: RawCharger[] = [];

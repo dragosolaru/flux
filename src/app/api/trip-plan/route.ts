@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getModelSpec } from "@/lib/brands/models";
-import { mockWeather } from "@/lib/external/weather/providers/mock-weather";
+import { getWeatherAsync } from "@/lib/external/weather/providers/open-meteo";
 import { derateRange } from "@/lib/external/weather/derating";
 import { STATIONS } from "@/lib/external/charging-networks/stations";
 import { planTripVariants } from "@/lib/external/routing/planner";
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     const spec = getModelSpec(vehicle.brand as BrandKey, vehicle.model);
     const personalEfficiency = await getPersonalEfficiency(vehicleId);
     const effEfficiency = personalEfficiency ?? spec.efficiencyKwhPer100km;
-    const weather = mockWeather.getCurrent(origin.lat, origin.lng);
+    const weather = await getWeatherAsync(origin.lat, origin.lng);
     const idealKm = (spec.batteryCapacityKwh / effEfficiency) * 100;
     const derating = derateRange(idealKm, weather);
 
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
   const spec = getModelSpec("tesla", "Model 3");
   const origin = bodyOrigin ?? { lat: 44.4268, lng: 26.1025, label: "Bucharest" };
   const currentSocPct = bodyStartSoc ?? 80;
-  const weather = mockWeather.getCurrent(origin.lat, origin.lng);
+  const weather = await getWeatherAsync(origin.lat, origin.lng);
   const idealKm = (spec.batteryCapacityKwh / spec.efficiencyKwhPer100km) * 100;
   const derating = derateRange(idealKm, weather);
 

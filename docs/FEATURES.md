@@ -1118,3 +1118,32 @@ All responsive — full values restore at `md:` breakpoint.
 **⚠️ Deployment:** apply migration `020_charger_availability.sql` (adds `p_availability` to `upsert_charger`) **before/with** this deploy — the ingest path passes the new param, so an un-migrated DB would reject upserts. The read RPCs (018) already returned `availability`, so no read-side migration was needed. Until the cron/lazy ingest re-runs an area, existing rows keep their old `unknown` value.
 
 **Key files:** `src/lib/chargers/types.ts` (`ChargerAvailability`, `STALE_AFTER_DAYS`), `src/lib/chargers/ingest/ocm.ts` (`deriveAvailability`), `src/lib/chargers/dedup.ts` (`mergeAvailability`), `src/lib/chargers/repository.ts` (`p_availability`), `src/lib/chargers/query.ts` (`toAvailability`), `supabase/migrations/020_charger_availability.sql`, `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`.
+
+## Charge Curves — Per-Vehicle Exported Shape (TESLA_NMC_CURVE)
+
+**What it does:** Adds `ChargeCurvePoint[]` interface and `TESLA_NMC_CURVE` export to `charge-curve.ts` so `ModelSpec` can carry the curve for each vehicle. Enables future UI visualization (charging speed vs SoC). The existing `chargeMinutes()` function already integrated the curve — this makes the shape an explicit part of each model spec.
+
+**Key files:** `src/lib/external/routing/charge-curve.ts` (`ChargeCurvePoint`, `TESLA_NMC_CURVE`), `src/lib/brands/models.ts` (`ModelSpec.chargeCurve`).
+
+## Weather — Open-Meteo Real Weather (replaces mock)
+
+**What it does:** Replaces `mock-weather.ts` (deterministic formula) with real temperature, wind, and precipitation from Open-Meteo's public API. Range derating now uses actual conditions at the trip origin so cold/wet trips show a shorter derated range than summer trips.
+
+**How to use:** Automatic in `POST /api/trip-plan`. The `getWeatherAsync(lat, lng)` helper fetches current conditions and caches per 0.1° cell for 15 minutes. Falls back to a mild neutral snapshot if the API is unreachable.
+
+**Important:** Open-Meteo free tier is non-commercial only. Production SaaS use requires a paid plan ($29–99/month). Set `OPEN_METEO_API_KEY` if/when upgrading (currently unused — the public endpoint works without a key).
+
+**Key files:** `src/lib/external/weather/providers/open-meteo.ts` (new), `src/app/api/trip-plan/route.ts` (uses `getWeatherAsync`).
+
+## Charger Sources — Austria (data.gv.at) + France IRVE (data.gouv.fr)
+
+**What it does:** Adds two new charger ingest sources:
+
+- **Austria** (`src/lib/chargers/ingest/austria.ts`): ArcGIS REST API, same pattern as BNetzA. Bbox-gated to AT bounds (46.3–49.1°N, 9.5–17.2°E). Covers the DE→AT→HU→RO corridor where BNetzA coverage ends at the German border.
+- **IRVE France** (`src/lib/chargers/ingest/irve.ts`): daily consolidated GeoJSON from data.gouv.fr (~90k+ points, legally mandated under EU AFIR). Loaded once per 6 hours (module-level cache), then filtered by tile bbox. Bbox-gated to metropolitan France.
+
+Both sources are fault-tolerant (return `[]` on error), fire in parallel with all other sources in `fetchAllSources()`, and flow through the existing dedup/merge pipeline.
+
+**Key files:** `src/lib/chargers/ingest/austria.ts` (new), `src/lib/chargers/ingest/irve.ts` (new), `src/lib/chargers/ingest/index.ts` (added), `src/lib/chargers/types.ts` (`"austria" | "irve"` added to `ChargerSourceId`).
+
+**Note on IRVE:** The IRVE connector fetches the full ~90k feature GeoJSON on first tile load within France. This is a one-time cost per cold-start (~2–5 MB); subsequent calls are in-memory filtered. Consider a background pre-warm at deploy time for production.

@@ -3,11 +3,15 @@
 
 import type { BrandKey } from "./types";
 import type { ScenarioVehicle } from "@/lib/mock/types";
+import { TESLA_NMC_CURVE, type ChargeCurvePoint } from "@/lib/external/routing/charge-curve";
 
 export interface ModelSpec extends ScenarioVehicle {
-  modelName: string;      // matches the string stored in vehicles.model
+  modelName: string;
   maxRangeKm: number;
-  defaultChargeLimit: number; // typical recommended SoC limit
+  defaultChargeLimit: number;
+  // Normalized DC charge curve (fraction of peak power vs SoC) for visualization
+  // and future per-vehicle chargeMinutes support.
+  chargeCurve: ChargeCurvePoint[];
 }
 
 export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
@@ -20,6 +24,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxDcChargingRateKw: 250,
       maxRangeKm: 602,
       defaultChargeLimit: 80,
+      chargeCurve: TESLA_NMC_CURVE,
     },
     {
       modelName: "Model Y",
@@ -29,6 +34,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxDcChargingRateKw: 250,
       maxRangeKm: 533,
       defaultChargeLimit: 80,
+      chargeCurve: TESLA_NMC_CURVE,
     },
     {
       modelName: "Model S",
@@ -38,6 +44,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxDcChargingRateKw: 250,
       maxRangeKm: 600,
       defaultChargeLimit: 90,
+      chargeCurve: TESLA_NMC_CURVE,
     },
     {
       modelName: "Model X",
@@ -47,6 +54,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxDcChargingRateKw: 250,
       maxRangeKm: 560,
       defaultChargeLimit: 90,
+      chargeCurve: TESLA_NMC_CURVE,
     },
   ],
 };
