@@ -753,7 +753,13 @@ surface background-ingested stations without re-panning (`maxDuration` raised to
 — a bottom sheet listing in-view stations sorted by distance, with a search box
 that queries `GET /api/chargers/search` (debounced 350 ms); tapping a row selects
 it and recenters the map. Map pins now show the operator initial (⚡ fallback)
-plus a price·power label. Key files:
+plus a price·power label. **Pins no longer flicker:** markers are memoized
+(`useMemo` on stations+selection) so the cluster layer only rebuilds on real
+data/selection change, and `MoveWatcher` skips no-op/micro viewport moves
+(map settle, resize, sheet open). The Redis freshness namespace is `v3` (bumped
+to re-ingest with operator-aware same-site dedup + the TomTom source, restoring
+distinct co-located stations such as a Tesla Supercharger beside an AC charger).
+Key files:
 `src/components/charging-map/StationListSheet.tsx`,
 `src/app/(dashboard)/charging-map/charging-map-client.tsx`,
 `src/components/charging-map/StationMap.tsx`. i18n: `chargingMap.search_placeholder`,

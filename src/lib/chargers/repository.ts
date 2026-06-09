@@ -20,11 +20,14 @@ const redis =
 const TILE_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 function freshnessKey(tile: Tile): string {
-  // v2: the v1 namespace was poisoned — early ingest runs marked tiles fresh
-  // even when every upsert_charger RPC failed (the p_availability param did not
-  // exist before migration 020), leaving areas permanently empty for the 7-day
-  // TTL. Bumping the namespace invalidates those stale markers in one shot.
-  return `chargers:tile:v2:${tileKey(tile)}`;
+  // Namespace is bumped whenever ingestion/dedup behaviour changes so cached
+  // tiles re-ingest and pick up the new logic in one shot.
+  //   v2: un-poison tiles cached fresh while every upsert failed (pre-020).
+  //   v3: apply operator-aware same-site dedup (co-located different operators
+  //       stay separate, e.g. a Tesla Supercharger next to an AC charger),
+  //       add the TomTom source, and restore rows migration 021 may have
+  //       collapsed by location cell regardless of operator.
+  return `chargers:tile:v3:${tileKey(tile)}`;
 }
 
 async function isTileFresh(tile: Tile): Promise<boolean> {

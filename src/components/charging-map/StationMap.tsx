@@ -5,7 +5,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -157,17 +157,33 @@ interface MoveWatcherProps {
 
 function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const last = useRef<ViewportBBox | null>(null);
 
   function schedule(m: L.Map) {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const b = m.getBounds();
-      onAreaChange({
+      const next: ViewportBBox = {
         minLat: b.getSouth(),
         minLng: b.getWest(),
         maxLat: b.getNorth(),
         maxLng: b.getEast(),
-      });
+      };
+      // Skip no-op / micro moves (map settle, resize, sheet open) so we don't
+      // churn the query and rebuild markers — that caused pins to flicker.
+      const p = last.current;
+      const eps = 1e-4; // ~11 m
+      if (
+        p &&
+        Math.abs(p.minLat - next.minLat) < eps &&
+        Math.abs(p.minLng - next.minLng) < eps &&
+        Math.abs(p.maxLat - next.maxLat) < eps &&
+        Math.abs(p.maxLng - next.maxLng) < eps
+      ) {
+        return;
+      }
+      last.current = next;
+      onAreaChange(next);
     }, 500);
   }
 
@@ -259,6 +275,28 @@ export default function StationMap({
 }: StationMapProps) {
   const t = useTranslations("chargingMap");
 
+  // Memoize markers so the cluster layer only rebuilds when the stations or the
+  // selection actually change — not on every parent re-render (pan/fetch/badge),
+  // which made pins flicker (appear/disappear) as the cluster tore down + re-added.
+  const selectedId = selected?.id ?? null;
+  const markers = useMemo(
+    () =>
+      stations.map((s) => {
+        const tier = getPowerTier(s.maxPowerKw, s.availability);
+        const isSelected = selectedId === s.id;
+        const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
+        return (
+          <Marker
+            key={s.id}
+            position={[s.lat, s.lng]}
+            icon={stationIcon(color, isSelected, s.maxPowerKw, s.pricing, s.operator)}
+            eventHandlers={{ click: () => onSelect(s) }}
+          />
+        );
+      }),
+    [stations, selectedId, onSelect],
+  );
+
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -303,21 +341,8 @@ export default function StationMap({
         showCoverageOnHover={false}
         maxClusterRadius={50}
         spiderfyOnMaxZoom
-        chunkedLoading
       >
-        {stations.map((s) => {
-          const tier = getPowerTier(s.maxPowerKw, s.availability);
-          const isSelected = selected?.id === s.id;
-          const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
-          return (
-            <Marker
-              key={s.id}
-              position={[s.lat, s.lng]}
-              icon={stationIcon(color, isSelected, s.maxPowerKw, s.pricing, s.operator)}
-              eventHandlers={{ click: () => onSelect(s) }}
-            />
-          );
-        })}
+        {markers}
       </MarkerClusterGroup>
     </MapContainer>
   );
