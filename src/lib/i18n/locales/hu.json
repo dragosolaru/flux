@@ -551,7 +551,15 @@
     "connectors_label": "Csatlakozók",
     "stations_count": "{count} állomás",
     "show_filters": "Szűrők",
-    "hide_filters": "Elrejt"
+    "hide_filters": "Elrejt",
+    "search_placeholder": "Állomások keresése…",
+    "list_button": "Lista",
+    "map_button": "Térkép",
+    "nearby_title": "Közeli állomások",
+    "search_results_title": "Keresési találatok",
+    "no_results": "Nincs találat",
+    "distance_km": "{km} km-re",
+    "distance_m": "{m} m-re"
   },
   "auth": {
     "title_login": "Üdv újra",
@@ -604,7 +612,7 @@
     "plan_btn": "Útvonal tervezése",
     "planning": "Számítás…",
     "edit_btn": "← Szerkesztés",
-    "route_label": "Tervezett útvonal",
+    "route_label": "Útvonal",
     "stops_label": "Töltési megállók",
     "no_stops": "Elegendő az akkumulátor — megállók nélkül elérsz a célba.",
     "approx_route_warning": "Közelítő útvonal — OSRM nem elérhető",
@@ -647,7 +655,6 @@
     },
     "recents": "Legutóbbi",
     "clear_recents": "Törlés",
-    "route_label": "Útvonal",
     "no_recents": "Nincs korábbi célpont",
     "station": {
       "power": "Teljesítmény",

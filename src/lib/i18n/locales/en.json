@@ -551,7 +551,15 @@
     "connectors_label": "Connectors",
     "stations_count": "{count} stations",
     "show_filters": "Filters",
-    "hide_filters": "Hide"
+    "hide_filters": "Hide",
+    "search_placeholder": "Search stations…",
+    "list_button": "List",
+    "map_button": "Map",
+    "nearby_title": "Nearby stations",
+    "search_results_title": "Search results",
+    "no_results": "No stations found",
+    "distance_km": "{km} km away",
+    "distance_m": "{m} m away"
   },
   "auth": {
     "title_login": "Welcome back",
@@ -604,7 +612,7 @@
     "plan_btn": "Plan route",
     "planning": "Calculating…",
     "edit_btn": "← Edit",
-    "route_label": "Planned route",
+    "route_label": "Route",
     "stops_label": "Charging stops",
     "no_stops": "Enough battery — no charging stops needed.",
     "approx_route_warning": "Approximate route — OSRM unavailable",
@@ -647,7 +655,6 @@
     },
     "recents": "Recent",
     "clear_recents": "Clear",
-    "route_label": "Route",
     "no_recents": "No recent destinations",
     "station": {
       "power": "Power",

@@ -742,6 +742,24 @@ radius from NE corner) and "N stations in view" count are preserved unchanged.
 Key files changed: `src/app/(dashboard)/charging-map/charging-map-client.tsx`,
 `src/components/charging-map/StationMap.tsx`.
 
+**M8 — Non-blocking reads + list/search UI (complete):** `GET /api/chargers`
+returns the current DB rows for the bbox **immediately** and refreshes stale
+tiles in the background via `after()` (was: blocking `ensureAreaFresh` first,
+which timed out on cold multi-source areas like Rotterdam — the map showed a
+stuck "updating" badge and nothing rendered because `keepPreviousData` kept an
+off-screen count). The client refetches once ~4 s after an empty result to
+surface background-ingested stations without re-panning (`maxDuration` raised to
+60 for the background work). New UI: a **List** button opens `StationListSheet`
+— a bottom sheet listing in-view stations sorted by distance, with a search box
+that queries `GET /api/chargers/search` (debounced 350 ms); tapping a row selects
+it and recenters the map. Map pins now show the operator initial (⚡ fallback)
+plus a price·power label. Key files:
+`src/components/charging-map/StationListSheet.tsx`,
+`src/app/(dashboard)/charging-map/charging-map-client.tsx`,
+`src/components/charging-map/StationMap.tsx`. i18n: `chargingMap.search_placeholder`,
+`list_button`, `map_button`, `nearby_title`, `search_results_title`, `no_results`,
+`distance_km`, `distance_m` (all 5 locales).
+
 **M7 — Ingest observability endpoint (complete):**
 `GET /api/internal/ingest-stats` returns the last 50 `ingest_runs` rows
 (ordered by `started_at` desc) plus a `summary`

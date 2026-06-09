@@ -551,7 +551,15 @@
     "connectors_label": "Anschlüsse",
     "stations_count": "{count} Stationen",
     "show_filters": "Filter",
-    "hide_filters": "Ausblenden"
+    "hide_filters": "Ausblenden",
+    "search_placeholder": "Stationen suchen…",
+    "list_button": "Liste",
+    "map_button": "Karte",
+    "nearby_title": "Stationen in der Nähe",
+    "search_results_title": "Suchergebnisse",
+    "no_results": "Keine Stationen gefunden",
+    "distance_km": "{km} km entfernt",
+    "distance_m": "{m} m entfernt"
   },
   "auth": {
     "title_login": "Willkommen zurück",
@@ -604,7 +612,7 @@
     "plan_btn": "Route planen",
     "planning": "Berechnung…",
     "edit_btn": "← Bearbeiten",
-    "route_label": "Geplante Route",
+    "route_label": "Route",
     "stops_label": "Ladestopps",
     "no_stops": "Genug Akku — keine Ladestopps nötig.",
     "approx_route_warning": "Näherungsroute — OSRM nicht verfügbar",
@@ -647,7 +655,6 @@
     },
     "recents": "Zuletzt",
     "clear_recents": "Löschen",
-    "route_label": "Route",
     "no_recents": "Keine letzten Ziele",
     "station": {
       "power": "Leistung",

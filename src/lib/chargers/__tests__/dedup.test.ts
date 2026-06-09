@@ -93,6 +93,19 @@ describe("clusterChargers", () => {
     expect(clusters[0].sources).toHaveLength(2);
   });
 
+  it("keeps two clearly different operators at the same point as separate stations", () => {
+    // Co-located but distinct networks (e.g. two operators in one car park) must
+    // not be swallowed by the same-site merge — sources accumulate, not exclude.
+    const clusters = clusterChargers(
+      [
+        raw({ source: "ocm", sourceRef: "a", operator: "Ionity", name: "Ionity Hub" }),
+        raw({ source: "osm", sourceRef: "b", lat: 44.42681, lng: 26.10251, operator: "Enel X", name: "Enel Station" }),
+      ],
+      [],
+    );
+    expect(clusters).toHaveLength(2);
+  });
+
   it("propagates an upstream address change onto the existing charger", () => {
     const existing: Charger = {
       id: "charger-addr",
@@ -232,17 +245,20 @@ describe("clusterChargers", () => {
     expect(dual[0].confidence).toBeGreaterThan(single[0].confidence);
   });
 
-  it("flags a conflict when merged sources disagree on operator", () => {
+  it("flags a conflict when merged sources disagree on power", () => {
+    // Same operator + same point → merge, but the two sources report very
+    // different max power, which lowers confidence via the conflict penalty.
     const clusters = clusterChargers(
       [
-        raw({ source: "ocm", sourceRef: "s1", operator: "Ionity", name: "Hub" }),
+        raw({ source: "ocm", sourceRef: "s1", operator: "Ionity", name: "Hub", connectors: [{ type: "ccs2", powerKw: 50, count: 1 }] }),
         raw({
           source: "osm",
           sourceRef: "s2",
           lat: 44.42682,
           lng: 26.10252,
-          operator: "Enel X",
+          operator: "Ionity",
           name: "Hub",
+          connectors: [{ type: "ccs2", powerKw: 350, count: 1 }],
         }),
       ],
       [],

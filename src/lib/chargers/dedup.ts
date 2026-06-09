@@ -176,10 +176,19 @@ export function matchScore(
   },
 ): number {
   const distanceM = haversineMeters(raw, candidate);
-  // Same physical point → definite match, regardless of sparse/missing metadata.
-  if (distanceM <= SAME_SITE_M) return 1;
-  const spatial = spatialScore(distanceM);
   const operator = operatorSimilarity(raw.operator, candidate.operator);
+  // Same physical point → merge duplicates, BUT keep two clearly different
+  // operators sitting at the same coordinate as separate stations (don't let
+  // dedup swallow genuine co-located networks — sources should accumulate).
+  if (distanceM <= SAME_SITE_M) {
+    const bothNamed = raw.operator != null && candidate.operator != null;
+    // Compatible (or unknown) operator → same physical duplicate, merge.
+    if (!bothNamed || operator >= 0.5) return 1;
+    // Same point but two clearly different operators → distinct co-located
+    // stations; never merge so sources accumulate instead of excluding.
+    return 0;
+  }
+  const spatial = spatialScore(distanceM);
   const connector = connectorOverlap(raw.connectors, candidate.connectors);
   const name = tokenOverlap(raw.name, candidate.name);
   return (

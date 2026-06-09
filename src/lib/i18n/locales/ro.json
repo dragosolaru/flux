@@ -551,7 +551,15 @@
     "connectors_label": "Conectori",
     "stations_count": "{count} stații",
     "show_filters": "Filtre",
-    "hide_filters": "Ascunde"
+    "hide_filters": "Ascunde",
+    "search_placeholder": "Caută stații…",
+    "list_button": "Listă",
+    "map_button": "Hartă",
+    "nearby_title": "Stații în apropiere",
+    "search_results_title": "Rezultate căutare",
+    "no_results": "Nicio stație găsită",
+    "distance_km": "la {km} km",
+    "distance_m": "la {m} m"
   },
   "auth": {
     "title_login": "Bine ai revenit",
@@ -604,7 +612,7 @@
     "plan_btn": "Planifică traseul",
     "planning": "Se calculează…",
     "edit_btn": "← Editează",
-    "route_label": "Traseu planificat",
+    "route_label": "Ruta",
     "stops_label": "Opriri la încărcare",
     "no_stops": "Baterie suficientă — ajungi fără opriri la încărcare.",
     "approx_route_warning": "Rută aproximativă — OSRM indisponibil",
@@ -647,7 +655,6 @@
     },
     "recents": "Recente",
     "clear_recents": "Șterge",
-    "route_label": "Ruta",
     "no_recents": "Fără destinații recente",
     "station": {
       "power": "Putere",

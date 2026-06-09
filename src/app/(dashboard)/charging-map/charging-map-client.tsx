@@ -1,15 +1,26 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { SlidersHorizontal } from "lucide-react";
+import { List, SlidersHorizontal } from "lucide-react";
 
 import { apiFetch } from "@/lib/api-fetch";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
+import { StationListSheet } from "@/components/charging-map/StationListSheet";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
+
+// Minimal debounce for the search input — avoids a request per keystroke.
+function useDebounced<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(id);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 export type { Charger };
 
@@ -107,6 +118,7 @@ export function ChargingMapClient() {
   const {
     data: stations = [],
     isFetching,
+    refetch,
   } = useQuery({
     queryKey: [
       "chargers-bbox",
@@ -130,6 +142,41 @@ export function ChargingMapClient() {
     staleTime: 300_000,
     placeholderData: keepPreviousData,
   });
+
+  // Cold areas return empty immediately while the server ingests in the
+  // background. Refetch once a few seconds later to surface the freshly stored
+  // stations without making the user pan again. Retried at most once per area.
+  const retriedAreas = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (isFetching || stations.length > 0) return;
+    const key = `${resetKey}:${area.minLat.toFixed(2)},${area.minLng.toFixed(2)}`;
+    if (retriedAreas.current.has(key)) return;
+    retriedAreas.current.add(key);
+    const id = setTimeout(() => void refetch(), 4000);
+    return () => clearTimeout(id);
+  }, [isFetching, stations.length, area, resetKey, refetch]);
+
+  // Station search (name/operator) — queried server-side, debounced.
+  const [showList, setShowList] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounced(searchInput, 350);
+  const { data: searchResults = [], isFetching: searching } = useQuery({
+    queryKey: ["chargers-search", debouncedSearch],
+    queryFn: () =>
+      apiFetch<Charger[]>(
+        `/api/chargers/search?q=${encodeURIComponent(debouncedSearch)}&limit=50`,
+      ),
+    enabled: debouncedSearch.trim().length >= 2,
+    staleTime: 300_000,
+  });
+
+  const listStations = debouncedSearch.trim().length >= 2 ? searchResults : stations;
+
+  const handleListSelect = useCallback((s: Charger) => {
+    setSelected(s);
+    setCenter({ lat: s.lat, lng: s.lng });
+    setShowList(false);
+  }, []);
 
   return (
     // Root: fills full main area (parent <main> has position:relative).
@@ -161,6 +208,17 @@ export function ChargingMapClient() {
             <SlidersHorizontal className="size-3.5" />
             {showFilters ? t("hide_filters") : t("show_filters")}
             {hasActiveFilter && <span className="size-1.5 rounded-full bg-primary" />}
+          </button>
+        </div>
+
+        {/* List + search toggle — top-right */}
+        <div className="absolute right-3 top-3 z-[1000]">
+          <button
+            onClick={() => setShowList(true)}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-background/80 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-xl backdrop-blur-xl transition-colors hover:text-foreground"
+          >
+            <List className="size-3.5" />
+            {t("list_button")}
           </button>
         </div>
 
@@ -219,6 +277,18 @@ export function ChargingMapClient() {
           so the BottomNav underneath remains accessible. */}
       {selected && (
         <ChargerDetailSheet charger={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {showList && (
+        <StationListSheet
+          stations={listStations}
+          center={center}
+          query={searchInput}
+          onQueryChange={setSearchInput}
+          searching={searching}
+          onSelect={handleListSelect}
+          onClose={() => setShowList(false)}
+        />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -8,7 +8,9 @@ import { findInBBox } from "@/lib/chargers/query";
 import { ensureAreaFresh } from "@/lib/chargers/repository";
 import type { BBox, ConnectorType } from "@/lib/chargers/types";
 
-export const maxDuration = 30;
+// The response returns immediately from the DB; ingest of a cold area runs in
+// the background via after(), so a wider budget covers that work.
+export const maxDuration = 60;
 
 const connectorEnum = z.enum([
   "ccs2", "ccs1", "chademo", "type2", "type1", "tesla", "schuko", "other",
@@ -50,8 +52,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "invalid-bbox" }, { status: 400 });
   }
 
-  await ensureAreaFresh(bbox);
-
+  // Return what we already have immediately — never block the map pan/zoom on a
+  // multi-source ingest (cold areas could take tens of seconds). Refresh stale
+  // tiles in the background; the client refetches shortly after to pick them up.
   const chargers = await findInBBox({
     bbox,
     minKw: parsed.data.minKw,
@@ -59,5 +62,14 @@ export async function GET(req: NextRequest) {
     minConfidence: parsed.data.minConfidence,
     limit: parsed.data.limit,
   });
+
+  after(async () => {
+    try {
+      await ensureAreaFresh(bbox);
+    } catch {
+      // Background refresh failures are non-fatal; the next request retries.
+    }
+  });
+
   return NextResponse.json(chargers);
 }
