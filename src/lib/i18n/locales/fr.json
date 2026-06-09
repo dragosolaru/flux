@@ -670,7 +670,10 @@
       "stale": "Non vérifié récemment",
       "verified": "Vérifié il y a {days}j"
     },
-    "traffic_delay": "incl. {minutes} min de trafic"
+    "traffic_delay": "incl. {minutes} min de trafic",
+    "sharing": "Envoi…",
+    "share_sent_title": "Envoyé vers Tesla",
+    "share_sent_detail": "Navigation vers {dest} sur la voiture"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

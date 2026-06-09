@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -187,8 +187,22 @@ export function TripClient() {
     }
   }
 
-  const variants = plan?.variants ?? [];
+  const variants = useMemo(() => plan?.variants ?? [], [plan]);
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
+
+  // One drawable line per variant road; the active one renders prominently and
+  // the rest are subtle + tappable to switch variants directly on the map.
+  const routeLines = useMemo(
+    () =>
+      variants
+        .map((v, i) => ({
+          index: i,
+          coordinates: v.plan.polyline?.coordinates ?? [],
+          active: i === activeVariant,
+        }))
+        .filter((r) => r.coordinates.length >= 2),
+    [variants, activeVariant],
+  );
 
   // Bounding box around the planned route, for the context-station layer. Padded
   // so chargers slightly off the corridor still show. Rounded to keep the query
@@ -222,9 +236,16 @@ export function TripClient() {
     staleTime: 300_000,
   });
 
-  // Share to Tesla is only possible for a real, connected Tesla vehicle.
-  const teslaVehicle =
-    plan?.vehicle && plan.vehicle.brand === "tesla" ? plan.vehicle : null;
+  // Target Tesla for "Send to Tesla": the planned vehicle if it's a Tesla,
+  // otherwise the first Tesla in the garage — so the button shows even when the
+  // trip was planned without picking a vehicle (the common case).
+  const teslaVehicle = useMemo(() => {
+    if (plan?.vehicle && plan.vehicle.brand === "tesla") {
+      return { id: plan.vehicle.id, displayName: plan.vehicle.displayName };
+    }
+    const v = (vehicles ?? []).find((x) => x.brand === "tesla");
+    return v ? { id: v.id, displayName: v.nickname ?? v.displayName } : null;
+  }, [plan, vehicles]);
   const canShare =
     teslaVehicle !== null && activePlan !== null && activePlan.feasible !== false;
 
@@ -302,6 +323,8 @@ export function TripClient() {
           className="h-full w-full"
           onStationSelect={setSelectedStop}
           nearbyStations={nearbyStations}
+          routes={routeLines}
+          onRouteSelect={setActiveVariant}
         />
       </div>
 
@@ -643,18 +666,44 @@ export function TripClient() {
                 />
 
                 {canShare && (
-                  <button
-                    onClick={handleShareToTesla}
-                    disabled={sharing}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
-                  >
-                    {sharing ? (
-                      <Loader2 className="size-4 animate-spin" />
+                  <AnimatePresence mode="wait">
+                    {sharedRoute ? (
+                      <motion.div
+                        key="sent"
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3"
+                      >
+                        <CheckCircle2 className="size-5 shrink-0 text-green-400" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-green-400">{t("share_sent_title")}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {t("share_sent_detail", { dest: destinationShort })}
+                          </p>
+                        </div>
+                      </motion.div>
                     ) : (
-                      <Send className="size-4" />
+                      <motion.button
+                        key="send"
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleShareToTesla}
+                        disabled={sharing}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition-opacity hover:opacity-90 disabled:opacity-60"
+                      >
+                        {sharing ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Send className="size-4" />
+                        )}
+                        {sharing ? t("sharing") : t("share_to_tesla")}
+                        {!sharing && activePlan.stops.length > 0 && (
+                          <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+                            {activePlan.stops.length} ⚡
+                          </span>
+                        )}
+                      </motion.button>
                     )}
-                    {t("share_to_tesla")}
-                  </button>
+                  </AnimatePresence>
                 )}
 
                 {activePlan.warning && (

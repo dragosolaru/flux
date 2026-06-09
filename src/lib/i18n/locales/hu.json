@@ -670,7 +670,10 @@
       "stale": "Nem ellenőrzött nemrég",
       "verified": "{days} napja ellenőrizve"
     },
-    "traffic_delay": "tartalmaz {minutes} perc forgalmi késést"
+    "traffic_delay": "tartalmaz {minutes} perc forgalmi késést",
+    "sharing": "Küldés…",
+    "share_sent_title": "Elküldve a Teslának",
+    "share_sent_detail": "A navigáció ({dest}) az autón van"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

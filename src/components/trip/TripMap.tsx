@@ -44,6 +44,12 @@ interface MapPoint {
   label?: string;
 }
 
+export interface RouteLine {
+  index: number;
+  coordinates: [number, number][]; // [lng, lat]
+  active: boolean;
+}
+
 interface TripMapProps {
   origin: MapPoint | null;
   destination: MapPoint | null;
@@ -54,6 +60,10 @@ interface TripMapProps {
   // All chargers near the corridor (from the station platform) shown as subtle
   // context dots so the planner map reflects real coverage like the main map.
   nearbyStations?: Charger[];
+  // All variant roads. Inactive ones are drawn subtly and are clickable to
+  // select; the active one is drawn prominently on top.
+  routes?: RouteLine[];
+  onRouteSelect?: (index: number) => void;
 }
 
 // Color a context dot by power tier (offline greyed), matching the main map.
@@ -76,7 +86,7 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
-export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations }: TripMapProps) {
+export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations, routes, onRouteSelect }: TripMapProps) {
   useLeafletIconFix();
 
   // Drop context dots that coincide with a numbered planned stop (~80 m) so the
@@ -136,8 +146,57 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
         />
       ))}
 
-      {routePositions.length >= 2 && (
-        <Polyline positions={routePositions} color="#2563eb" weight={4} opacity={0.8} />
+      {/* Alternative roads: inactive drawn subtly + clickable, active on top. */}
+      {routes && routes.length > 0 ? (
+        <>
+          {routes
+            .filter((r) => !r.active)
+            .map((r) => {
+              const positions = r.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
+              if (positions.length < 2) return null;
+              return (
+                <Polyline
+                  key={`alt-${r.index}`}
+                  positions={positions}
+                  pathOptions={{ color: "#94a3b8", weight: 8, opacity: 0 }}
+                  eventHandlers={onRouteSelect ? { click: () => onRouteSelect(r.index) } : undefined}
+                >
+                  {/* Wider invisible hit-area above + the thin visible dashed line. */}
+                </Polyline>
+              );
+            })}
+          {routes
+            .filter((r) => !r.active)
+            .map((r) => {
+              const positions = r.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
+              if (positions.length < 2) return null;
+              return (
+                <Polyline
+                  key={`altline-${r.index}`}
+                  positions={positions}
+                  pathOptions={{ color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }}
+                  eventHandlers={onRouteSelect ? { click: () => onRouteSelect(r.index) } : undefined}
+                />
+              );
+            })}
+          {routes
+            .filter((r) => r.active)
+            .map((r) => {
+              const positions = r.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
+              if (positions.length < 2) return null;
+              return (
+                <Polyline
+                  key={`active-${r.index}`}
+                  positions={positions}
+                  pathOptions={{ color: "#7c3aed", weight: 5, opacity: 0.95 }}
+                />
+              );
+            })}
+        </>
+      ) : (
+        routePositions.length >= 2 && (
+          <Polyline positions={routePositions} color="#7c3aed" weight={4} opacity={0.9} />
+        )
       )}
 
       {origin && (

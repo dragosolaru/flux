@@ -670,7 +670,10 @@
       "stale": "Neverificată recent",
       "verified": "Verificată acum {days} zile"
     },
-    "traffic_delay": "incl. {minutes} min întârziere din trafic"
+    "traffic_delay": "incl. {minutes} min întârziere din trafic",
+    "sharing": "Se trimite…",
+    "share_sent_title": "Trimis către Tesla",
+    "share_sent_detail": "Navigarea spre {dest} e pe mașină"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

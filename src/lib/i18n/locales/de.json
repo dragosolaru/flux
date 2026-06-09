@@ -670,7 +670,10 @@
       "stale": "Nicht kürzlich geprüft",
       "verified": "Vor {days} T. geprüft"
     },
-    "traffic_delay": "inkl. {minutes} Min Stau"
+    "traffic_delay": "inkl. {minutes} Min Stau",
+    "sharing": "Wird gesendet…",
+    "share_sent_title": "An Tesla gesendet",
+    "share_sent_detail": "Navigation nach {dest} ist im Auto"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",
