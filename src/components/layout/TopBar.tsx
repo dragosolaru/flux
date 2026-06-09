@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import { LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +24,7 @@ function VehicleSwitcher() {
   const { data: vehicles } = useVehicles();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("nav");
   const currentId = searchParams.get("v");
 
   if (!vehicles || vehicles.length === 0) return null;
@@ -35,9 +37,9 @@ function VehicleSwitcher() {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
         className="h-8 cursor-pointer rounded-md border bg-background px-2 pr-7 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
-        aria-label="Switch vehicle"
+        aria-label={t("select_vehicle")}
       >
-        {!currentId && <option value="">— select vehicle —</option>}
+        {!currentId && <option value="">— {t("select_vehicle")} —</option>}
         {vehicles.map((v: { id: string; nickname: string | null; displayName: string }) => (
           <option key={v.id} value={v.id}>
             {v.nickname ?? v.displayName}
@@ -51,6 +53,7 @@ function VehicleSwitcher() {
 export function TopBar() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+  const t = useTranslations("nav");
   const [addOpen, setAddOpen] = useState(false);
 
   const name = session?.user?.name ?? session?.user?.email ?? "User";
@@ -109,37 +112,33 @@ export function TopBar() {
 
             <DropdownMenuSeparator />
 
-            {/* Add vehicle — opens modal */}
             <DropdownMenuItem onSelect={() => setAddOpen(true)}>
               <PlusCircle className="size-4" />
-              Add vehicle
+              {t("add_vehicle")}
             </DropdownMenuItem>
 
-            {/* Garage */}
             <DropdownMenuItem asChild>
               <Link href="/garage">
                 <Warehouse className="size-4" />
-                Garage
+                {t("garage")}
               </Link>
             </DropdownMenuItem>
 
-            {/* Settings */}
             <DropdownMenuItem asChild>
               <Link href="/settings">
                 <Settings className="size-4" />
-                Settings
+                {t("settings")}
               </Link>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
-            {/* Sign out */}
             <DropdownMenuItem
               onSelect={() => signOut({ callbackUrl: "/login" })}
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="size-4" />
-              Sign out
+              {t("sign_out")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -35,6 +35,10 @@
     "settings": "Paramètres",
     "about": "À propos",
     "more": "Plus",
+    "add_vehicle": "Ajouter un véhicule",
+    "garage": "Garage",
+    "sign_out": "Se déconnecter",
+    "select_vehicle": "Choisir un véhicule",
     "mobile": {
       "car": "Ma voiture",
       "charging": "Recharge",
