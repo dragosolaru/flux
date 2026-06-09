@@ -171,3 +171,46 @@ export const ocmConnector: SourceConnector = {
   id: "ocm",
   fetchTile,
 };
+
+/**
+ * Full-country fetch: queries OCM /poi by countrycode with optional modifiedsince
+ * for incremental updates. maxresults=5000. Returns [] on any error.
+ */
+export async function fetchCountryOcm(
+  countryCode: string,
+  modifiedSince?: Date,
+): Promise<RawCharger[]> {
+  try {
+    const url = new URL("https://api.openchargemap.io/v3/poi/");
+    url.searchParams.set("output", "json");
+    url.searchParams.set("compact", "true");
+    url.searchParams.set("verbose", "false");
+    url.searchParams.set("maxresults", "5000");
+    url.searchParams.set("countrycode", countryCode);
+    if (modifiedSince) {
+      url.searchParams.set("modifiedsince", modifiedSince.toISOString());
+    }
+
+    const apiKey = process.env.OPEN_CHARGE_MAP_API_KEY;
+    if (apiKey) url.searchParams.set("key", apiKey);
+
+    const res = await fetch(url.toString(), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!res.ok) return [];
+
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) return [];
+
+    const out: RawCharger[] = [];
+    for (const item of data) {
+      if (!isOcmPoi(item)) continue;
+      const mapped = mapOcmPoi(item);
+      if (mapped) out.push(mapped);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}

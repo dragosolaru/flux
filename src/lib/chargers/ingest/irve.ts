@@ -158,3 +158,18 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
 }
 
 export const irveConnector: SourceConnector = { id: "irve", fetchTile };
+
+/** Full-country fetch: loads the complete IRVE GeoJSON without any bbox filter. */
+export async function fetchCountryFr(): Promise<RawCharger[]> {
+  try {
+    const features = await loadFeatures();
+    const out: RawCharger[] = [];
+    for (const f of features) {
+      const mapped = mapFeature(f);
+      if (mapped) out.push(mapped);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}

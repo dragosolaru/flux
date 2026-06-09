@@ -131,3 +131,36 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
 }
 
 export const ndwConnector: SourceConnector = { id: "ndw", fetchTile };
+
+const NL_BBOX = { minLng: 3.3, minLat: 50.7, maxLng: 7.3, maxLat: 53.6 };
+
+/**
+ * Full-country fetch: queries the NDW endpoint with the whole NL bounding box.
+ * The current tile fetch is already bbox-based; this just drops the tile restriction.
+ */
+export async function fetchCountryNl(): Promise<RawCharger[]> {
+  try {
+    const params = new URLSearchParams({
+      bbox: `${NL_BBOX.minLng},${NL_BBOX.minLat},${NL_BBOX.maxLng},${NL_BBOX.maxLat}`,
+    });
+
+    const res = await fetch(`${NDW_URL}?${params}`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as { features?: NdwFeature[] };
+    const features = data.features;
+    if (!Array.isArray(features)) return [];
+
+    const out: RawCharger[] = [];
+    for (const f of features) {
+      const mapped = mapFeature(f);
+      if (mapped) out.push(mapped);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}

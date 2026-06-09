@@ -188,6 +188,18 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ---
 
+## 9a. Full-country bulk imports (scheduled)
+
+**What:** Daily scheduled ingest of all EV chargers for six covered countries (ro, de, fr, at, nl, hu). Replaces the old city-box warm cron. Each country is fetched from its official open-data source (IRVE for FR, BNetzA for DE, Austria ArcGIS for AT, NDW for NL) plus OCM (incremental, `modifiedsince` 7 days ago) in parallel. Results are deduped cell-by-cell over a 1°×1° grid (bounded memory) and persisted via `persistClusters`. After a successful run the country is marked bulk-fresh for 48h — map reads skip lazy tile ingest for fresh countries.
+
+**How to use:** `GET /api/internal/warm?country=<cc>` (Bearer `CRON_SECRET` or `x-webhook-secret`). Vercel crons fire automatically: 02:00 ro, 02:30 hu, 03:00 at, 03:30 nl, 04:00 de, 04:30 fr (UTC).
+
+**Key files:** `src/lib/chargers/ingest/bulk.ts` (orchestrator), `src/lib/chargers/ingest/irve.ts` (`fetchCountryFr`), `src/lib/chargers/ingest/bnetza.ts` (`fetchCountryDe`), `src/lib/chargers/ingest/austria.ts` (`fetchCountryAt`), `src/lib/chargers/ingest/ndw.ts` (`fetchCountryNl`), `src/lib/chargers/ingest/ocm.ts` (`fetchCountryOcm`), `src/lib/chargers/countries.ts` (bounds + `isBulkCountry`), `src/app/api/internal/warm/route.ts`, `vercel.json`.
+
+**Dependencies:** Supabase admin client (`ingest_runs` table), `persistClusters` + `markCountryFresh` from `repository.ts`, official open-data APIs (no auth required except optional `OPEN_CHARGE_MAP_API_KEY`).
+
+---
+
 ## 10. Trip planner
 
 **What:** ABRP-style planner: routes origin → destination, inserts charging stops when range (weather-derated) runs low, and shows cost + petrol comparison. Uses a 10% safety reserve and 80% default charge target.
