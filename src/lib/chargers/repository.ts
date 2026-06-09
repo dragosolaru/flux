@@ -88,6 +88,7 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
       }),
     ),
   );
+  results.filter((r) => r.error).forEach((r) => console.error("[charger-repo] upsert failed:", r.error));
   const upserted = results.filter((r) => !r.error).length;
 
   // Only mark tiles fresh when the ingest actually persisted data (or the area

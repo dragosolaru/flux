@@ -673,7 +673,8 @@
     "traffic_delay": "incl. {minutes} min de trafic",
     "sharing": "Envoi…",
     "share_sent_title": "Envoyé vers Tesla",
-    "share_sent_detail": "Navigation vers {dest} sur la voiture"
+    "share_sent_detail": "Navigation vers {dest} sur la voiture",
+    "location_not_found": "Lieu introuvable"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

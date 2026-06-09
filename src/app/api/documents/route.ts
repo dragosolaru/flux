@@ -42,6 +42,7 @@ export async function GET(request: Request) {
     .from("documents")
     .select("id, source, document_type, original_filename, mime_type, storage_path, status, confidence, parsed_json, error_message, created_at, processed_at")
     .eq("vehicle_id", parsed.data.vehicleId)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
 

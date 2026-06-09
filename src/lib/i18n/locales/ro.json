@@ -673,7 +673,8 @@
     "traffic_delay": "incl. {minutes} min întârziere din trafic",
     "sharing": "Se trimite…",
     "share_sent_title": "Trimis către Tesla",
-    "share_sent_detail": "Navigarea spre {dest} e pe mașină"
+    "share_sent_detail": "Navigarea spre {dest} e pe mașină",
+    "location_not_found": "Locația nu a fost găsită"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

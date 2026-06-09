@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MapPin, X, Loader2, LocateFixed } from "lucide-react";
 
 export interface GeoPoint {
@@ -32,6 +33,7 @@ function shortName(displayName: string): string {
 }
 
 export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle, onFocus, onBlur }: GeocodingSearchProps) {
+  const t = useTranslations("trip");
   const [inputValue, setInputValue] = useState(value ? shortName(value.name) : "");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -163,7 +165,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
       {open && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
           {results.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-muted-foreground">Locația nu a fost găsită</div>
+            <div className="px-3 py-2 text-sm text-muted-foreground">{t("location_not_found")}</div>
           ) : (
             results.map((r, i) => (
               <button

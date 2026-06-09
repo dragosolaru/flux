@@ -673,7 +673,8 @@
     "traffic_delay": "tartalmaz {minutes} perc forgalmi késést",
     "sharing": "Küldés…",
     "share_sent_title": "Elküldve a Teslának",
-    "share_sent_detail": "A navigáció ({dest}) az autón van"
+    "share_sent_detail": "A navigáció ({dest}) az autón van",
+    "location_not_found": "Helyszín nem található"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

@@ -1147,3 +1147,18 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/lib/chargers/ingest/austria.ts` (new), `src/lib/chargers/ingest/irve.ts` (new), `src/lib/chargers/ingest/index.ts` (added), `src/lib/chargers/types.ts` (`"austria" | "irve"` added to `ChargerSourceId`).
 
 **Note on IRVE:** The IRVE connector fetches the full ~90k feature GeoJSON on first tile load within France. This is a one-time cost per cold-start (~2–5 MB); subsequent calls are in-memory filtered. Consider a background pre-warm at deploy time for production.
+
+---
+
+## Code Review Fixes — Security, i18n, Charger Pipeline (2026-06-09)
+
+**What it does:** Addresses 5 blockers + 1 warn found in a multi-agent code review pass.
+
+- **Security (IDOR):** `GET /api/documents` now adds `.eq("user_id", userId)` on the documents query in addition to the vehicle ownership check, preventing a crafted `vehicleId` from leaking another user's documents if DB-level RLS is misconfigured.
+- **i18n:** Hardcoded Romanian string `"Locația nu a fost găsită"` in `GeocodingSearch.tsx` replaced with `t("location_not_found")` from the `trip` namespace. Key added to all 5 locales (en/ro/de/fr/hu).
+- **Zero-kW stations:** Trip planner (`planner.ts`) now filters out charging candidates with `maxKw <= 0` before sorting, preventing division-by-zero / infinite charge-time in `chargeMinutes()`.
+- **Charger dedup priority:** `CORE_PRIORITY` in `dedup.ts` updated to rank all sources: `ocm → tomtom → osm → bnetza → ndw → austria → irve → chargeprice`.
+- **Source ID registry:** `SOURCE_IDS` in `query.ts` and `ChargerSourceId` union in `types.ts` updated to include `"tomtom"`, `"austria"`, and `"irve"` — previously only `ocm/osm/chargeprice/bnetza/ndw` were listed, causing silent drops for the new connectors.
+- **Error logging:** `repository.ts` now logs failed RPC upserts via `console.error` instead of silently discarding them.
+
+**Key files:** `src/app/api/documents/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/lib/external/routing/planner.ts`, `src/lib/chargers/dedup.ts`, `src/lib/chargers/query.ts`, `src/lib/chargers/types.ts`, `src/lib/chargers/repository.ts`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.

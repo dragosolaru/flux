@@ -673,7 +673,8 @@
     "traffic_delay": "inkl. {minutes} Min Stau",
     "sharing": "Wird gesendet…",
     "share_sent_title": "An Tesla gesendet",
-    "share_sent_detail": "Navigation nach {dest} ist im Auto"
+    "share_sent_detail": "Navigation nach {dest} ist im Auto",
+    "location_not_found": "Ort nicht gefunden"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

@@ -53,7 +53,7 @@ const CONNECTOR_TYPES: ReadonlySet<string> = new Set<ConnectorType>([
   "other",
 ]);
 
-const SOURCE_IDS: ReadonlySet<string> = new Set<ChargerSourceId>(["ocm", "osm", "chargeprice", "bnetza", "ndw", "tomtom"]);
+const SOURCE_IDS: ReadonlySet<string> = new Set<ChargerSourceId>(["ocm", "osm", "chargeprice", "bnetza", "ndw", "tomtom", "austria", "irve"]);
 
 const AVAILABILITY_VALUES: ReadonlySet<string> = new Set<ChargerAvailability>([
   "operational",

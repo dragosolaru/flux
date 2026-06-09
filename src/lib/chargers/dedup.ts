@@ -200,7 +200,7 @@ export function matchScore(
 }
 
 // Discovery sources ranked for core-field priority. Lower index wins.
-const CORE_PRIORITY: RawCharger["source"][] = ["ocm", "tomtom", "osm", "chargeprice"];
+const CORE_PRIORITY: RawCharger["source"][] = ["ocm", "tomtom", "osm", "bnetza", "ndw", "austria", "irve", "chargeprice"];
 
 function corePriority(source: RawCharger["source"]): number {
   const idx = CORE_PRIORITY.indexOf(source);
