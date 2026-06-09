@@ -82,8 +82,8 @@ export function CostSummary({
       )}
 
       {/* Stats chips + fuel toggle on one line */}
-      <div className="flex items-center gap-1.5 text-xs">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+      <div className="flex items-center gap-1 text-xs">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-1">
           <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
             {stopsLabel}
           </span>

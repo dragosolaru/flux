@@ -49,7 +49,7 @@ export function MockGlobalBanner() {
           transition={{ duration: 0.25 }}
           className="overflow-hidden border-b border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-indigo-500/10"
         >
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs sm:text-sm">
+          <div className="flex items-center justify-between gap-3 px-4 py-2 text-xs sm:text-sm">
             <div className="flex min-w-0 items-center gap-2 text-indigo-200">
               <Sparkles className="size-3.5 shrink-0 text-indigo-300" />
               <span className="truncate">

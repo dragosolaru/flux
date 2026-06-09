@@ -15,7 +15,7 @@ export function PageWrapper({ children, className }: PageWrapperProps) {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className={cn("flex flex-col gap-3 md:gap-4", className)}
+      className={cn("flex flex-col gap-2.5 md:gap-4", className)}
     >
       {children}
     </motion.div>

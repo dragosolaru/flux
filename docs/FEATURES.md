@@ -1162,3 +1162,16 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 - **Error logging:** `repository.ts` now logs failed RPC upserts via `console.error` instead of silently discarding them.
 
 **Key files:** `src/app/api/documents/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/lib/external/routing/planner.ts`, `src/lib/chargers/dedup.ts`, `src/lib/chargers/query.ts`, `src/lib/chargers/types.ts`, `src/lib/chargers/repository.ts`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
+
+## Mobile UI Compaction Pass (2026-06-09)
+
+**What it does:** Tightens vertical spacing on the primary mobile screens (~50-60px reclaimed on the dashboard viewport) without touching logic or shrinking touch targets below 44px.
+
+- **HeroCard**: `p-4→p-3`, header `mb-3→mb-2`, SOC bar `mt-3→mt-2`, charging label `mt-2→mt-1.5`, SOC/km gap `gap-1→gap-0.5` (mobile only — `md:` values unchanged).
+- **StatChips**: row gap `2→1.5`, chip padding `2.5→2`, skeletons resized to match (`h-16→h-14`).
+- **QuickActions**: `min-h-[48px]→min-h-11` (44px, iOS touch minimum), `gap-1→gap-0.5`, `p-2→p-1.5`.
+- **PageWrapper**: section gap `gap-3→gap-2.5` on mobile.
+- **BottomNav**: spacer `3.25rem→3rem`, tab `py-1.5→py-1`.
+- **MockGlobalBanner**: `py-2.5→py-2`. **CostSummary** (trip): chip gaps `1.5→1`.
+
+**Key files:** `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/components/layout/{page-wrapper,BottomNav,MockGlobalBanner}.tsx`, `src/components/trip/CostSummary.tsx`.

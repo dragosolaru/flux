@@ -72,7 +72,7 @@ export function BottomNav() {
       <div
         aria-hidden="true"
         className="shrink-0 md:hidden"
-        style={{ height: "calc(3.25rem + env(safe-area-inset-bottom))" }}
+        style={{ height: "calc(3rem + env(safe-area-inset-bottom))" }}
       />
 
       <nav
@@ -87,7 +87,7 @@ export function BottomNav() {
             const needsUnlock = !gate.ok;
 
             const content = (
-              <div className="relative flex flex-col items-center gap-0.5 py-1.5 text-[11px]">
+              <div className="relative flex flex-col items-center gap-0.5 py-1 text-[11px]">
                 {isActive && (
                   <motion.span
                     layoutId="bottom-nav-indicator"

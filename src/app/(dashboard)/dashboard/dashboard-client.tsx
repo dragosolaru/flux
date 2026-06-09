@@ -82,14 +82,14 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
 
   return (
     <GlassCard
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950/80 to-slate-900/80 p-4 md:p-6"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950/80 to-slate-900/80 p-3 md:p-6"
       animate={false}
     >
       {/* glassmorphism overlay */}
       <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03]" />
 
       {/* Header row */}
-      <div className="relative mb-3 flex items-center justify-between md:mb-6">
+      <div className="relative mb-2 flex items-center justify-between md:mb-6">
         <h1 className="text-lg font-semibold tracking-tight">{vehicleName}</h1>
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
@@ -99,7 +99,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       </div>
 
       {/* SOC % */}
-      <div className="relative flex flex-col items-center gap-1">
+      <div className="relative flex flex-col items-center gap-0.5">
         {isLoading ? (
           <>
             <Skeleton className="h-16 w-28 rounded-xl" />
@@ -123,7 +123,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       </div>
 
       {/* SOC progress bar */}
-      <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
+      <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
         <motion.div
           className={`h-full rounded-full ${isLoading ? "bg-white/20" : getSocColor(soc)}`}
           initial={{ width: 0 }}
@@ -143,7 +143,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-2 text-center text-xs font-medium uppercase tracking-wider text-emerald-400"
+          className="mt-1.5 text-center text-xs font-medium uppercase tracking-wider text-emerald-400"
         >
           {td("charging_active")} · {state.chargingRateKw?.toFixed(1) ?? "—"} kW
         </motion.div>
@@ -193,9 +193,9 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 overflow-x-auto pb-0.5">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-16 w-24 shrink-0 rounded-2xl" />
+          <Skeleton key={i} className="h-14 w-24 shrink-0 rounded-2xl" />
         ))}
       </div>
     );
@@ -268,13 +268,13 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x"
+      className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x"
     >
       {chips.map((chip) => (
         <motion.div key={chip.key} variants={cardVariants} className="snap-center">
           <GlassCard
             animate={false}
-            className="flex w-[96px] shrink-0 flex-col items-center gap-1 p-2.5"
+            className="flex w-[96px] shrink-0 flex-col items-center gap-1 p-2"
           >
             {chip.icon}
             <div className="text-center text-sm font-semibold tabular-nums leading-tight">
@@ -387,7 +387,7 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`glass-card flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-colors disabled:opacity-50 ${
+          className={`glass-card flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl p-1.5 transition-colors disabled:opacity-50 ${
             action.active
               ? "border-primary/40 bg-primary/15 text-primary"
               : "text-foreground hover:bg-white/5"
