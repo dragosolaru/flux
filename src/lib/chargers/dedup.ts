@@ -47,6 +47,11 @@ function mergeAvailability(
 const MATCH_THRESHOLD = 0.6;
 const MATCH_RADIUS_M = 60;
 const MATCH_DECAY_M = 150;
+// Records this close are the same physical site. OCM frequently has duplicate
+// community submissions at one coordinate; without this they each fall below the
+// match threshold (spatial weight alone is < threshold) and stack on the map as
+// a single spiderfied point instead of merging into one charger.
+const SAME_SITE_M = 25;
 
 // Match-score weights. Spatial proximity dominates because two records at the
 // same coordinates are almost certainly the same physical site; the other
@@ -170,7 +175,10 @@ export function matchScore(
     name: string | null;
   },
 ): number {
-  const spatial = spatialScore(haversineMeters(raw, candidate));
+  const distanceM = haversineMeters(raw, candidate);
+  // Same physical point → definite match, regardless of sparse/missing metadata.
+  if (distanceM <= SAME_SITE_M) return 1;
+  const spatial = spatialScore(distanceM);
   const operator = operatorSimilarity(raw.operator, candidate.operator);
   const connector = connectorOverlap(raw.connectors, candidate.connectors);
   const name = tokenOverlap(raw.name, candidate.name);
@@ -192,6 +200,23 @@ function corePriority(source: RawCharger["source"]): number {
 
 function addressCompleteness(address: Charger["address"]): number {
   return Object.values(address).filter((v) => v != null && v !== "").length;
+}
+
+// Merge two addresses field-by-field: each non-null field of `primary` wins, with
+// `secondary` filling the gaps. Used so the authoritative/fresh source's address
+// overwrites our stored one — when an address is corrected upstream (OCM), the
+// change propagates on the next ingest instead of being pinned to the old value.
+function preferAddress(
+  primary: Charger["address"],
+  secondary: Charger["address"],
+): Charger["address"] {
+  return {
+    street: primary.street ?? secondary.street,
+    city: primary.city ?? secondary.city,
+    region: primary.region ?? secondary.region,
+    country: primary.country ?? secondary.country,
+    postcode: primary.postcode ?? secondary.postcode,
+  };
 }
 
 function maxPowerOf(connectors: ChargerConnector[]): number | null {
@@ -259,8 +284,10 @@ function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
   const { cluster } = state;
   const priority = corePriority(raw.source);
 
-  // Core fields follow source priority: a higher-priority source overwrites.
-  if (priority < state.bestCorePriority) {
+  // Core fields follow source priority: a higher-priority (or equally
+  // authoritative, fresher) source overwrites so upstream corrections to
+  // location/name/operator/address propagate to our stored charger.
+  if (priority <= state.bestCorePriority) {
     cluster.lat = raw.lat;
     cluster.lng = raw.lng;
     if (raw.name) cluster.name = raw.name;
@@ -268,6 +295,8 @@ function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
       cluster.operator = raw.operator;
       cluster.operatorId = slugify(raw.operator);
     }
+    // Authoritative source's fields win; existing values fill any gaps.
+    cluster.address = preferAddress(raw.address, cluster.address);
     state.bestCorePriority = priority;
   } else {
     if (!cluster.name && raw.name) cluster.name = raw.name;
@@ -275,11 +304,8 @@ function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
       cluster.operator = raw.operator;
       cluster.operatorId = slugify(raw.operator);
     }
-  }
-
-  // Keep the most complete address regardless of source rank.
-  if (addressCompleteness(raw.address) > addressCompleteness(cluster.address)) {
-    cluster.address = { ...raw.address };
+    // Lower-priority source only fills fields the authoritative one left empty.
+    cluster.address = preferAddress(cluster.address, raw.address);
   }
 
   cluster.connectors = mergeConnectors(cluster.connectors, raw.connectors);

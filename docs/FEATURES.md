@@ -668,7 +668,23 @@ operator/connector/name matching, merge by source priority, connector union) →
 `computeConfidence` (independent-source agreement + completeness − conflict) →
 `upsert_charger` RPC (geography construction server-side). Orchestrated by
 `ingestArea(bbox)` in `repository.ts`; `ensureAreaFresh(bbox)` runs it only for
-stale tiles (Redis freshness keys, 7-day lazy TTL).
+stale tiles (Redis freshness keys, **v2** namespace, 7-day lazy TTL).
+
+**Dedup details that keep the map clean:**
+- **Same-site force-merge:** two records within `SAME_SITE_M` (25 m) are the same
+  physical point → forced match regardless of sparse/missing metadata. Without
+  this, OCM's duplicate community submissions at one coordinate each fall below
+  the 0.6 threshold and stack into a single spiderfied point on the map.
+- **Upstream sync:** the authoritative/fresh source (OCM) overwrites
+  location/name/operator/address per-field on each ingest (`preferAddress`), so a
+  corrected address upstream propagates to our stored charger instead of being
+  pinned to the first value.
+- **Freshness only on success:** `ingestArea` marks tiles fresh **only** when the
+  ingest actually persisted data — if clusters existed but every upsert failed it
+  leaves the tiles stale so the next request retries (previously a wholesale
+  upsert failure cached an empty area for the full TTL).
+- **One-time cleanup:** migration `021` collapses coincident duplicate rows that
+  earlier ingests already stored.
 
 **Query APIs** (auth + rate-limited `chargers` bucket, Zod-validated; return
 `Charger[]`):
@@ -691,6 +707,8 @@ stores per-tile freshness so overlapping requests reuse ingestion work.
 `src/app/api/internal/warm/route.ts`, `vercel.json`,
 `supabase/migrations/017_chargers.sql` (tables + GIST/trigram indexes),
 `018_charger_queries.sql` (read RPCs), `019_charger_upsert.sql` (upsert RPC),
+`020_charger_availability.sql` (availability param), `021_dedupe_coincident_chargers.sql`
+(one-time coincident-row cleanup),
 `src/lib/chargers/__tests__/` (normalize, ingest, dedup, confidence, query).
 
 **Deployment prerequisites:** apply migrations 017–019 to Supabase (enables

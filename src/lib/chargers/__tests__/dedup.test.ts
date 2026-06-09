@@ -79,6 +79,53 @@ describe("clusterChargers", () => {
     );
   });
 
+  it("force-merges same-point duplicates even with missing/different metadata", () => {
+    // OCM often has duplicate community submissions at one coordinate with
+    // sparse metadata. They must collapse into one charger, not stack on a point.
+    const clusters = clusterChargers(
+      [
+        raw({ source: "ocm", sourceRef: "dup-1", operator: null, name: null }),
+        raw({ source: "ocm", sourceRef: "dup-2", lat: 44.42681, lng: 26.10251, operator: "Other", name: "Different" }),
+      ],
+      [],
+    );
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].sources).toHaveLength(2);
+  });
+
+  it("propagates an upstream address change onto the existing charger", () => {
+    const existing: Charger = {
+      id: "charger-addr",
+      lat: 44.4268,
+      lng: 26.1025,
+      name: "Ionity Bucuresti",
+      operator: "Ionity",
+      operatorId: "ionity",
+      address: { street: "Old Street 1", city: "Bucuresti", region: null, country: "RO", postcode: "010101" },
+      connectors: [{ type: "ccs2", powerKw: 350, count: 4 }],
+      maxPowerKw: 350,
+      pricing: null,
+      availability: "unknown",
+      confidence: 0.5,
+      sources: [{ source: "ocm", ref: "ocm-addr" }],
+      lastSeenAt: "2026-06-03T00:00:00.000Z",
+    };
+    // Same OCM ref re-fetched with a corrected street.
+    const clusters = clusterChargers(
+      [
+        raw({
+          source: "ocm",
+          sourceRef: "ocm-addr",
+          address: { street: "New Street 99", city: "Bucuresti", region: null, country: "RO", postcode: "010101" },
+        }),
+      ],
+      [existing],
+    );
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].matchedExistingId).toBe("charger-addr");
+    expect(clusters[0].address.street).toBe("New Street 99");
+  });
+
   it("keeps records 500m apart as separate clusters", () => {
     const clusters = clusterChargers(
       [
