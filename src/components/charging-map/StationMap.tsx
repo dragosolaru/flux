@@ -1,16 +1,17 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap, useMapEvents } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Charger } from "@/lib/chargers/types";
 
-// Power-tier fill colours — CircleMarker uses Leaflet's own SVG/Canvas
-// renderer, bypassing all DivIcon/WebKit rendering issues.
+// Power-tier fill colours.
 const TIER_COLORS: Record<string, string> = {
   ultra:   "#ef4444", // 350+ kW
   fast:    "#f97316", // 150–349 kW
@@ -26,6 +27,37 @@ function getPowerTier(maxPowerKw: number | null | undefined, likelyOperational: 
   if (maxPowerKw >= 150) return "fast";
   if (maxPowerKw >= 50) return "medium";
   return "slow";
+}
+
+// Plain-CSS circular DivIcon (no SVG — SVG DivIcons render blank on mobile
+// WebKit). Cached per color+selected so panning doesn't re-allocate icons.
+const iconCache = new Map<string, L.DivIcon>();
+
+function stationIcon(color: string, selected: boolean): L.DivIcon {
+  const key = `${color}:${selected ? 1 : 0}`;
+  const cached = iconCache.get(key);
+  if (cached) return cached;
+  const size = selected ? 26 : 18;
+  const icon = L.divIcon({
+    className: "",
+    html: `<div style="width:${size}px;height:${size}px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+  iconCache.set(key, icon);
+  return icon;
+}
+
+// Cluster bubble — dark glass circle with a white count, matching the app UI.
+function clusterIcon(cluster: { getChildCount: () => number }): L.DivIcon {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 34 : count < 100 ? 40 : 48;
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,.85);color:#fff;font-size:13px;font-weight:600;border:2px solid rgba(255,255,255,.5);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -201,8 +233,10 @@ export default function StationMap({
       scrollWheelZoom
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        maxZoom={20}
       />
 
       <SetView centre={center} />
@@ -227,27 +261,29 @@ export default function StationMap({
         </CircleMarker>
       )}
 
-      {/* Station markers */}
-      {stations.map((s) => {
-        const tier = getPowerTier(s.maxPowerKw, s.confidence >= 0.5);
-        const isSelected = selected?.id === s.id;
-        const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
-        return (
-          <CircleMarker
-            key={s.id}
-            center={[s.lat, s.lng]}
-            radius={isSelected ? 12 : 8}
-            pathOptions={{
-              fillColor: color,
-              color: "white",
-              weight: isSelected ? 3 : 2,
-              fillOpacity: 0.95,
-              opacity: 1,
-            }}
-            eventHandlers={{ click: () => onSelect(s) }}
-          />
-        );
-      })}
+      {/* Station markers — clustered so dense/overlapping sites collapse into a
+          single counted bubble that splits apart as you zoom in. */}
+      <MarkerClusterGroup
+        iconCreateFunction={clusterIcon}
+        showCoverageOnHover={false}
+        maxClusterRadius={50}
+        spiderfyOnMaxZoom
+        chunkedLoading
+      >
+        {stations.map((s) => {
+          const tier = getPowerTier(s.maxPowerKw, s.confidence >= 0.5);
+          const isSelected = selected?.id === s.id;
+          const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
+          return (
+            <Marker
+              key={s.id}
+              position={[s.lat, s.lng]}
+              icon={stationIcon(color, isSelected)}
+              eventHandlers={{ click: () => onSelect(s) }}
+            />
+          );
+        })}
+      </MarkerClusterGroup>
     </MapContainer>
   );
 }

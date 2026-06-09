@@ -1026,3 +1026,21 @@ All responsive — full values restore at `md:` breakpoint.
 2. **Ingest limits raised to 2000.** OCM `maxresults: 500 → 2000`; Overpass `out body center 500 → 2000` (timeout raised 15s → 25s to match). For large query radii (50–100 km), the previous 500-station cap silently truncated results in dense urban areas.
 
 **Key files:** `src/app/(dashboard)/charging-map/charging-map-client.tsx` (`resetKey`), `src/lib/chargers/ingest/ocm.ts`, `src/lib/chargers/ingest/overpass.ts`.
+
+---
+
+## Charging Map — Viewport Query, Clustering & Basemap
+
+**What it does:** Makes the map behave like AmpWhere — zoom/pan always refetches the visible area, dense or overlapping stations collapse into counted bubbles, and the basemap is a clean modern style.
+
+1. **Viewport bbox query.** The map queries `GET /api/chargers?bbox=minLng,minLat,maxLng,maxLat` for the *actual* visible bounds instead of a radius around the centre. `MoveWatcher` listens to both `moveend` and `zoomend` (mobile pinch-zoom fires `zoomend` without `moveend` when the centre stays fixed), so any zoom or pan that changes the viewport triggers a fresh fetch. The TanStack Query key uses the four bbox edges.
+
+2. **Marker clustering.** Stations are rendered as `L.Marker` with a **plain-CSS circular `DivIcon`** (not SVG — SVG DivIcons render blank on mobile WebKit), wrapped in a `MarkerClusterGroup` (`react-leaflet-cluster` + `leaflet.markercluster`). Nearby/overlapping sites merge into a dark-glass bubble showing the count, which splits apart as you zoom in (`maxClusterRadius={50}`, `spiderfyOnMaxZoom`). This fixes "the badge says 11 but I only see a few pins" — co-located stations were stacking on top of each other. Icons are cached per colour+selected state. Power-tier colours (red 350+/orange 150+/green 50+/blue <50/grey offline) are preserved.
+
+3. **Basemap.** Switched from raw OpenStreetMap raster tiles to **CARTO Voyager** (`basemaps.cartocdn.com/rastertiles/voyager`) — a clean, modern OSM-based style, free and key-less. (True OpenMapTiles vector styles require a provider API key e.g. MapTiler + MapLibre GL; CARTO gives the same look as a drop-in `TileLayer` URL with no key.)
+
+**Note:** the `chargers_in_bbox` / `chargers_nearby` RPCs still hard-cap results at 500 inside the SQL (`least(p_limit, 500)`). Not a bottleneck today (typical city viewports return far fewer), but a future migration can raise it for very dense metros.
+
+**Key files:** `src/components/charging-map/StationMap.tsx` (clustering, CSS DivIcon, CARTO tiles, `ViewportBBox`), `src/app/(dashboard)/charging-map/charging-map-client.tsx` (bbox query), `src/app/api/chargers/route.ts` (limit cap raised to 2000).
+
+**Dependencies:** `react-leaflet-cluster`, `leaflet.markercluster`, `@types/leaflet.markercluster`.
