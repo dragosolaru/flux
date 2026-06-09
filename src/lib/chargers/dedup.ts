@@ -6,6 +6,7 @@
 import { computeConfidence } from "./confidence";
 import type {
   Charger,
+  ChargerAvailability,
   ChargerConnector,
   ChargerSourceRef,
   RawCharger,
@@ -21,9 +22,26 @@ export interface ChargerCluster {
   connectors: ChargerConnector[];
   maxPowerKw: number | null;
   pricing: Charger["pricing"];
+  availability: ChargerAvailability;
   sources: ChargerSourceRef[];
   confidence: number;
   matchedExistingId: string | null;
+}
+
+// A more informative status wins when merging co-located records. unknown is
+// the weakest signal; an explicit operational/offline beats a stale one.
+const AVAILABILITY_RANK: Record<ChargerAvailability, number> = {
+  unknown: 0,
+  stale: 1,
+  offline: 2,
+  operational: 3,
+};
+
+function mergeAvailability(
+  a: ChargerAvailability,
+  b: ChargerAvailability,
+): ChargerAvailability {
+  return AVAILABILITY_RANK[b] > AVAILABILITY_RANK[a] ? b : a;
 }
 
 const MATCH_THRESHOLD = 0.6;
@@ -222,6 +240,7 @@ function newClusterFromRaw(
     connectors: raw.connectors.map((c) => ({ ...c })),
     maxPowerKw: maxPowerOf(raw.connectors),
     pricing: raw.source === "chargeprice" ? raw.pricing : null,
+    availability: raw.availability ?? "unknown",
     sources: [{ source: raw.source, ref: raw.sourceRef }],
     confidence: 0,
     matchedExistingId,
@@ -268,6 +287,8 @@ function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
 
   // Pricing only from a chargeprice source.
   if (raw.source === "chargeprice" && raw.pricing) cluster.pricing = raw.pricing;
+
+  cluster.availability = mergeAvailability(cluster.availability, raw.availability ?? "unknown");
 
   cluster.sources.push({ source: raw.source, ref: raw.sourceRef });
 
@@ -392,6 +413,7 @@ function seedFromExisting(charger: Charger, raw: RawCharger | null): ClusterStat
     connectors: charger.connectors.map((c) => ({ ...c })),
     maxPowerKw: charger.maxPowerKw,
     pricing: charger.pricing,
+    availability: charger.availability,
     sources: charger.sources.map((s) => ({ ...s })),
     confidence: charger.confidence,
     matchedExistingId: charger.id,

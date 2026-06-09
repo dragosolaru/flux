@@ -540,6 +540,8 @@
     "status": "Status",
     "operational": "Betriebsbereit",
     "out_of_service": "Außer Betrieb",
+    "status_stale": "Kürzlich nicht geprüft",
+    "status_unknown": "Status unbekannt",
     "close": "Schließen",
     "select_hint": "Wähle eine Station auf der Karte für Details",
     "station_fallback": "Ladestation",

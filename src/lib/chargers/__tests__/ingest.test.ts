@@ -62,6 +62,30 @@ describe("mapOcmPoi", () => {
     expect(mapOcmPoi({ AddressInfo: { Latitude: 1, Longitude: 2 } })).toBeNull();
     expect(mapOcmPoi({ ID: 1 })).toBeNull();
   });
+
+  it("derives availability from status + last-verified date", () => {
+    const base = { ID: 1, AddressInfo: { Latitude: 1, Longitude: 2 } };
+    const recent = new Date(Date.now() - 5 * 86_400_000).toISOString();
+    const old = new Date(Date.now() - 200 * 86_400_000).toISOString();
+
+    // Operational + recently verified → operational.
+    expect(
+      mapOcmPoi({ ...base, StatusType: { IsOperational: true }, DateLastVerified: recent })!.availability,
+    ).toBe("operational");
+    // Operational but stale verification → stale.
+    expect(
+      mapOcmPoi({ ...base, StatusType: { IsOperational: true }, DateLastVerified: old })!.availability,
+    ).toBe("stale");
+    // Explicitly not operational → offline.
+    expect(
+      mapOcmPoi({ ...base, StatusType: { IsOperational: false } })!.availability,
+    ).toBe("offline");
+    // StatusTypeID fallback (50 = operational) when no verbose object.
+    expect(mapOcmPoi({ ...base, StatusTypeID: 50 })!.availability).toBe("operational");
+    expect(mapOcmPoi({ ...base, StatusTypeID: 100 })!.availability).toBe("offline");
+    // No signal at all → unknown.
+    expect(mapOcmPoi(base)!.availability).toBe("unknown");
+  });
 });
 
 describe("mapOverpassElement", () => {

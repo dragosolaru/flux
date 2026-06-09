@@ -7,6 +7,7 @@ import type {
   BBox,
   Charger,
   ChargerAddress,
+  ChargerAvailability,
   ChargerConnector,
   ChargerPricing,
   ChargerSourceId,
@@ -53,6 +54,19 @@ const CONNECTOR_TYPES: ReadonlySet<string> = new Set<ConnectorType>([
 ]);
 
 const SOURCE_IDS: ReadonlySet<string> = new Set<ChargerSourceId>(["ocm", "osm", "chargeprice", "bnetza", "ndw"]);
+
+const AVAILABILITY_VALUES: ReadonlySet<string> = new Set<ChargerAvailability>([
+  "operational",
+  "offline",
+  "stale",
+  "unknown",
+]);
+
+function toAvailability(value: unknown): ChargerAvailability {
+  return typeof value === "string" && AVAILABILITY_VALUES.has(value)
+    ? (value as ChargerAvailability)
+    : "unknown";
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -130,7 +144,7 @@ export function rowToCharger(row: unknown): Charger {
     connectors: mapConnectors(r.connectors),
     maxPowerKw: asNumber(r.max_power_kw),
     pricing: mapPricing(r.pricing),
-    availability: "unknown",
+    availability: toAvailability(r.availability),
     confidence: asNumber(r.confidence) ?? 0,
     sources: mapSources(r.sources),
     lastSeenAt: asString(r.last_seen_at) ?? "",

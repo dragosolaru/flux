@@ -540,6 +540,8 @@
     "status": "État",
     "operational": "Opérationnelle",
     "out_of_service": "Hors service",
+    "status_stale": "Non vérifié récemment",
+    "status_unknown": "Statut inconnu",
     "close": "Fermer",
     "select_hint": "Cliquez sur une station de la carte pour les détails",
     "station_fallback": "Station de recharge",

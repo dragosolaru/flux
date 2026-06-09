@@ -540,6 +540,8 @@
     "status": "Állapot",
     "operational": "Működik",
     "out_of_service": "Üzemen kívül",
+    "status_stale": "Nemrég nem ellenőrizve",
+    "status_unknown": "Ismeretlen állapot",
     "close": "Bezárás",
     "select_hint": "Kattints egy állomásra a térképen a részletekért",
     "station_fallback": "Töltőállomás",

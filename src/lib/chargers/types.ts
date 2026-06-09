@@ -13,6 +13,16 @@ export type ConnectorType =
 
 export type ChargerSourceId = "ocm" | "osm" | "chargeprice" | "bnetza" | "ndw";
 
+/**
+ * Operational status. `operational`/`offline` come from a source that reports
+ * live-ish status (OCM `StatusType.IsOperational`); `stale` means it was
+ * operational but not verified recently (> {@link STALE_AFTER_DAYS} days);
+ * `unknown` means no status signal at all.
+ */
+export type ChargerAvailability = "operational" | "offline" | "stale" | "unknown";
+
+export const STALE_AFTER_DAYS = 90;
+
 export interface ChargerAddress {
   street: string | null;
   city: string | null;
@@ -50,7 +60,7 @@ export interface Charger {
   connectors: ChargerConnector[];
   maxPowerKw: number | null;
   pricing: ChargerPricing | null;
-  availability: "unknown"; // reserved; not ingested in v1
+  availability: ChargerAvailability;
   confidence: number; // 0..1
   sources: ChargerSourceRef[];
   lastSeenAt: string;
@@ -71,6 +81,9 @@ export interface RawCharger {
   address: ChargerAddress;
   connectors: ChargerConnector[];
   pricing: ChargerPricing | null;
+  // Optional: only sources that report status set this (OCM). Defaults to
+  // "unknown" during dedup when absent, so other connectors need not set it.
+  availability?: ChargerAvailability;
 }
 
 /** Geographic bounding box (WGS84). */

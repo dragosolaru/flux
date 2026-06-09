@@ -1,9 +1,11 @@
 import type {
   BBox,
+  ChargerAvailability,
   ChargerConnector,
   RawCharger,
   SourceConnector,
 } from "../types";
+import { STALE_AFTER_DAYS } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
 
 interface OcmConnectionType {
@@ -17,6 +19,16 @@ interface OcmConnection {
   PowerKW?: number | null;
   Quantity?: number | null;
 }
+
+interface OcmStatusType {
+  IsOperational?: boolean | null;
+}
+
+// OCM StatusTypeID reference values (when the verbose StatusType object is
+// absent under compact mode). 50/75/150 = operational variants; 100/200/30 =
+// not operational; 0/null = unknown.
+const OCM_OPERATIONAL_STATUS_IDS = new Set<number>([50, 75, 150]);
+const OCM_NOT_OPERATIONAL_STATUS_IDS = new Set<number>([30, 100, 200, 210]);
 
 interface OcmOperatorInfo {
   Title?: string | null;
@@ -38,6 +50,38 @@ interface OcmPoi {
   AddressInfo?: OcmAddressInfo | null;
   OperatorInfo?: OcmOperatorInfo | null;
   Connections?: OcmConnection[] | null;
+  StatusType?: OcmStatusType | null;
+  StatusTypeID?: number | null;
+  DateLastStatusUpdate?: string | null;
+  DateLastVerified?: string | null;
+}
+
+/**
+ * Derive operational status from OCM's StatusType / StatusTypeID, then downgrade
+ * a still-operational station to "stale" if it hasn't been verified recently.
+ */
+function deriveAvailability(poi: OcmPoi): ChargerAvailability {
+  let operational: boolean | null = null;
+
+  if (typeof poi.StatusType?.IsOperational === "boolean") {
+    operational = poi.StatusType.IsOperational;
+  } else if (typeof poi.StatusTypeID === "number") {
+    if (OCM_OPERATIONAL_STATUS_IDS.has(poi.StatusTypeID)) operational = true;
+    else if (OCM_NOT_OPERATIONAL_STATUS_IDS.has(poi.StatusTypeID)) operational = false;
+  }
+
+  if (operational === false) return "offline";
+  if (operational !== true) return "unknown";
+
+  const verified = poi.DateLastVerified ?? poi.DateLastStatusUpdate;
+  if (verified) {
+    const ts = Date.parse(verified);
+    if (Number.isFinite(ts)) {
+      const ageDays = (Date.now() - ts) / 86_400_000;
+      if (ageDays > STALE_AFTER_DAYS) return "stale";
+    }
+  }
+  return "operational";
 }
 
 function isOcmPoi(value: unknown): value is OcmPoi {
@@ -82,6 +126,7 @@ export function mapOcmPoi(poi: OcmPoi): RawCharger | null {
     },
     connectors: connections.map(mapConnection),
     pricing: null,
+    availability: deriveAvailability(poi),
   };
 }
 
