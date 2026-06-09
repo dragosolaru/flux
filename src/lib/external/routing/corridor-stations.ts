@@ -8,7 +8,13 @@ const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 const OCM_URL = "https://api.openchargemap.io/v3/poi/";
 const BBOX_PAD_DEG = 0.15;
 const FAST_KW_THRESHOLD = 40;
-const MAX_STATIONS = 400;
+const MAX_STATIONS = 800;
+// Corridor sampling: walk the route polyline and query a small bbox around
+// evenly-spaced points so a long international route gets dense coverage along
+// its whole length, instead of one giant bbox capped at 500 (which left huge
+// gaps mid-route, e.g. Serbia/Croatia on Florești→Rome).
+const SAMPLE_PAD_DEG = 0.45; // ~50 km half-box; overlaps the next sample.
+const MAX_SAMPLE_BOXES = 16; // cap OCM calls for very long routes.
 
 interface OverpassElement {
   type: "node" | "way" | "relation";
@@ -66,6 +72,42 @@ function computeBBox(
     maxLat: maxLat + BBOX_PAD_DEG,
     maxLng: maxLng + BBOX_PAD_DEG,
   };
+}
+
+// Evenly-spaced sample bboxes along the route polyline (by distance), each padded
+// so consecutive boxes overlap — no gaps. Capped at MAX_SAMPLE_BOXES.
+function corridorSampleBoxes(polyline: [number, number][]): BBox[] {
+  const pts = polyline.map(([lng, lat]) => ({ lat, lng }));
+  if (pts.length === 0) return [];
+
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) total += haversine(pts[i - 1]!, pts[i]!);
+  const step = Math.max(60, total / MAX_SAMPLE_BOXES); // km between samples
+
+  const boxAround = (p: { lat: number; lng: number }): BBox => ({
+    minLat: p.lat - SAMPLE_PAD_DEG,
+    minLng: p.lng - SAMPLE_PAD_DEG,
+    maxLat: p.lat + SAMPLE_PAD_DEG,
+    maxLng: p.lng + SAMPLE_PAD_DEG,
+  });
+
+  const boxes: BBox[] = [boxAround(pts[0]!)];
+  let acc = 0;
+  let nextAt = step;
+  for (let i = 1; i < pts.length; i++) {
+    acc += haversine(pts[i - 1]!, pts[i]!);
+    if (acc >= nextAt && boxes.length < MAX_SAMPLE_BOXES) {
+      boxes.push(boxAround(pts[i]!));
+      nextAt += step;
+    }
+  }
+  return boxes;
+}
+
+function dedupeById(stations: ChargingStation[]): ChargingStation[] {
+  const byId = new Map<string, ChargingStation>();
+  for (const s of stations) byId.set(s.id, s);
+  return [...byId.values()];
 }
 
 function slug(value: string): string {
@@ -234,13 +276,24 @@ export async function fetchCorridorStations(
 ): Promise<ChargingStation[]> {
   const bbox = computeBBox(polyline, origin, destination);
 
-  const [dbStations, ocmStations] = await Promise.all([
-    findInBBox({ bbox, limit: 500 })
+  // Sample OCM along the route in segments so coverage stays dense over the whole
+  // corridor (a single huge bbox capped at 500 left mid-route gaps). One fast
+  // PostGIS query over the full bbox supplies the richer stored rows.
+  const sampleBoxes =
+    polyline && polyline.length >= 2 ? corridorSampleBoxes(polyline) : [bbox];
+
+  const [dbStations, ocmLists] = await Promise.all([
+    findInBBox({ bbox, limit: 1000 })
       .then((chargers) => chargers.map(chargerToStation))
       .catch(() => [] as ChargingStation[]),
-    fetchCorridorStationsOCM(bbox).catch(() => [] as ChargingStation[]),
+    Promise.all(
+      sampleBoxes.map((b) =>
+        fetchCorridorStationsOCM(b, 150).catch(() => [] as ChargingStation[]),
+      ),
+    ),
   ]);
 
+  const ocmStations = dedupeById(ocmLists.flat());
   const merged = mergeByProximity(dbStations, ocmStations);
   if (merged.length > 0) return preferFast(merged);
 
@@ -306,13 +359,13 @@ function ocmToStation(poi: OcmPoi): ChargingStation | null {
  * global EV charging registry. More reliable from serverless than Overpass.
  * Returns [] on any error so the caller can fall back further.
  */
-export async function fetchCorridorStationsOCM(bbox: BBox): Promise<ChargingStation[]> {
+export async function fetchCorridorStationsOCM(bbox: BBox, maxResults = 500): Promise<ChargingStation[]> {
   try {
     const params = new URLSearchParams({
       output: "json",
       // OCM boundingbox: (lat,lng),(lat,lng) — top-left, bottom-right.
       boundingbox: `(${bbox.maxLat},${bbox.minLng}),(${bbox.minLat},${bbox.maxLng})`,
-      maxresults: "500",
+      maxresults: String(maxResults),
       compact: "true",
       verbose: "false",
     });
