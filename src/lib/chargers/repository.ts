@@ -20,7 +20,11 @@ const redis =
 const TILE_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 function freshnessKey(tile: Tile): string {
-  return `chargers:tile:${tileKey(tile)}`;
+  // v2: the v1 namespace was poisoned — early ingest runs marked tiles fresh
+  // even when every upsert_charger RPC failed (the p_availability param did not
+  // exist before migration 020), leaving areas permanently empty for the 7-day
+  // TTL. Bumping the namespace invalidates those stale markers in one shot.
+  return `chargers:tile:v2:${tileKey(tile)}`;
 }
 
 async function isTileFresh(tile: Tile): Promise<boolean> {
@@ -83,14 +87,22 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
   );
   const upserted = results.filter((r) => !r.error).length;
 
-  await Promise.all(tiles.map(markTileFresh));
+  // Only mark tiles fresh when the ingest actually persisted data (or the area
+  // is legitimately empty). If we had clusters but every upsert failed, this is
+  // a real failure — leave the tiles stale so the next request retries instead
+  // of caching an empty area for the full TTL.
+  const ingestFailed = clusters.length > 0 && upserted === 0;
+  if (!ingestFailed) {
+    await Promise.all(tiles.map(markTileFresh));
+  }
 
   await supabase.from("ingest_runs").insert({
     tile: runLabel,
     source: "all",
-    status: "ok",
+    status: ingestFailed ? "error" : "ok",
     fetched: raws.length,
     upserted,
+    error: ingestFailed ? "all upserts failed" : null,
     finished_at: new Date().toISOString(),
   });
 
