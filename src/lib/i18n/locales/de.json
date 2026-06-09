@@ -669,7 +669,8 @@
       "offline": "Möglicherweise offline",
       "stale": "Nicht kürzlich geprüft",
       "verified": "Vor {days} T. geprüft"
-    }
+    },
+    "traffic_delay": "inkl. {minutes} Min Stau"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

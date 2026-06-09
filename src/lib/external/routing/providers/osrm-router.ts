@@ -19,6 +19,9 @@ export interface OsrmResult {
   distanceKm: number;
   drivingMinutes: number;
   polyline: { type: "LineString"; coordinates: [number, number][] } | null;
+  // Live-traffic delay already included in drivingMinutes (TomTom only). Lets the
+  // UI show "incl. N min traffic"; undefined when the provider has no traffic data.
+  trafficDelayMinutes?: number;
 }
 
 export async function computeOsrmRoute(origin: RoutePoint, destination: RoutePoint): Promise<OsrmResult> {

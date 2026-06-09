@@ -669,7 +669,8 @@
       "offline": "Lehet, hogy offline",
       "stale": "Nem ellenőrzött nemrég",
       "verified": "{days} napja ellenőrizve"
-    }
+    },
+    "traffic_delay": "tartalmaz {minutes} perc forgalmi késést"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

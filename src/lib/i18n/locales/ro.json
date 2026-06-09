@@ -669,7 +669,8 @@
       "offline": "Posibil indisponibilă",
       "stale": "Neverificată recent",
       "verified": "Verificată acum {days} zile"
-    }
+    },
+    "traffic_delay": "incl. {minutes} min întârziere din trafic"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

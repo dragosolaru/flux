@@ -17,6 +17,8 @@ interface CostSummaryProps {
   tripEnergyCostEur: number;
   stopsCount: number;
   approxRoute: boolean;
+  // Live-traffic delay already included in drivingMinutes (TomTom). 0 = none.
+  trafficDelayMinutes?: number;
 }
 
 function formatDuration(minutes: number): string {
@@ -37,6 +39,7 @@ export function CostSummary({
   tripEnergyCostEur,
   stopsCount,
   approxRoute,
+  trafficDelayMinutes = 0,
 }: CostSummaryProps) {
   const t = useTranslations("trip");
   const [showFuel, setShowFuel] = useState(false);
@@ -70,6 +73,13 @@ export function CostSummary({
           {formatDuration(totalMinutes)} · {Math.round(totalDistanceKm)} km
         </span>
       </div>
+
+      {/* Live-traffic note — only when a traffic-aware provider reported a delay */}
+      {trafficDelayMinutes > 0 && (
+        <p className="text-xs text-amber-400">
+          {t("traffic_delay", { minutes: trafficDelayMinutes })}
+        </p>
+      )}
 
       {/* Stats chips + fuel toggle on one line */}
       <div className="flex items-center gap-1.5 text-xs">

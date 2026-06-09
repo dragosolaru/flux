@@ -669,7 +669,8 @@
       "offline": "Possibly offline",
       "stale": "Not recently verified",
       "verified": "Verified {days}d ago"
-    }
+    },
+    "traffic_delay": "incl. {minutes} min traffic delay"
   },
   "notFoundPage": {
     "heading": "Page not found",

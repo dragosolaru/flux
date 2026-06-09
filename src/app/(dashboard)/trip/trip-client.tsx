@@ -597,6 +597,7 @@ export function TripClient() {
                   tripEnergyCostEur={activePlan.tripEnergyCostEur}
                   stopsCount={activePlan.stops.length}
                   approxRoute={activePlan.approxRoute}
+                  trafficDelayMinutes={activePlan.trafficDelayMinutes}
                 />
 
                 {canShare && (

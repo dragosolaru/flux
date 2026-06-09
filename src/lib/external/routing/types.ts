@@ -37,6 +37,9 @@ export interface TripPlan {
   warning: string | null;
   polyline: { type: "LineString"; coordinates: [number, number][] } | null;
   approxRoute: boolean;
+  // Live-traffic delay (minutes) already included in drivingMinutes when the
+  // routing provider is traffic-aware (TomTom). 0 when no traffic data.
+  trafficDelayMinutes: number;
 }
 
 export type TripStrategy = "fastest" | "balanced";

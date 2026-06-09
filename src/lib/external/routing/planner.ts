@@ -4,8 +4,10 @@ import type { ChargingStop, RoutePoint, TripPlan, TripStrategy, TripVariant } fr
 import { haversine } from "./providers/mock-router";
 import { computeOsrmRoute, computeOsrmRouteVia, computeOsrmAlternatives } from "./providers/osrm-router";
 import { computeOrsAlternatives } from "./providers/ors-router";
+import { computeTomTomAlternatives, computeTomTomRouteVia } from "./providers/tomtom-router";
 import type { OsrmResult } from "./providers/osrm-router";
 import { fetchCorridorStations } from "./corridor-stations";
+import { chargeMinutes } from "./charge-curve";
 
 const DEFAULT_ARRIVAL_SOC_PCT = 10; // Default minimum SoC at destination/waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
@@ -67,19 +69,30 @@ function mergeStations(a: ChargingStation[], b: ChargingStation[]): ChargingStat
 }
 
 /**
- * Distinct road alternatives between two points. Prefers OpenRouteService when
- * an API key is configured (it returns genuinely different roads, like ABRP /
- * Waze do); otherwise falls back to OSRM's public server, which usually returns
- * a single road for long corridors.
+ * Distinct road alternatives between two points. Prefers TomTom when its key is
+ * set — its ETAs include live traffic (Waze/Google-like) and it returns genuine
+ * alternatives. Falls back to OpenRouteService (distinct roads), then OSRM.
  */
 async function computeRouteAlternatives(
   origin: RoutePoint,
   destination: RoutePoint,
   max: number,
 ): Promise<OsrmResult[]> {
+  const tomtom = await computeTomTomAlternatives(origin, destination, max);
+  if (tomtom.length > 0) return tomtom;
   const ors = await computeOrsAlternatives(origin, destination, max);
   if (ors.length > 0) return ors;
   return computeOsrmAlternatives(origin, destination, max);
+}
+
+/**
+ * Route through ordered waypoints (origin, …stops, destination), traffic-aware
+ * when the TomTom key is set, otherwise via OSRM.
+ */
+async function computeRouteVia(points: RoutePoint[]): Promise<OsrmResult> {
+  const tomtom = await computeTomTomRouteVia(points);
+  if (tomtom && tomtom.distanceKm > 0) return tomtom;
+  return computeOsrmRouteVia(points);
 }
 
 interface PlanInput {
@@ -97,6 +110,7 @@ interface PlanInput {
     distanceKm: number;
     drivingMinutes: number;
     polyline: { type: "LineString"; coordinates: [number, number][] } | null;
+    trafficDelayMinutes?: number;
   };
   skipCorridorFetch?: boolean;       // variants flow pre-merges corridor stations once
 }
@@ -187,8 +201,17 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const remainingNeededPct = ((kmLeft + detourKm * 0.3) / deratedFullRangeKm) * 100 + arrivalSocPct;
     const departSoc = Math.min(chargeTarget, Math.max(arriveSoc + 5, Math.min(95, Math.ceil(remainingNeededPct))));
     const energyAddedKwh = ((departSoc - arriveSoc) / 100) * spec.batteryCapacityKwh;
-    const effectiveRateKw = Math.min(chosen.maxKw, spec.maxDcChargingRateKw) * 0.75; // avg session rate (curve)
-    const chargingMinutes = Math.round((energyAddedKwh / effectiveRateKw) * 60);
+    // SoC-dependent charge curve (ABRP-style) instead of a flat average rate —
+    // fast when topping up from low, tapering past ~50–60%.
+    const chargingMinutes = Math.round(
+      chargeMinutes(
+        arriveSoc,
+        departSoc,
+        spec.batteryCapacityKwh,
+        chosen.maxKw,
+        spec.maxDcChargingRateKw,
+      ),
+    );
     const costEur = chosen.priceEurKwh != null ? Math.round(energyAddedKwh * chosen.priceEurKwh * 100) / 100 : 0;
 
     stops.push({
@@ -218,8 +241,11 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   let finalDistanceKm = distanceKm;
   let finalDrivingMinutes = drivingMinutes;
   let finalPolyline = polyline;
+  // Traffic delay (minutes) already baked into drivingMinutes when the provider
+  // is traffic-aware (TomTom). Carried from the base route, refined by via-route.
+  let trafficDelayMinutes = input.baseRoute?.trafficDelayMinutes ?? 0;
   if (feasible && stops.length > 0) {
-    const via = await computeOsrmRouteVia([
+    const via = await computeRouteVia([
       origin,
       ...stops.map((s) => ({ lat: s.station.lat, lng: s.station.lng })),
       destination,
@@ -227,6 +253,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     if (via.distanceKm > 0) {
       finalDistanceKm = via.distanceKm;
       finalDrivingMinutes = via.drivingMinutes;
+      trafficDelayMinutes = via.trafficDelayMinutes ?? trafficDelayMinutes;
       // Keep the base-route polyline when via-routing fails (OSRM down) —
       // better to show the correct road without stop-detours than a straight line.
       finalPolyline = via.polyline ?? polyline;
@@ -259,6 +286,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     warning,
     polyline: finalPolyline,
     approxRoute: finalPolyline === null,
+    trafficDelayMinutes: Math.max(0, Math.round(trafficDelayMinutes)),
   };
 }
 
