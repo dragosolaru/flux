@@ -67,9 +67,17 @@ export function BottomNav() {
 
   return (
     <>
+      {/* Spacer: keeps <main> bounded above the fixed nav on every page,
+          including full-screen maps that use `absolute inset-0`. */}
+      <div
+        aria-hidden="true"
+        className="shrink-0 md:hidden"
+        style={{ height: "calc(3.25rem + env(safe-area-inset-bottom))" }}
+      />
+
       <nav
         aria-label="Primary"
-        className="shrink-0 border-t border-white/8 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
+        className="fixed bottom-0 inset-x-0 z-50 border-t border-white/8 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
       >
         <ul className="grid grid-cols-4">
           {TABS.map((tab) => {
