@@ -183,7 +183,9 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast.
 
-**Key files:** `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx` (new), `src/app/(dashboard)/charging-map/charging-map-client.tsx`.
+**Escape to close:** `ChargerDetailSheet` and `StationDetailSheet` listen for the `Escape` key (via `useEffect` keydown) and call `onClose` when the sheet is open. On desktop the sheets render as side cards (`md:max-w-md md:right-6`) rather than full-width bottom sheets.
+
+**Key files:** `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`, `src/components/trip/StationDetailSheet.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`.
 
 **Dependencies:** Leaflet/react-leaflet, sonner, OpenChargeMap API (optional key), Overpass/OpenStreetMap (free).
 

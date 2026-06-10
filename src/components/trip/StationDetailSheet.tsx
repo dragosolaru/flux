@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { X, Zap, Clock, Battery, BatteryFull } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChargingStop } from "@/lib/external/routing/types";
@@ -20,6 +21,14 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
   const t = useTranslations("trip.station");
   const { station, arriveSoc, departSoc, chargingMinutes, energyAddedKwh, costEur } = stop;
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
     <>
       {/* Backdrop — tap to dismiss */}
@@ -29,12 +38,12 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
         aria-hidden="true"
       />
 
-      {/* Bottom sheet */}
+      {/* Bottom sheet — on md+ screens becomes a side card anchored to the right. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={station.name}
-        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
+        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}

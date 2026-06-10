@@ -78,6 +78,7 @@ export function TopBar() {
         <Button
           variant="ghost"
           size="icon"
+          className="size-10"
           aria-label="Toggle theme"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
@@ -89,7 +90,7 @@ export function TopBar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="flex size-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               aria-label="Open profile menu"
             >
               <Avatar className="size-8">

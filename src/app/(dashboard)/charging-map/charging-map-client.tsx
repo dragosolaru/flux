@@ -225,7 +225,7 @@ export function ChargingMapClient() {
         <div className="absolute right-3 top-3 z-[1000]">
           <button
             onClick={() => setShowList(true)}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-background/80 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-xl backdrop-blur-xl transition-colors hover:text-foreground"
+            className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-full border border-white/10 bg-background/80 px-3 text-xs font-medium text-muted-foreground shadow-xl backdrop-blur-xl transition-colors hover:text-foreground"
           >
             <List className="size-3.5" />
             {t("list_button")}

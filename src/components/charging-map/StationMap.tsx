@@ -238,7 +238,7 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
           onClick={handleClick}
           title={t("locate_me")}
           className="flex items-center justify-center bg-background/80 backdrop-blur-sm border border-white/10 rounded-lg p-2 shadow-lg hover:bg-background/90 transition-colors"
-          style={{ width: "34px", height: "34px" }}
+          style={{ width: "44px", height: "44px" }}
         >
           {locating ? (
             <Loader2 className="size-4 animate-spin text-foreground" />

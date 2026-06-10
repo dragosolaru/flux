@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Charger } from "@/lib/chargers/types";
@@ -29,6 +30,14 @@ const STATUS_META: Record<
 export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps) {
   const t = useTranslations("chargingMap");
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const displayName = charger.name ?? charger.operator ?? t("station_fallback");
   const totalConnectors = charger.connectors.reduce((sum, c) => sum + c.count, 0);
   const status = STATUS_META[charger.availability];
@@ -45,12 +54,13 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
         aria-hidden="true"
       />
 
-      {/* Bottom sheet — absolute so it stays within <main> above BottomNav. */}
+      {/* Bottom sheet — absolute so it stays within <main> above BottomNav.
+          On md+ screens it becomes a side card anchored to the right. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
-        className="absolute bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90"
+        className="absolute bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}

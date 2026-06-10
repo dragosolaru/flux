@@ -329,7 +329,7 @@ export function TripClient() {
       </div>
 
       {/* Search overlay — top left */}
-      <div className="absolute left-3 top-3 z-[1000] w-80 max-w-[calc(100vw-1.5rem)]">
+      <div className="absolute left-3 top-3 z-[1000] w-80 max-w-[calc(100vw-1.5rem)] md:w-[420px]">
         {formCollapsed && plan ? (
           /* Compact pill summary */
           <button
@@ -420,7 +420,7 @@ export function TripClient() {
               type="button"
               onClick={() => setOptionsOpen((v) => !v)}
               aria-expanded={optionsOpen}
-              className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs text-muted-foreground hover:text-foreground"
+              className="flex min-h-[40px] w-full items-center justify-between rounded-lg px-1 py-1 text-xs text-muted-foreground hover:text-foreground"
             >
               <span className="flex items-center gap-1.5">
                 <SlidersHorizontal className="size-3.5" />
@@ -447,7 +447,7 @@ export function TripClient() {
                     step={5}
                     value={startSoc}
                     onChange={(e) => setStartSoc(Number(e.target.value))}
-                    className="mt-1 w-full accent-primary"
+                    className="soc-slider mt-1 w-full accent-primary"
                   />
                 </div>
 
@@ -464,7 +464,7 @@ export function TripClient() {
                     step={5}
                     value={arrivalSoc}
                     onChange={(e) => setArrivalSoc(Number(e.target.value))}
-                    className="mt-1 w-full accent-primary"
+                    className="soc-slider mt-1 w-full accent-primary"
                   />
                 </div>
 

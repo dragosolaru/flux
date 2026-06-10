@@ -747,7 +747,7 @@ function PlanContent({
             step={5}
             value={startSoc}
             onChange={(e) => setStartSoc(Number(e.target.value))}
-            className="mt-1 w-full accent-primary"
+            className="soc-slider mt-1 w-full accent-primary"
           />
         </div>
         <div>
@@ -762,7 +762,7 @@ function PlanContent({
             step={5}
             value={arrivalSoc}
             onChange={(e) => setArrivalSoc(Number(e.target.value))}
-            className="mt-1 w-full accent-primary"
+            className="soc-slider mt-1 w-full accent-primary"
           />
         </div>
       </div>
