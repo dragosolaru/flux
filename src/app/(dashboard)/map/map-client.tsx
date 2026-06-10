@@ -560,7 +560,7 @@ export function MapClient() {
 
         {/* Sheet content — only rendered when sheet is at HALF or FULL */}
         {snapH > peekH && (
-          <div className="overflow-y-auto px-4 pb-6" style={{ height: `${snapH - peekH}px` }}>
+          <div className="overflow-y-auto px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]" style={{ height: `${snapH - peekH}px` }}>
             {mode === "explore" ? (
               <ExploreContent
                 stations={stations}

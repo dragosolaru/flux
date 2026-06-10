@@ -89,8 +89,8 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03]" />
 
       {/* Header row */}
-      <div className="relative mb-2 flex items-center justify-between md:mb-6">
-        <h1 className="text-lg font-semibold tracking-tight">{vehicleName}</h1>
+      <div className="relative mb-2 flex items-center justify-between gap-2 md:mb-6">
+        <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight">{vehicleName}</h1>
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
         ) : (

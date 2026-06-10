@@ -279,13 +279,13 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
           </div>
 
           {/* Action buttons */}
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5">
             {doc.view_url && (
               <a
                 href={doc.view_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded p-1 text-muted-foreground hover:text-foreground"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-foreground"
                 aria-label={t("ariaOpen")}
                 title={t("ariaOpen")}
               >
@@ -295,7 +295,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {canEdit && !editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="rounded p-1 text-muted-foreground hover:text-foreground"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-foreground"
                 aria-label={t("ariaEdit")}
                 title={t("ariaEdit")}
               >
@@ -305,7 +305,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {!confirmDelete && onDelete && (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="rounded p-1 text-muted-foreground hover:text-destructive"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-destructive"
                 aria-label={t("ariaDelete")}
                 title={t("ariaDelete")}
               >

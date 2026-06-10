@@ -373,15 +373,15 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   return (
     <PageWrapper className="relative mx-auto max-w-2xl gap-4 pb-28">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">{t("page_title")}</h1>
-          <p className="text-xs text-muted-foreground">{vehicleName}</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight">{t("page_title")}</h1>
+          <p className="truncate text-xs text-muted-foreground">{vehicleName}</p>
         </div>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="ghost" size="sm" className="shrink-0" asChild>
           <a href={`/api/costs/export?vehicleId=${vehicleId}`} download>
             <Download className="size-4" />
-            {t("export_csv")}
+            <span className="hidden sm:inline">{t("export_csv")}</span>
           </a>
         </Button>
       </div>
@@ -399,15 +399,15 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       )}
 
       {/* Email recovery banner */}
-      <div className="flex items-center justify-between rounded-xl border border-white/8 bg-white/5 px-4 py-2 text-xs">
-        <span className="flex items-center gap-2 text-muted-foreground">
-          <Inbox className="size-3.5" />
-          {t("missing_email_docs")}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-white/8 bg-white/5 px-4 py-2 text-xs">
+        <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
+          <Inbox className="size-3.5 shrink-0" />
+          <span className="min-w-0 truncate">{t("missing_email_docs")}</span>
         </span>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs"
+          className="h-7 shrink-0 text-xs"
           onClick={() => recover()}
           disabled={recovering}
         >

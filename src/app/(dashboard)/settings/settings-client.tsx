@@ -353,16 +353,14 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       <section>
         <SectionHeader label={t("section.danger")} />
         <GlassCard>
-          <div className="flex min-h-[52px] items-center gap-3 px-4 py-4">
+          <div className="flex flex-wrap items-center gap-3 px-4 py-4">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/20">
               <Trash2 className="size-4 text-destructive" />
             </div>
-            <span className="flex-1 text-sm font-medium text-destructive">
+            <span className="min-w-0 flex-1 text-sm font-medium text-destructive">
               {t("danger_zone.delete_button")}
             </span>
-            <div className="flex shrink-0 items-center gap-2">
-              <DangerZone />
-            </div>
+            <DangerZone />
           </div>
         </GlassCard>
       </section>
@@ -393,8 +391,8 @@ function SettingsRow({ icon, iconBg, label, value, control, chevron }: SettingsR
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
         {icon}
       </div>
-      <span className="flex-1 text-sm font-medium">{label}</span>
-      {value && <span className="text-sm text-muted-foreground">{value}</span>}
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
+      {value && <span className="max-w-[40%] truncate text-sm text-muted-foreground">{value}</span>}
       {control && <div className="shrink-0">{control}</div>}
       {chevron && <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
     </div>

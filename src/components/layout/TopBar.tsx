@@ -30,13 +30,13 @@ function VehicleSwitcher() {
   if (!vehicles || vehicles.length === 0) return null;
 
   return (
-    <div className="flex items-center">
+    <div className="flex min-w-0 items-center">
       <select
         value={currentId ?? ""}
         onChange={(e: ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
-        className="h-8 cursor-pointer rounded-md border bg-background px-2 pr-7 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+        className="h-8 w-full min-w-0 max-w-[40vw] cursor-pointer truncate rounded-md border bg-background px-2 pr-7 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring md:max-w-xs"
         aria-label={t("select_vehicle")}
       >
         {!currentId && <option value="">— {t("select_vehicle")} —</option>}
@@ -68,12 +68,12 @@ export function TopBar() {
     <header className="shrink-0 bg-background">
       {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
       <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
-      <div className="flex h-11 items-center gap-3 border-b px-4 md:h-14 md:px-6">
-      <div className="md:hidden flex items-center gap-2 font-semibold">Flux</div>
+      <div className="flex h-11 min-w-0 items-center gap-2 border-b px-4 md:h-14 md:gap-3 md:px-6">
+      <div className="md:hidden flex shrink-0 items-center gap-2 font-semibold">Flux</div>
 
-      <VehicleSwitcher />
+      <div className="min-w-0 flex-1"><VehicleSwitcher /></div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
         {/* Theme toggle */}
         <Button
           variant="ghost"

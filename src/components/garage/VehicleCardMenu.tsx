@@ -57,7 +57,7 @@ export function VehicleCardMenu({ vehicleId, vehicleName: _vehicleName, onDeacti
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-black/30 text-white/70 hover:bg-black/50 hover:text-white transition-colors"
+            className="absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full bg-black/30 text-white/70 hover:bg-black/50 hover:text-white transition-colors"
             aria-label={t("menu_deactivate")}
           >
             <MoreVertical className="size-4" />

@@ -235,7 +235,7 @@ export function ChargingClient({
           <Switch checked={scheduled} onCheckedChange={setScheduled} />
         </div>
         {scheduled && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <label htmlFor="charge-time" className="text-sm text-muted-foreground">
               {tc("scheduled_start_at")}
             </label>
@@ -246,7 +246,7 @@ export function ChargingClient({
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setScheduleTime(e.target.value)
               }
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[44px]"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[44px] w-full sm:w-auto"
             />
           </div>
         )}
@@ -254,13 +254,13 @@ export function ChargingClient({
 
       {/* Charging history */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="min-w-0">
             <p className="text-sm font-semibold">{tc("history_title")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{tc("history_description")}</p>
           </div>
           {caps?.hasLiveVehicle && (
-            <motion.div {...tapShrink}>
+            <motion.div {...tapShrink} className="shrink-0">
               <Button
                 variant="outline"
                 size="sm"

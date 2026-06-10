@@ -155,7 +155,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
-          <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200">
+          <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto">
             <CardHeader className="relative pb-3">
               <div className="mb-2 flex items-center gap-2">
                 <BrandLogo brand="tesla" className="size-6 text-red-400" />
@@ -173,7 +173,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
               <button
                 onClick={close}
-                className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-3 flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
                 aria-label="Close"
               >
                 <X className="size-4" />

@@ -85,8 +85,8 @@ export function EnergyClient() {
     <FeatureGate capability="TARIFF">
       <PageWrapper className="mx-auto max-w-2xl">
         {/* Page header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight">
               {t("page_title")}
             </h1>

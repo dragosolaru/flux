@@ -81,7 +81,7 @@ export default async function AboutDataPage() {
                         <StatusBadge live={isLive} label={isLive ? liveLabel : mockLabel} />
                       </div>
                     </div>
-                    <div className="grid flex-1 grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                    <div className="grid flex-1 grid-cols-1 gap-2 text-xs min-[400px]:grid-cols-2 sm:grid-cols-3">
                       {CATEGORY_KEYS.slice(0, 4).map((key) => (
                         <div key={key} className="space-y-0.5">
                           <div className="font-medium text-muted-foreground">{t(`category.${key}.label`)}</div>

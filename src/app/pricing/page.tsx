@@ -51,7 +51,7 @@ export default async function PricingPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Free tier */}
-          <div className="flex flex-col rounded-2xl border bg-card p-8">
+          <div className="flex flex-col rounded-2xl border bg-card p-5 sm:p-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold">{t("freeTier")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -87,7 +87,7 @@ export default async function PricingPage() {
           </div>
 
           {/* Pro tier */}
-          <div className="flex flex-col rounded-2xl border-2 border-primary bg-card p-8 shadow-lg">
+          <div className="flex flex-col rounded-2xl border-2 border-primary bg-card p-5 shadow-lg sm:p-8">
             <div className="mb-6">
               <div className="mb-2 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 {t("mostPopular")}

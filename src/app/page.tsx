@@ -55,17 +55,17 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Nav */}
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-white/8 bg-background/80 px-6 backdrop-blur-xl">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-white/8 bg-background/80 px-4 backdrop-blur-xl md:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2 font-semibold">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Zap className="size-4" />
           </div>
-          Flux
-          <span className="text-xs font-normal text-muted-foreground">
+          <span className="truncate">Flux</span>
+          <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
             by DAO Lab
           </span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex shrink-0 items-center gap-2 md:gap-4">
           <Link
             href="/pricing"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -74,7 +74,7 @@ export default async function HomePage() {
           </Link>
           <Link
             href="/register"
-            className="rounded-md bg-gradient-to-r from-primary to-primary/90 px-4 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            className="rounded-md bg-gradient-to-r from-primary to-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 md:px-4"
           >
             {t("hero_cta")}
           </Link>
@@ -92,7 +92,7 @@ export default async function HomePage() {
         />
 
         {/* Features — animated client component */}
-        <section className="border-t border-white/8 bg-white/[0.02] px-6 py-20">
+        <section className="border-t border-white/8 bg-white/[0.02] px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-12 text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("features_title")}
@@ -102,7 +102,7 @@ export default async function HomePage() {
         </section>
 
         {/* Pricing teaser */}
-        <section className="px-6 py-20">
+        <section className="px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("pricing_teaser_title")}
@@ -129,7 +129,7 @@ export default async function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/8 px-6 py-8">
+      <footer className="border-t border-white/8 px-4 py-8 md:px-6">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <div className="flex items-center gap-2">
             <div className="flex size-5 items-center justify-center rounded bg-primary text-primary-foreground">
