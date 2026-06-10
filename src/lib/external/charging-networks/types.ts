@@ -17,6 +17,9 @@ export interface ChargingStation {
   // leave these undefined.
   lastVerifiedAt?: string;   // ISO date — when last verified (OCM DateLastVerified)
   isOperational?: boolean;   // OCM StatusType.IsOperational
+  // DB-sourced reliability fields — undefined for OCM-only or legacy static stations.
+  availability?: "operational" | "offline" | "stale" | "unknown";
+  confidence?: number;       // 0..1 — from the canonical Charger row
 }
 
 export interface StationAvailability {

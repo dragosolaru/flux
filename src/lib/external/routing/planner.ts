@@ -1,5 +1,7 @@
 import type { ChargingStation } from "@/lib/external/charging-networks/types";
 import type { ModelSpec } from "@/lib/brands/models";
+import type { ConnectorType } from "@/lib/chargers/types";
+import type { PlugType } from "@/lib/external/charging-networks/types";
 import type { ChargingStop, RoutePoint, TripPlan, TripStrategy, TripVariant } from "./types";
 import { haversine } from "./providers/mock-router";
 import { computeOsrmRoute, computeOsrmRouteVia, computeOsrmAlternatives } from "./providers/osrm-router";
@@ -15,6 +17,22 @@ const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
 // ~1 RON/kWh ≈ €0.20. Used to price the energy a trip consumes so the cost is
 // never shown as €0 just because no public charging stop was needed.
 const DEFAULT_HOME_PRICE_EUR_KWH = 0.20;
+// Assumed average tariff when a station has no price data — used only as a
+// relative penalty in scoring, not as a cost estimate shown to the user.
+const ASSUMED_AVG_PRICE_EUR_KWH = 0.45;
+
+// Map from the domain ConnectorType to the ChargingStation.plugTypes PlugType so
+// the connector compatibility check works across both type systems.
+const CONNECTOR_TYPE_TO_PLUG: Record<ConnectorType, PlugType | null> = {
+  ccs2: "CCS",
+  ccs1: "CCS",
+  chademo: "CHAdeMO",
+  type2: "Type2",
+  type1: "Type2",
+  tesla: "Tesla",
+  schuko: null,
+  other: null,
+};
 
 type Polyline = { type: "LineString"; coordinates: [number, number][] } | null;
 
@@ -66,6 +84,72 @@ function mergeStations(a: ChargingStation[], b: ChargingStation[]): ChargingStat
   for (const s of a) byId.set(s.id, s);
   for (const s of b) byId.set(s.id, s);
   return [...byId.values()];
+}
+
+/**
+ * Returns true when the station has at least one connector type compatible with
+ * the vehicle's supportedConnectors list. Stations with no plug type info always
+ * pass — we never exclude an unknown station.
+ */
+export function isConnectorCompatible(
+  station: ChargingStation,
+  supportedConnectors: ConnectorType[],
+): boolean {
+  if (station.plugTypes.length === 0) return true;
+  const supportedPlugs = new Set<PlugType>();
+  for (const c of supportedConnectors) {
+    const plug = CONNECTOR_TYPE_TO_PLUG[c];
+    if (plug) supportedPlugs.add(plug);
+  }
+  return station.plugTypes.some((p) => supportedPlugs.has(p));
+}
+
+/**
+ * Score a candidate station (higher = better). Pure function, exported for tests.
+ *
+ * Weights (roughly):
+ *  +power   dominant: effective kW = min(station.maxKw, vehicle.maxDcKw) / 100
+ *  -detour  km from the search centre, scaled to ~same magnitude as a 50 kW gain
+ *  -price   EUR/kWh above/below 0.45 average — moderate penalty
+ *  +stalls  small bonus when totalStalls ≥ 4 (queue risk)
+ *  -stale   small penalty for unverified data
+ */
+export function scoreStation(
+  station: ChargingStation,
+  distKm: number,
+  vehicleMaxDcKw: number,
+): number {
+  const effectiveKw = Math.min(station.maxKw, vehicleMaxDcKw);
+  const powerScore = effectiveKw / 100;
+
+  const detourPenalty = distKm * 0.03; // 1 km detour ≈ 3 kW equivalent
+
+  const pricePerKwh = station.priceEurKwh ?? ASSUMED_AVG_PRICE_EUR_KWH;
+  const pricePenalty = (pricePerKwh - ASSUMED_AVG_PRICE_EUR_KWH) * 0.8;
+
+  const stallBonus = station.totalStalls >= 4 ? 0.1 : 0;
+
+  const stalePenalty = station.availability === "stale" ? 0.05 : 0;
+
+  return powerScore - detourPenalty - pricePenalty + stallBonus - stalePenalty;
+}
+
+/**
+ * Filter out stations that cannot be used for this leg:
+ * - offline (known down)
+ * - low confidence (< 0.5)
+ * - connector-incompatible with the vehicle (unknown plug type passes)
+ */
+export function filterUsableStations(
+  stations: ChargingStation[],
+  supportedConnectors: ConnectorType[],
+): ChargingStation[] {
+  return stations.filter((st) => {
+    if (st.availability === "offline") return false;
+    if (st.confidence !== undefined && st.confidence < 0.5) return false;
+    if (!isConnectorCompatible(st, supportedConnectors)) return false;
+    return true;
+  });
 }
 
 /**
@@ -130,12 +214,16 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   const { distanceKm, drivingMinutes } = osrm;
   const polyline = osrm.polyline;
 
-  const allStations = input.skipCorridorFetch
+  const rawStations = input.skipCorridorFetch
     ? stations
     : mergeStations(
         stations,
         await fetchCorridorStations(polyline?.coordinates ?? null, origin, destination),
       );
+
+  // Apply reliability and connector filters once, before any candidate loops.
+  const supportedConnectors = spec.supportedConnectors ?? [];
+  const allStations = filterUsableStations(rawStations, supportedConnectors);
 
   // Prefer the driver's measured consumption (from real charging + trip
   // history) over the model's spec figure — a cold-climate / heavy-foot driver
@@ -151,8 +239,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   let kmFromStart = 0;
   let socNow = currentSocPct;
   let rangeNow = Math.max(0, currentRangeKm);
-  let totalEnergyKwh = ((100 - currentSocPct) / 100) * spec.batteryCapacityKwh; // not used; placeholder
-  totalEnergyKwh = 0; // reset; we'll compute charging energy
+  let totalEnergyKwh = 0;
 
   let totalChargingMinutes = 0;
   let totalChargingCostEur = 0;
@@ -173,15 +260,21 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const targetKm = kmFromStart + rangeNow * 0.85;
     const searchCenter = pointAlongRoute(polyline, targetKm, origin, destination, distanceKm);
 
-    // Find compatible station within 100km detour, prefer high power
+    // Find compatible station within 100km detour, scored by power/price/detour
     const candidates = allStations
       .map((st) => ({ st, dist: haversine(searchCenter, st) }))
       .filter((c) => c.dist < 100 && (c.st.maxKw ?? 0) > 0)
-      .sort((a, b) => (b.st.maxKw - a.st.maxKw) || (a.dist - b.dist));
+      .map((c) => ({
+        ...c,
+        score: scoreStation(c.st, c.dist, spec.maxDcChargingRateKw),
+      }))
+      .sort((a, b) => b.score - a.score);
 
     if (candidates.length === 0) {
       feasible = false;
-      warning = `No charging station found near km ${Math.round(targetKm)} of the route.`;
+      const gapStart = Math.round(kmFromStart);
+      const gapEnd = Math.round(kmFromStart + rangeNow);
+      warning = `No charging coverage between ${gapStart} km and ${gapEnd} km along the route.`;
       break;
     }
 
@@ -212,7 +305,10 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
         spec.maxDcChargingRateKw,
       ),
     );
-    const costEur = chosen.priceEurKwh != null ? Math.round(energyAddedKwh * chosen.priceEurKwh * 100) / 100 : 0;
+    // Use the station's real price when available; otherwise 0 (no assumed cost shown to user)
+    const costEur = chosen.priceEurKwh != null
+      ? Math.round(energyAddedKwh * chosen.priceEurKwh * 100) / 100
+      : 0;
 
     stops.push({
       station: chosen,
