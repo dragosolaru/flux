@@ -65,6 +65,9 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 const PEEK = 96;
+// Taller peek used when a computed plan exists: leaves room for the compact
+// route summary strip while keeping the map (and its polyline) visible.
+const PEEK_SUMMARY = 158;
 function halfHeight() {
   return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.45) : 400;
 }
@@ -148,13 +151,17 @@ export function MapClient() {
   // on first render (client-only). The lazy initializer runs once on mount.
   const [fullH] = useState(() => fullHeight());
 
+  // Landing directly in plan mode (e.g. /map?mode=plan) opens at half so the
+  // form is immediately usable; explore starts at peek.
+  const initialSnapH = initialMode === "plan" ? halfHeight() : PEEK;
+
   // Drag tracking refs (not used in render, safe as refs)
   const dragStartY = useRef(0);
   const dragStartSheetY = useRef(0);
-  const currentSheetY = useRef(snapToY(PEEK, 700));
+  const currentSheetY = useRef(snapToY(initialSnapH, fullHeight()));
 
   // Track current snap height for content rendering
-  const [snapH, setSnapH] = useState(PEEK);
+  const [snapH, setSnapH] = useState(initialSnapH);
 
   const controls = useAnimation();
 
@@ -177,14 +184,14 @@ export function MapClient() {
   function onDragMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!(e.buttons & 1)) return;
     const delta = e.clientY - dragStartY.current;
-    const newY = Math.max(0, Math.min(dragStartSheetY.current + delta, snapToY(PEEK, fullH)));
+    const newY = Math.max(0, Math.min(dragStartSheetY.current + delta, snapToY(peekH, fullH)));
     currentSheetY.current = newY;
     void controls.set({ y: newY });
   }
 
   function onDragEnd() {
     const currentH = fullH - currentSheetY.current;
-    const snaps = [PEEK, halfHeight(), fullH];
+    const snaps = [peekH, halfHeight(), fullH];
     const nearest = snaps.reduce((best, h) =>
       Math.abs(h - currentH) < Math.abs(best - currentH) ? h : best,
     );
@@ -268,6 +275,10 @@ export function MapClient() {
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
 
+  // Peek grows when a plan exists so the compact summary strip fits while the
+  // route stays visible on the map.
+  const peekH = mode === "plan" && plan !== null ? PEEK_SUMMARY : PEEK;
+
   const canPlan = origin !== null && destination !== null;
 
   function handleLocateOrigin() {
@@ -313,8 +324,9 @@ export function MapClient() {
       setPlan(result);
       setActiveVariant(0);
       setSharedRoute(false);
-      // Expand sheet to FULL to show results
-      snapTo(fullH, fullH);
+      // Collapse to summary peek so the route is visible on the map —
+      // details stay one drag away (Google Maps pattern).
+      snapTo(PEEK_SUMMARY, fullH);
     } catch (err) {
       setPlanError(err instanceof Error ? err.message : tTrip("infeasible_hint"));
     } finally {
@@ -384,7 +396,12 @@ export function MapClient() {
   // ---- Mode switch ----
   function switchMode(next: MapMode) {
     setMode(next);
-    snapTo(PEEK, fullH);
+    if (next === "plan") {
+      // No plan yet → open the form at half height; plan exists → summary peek.
+      snapTo(plan ? PEEK_SUMMARY : halfHeight(), fullH);
+    } else {
+      snapTo(PEEK, fullH);
+    }
   }
 
   // ---- Render ----
@@ -472,7 +489,7 @@ export function MapClient() {
       {/* LAYER 3: Bottom sheet */}
       <motion.div
         animate={controls}
-        initial={{ y: snapToY(PEEK, fullH) }}
+        initial={{ y: snapToY(initialSnapH, fullH) }}
         className="absolute inset-x-0 bottom-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/10 bg-background/90 shadow-2xl backdrop-blur-2xl"
         style={{ height: `${fullH}px` }}
       >
@@ -508,11 +525,42 @@ export function MapClient() {
               {tMap("tab_plan")}
             </button>
           </div>
+
+          {/* Compact route summary — always visible once a plan exists, so
+              the peek state shows the key numbers while the map shows the route. */}
+          {mode === "plan" && plan && activePlan && (
+            <button
+              onClick={() => snapTo(snapH <= peekH ? halfHeight() : PEEK_SUMMARY, fullH)}
+              className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-left"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
+                  {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
+                  <span className="font-normal text-muted-foreground">
+                    {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
+                    {activePlan.stops.length === 0
+                      ? tTrip("stops_count_zero")
+                      : activePlan.stops.length === 1
+                        ? tTrip("stops_count_one")
+                        : tTrip("stops_count_other", { count: activePlan.stops.length })}
+                  </span>
+                </p>
+              </div>
+              <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                <span className="text-sm font-semibold text-green-400">
+                  €{activePlan.tripEnergyCostEur.toFixed(2)}
+                </span>
+                <ChevronUp
+                  className={`size-4 text-muted-foreground transition-transform ${snapH > peekH ? "rotate-180" : ""}`}
+                />
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Sheet content — only rendered when sheet is at HALF or FULL */}
-        {snapH > PEEK && (
-          <div className="overflow-y-auto px-4 pb-6" style={{ height: `${snapH - 96}px` }}>
+        {snapH > peekH && (
+          <div className="overflow-y-auto px-4 pb-6" style={{ height: `${snapH - peekH}px` }}>
             {mode === "explore" ? (
               <ExploreContent
                 stations={stations}
@@ -790,7 +838,7 @@ function PlanContent({
       <button
         onClick={onPlan}
         disabled={!canPlan || loading}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
       >
         {loading ? (
           <>

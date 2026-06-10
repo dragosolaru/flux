@@ -287,6 +287,7 @@ from `StopCard.tsx`. i18n: `trip.share_to_tesla`, `trip.share_success`,
 **Architecture:**
 - `src/app/(dashboard)/map/page.tsx` — server component: auth check + metadata only.
 - `src/app/(dashboard)/map/map-client.tsx` — unified client: full-screen map layer + floating filter overlay + Framer Motion draggable bottom sheet with 3 snap points (PEEK=96px, HALF=45vh, FULL=88vh). Explore and Plan modes share state and switch via tab row in the sheet header.
+- After computing a plan the sheet auto-collapses to a taller peek (158px) with a compact summary strip (time · km · stops · cost) so the route stays visible on the map; tapping the strip toggles full details (Google Maps pattern). Landing on `?mode=plan` opens the sheet at half so the form is immediately usable.
 - Reuses `TripMap`, `StationMap`, `ChargerDetailSheet`, `StationDetailSheet`, `GeocodingSearch`, `StopCard`, `CostSummary` — no logic is duplicated.
 - Station data via existing `GET /api/chargers` (same query as `/charging-map`). Trip planning via existing `POST /api/trip-plan`.
 
