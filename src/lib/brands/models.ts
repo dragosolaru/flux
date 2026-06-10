@@ -4,6 +4,7 @@
 import type { BrandKey } from "./types";
 import type { ScenarioVehicle } from "@/lib/mock/types";
 import { TESLA_NMC_CURVE, type ChargeCurvePoint } from "@/lib/external/routing/charge-curve";
+import type { ConnectorType } from "@/lib/chargers/types";
 
 export interface ModelSpec extends ScenarioVehicle {
   modelName: string;
@@ -12,6 +13,8 @@ export interface ModelSpec extends ScenarioVehicle {
   // Normalized DC charge curve (fraction of peak power vs SoC) for visualization
   // and future per-vehicle chargeMinutes support.
   chargeCurve: ChargeCurvePoint[];
+  // Connector types this model can physically use for DC fast charging.
+  supportedConnectors: ConnectorType[];
 }
 
 export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
@@ -25,6 +28,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxRangeKm: 602,
       defaultChargeLimit: 80,
       chargeCurve: TESLA_NMC_CURVE,
+      supportedConnectors: ["ccs2", "tesla"],
     },
     {
       modelName: "Model Y",
@@ -35,6 +39,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxRangeKm: 533,
       defaultChargeLimit: 80,
       chargeCurve: TESLA_NMC_CURVE,
+      supportedConnectors: ["ccs2", "tesla"],
     },
     {
       modelName: "Model S",
@@ -45,6 +50,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxRangeKm: 600,
       defaultChargeLimit: 90,
       chargeCurve: TESLA_NMC_CURVE,
+      supportedConnectors: ["ccs2", "tesla"],
     },
     {
       modelName: "Model X",
@@ -55,6 +61,7 @@ export const BRAND_MODELS: Record<BrandKey, ModelSpec[]> = {
       maxRangeKm: 560,
       defaultChargeLimit: 90,
       chargeCurve: TESLA_NMC_CURVE,
+      supportedConnectors: ["ccs2", "tesla"],
     },
   ],
 };

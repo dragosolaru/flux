@@ -1,10 +1,10 @@
 import { findInBBox } from "@/lib/chargers/query";
+import { bulkCountryContaining } from "@/lib/chargers/countries";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ChargingStation, NetworkId, PlugType } from "@/lib/external/charging-networks/types";
 import type { RoutePoint } from "./types";
 import { haversine } from "./providers/mock-router";
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 const OCM_URL = "https://api.openchargemap.io/v3/poi/";
 const BBOX_PAD_DEG = 0.15;
 const FAST_KW_THRESHOLD = 40;
@@ -15,25 +15,6 @@ const MAX_STATIONS = 800;
 // gaps mid-route, e.g. Serbia/Croatia on Florești→Rome).
 const SAMPLE_PAD_DEG = 0.45; // ~50 km half-box; overlaps the next sample.
 const MAX_SAMPLE_BOXES = 16; // cap OCM calls for very long routes.
-
-interface OverpassElement {
-  type: "node" | "way" | "relation";
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
-}
-
-interface OverpassResponse {
-  elements?: OverpassElement[];
-}
-
-function isOverpassResponse(value: unknown): value is OverpassResponse {
-  if (typeof value !== "object" || value === null) return false;
-  const elements = (value as { elements?: unknown }).elements;
-  return elements === undefined || Array.isArray(elements);
-}
 
 interface BBox {
   minLat: number;
@@ -117,76 +98,6 @@ function slug(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function parsePower(tags: Record<string, string>): number {
-  const candidates = [
-    tags["maxpower"],
-    tags["socket:ccs:output"],
-    tags["socket:type2:output"],
-    tags["charge"],
-  ];
-  for (const raw of candidates) {
-    if (!raw) continue;
-    const match = raw.match(/([\d.]+)\s*(kw|w)?/i);
-    if (!match) continue;
-    const num = parseFloat(match[1]!);
-    if (!Number.isFinite(num) || num <= 0) continue;
-    const unit = match[2]?.toLowerCase();
-    if (unit === "w" || (unit === undefined && num > 1000)) {
-      return Math.round(num / 1000);
-    }
-    return Math.round(num);
-  }
-  return 0;
-}
-
-function parsePlugTypes(tags: Record<string, string>): PlugType[] {
-  const plugs: PlugType[] = [];
-  const socket = tags["socket"] ?? "";
-  const hasCcs =
-    tags["socket:ccs"] != null ||
-    tags["socket:ccs:output"] != null ||
-    /ccs/i.test(socket);
-  const hasType2 =
-    tags["socket:type2"] != null ||
-    tags["socket:type2:output"] != null ||
-    tags["socket:type2_combo"] != null ||
-    /type2/i.test(socket);
-  const hasChademo =
-    tags["socket:chademo"] != null || /chademo/i.test(socket);
-
-  if (hasCcs) plugs.push("CCS");
-  if (hasChademo) plugs.push("CHAdeMO");
-  if (hasType2) plugs.push("Type2");
-  return plugs.length > 0 ? plugs : ["CCS"];
-}
-
-function mapElement(el: OverpassElement): ChargingStation | null {
-  const lat = el.lat ?? el.center?.lat;
-  const lng = el.lon ?? el.center?.lon;
-  if (lat == null || lng == null) return null;
-
-  const tags = el.tags ?? {};
-  const operator = tags["operator"] ?? tags["network"] ?? null;
-  const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
-
-  const capacity = parseInt(tags["capacity"] ?? "", 10);
-  const totalStalls = Number.isFinite(capacity) && capacity > 0 ? capacity : 1;
-
-  return {
-    id: `osm-${el.type}-${el.id}`,
-    networkId,
-    name: tags["name"] ?? operator ?? "Charging Station",
-    lat,
-    lng,
-    maxKw: parsePower(tags),
-    totalStalls,
-    plugTypes: parsePlugTypes(tags),
-    priceEurKwh: null,
-    addressCity: tags["addr:city"] ?? tags["addr:suburb"] ?? "",
-    addressCountry: tags["addr:country"] ?? "RO",
-  };
-}
-
 function preferFast(stations: ChargingStation[]): ChargingStation[] {
   const fast = stations.filter((s) => s.maxKw >= FAST_KW_THRESHOLD);
   const selected = fast.length >= 3 ? fast : stations;
@@ -213,11 +124,9 @@ function chargerToPlugTypes(charger: Charger): PlugType[] {
   return plugs.size > 0 ? [...plugs] : ["CCS"];
 }
 
-function chargerToStation(charger: Charger): ChargingStation {
+export function chargerToStation(charger: Charger): ChargingStation {
   const operator = charger.operator ?? charger.operatorId;
   const networkId: NetworkId = operator ? (slug(operator) as NetworkId) : "other";
-  // Surface the platform's availability so the trip's reliability badge reflects
-  // real status: operational → up, offline → down, stale/unknown → unspecified.
   const isOperational =
     charger.availability === "operational"
       ? true
@@ -237,6 +146,8 @@ function chargerToStation(charger: Charger): ChargingStation {
     addressCity: charger.address.city ?? "",
     addressCountry: charger.address.country ?? "RO",
     isOperational,
+    availability: charger.availability,
+    confidence: charger.confidence,
   };
 }
 
@@ -259,15 +170,10 @@ function mergeByProximity(
 /**
  * Fetch fast-charging stations within a bounding box around the route corridor.
  *
- * The planner needs comprehensive coverage *now* (so it sees as many stations as
- * the map and can place stops well), without blocking on a slow full-corridor
- * ingest. So we query two fast sources in parallel and merge them:
- *   - the PostGIS platform (whatever the map browsing + warm cron already stored,
- *     with rich fields: price, plug types, availability), and
- *   - a direct Open Charge Map corridor query (comprehensive, fast with an API
- *     key), covering corridor segments that haven't been ingested yet.
- * Overpass is the last-resort fallback if both come back empty (e.g. OCM down or
- * the charger migrations not yet applied).
+ * PostGIS is the primary source — queried per-segment bbox for dense coverage
+ * along the whole corridor. For segments whose bbox falls outside the bulk-imported
+ * countries (ro/de/fr/at/nl/hu), OCM is queried as a live fallback so international
+ * routes (e.g. RO→GR via Serbia) still have coverage. Overpass is no longer used.
  */
 export async function fetchCorridorStations(
   polyline: [number, number][] | null,
@@ -276,29 +182,31 @@ export async function fetchCorridorStations(
 ): Promise<ChargingStation[]> {
   const bbox = computeBBox(polyline, origin, destination);
 
-  // Sample OCM along the route in segments so coverage stays dense over the whole
-  // corridor (a single huge bbox capped at 500 left mid-route gaps). One fast
-  // PostGIS query over the full bbox supplies the richer stored rows.
   const sampleBoxes =
     polyline && polyline.length >= 2 ? corridorSampleBoxes(polyline) : [bbox];
 
-  const [dbStations, ocmLists] = await Promise.all([
-    findInBBox({ bbox, limit: 1000 })
-      .then((chargers) => chargers.map(chargerToStation))
-      .catch(() => [] as ChargingStation[]),
-    Promise.all(
-      sampleBoxes.map((b) =>
-        fetchCorridorStationsOCM(b, 150).catch(() => [] as ChargingStation[]),
-      ),
+  // DB queries fire for all segment bboxes — no timeout cap on the read itself.
+  const dbResults = await Promise.all(
+    sampleBoxes.map((b) =>
+      findInBBox({ bbox: b, limit: 300 })
+        .then((chargers) => chargers.map(chargerToStation))
+        .catch(() => [] as ChargingStation[]),
     ),
-  ]);
+  );
+  const dbStations = dedupeById(dbResults.flat());
 
-  const ocmStations = dedupeById(ocmLists.flat());
+  // OCM fires only for segments outside bulk countries — covers corridors that
+  // haven't been ingested (e.g. Serbia, Bulgaria, Greece on long Balkan routes).
+  const nonBulkBoxes = sampleBoxes.filter((b) => bulkCountryContaining(b) === null);
+  const ocmResults = await Promise.all(
+    nonBulkBoxes.map((b) =>
+      fetchCorridorStationsOCM(b, 150).catch(() => [] as ChargingStation[]),
+    ),
+  );
+  const ocmStations = dedupeById(ocmResults.flat());
+
   const merged = mergeByProximity(dbStations, ocmStations);
-  if (merged.length > 0) return preferFast(merged);
-
-  // Both primary sources empty → live Overpass as a final fallback.
-  return fetchCorridorStationsOverpass(polyline, origin, destination);
+  return preferFast(merged);
 }
 
 interface OcmConnection {
@@ -343,8 +251,6 @@ function ocmToStation(poi: OcmPoi): ChargingStation | null {
     lng: info.Longitude,
     maxKw: Math.round(maxKw),
     totalStalls: (poi.Connections ?? []).length || 1,
-    // Plug type doesn't affect routing feasibility (planner filters on power +
-    // distance only); default to CCS to keep the mapping simple.
     plugTypes: ["CCS"],
     priceEurKwh: null,
     addressCity: info.Town ?? "",
@@ -355,9 +261,8 @@ function ocmToStation(poi: OcmPoi): ChargingStation | null {
 }
 
 /**
- * Fetch corridor stations from Open Charge Map — a dedicated, well-maintained
- * global EV charging registry. More reliable from serverless than Overpass.
- * Returns [] on any error so the caller can fall back further.
+ * Fetch corridor stations from Open Charge Map — used only for segments outside
+ * bulk-imported countries. Returns [] on any error so the caller can proceed.
  */
 export async function fetchCorridorStationsOCM(bbox: BBox, maxResults = 500): Promise<ChargingStation[]> {
   try {
@@ -383,48 +288,6 @@ export async function fetchCorridorStationsOCM(bbox: BBox, maxResults = 500): Pr
     const mapped = (data as OcmPoi[])
       .map(ocmToStation)
       .filter((s): s is ChargingStation => s !== null);
-    return preferFast(mapped);
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Legacy fallback: fetch corridor stations directly from OpenStreetMap
- * (Overpass). Returns [] on any error so the caller can fall back to the static
- * station set.
- */
-export async function fetchCorridorStationsOverpass(
-  polyline: [number, number][] | null,
-  origin: RoutePoint,
-  destination: RoutePoint,
-): Promise<ChargingStation[]> {
-  try {
-    const bbox = computeBBox(polyline, origin, destination);
-    // Skip Overpass for very large corridors — query would hit the 20s timeout
-    // and return zero results. The static STATIONS list covers these long routes.
-    if (bbox.maxLat - bbox.minLat > 5 || bbox.maxLng - bbox.minLng > 8) return [];
-    const box = `${bbox.minLat},${bbox.minLng},${bbox.maxLat},${bbox.maxLng}`;
-    const query = `[out:json][timeout:20];(node["amenity"="charging_station"](${box});way["amenity"="charging_station"](${box}););out body center 500;`;
-
-    const res = await fetch(OVERPASS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Flux-TripPlanner/1.0",
-      },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(22000),
-    });
-
-    if (!res.ok) return [];
-    const data: unknown = await res.json();
-    if (!isOverpassResponse(data) || !data.elements) return [];
-
-    const mapped = data.elements
-      .map(mapElement)
-      .filter((s): s is ChargingStation => s !== null);
-
     return preferFast(mapped);
   } catch {
     return [];

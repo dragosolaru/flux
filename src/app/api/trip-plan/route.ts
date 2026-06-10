@@ -8,7 +8,6 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getModelSpec } from "@/lib/brands/models";
 import { getWeatherAsync } from "@/lib/external/weather/providers/open-meteo";
 import { derateRange } from "@/lib/external/weather/derating";
-import { STATIONS } from "@/lib/external/charging-networks/stations";
 import { planTripVariants } from "@/lib/external/routing/planner";
 import { DEFAULT_PROVIDER_ID, getProvider } from "@/lib/external/tariffs/registry";
 import type { BrandKey } from "@/lib/brands/types";
@@ -166,7 +165,7 @@ export async function POST(req: NextRequest) {
       spec,
       currentSocPct,
       deratingPct: derating.totalPct,
-      stations: STATIONS,
+      stations: [],
       arrivalSocPct,
       homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
       efficiencyKwhPer100km: personalEfficiency,
@@ -199,7 +198,7 @@ export async function POST(req: NextRequest) {
     spec,
     currentSocPct,
     deratingPct: derating.totalPct,
-    stations: STATIONS,
+    stations: [],
     arrivalSocPct,
     homePriceEurKwh: await getHomePriceEurKwh(session.user.id),
   });
