@@ -39,10 +39,12 @@
     "garage": "Garage",
     "sign_out": "Sign out",
     "select_vehicle": "Select vehicle",
+    "map": "Map",
     "mobile": {
       "car": "Car",
       "charging": "Charging",
       "trip": "Trip",
+      "map": "Map",
       "costs": "Costs",
       "energy": "Energy",
       "more": "More"
@@ -774,5 +776,14 @@
         "mockDesc": "Great-circle heuristic"
       }
     }
+  },
+  "map": {
+    "title": "Map",
+    "tab_explore": "Explore",
+    "tab_plan": "Plan",
+    "explore_hint": "Browse charging stations near you",
+    "plan_hint": "Plan a route with charging stops",
+    "no_stations": "No stations found in this area",
+    "drag_to_expand": "Drag up to expand"
   }
 }

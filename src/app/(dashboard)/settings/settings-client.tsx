@@ -244,14 +244,14 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                     </div>
                   </SettingsRowExpanded>
                 ) : (
-                  <div key={v.id} className="flex min-h-[52px] items-center gap-3 px-4 py-2">
+                  <div key={v.id} className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
                       <Car className="size-4 text-blue-400" />
                     </div>
-                    <span className="flex-1 text-sm font-medium">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {v.nickname ?? v.displayName}
                     </span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="hidden text-sm text-muted-foreground sm:block">
                       {v.brand}{v.model ? ` · ${v.model}` : ""}
                     </span>
                     <DeactivateButton vehicleId={v.id} label={t("deactivate")} />
@@ -310,12 +310,12 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       <section id="billing">
         <SectionHeader label={t("section.billing")} />
         <GlassCard className="divide-y divide-white/5">
-          <div className="flex min-h-[52px] items-center gap-3 px-4 py-3">
+          <div className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
               <CreditCard className="size-4 text-primary" />
             </div>
-            <div className="flex flex-1 items-center justify-between gap-2">
-              <div>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-2">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">
                   {subscriptionTier === "pro"
                     ? t("billing.plan_pro")
@@ -327,11 +327,13 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                     : t("billing.plan_free_desc")}
                 </p>
               </div>
-              {subscriptionTier === "pro" ? (
-                <ManageSubscriptionButton />
-              ) : (
-                <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
-              )}
+              <div className="shrink-0">
+                {subscriptionTier === "pro" ? (
+                  <ManageSubscriptionButton />
+                ) : (
+                  <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
+                )}
+              </div>
             </div>
           </div>
           {subscriptionTier === "free" && (

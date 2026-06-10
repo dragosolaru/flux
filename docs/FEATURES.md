@@ -43,6 +43,7 @@ Dashboard pages live under `src/app/(dashboard)/` (auth-gated layout):
 | `/energy` | Energy | tariff prices + smart charge timing |
 | `/charging-map` | Charging map | station map |
 | `/trip` | Trip planner | ABRP-style route + charging stops |
+| `/map` | Unified map | combined trip planner + station browser |
 | `/settings` | Settings | locale, currency, home, tariff, account, billing |
 | `/about-data` | About your data | privacy / data transparency page |
 
@@ -272,6 +273,30 @@ from `StopCard.tsx`. i18n: `trip.share_to_tesla`, `trip.share_success`,
 **Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/planner.ts`, `src/lib/external/routing/corridor-stations.ts`, `src/lib/external/routing/providers/osrm-router.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx`, `src/components/trip/StopCard.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/brands/models.ts` (supportedConnectors), `src/lib/brands/tesla/command-map.ts` (share_navigation), `src/app/api/vehicles/[vehicleId]/commands/route.ts`.
 
 **Dependencies:** OSRM (`router.project-osrm.org`, 5s timeout with haversine×1.25 fallback), OCM (non-bulk segments only), Nominatim (geocoding + reverse geocoding), PostGIS charger DB (primary), Leaflet, sonner, mock weather derating, model specs (`src/lib/brands/models.ts`).
+
+---
+
+## 10b. Unified Map Screen (`/map`)
+
+**What:** A single full-screen map experience that unifies the trip planner (`/trip`) and charging-station browser (`/charging-map`) into one sheet-based UI. Inspired by ABRP / Google Maps. Available at `/map` with an optional `?mode=plan` or `?mode=explore` query param.
+
+**How to use:** UI `/map`. Tap the "Hartă" tab in the bottom nav (mobile) or the "Map" link in the sidebar Planning section. Drag the bottom sheet up to reveal: Explore mode — filter pills + station list; Plan mode — origin/destination, SOC sliders, vehicle picker, Plan button, and trip results.
+
+**Architecture:**
+- `src/app/(dashboard)/map/page.tsx` — server component: auth check + metadata only.
+- `src/app/(dashboard)/map/map-client.tsx` — unified client: full-screen map layer + floating filter overlay + Framer Motion draggable bottom sheet with 3 snap points (PEEK=96px, HALF=45vh, FULL=88vh). Explore and Plan modes share state and switch via tab row in the sheet header.
+- Reuses `TripMap`, `StationMap`, `ChargerDetailSheet`, `StationDetailSheet`, `GeocodingSearch`, `StopCard`, `CostSummary` — no logic is duplicated.
+- Station data via existing `GET /api/chargers` (same query as `/charging-map`). Trip planning via existing `POST /api/trip-plan`.
+
+**Navigation:**
+- BottomNav: "Hartă" tab replaces the old "Trip" tab (key `nav.mobile.map`).
+- Sidebar: "Map" link added to the Planning section (key `nav.map`).
+
+**i18n keys added (all 5 locales):** `nav.map`, `nav.mobile.map`, `map.title`, `map.tab_explore`, `map.tab_plan`, `map.explore_hint`, `map.plan_hint`, `map.no_stations`, `map.drag_to_expand`.
+
+**Key files:** `src/app/(dashboard)/map/page.tsx`, `src/app/(dashboard)/map/map-client.tsx`, `src/components/layout/BottomNav.tsx`, `src/components/layout/Sidebar.tsx`.
+
+**Dependencies:** Framer Motion (`useAnimation`, `motion.div`), react-leaflet, TanStack Query, next-intl.
 
 ---
 

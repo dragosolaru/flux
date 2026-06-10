@@ -45,7 +45,8 @@
       "trip": "Route",
       "costs": "Kosten",
       "energy": "Energie",
-      "more": "Mehr"
+      "more": "Mehr",
+      "map": "Karte"
     },
     "indicator": {
       "tooltip": {
@@ -54,7 +55,8 @@
         "tariff": "Energietarif konfigurieren",
         "commands": "Virtual Key für Befehle einrichten"
       }
-    }
+    },
+    "map": "Karte"
   },
   "mock_banner": {
     "title": "Simulierte Daten",
@@ -774,5 +776,14 @@
         "mockDesc": "Großkreis-Heuristik"
       }
     }
+  },
+  "map": {
+    "title": "Karte",
+    "tab_explore": "Erkunden",
+    "tab_plan": "Planen",
+    "explore_hint": "Ladestationen in Ihrer Nähe erkunden",
+    "plan_hint": "Route mit Ladestopps planen",
+    "no_stations": "Keine Stationen in diesem Bereich gefunden",
+    "drag_to_expand": "Nach oben ziehen zum Erweitern"
   }
 }

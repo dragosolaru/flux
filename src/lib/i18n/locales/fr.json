@@ -45,7 +45,8 @@
       "trip": "Trajet",
       "costs": "Coûts",
       "energy": "Énergie",
-      "more": "Plus"
+      "more": "Plus",
+      "map": "Carte"
     },
     "indicator": {
       "tooltip": {
@@ -54,7 +55,8 @@
         "tariff": "Configurez votre tarif énergétique",
         "commands": "Configurez la clé virtuelle pour les commandes"
       }
-    }
+    },
+    "map": "Carte"
   },
   "mock_banner": {
     "title": "Données simulées",
@@ -774,5 +776,14 @@
         "mockDesc": "Heuristique de grand cercle"
       }
     }
+  },
+  "map": {
+    "title": "Carte",
+    "tab_explore": "Explorer",
+    "tab_plan": "Planifier",
+    "explore_hint": "Parcourir les bornes de recharge à proximité",
+    "plan_hint": "Planifier un itinéraire avec des arrêts de recharge",
+    "no_stations": "Aucune borne trouvée dans cette zone",
+    "drag_to_expand": "Faites glisser vers le haut pour agrandir"
   }
 }

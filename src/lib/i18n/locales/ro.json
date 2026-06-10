@@ -39,10 +39,12 @@
     "garage": "Garaj",
     "sign_out": "Deconectare",
     "select_vehicle": "Selectează vehicul",
+    "map": "Hartă",
     "mobile": {
       "car": "Mașina",
       "charging": "Încărcare",
       "trip": "Drum",
+      "map": "Hartă",
       "costs": "Costuri",
       "energy": "Energie",
       "more": "Mai mult"
@@ -774,5 +776,14 @@
         "mockDesc": "Euristică cerc-mare"
       }
     }
+  },
+  "map": {
+    "title": "Hartă",
+    "tab_explore": "Explorează",
+    "tab_plan": "Planifică",
+    "explore_hint": "Explorează stațiile de încărcare din apropiere",
+    "plan_hint": "Planifică o rută cu opriri de încărcare",
+    "no_stations": "Nicio stație găsită în această zonă",
+    "drag_to_expand": "Trage în sus pentru a extinde"
   }
 }

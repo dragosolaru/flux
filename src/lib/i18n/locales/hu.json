@@ -45,7 +45,8 @@
       "trip": "Útvonal",
       "costs": "Költségek",
       "energy": "Energia",
-      "more": "Több"
+      "more": "Több",
+      "map": "Térkép"
     },
     "indicator": {
       "tooltip": {
@@ -54,7 +55,8 @@
         "tariff": "Konfigurálja az energiadíjat",
         "commands": "Állítsa be a Virtual Key-t a parancsokhoz"
       }
-    }
+    },
+    "map": "Térkép"
   },
   "mock_banner": {
     "title": "Szimulált adatok",
@@ -774,5 +776,14 @@
         "mockDesc": "Nagykör-heurisztika"
       }
     }
+  },
+  "map": {
+    "title": "Térkép",
+    "tab_explore": "Felfedezés",
+    "tab_plan": "Tervezés",
+    "explore_hint": "Töltőállomások felfedezése a közelben",
+    "plan_hint": "Útvonal tervezése töltési megállókkal",
+    "no_stations": "Nem találhatók állomások ezen a területen",
+    "drag_to_expand": "Húzza felfelé a kibontáshoz"
   }
 }
