@@ -95,6 +95,20 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Dependencies:** framer-motion v12, TanStack Query v5 (`isFetching`, `refetch`).
 
+### 3b. Flux 2027 Design System — Dashboard Ambient Numbers
+
+**What:** Visual redesign of the dashboard hero and quick-action row.
+- Hero SOC floats directly on the page background — no card chrome. Battery percentage is `text-7xl font-thin tracking-tight`; range below in `text-lg font-light text-muted-foreground`.
+- Live badge status dot gains `animate-pulse` while `isFetching === true`.
+- Ambient body tinting: a `useEffect` adds `ambient-charging` / `ambient-low` / `ambient-full` CSS class to `document.body` based on battery level (≥80% → full, ≤20% → low, charging → charging). Classes are cleaned up on unmount. The 1.4s background-color transition in `globals.css` gives a slow ambient colour shift.
+- Quick-action buttons (climate, lock, charge) are now `size-9 rounded-full` icon-only circles with `bg-white/8 backdrop-blur-sm`. Text labels removed; `title` + `aria-label` retained for accessibility.
+
+**How to use:** UI `/dashboard`. No new API routes or user settings.
+
+**Key files:** `src/app/(dashboard)/dashboard/dashboard-client.tsx` (all changes), `src/app/globals.css` (`.ambient-*` classes + body transition).
+
+**Dependencies:** framer-motion v12, TanStack Query v5 (`isFetching`).
+
 ---
 
 ## 4. Charging

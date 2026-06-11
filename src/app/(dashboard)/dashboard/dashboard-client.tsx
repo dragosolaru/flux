@@ -14,7 +14,7 @@ import {
   Unlock,
   Zap,
 } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -68,7 +68,7 @@ function getSocColor(level: number): string {
 }
 
 // --------------------------------------------------------------------------
-// Hero card
+// Hero card — floats directly on the page background (no card chrome)
 // --------------------------------------------------------------------------
 function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string }) {
   const td = useTranslations("dashboard");
@@ -81,13 +81,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
   const fresh = state ? isDataFresh(state.recordedAt) : false;
 
   return (
-    <GlassCard
-      className="relative overflow-hidden rounded-3xl bg-[oklch(0.13_0.02_265)] p-4 md:p-6"
-      animate={false}
-    >
-      {/* Subtle top-edge highlight */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/6" />
-
+    <div className="relative overflow-hidden px-4 py-4 md:px-6 md:py-6">
       {/* Header row */}
       <div className="relative mb-2 flex items-center justify-between gap-2 md:mb-6">
         <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight">{vehicleName}</h1>
@@ -98,23 +92,23 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
         )}
       </div>
 
-      {/* SOC % */}
+      {/* SOC % — ambient numbers hero */}
       <div className="relative flex flex-col items-center gap-0.5">
         {isLoading ? (
           <>
-            <Skeleton className="h-16 w-28 rounded-xl" />
+            <Skeleton className="h-20 w-36 rounded-xl" />
             <Skeleton className="h-6 w-24 rounded-xl" />
           </>
         ) : (
           <>
-            <div className="text-5xl font-bold tabular-nums leading-none md:text-7xl">
+            <div className="text-7xl font-thin tracking-tight tabular-nums leading-none">
               {displayBattery}
               {typeof displayBattery === "number" && (
-                <span className="ml-1 text-2xl text-muted-foreground md:text-3xl">%</span>
+                <span className="ml-1 text-xl text-muted-foreground">%</span>
               )}
             </div>
             {state?.batteryRangeKm != null && (
-              <div className="text-lg text-muted-foreground md:text-2xl">
+              <div className="text-lg font-light text-muted-foreground">
                 {Math.round(state.batteryRangeKm)} km
               </div>
             )}
@@ -123,7 +117,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       </div>
 
       {/* SOC progress bar */}
-      <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
+      <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
         <motion.div
           className={`h-full rounded-full ${isLoading ? "bg-white/20" : getSocColor(soc)}`}
           initial={{ width: 0 }}
@@ -148,7 +142,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
           {td("charging_active")} · {state.chargingRateKw?.toFixed(1) ?? "—"} kW
         </motion.div>
       )}
-    </GlassCard>
+    </div>
   );
 }
 
@@ -164,7 +158,7 @@ function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: 
     >
       {isFetching ? (
         <motion.span
-          className={`size-1.5 rounded-full ${dotColor}`}
+          className={`size-1.5 rounded-full ${dotColor} animate-pulse`}
           animate={{ opacity: [1, 0.4, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -296,7 +290,7 @@ function formatRelativeTime(isoString: string): string {
 }
 
 // --------------------------------------------------------------------------
-// Quick actions
+// Quick actions — circular icon-only buttons
 // --------------------------------------------------------------------------
 function QuickActions({
   vehicleId,
@@ -371,12 +365,14 @@ function QuickActions({
   }[];
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="flex justify-center gap-4">
       {actions.map((action) => (
         <motion.button
           key={action.key}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
           disabled={action.disabled}
+          title={action.label}
+          aria-label={action.label}
           onClick={() => {
             if (action.href) {
               window.location.href = action.href;
@@ -384,10 +380,10 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-2xl border p-2 transition-colors disabled:opacity-50 ${
+          className={`size-9 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50 flex items-center justify-center ${
             action.active
-              ? "border-primary/30 bg-primary/12 text-primary"
-              : "border-white/6 bg-white/[0.04] text-foreground hover:bg-white/[0.07]"
+              ? "bg-primary/20 text-primary"
+              : "bg-white/8 text-foreground hover:bg-white/[0.14]"
           }`}
         >
           {action.inFlight ? (
@@ -395,7 +391,6 @@ function QuickActions({
           ) : (
             action.icon
           )}
-          <span className="text-xs font-medium">{action.label}</span>
         </motion.button>
       ))}
     </div>
@@ -449,6 +444,33 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
   const td = useTranslations("dashboard");
   const containerRef = useRef<HTMLElement>(null);
   const { isPulling } = usePullToRefresh(containerRef, refetch, { disabled: isFetching });
+
+  // Ambient body tinting based on battery state
+  useEffect(() => {
+    const body = document.body;
+    const allAmbient = ["ambient-full", "ambient-low", "ambient-charging"] as const;
+
+    if (!data) {
+      allAmbient.forEach((cls) => body.classList.remove(cls));
+      return;
+    }
+
+    const level = data.batteryLevel ?? 0;
+    const isCharging = data.chargingState === "charging";
+
+    body.classList.remove(...allAmbient);
+    if (isCharging) {
+      body.classList.add("ambient-charging");
+    } else if (level >= 80) {
+      body.classList.add("ambient-full");
+    } else if (level <= 20) {
+      body.classList.add("ambient-low");
+    }
+
+    return () => {
+      allAmbient.forEach((cls) => body.classList.remove(cls));
+    };
+  }, [data]);
 
   return (
     <PageWrapper className="relative mx-auto max-w-xl gap-4 px-0">
