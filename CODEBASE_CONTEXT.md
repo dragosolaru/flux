@@ -32,6 +32,12 @@ src/
       charging/               # Charging sessions + sync
       costs/                  # CostDashboard — monthly trend, kpi cards
       energy/                 # Tariff page + SmartChargeCard
+      garage/                 # Fleet management — add/deactivate vehicles
+      map/                    # Unified map — explore chargers or plan trips (bottom sheet)
+      trip/                   # Standalone trip planner (legacy of map split)
+      charging-map/           # Charging station map — filter by power/connector
+      commands/               # Remote vehicle control (lock/unlock/climate/honk)
+      about-data/             # Data transparency — live vs demo per data type
       settings/               # Locale, currency, home location, danger zone
     api/
       auth/                   # NextAuth [...nextauth] + /register + /tesla/callback
@@ -209,6 +215,7 @@ if (!profile.capabilities.commands[COMMAND_CAP_MAP[command]]) {
 
 | File | What's in it |
 |------|-------------|
+| `docs/USER-JOURNEY.md` | All user journeys, screen reference, feature gates, PWA install flow |
 | `docs/ARCHITECTURE.md` | Engineering decisions, DB schema rationale, module boundaries |
 | `docs/SYSTEMS.md` | Every third-party service — Supabase, Tesla API, Cloudmailin, Anthropic |
 | `docs/VEHICLE-CONNECTION.md` | Tesla OAuth PKCE flow, token lifecycle, VCP proxy setup |
