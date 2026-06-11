@@ -9,7 +9,6 @@ import { useEffect, type ComponentType } from "react";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { checkCapability, type Capability } from "@/lib/capabilities";
 import { slideUp } from "@/lib/animations/variants";
-import { cn } from "@/lib/utils";
 
 interface SlideUpMenuProps {
   open: boolean;
@@ -26,8 +25,8 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   { href: "/costs",        labelKey: "nav.costs",        icon: Receipt,  capability: "VEHICLE" },
   { href: "/energy",       labelKey: "nav.energy",       icon: Zap,      capability: "TARIFF" },
-  { href: "/commands",     labelKey: "nav.commands",     icon: Gamepad2, capability: "COMMANDS" },
   { href: "/charging-map", labelKey: "nav.charging_map", icon: MapPin,   capability: "NONE" },
+  { href: "/commands",     labelKey: "nav.commands",     icon: Gamepad2, capability: "COMMANDS" },
   { href: "/settings",     labelKey: "nav.settings",     icon: Settings, capability: "NONE" },
   { href: "/about-data",   labelKey: "nav.about",        icon: Info,     capability: "NONE" },
 ];
@@ -78,49 +77,45 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
               <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
             </div>
 
-            <div className="flex items-center justify-between px-5 pt-3 pb-2">
-              <h2 className="text-base font-semibold tracking-tight">{t("nav.more")}</h2>
+            <div className="flex justify-end px-3 pt-1 pb-2">
               <button
                 type="button"
                 onClick={onClose}
                 aria-label={t("common.close")}
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <ul className="space-y-1 px-3 pb-4">
+            <div className="grid grid-cols-2 gap-2 px-3 pb-4">
               {MENU_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const gate = caps ? checkCapability(item.capability, caps) : { ok: true as const };
                 const needsUnlock = !gate.ok;
                 return (
-                  <li key={item.href}>
-                    <motion.div whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-                      <Link
-                        href={item.href}
-                        onClick={onClose}
-                        className={cn(
-                          "flex items-center gap-3 rounded-xl px-3 py-3 text-base transition-colors",
-                          "text-foreground hover:bg-accent active:bg-accent/70",
-                        )}
-                      >
-                        <div className="flex size-9 items-center justify-center rounded-xl bg-accent/60">
-                          <Icon className="size-5 text-foreground/70" />
-                        </div>
-                        <span className="flex-1">{t(item.labelKey)}</span>
-                        {needsUnlock && (
-                          <span aria-hidden className="text-xs text-muted-foreground/70">
-                            ✦
-                          </span>
-                        )}
-                      </Link>
-                    </motion.div>
-                  </li>
+                  <motion.div
+                    key={item.href}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      className="flex items-center gap-2.5 rounded-[10px] bg-white/[0.05] px-3 py-3"
+                    >
+                      <Icon className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-medium">{t(item.labelKey)}</span>
+                      {needsUnlock && (
+                        <span aria-hidden className="ml-auto text-xs text-muted-foreground/70">
+                          ✦
+                        </span>
+                      )}
+                    </Link>
+                  </motion.div>
                 );
               })}
-            </ul>
+            </div>
           </motion.div>
         </>
       )}

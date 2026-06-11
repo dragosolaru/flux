@@ -1427,3 +1427,15 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/components/vehicle/DepartureCard.tsx`, `src/components/vehicle/CommandPanel.tsx`, `src/components/vehicle/BatteryHealthCard.tsx`, `src/components/vehicle/StatsGrid.tsx`, `src/components/vehicle/TirePressureCard.tsx`, `src/components/vehicle/WeatherRangeCard.tsx`, `src/components/vehicle/DoorsWindowsCard.tsx`, `src/components/vehicle/ScoresCard.tsx`, `src/components/vehicle/SentryDashcamCard.tsx`, `src/components/vehicle/SoftwareCard.tsx`.
 
 **Dependencies:** `GlassCard` (`src/components/ui/glass-card.tsx`). No new npm packages.
+
+---
+
+## More Menu — Compact Grid
+
+**What it does:** The "More" slide-up sheet (BottomNav → More tab) renders its 6 destinations as a 2-column grid of compact monochrome tiles instead of a 6-row vertical list — the sheet is half as tall and items need less thumb travel. Colored icon circles removed (bare `size-4 text-muted-foreground` icons, 2027 design); the sheet title removed (drag handle + small `size-8` close button remain); items ordered by frequency of use: Costs, Energy, Charging map, Commands, Settings, About data. Capability gating (`✦` unlock hint) still renders inline after the label; drag-to-dismiss, backdrop, and safe-area padding unchanged.
+
+**How to use:** Mobile only — tap "More" in the bottom nav; tap a tile to navigate (sheet closes), drag down or tap X to dismiss.
+
+**Key files:** `src/components/layout/SlideUpMenu.tsx`.
+
+**Dependencies:** None — Framer Motion and `useCapabilities` already in use.
