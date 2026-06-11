@@ -154,7 +154,9 @@
       "vehicles": "Vehicles",
       "billing": "Subscription",
       "danger": "Danger Zone",
-      "charger": "Charger network"
+      "charger": "Charger network",
+      "account_billing": "Account & Billing",
+      "advanced": "Advanced"
     },
     "locale": {
       "label": "Language",

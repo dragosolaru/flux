@@ -154,7 +154,9 @@
       "vehicles": "Fahrzeuge",
       "billing": "Abonnement",
       "danger": "Gefahrenzone",
-      "charger": "Ladenetz"
+      "charger": "Ladenetz",
+      "account_billing": "Konto & Abonnement",
+      "advanced": "Erweitert"
     },
     "locale": {
       "label": "Sprache",

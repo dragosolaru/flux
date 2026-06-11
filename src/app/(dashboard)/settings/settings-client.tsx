@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
@@ -14,6 +15,7 @@ import {
   CreditCard,
   Car,
   ChevronRight,
+  ChevronDown,
   Trash2,
   Smartphone,
 } from "lucide-react";
@@ -132,26 +134,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
     <PageWrapper className="mx-auto max-w-2xl pb-8">
       <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
 
-      {/* Account section */}
-      <section>
-        <SectionHeader label={t("section.account")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRow
-            icon={<User className="size-4 text-blue-400" />}
-            iconBg="bg-blue-500/20"
-            label={t("account.name")}
-            value={userName ?? "—"}
-          />
-          <SettingsRow
-            icon={<Mail className="size-4 text-purple-400" />}
-            iconBg="bg-purple-500/20"
-            label={t("account.email")}
-            value={userEmail ?? "—"}
-          />
-        </GlassCard>
-      </section>
-
-      {/* Preferences section */}
+      {/* Esențial — Preferences */}
       <section>
         <SectionHeader label={t("section.preferences")} />
         <GlassCard className="divide-y divide-white/[0.04]">
@@ -176,7 +159,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         </GlassCard>
       </section>
 
-      {/* Location section */}
+      {/* Home location */}
       <section id="home-location">
         <SectionHeader label={t("section.location")} />
         <GlassCard className="divide-y divide-white/[0.04]">
@@ -187,17 +170,24 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
           >
             <HomeLocationPicker />
           </SettingsRowExpanded>
+        </GlassCard>
+      </section>
+
+      {/* Energy tariff */}
+      <section id="tariff">
+        <SectionHeader label={t("section.tariff")} />
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
-            icon={<MessageCircle className="size-4 text-green-400" />}
-            iconBg="bg-green-500/20"
-            label="WhatsApp"
+            icon={<Zap className="size-4 text-yellow-400" />}
+            iconBg="bg-yellow-500/20"
+            label={t("tariff.label")}
           >
-            <WhatsAppPhonePicker />
+            <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
           </SettingsRowExpanded>
         </GlassCard>
       </section>
 
-      {/* Vehicles section */}
+      {/* Vehicles */}
       <section>
         <SectionHeader label={t("section.vehicles")} />
         <VehicleSectionBoundary
@@ -244,7 +234,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                     </div>
                   </SettingsRowExpanded>
                 ) : (
-                  <div key={v.id} className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+                  <div key={v.id} className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
                       <Car className="size-4 text-blue-400" />
                     </div>
@@ -278,101 +268,168 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         </VehicleSectionBoundary>
       </section>
 
-      {/* Energy tariff section */}
-      <section id="tariff">
-        <SectionHeader label={t("section.tariff")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRowExpanded
-            icon={<Zap className="size-4 text-yellow-400" />}
-            iconBg="bg-yellow-500/20"
-            label={t("tariff.label")}
-          >
-            <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
-          </SettingsRowExpanded>
-        </GlassCard>
-      </section>
+      {/* Contul & Billing — collapsible */}
+      <CollapsibleSection
+        titleKey="section.account_billing"
+        storageKey="settings-billing-open"
+        defaultOpen={false}
+      >
+        <section>
+          <GlassCard className="divide-y divide-white/[0.04]">
+            <SettingsRow
+              icon={<User className="size-4 text-blue-400" />}
+              iconBg="bg-blue-500/20"
+              label={t("account.name")}
+              value={userName ?? "—"}
+            />
+            <SettingsRow
+              icon={<Mail className="size-4 text-purple-400" />}
+              iconBg="bg-purple-500/20"
+              label={t("account.email")}
+              value={userEmail ?? "—"}
+            />
+          </GlassCard>
+        </section>
 
-      {/* Charger data health section */}
-      <section id="charger-health">
-        <SectionHeader label={t("section.charger")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRowExpanded
-            icon={<Zap className="size-4 text-amber-400" />}
-            iconBg="bg-amber-500/20"
-            label={t("charger.label")}
-          >
-            <ChargerHealthCard />
-          </SettingsRowExpanded>
-        </GlassCard>
-      </section>
-
-      {/* Subscription section */}
-      <section id="billing">
-        <SectionHeader label={t("section.billing")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <div className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-              <CreditCard className="size-4 text-primary" />
+        <section id="billing" className="mt-3">
+          <GlassCard className="divide-y divide-white/[0.04]">
+            <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+                <CreditCard className="size-4 text-primary" />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {subscriptionTier === "pro"
+                      ? t("billing.plan_pro")
+                      : t("billing.plan_free")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {subscriptionTier === "pro"
+                      ? t("billing.plan_pro_desc")
+                      : t("billing.plan_free_desc")}
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  {subscriptionTier === "pro" ? (
+                    <ManageSubscriptionButton />
+                  ) : (
+                    <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-2">
-              <div className="min-w-0">
-                <p className="text-sm font-medium">
-                  {subscriptionTier === "pro"
-                    ? t("billing.plan_pro")
-                    : t("billing.plan_free")}
-                </p>
+            {subscriptionTier === "free" && (
+              <div className="px-4 py-2.5">
                 <p className="text-xs text-muted-foreground">
-                  {subscriptionTier === "pro"
-                    ? t("billing.plan_pro_desc")
-                    : t("billing.plan_free_desc")}
+                  {t("billing.pro_unlock_note")}{" "}
+                  <a href="/pricing" className="underline underline-offset-2">
+                    {t("billing.see_all_features")}
+                  </a>
                 </p>
               </div>
-              <div className="shrink-0">
-                {subscriptionTier === "pro" ? (
-                  <ManageSubscriptionButton />
-                ) : (
-                  <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
-                )}
-              </div>
-            </div>
-          </div>
-          {subscriptionTier === "free" && (
-            <div className="px-4 py-3">
-              <p className="text-xs text-muted-foreground">
-                {t("billing.pro_unlock_note")}{" "}
-                <a href="/pricing" className="underline underline-offset-2">
-                  {t("billing.see_all_features")}
-                </a>
-              </p>
-            </div>
-          )}
-        </GlassCard>
-      </section>
+            )}
+          </GlassCard>
+        </section>
 
-      {/* Danger zone section */}
-      <section>
-        <SectionHeader label={t("section.danger")} />
-        <GlassCard>
-          <div className="flex flex-wrap items-center gap-3 px-4 py-4">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/20">
-              <Trash2 className="size-4 text-destructive" />
+        <section className="mt-3">
+          <GlassCard>
+            <div className="flex flex-wrap items-center gap-3 px-4 py-4">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/20">
+                <Trash2 className="size-4 text-destructive" />
+              </div>
+              <span className="min-w-0 flex-1 text-sm font-medium text-destructive">
+                {t("danger_zone.delete_button")}
+              </span>
+              <DangerZone />
             </div>
-            <span className="min-w-0 flex-1 text-sm font-medium text-destructive">
-              {t("danger_zone.delete_button")}
-            </span>
-            <DangerZone />
-          </div>
-        </GlassCard>
-      </section>
+          </GlassCard>
+        </section>
+      </CollapsibleSection>
+
+      {/* Avansat — collapsible */}
+      <CollapsibleSection
+        titleKey="section.advanced"
+        storageKey="settings-advanced-open"
+        defaultOpen={false}
+      >
+        <section id="whatsapp">
+          <GlassCard className="divide-y divide-white/[0.04]">
+            <SettingsRowExpanded
+              icon={<MessageCircle className="size-4 text-green-400" />}
+              iconBg="bg-green-500/20"
+              label="WhatsApp"
+            >
+              <WhatsAppPhonePicker />
+            </SettingsRowExpanded>
+          </GlassCard>
+        </section>
+
+        <section id="charger-health" className="mt-3">
+          <GlassCard className="divide-y divide-white/[0.04]">
+            <SettingsRowExpanded
+              icon={<Zap className="size-4 text-amber-400" />}
+              iconBg="bg-amber-500/20"
+              label={t("charger.label")}
+            >
+              <ChargerHealthCard />
+            </SettingsRowExpanded>
+          </GlassCard>
+        </section>
+      </CollapsibleSection>
     </PageWrapper>
   );
 }
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">
+    <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/40 px-1 mb-1 mt-5 first:mt-0">
       {label}
     </p>
+  );
+}
+
+function CollapsibleSection({
+  titleKey,
+  children,
+  storageKey,
+  defaultOpen = false,
+}: {
+  titleKey: string;
+  children: React.ReactNode;
+  storageKey: string;
+  defaultOpen?: boolean;
+}) {
+  const t = useTranslations("settings");
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return defaultOpen;
+    const stored = localStorage.getItem(storageKey);
+    return stored !== null ? stored === "true" : defaultOpen;
+  });
+
+  const toggle = () => {
+    setOpen((v) => {
+      const next = !v;
+      localStorage.setItem(storageKey, String(next));
+      return next;
+    });
+  };
+
+  return (
+    <section>
+      <button
+        onClick={toggle}
+        className="flex w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
+      >
+        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/40">
+          {t(titleKey)}
+        </span>
+        <ChevronDown
+          className={`size-3 text-muted-foreground/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && children}
+    </section>
   );
 }
 
@@ -387,7 +444,7 @@ interface SettingsRowProps {
 
 function SettingsRow({ icon, iconBg, label, value, control, chevron }: SettingsRowProps) {
   return (
-    <div className="flex min-h-[52px] items-center gap-3 px-4 py-2">
+    <div className="flex min-h-[44px] items-center gap-3 px-4 py-2.5">
       <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
         {icon}
       </div>
@@ -408,7 +465,7 @@ interface SettingsRowExpandedProps {
 
 function SettingsRowExpanded({ icon, iconBg, label, children }: SettingsRowExpandedProps) {
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-2.5">
       <div className="mb-3 flex items-center gap-3">
         <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
           {icon}

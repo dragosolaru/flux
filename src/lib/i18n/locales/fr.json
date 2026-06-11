@@ -154,7 +154,9 @@
       "vehicles": "Véhicules",
       "billing": "Abonnement",
       "danger": "Zone dangereuse",
-      "charger": "Réseau de recharge"
+      "charger": "Réseau de recharge",
+      "account_billing": "Compte & Abonnement",
+      "advanced": "Avancé"
     },
     "locale": {
       "label": "Langue",

@@ -154,7 +154,9 @@
       "vehicles": "Vehicule",
       "billing": "Abonament",
       "danger": "Zonă periculoasă",
-      "charger": "Rețea de încărcare"
+      "charger": "Rețea de încărcare",
+      "account_billing": "Cont & Abonament",
+      "advanced": "Avansat"
     },
     "locale": {
       "label": "Limbă",

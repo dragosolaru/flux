@@ -154,7 +154,9 @@
       "vehicles": "Járművek",
       "billing": "Előfizetés",
       "danger": "Veszélyzóna",
-      "charger": "Töltőhálózat"
+      "charger": "Töltőhálózat",
+      "account_billing": "Fiók & Előfizetés",
+      "advanced": "Speciális"
     },
     "locale": {
       "label": "Nyelv",

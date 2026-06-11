@@ -1319,3 +1319,22 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **i18n:** `auth.email_label`, `auth.password_label`, `auth.tagline` in all 5 locales.
 
 **Dependencies:** No new npm packages.
+
+---
+
+## Flux 2027 Design System — Settings Collapsible Sections
+
+**What it does:** Compact rows and progressive disclosure for the Settings screen.
+
+- Row height reduced: `min-h-[52px]` → `min-h-[44px]`, `py-3` → `py-2.5`.
+- Section headers near-invisible structural markers (`text-muted-foreground/40`), no bold titles.
+- Section order: Esențial (preferences) → Home location → Energy tariff → Vehicles → Contul & Billing (collapsed by default) → Avansat (collapsed by default).
+- "Contul & Billing" collapses account info + subscription + danger zone under one togglable header.
+- "Avansat" collapses WhatsApp picker + charger network health under one togglable header.
+- Collapse state persisted to `localStorage` keys `settings-billing-open` / `settings-advanced-open`.
+
+**How to use:** Visit `/settings`. Click the section header button to expand/collapse. Preference survives page reload.
+
+**Key files:** `src/app/(dashboard)/settings/settings-client.tsx`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
+
+**Dependencies:** React `useState`, `localStorage`, `lucide-react` `ChevronDown`, `next-intl`.
