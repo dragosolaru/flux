@@ -99,13 +99,13 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
     );
   }
 
-  // State still loading — show a skeleton grid instead of greyed-out buttons
+  // State still loading — show a skeleton row instead of greyed-out buttons
   // that look broken/frozen on first load.
   if (!state) {
     return (
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-3">
         {buttons.map((_, i) => (
-          <Skeleton key={i} className="min-h-[80px] rounded-2xl" />
+          <Skeleton key={i} className="size-9 rounded-full" />
         ))}
       </div>
     );
@@ -116,7 +116,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-2 gap-3"
+      className="flex gap-3"
     >
       {buttons.map(({ cmd, label, icon: Icon, inFlight: fly, active }) => {
         const isSending = fly;
@@ -126,36 +126,28 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
               whileTap={{ scale: 0.95 }}
               onClick={() => send(cmd)}
               disabled={isPending || !state}
+              title={label}
+              aria-label={label}
               className={[
-                "flex min-h-[80px] w-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 transition-all",
-                "glass-card",
+                "size-9 rounded-full flex items-center justify-center transition-all",
+                "bg-white/8 backdrop-blur-sm border border-white/8",
                 active
-                  ? "border-primary/60 shadow-lg shadow-primary/20"
-                  : "border-white/8",
+                  ? "border-primary/60 bg-primary/15 shadow-lg shadow-primary/20"
+                  : "",
                 isSending
                   ? "pointer-events-none opacity-60"
-                  : "hover:border-white/15 hover:bg-white/8",
+                  : "hover:border-white/15 hover:bg-white/15",
                 !state && "cursor-not-allowed opacity-50",
               ]
                 .filter(Boolean)
                 .join(" ")}
             >
               {isSending ? (
-                <Loader2 className="size-8 animate-spin text-primary" />
+                <Loader2 className="size-4 animate-spin text-primary" />
               ) : (
                 <Icon
-                  className={`size-8 ${active ? "text-primary" : "text-foreground"}`}
+                  className={`size-4 ${active ? "text-primary" : "text-muted-foreground"}`}
                 />
-              )}
-              <span
-                className={`text-sm font-medium ${active ? "text-primary" : "text-foreground"}`}
-              >
-                {label}
-              </span>
-              {isSending && (
-                <span className="text-[10px] text-muted-foreground">
-                  {t("sending")}
-                </span>
               )}
             </motion.button>
           </motion.div>

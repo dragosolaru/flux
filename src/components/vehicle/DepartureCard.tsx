@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 
 interface DepartureCardProps {
@@ -49,17 +48,15 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <CalendarClock className="size-4" />
-          {t("title")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <CalendarClock className="size-4 text-muted-foreground shrink-0" />
+        <span className="text-base font-medium">{t("title")}</span>
+      </div>
+      <div className="space-y-4">
         {/* Scheduled departure */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
             {t("departure_label")}
           </p>
           <p className="text-xs text-muted-foreground">{t("departure_hint")}</p>
@@ -68,14 +65,14 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
               type="time"
               value={departureTime}
               onChange={(e) => setDepartureTime(e.target.value)}
-              className="h-9 rounded-md border bg-background px-3 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+              className="auth-input w-full"
             />
             <Button
               variant={scheduledConfirm ? "default" : "outline"}
               size="sm"
               onClick={handleScheduleDeparture}
               disabled={isPending || scheduledConfirm}
-              className="min-w-28"
+              className="min-w-28 h-10 rounded-[10px]"
             >
               {scheduledConfirm ? (
                 <><CheckCircle2 className="size-3.5 mr-1.5" />{t("scheduled")}</>
@@ -92,7 +89,7 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
 
         {/* Precondition now */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
             {t("precondition_label")}
           </p>
           <p className="text-xs text-muted-foreground">{t("precondition_hint")}</p>
@@ -101,7 +98,7 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
             size="sm"
             onClick={handlePreconditionNow}
             disabled={isPending || precondConfirm}
-            className="min-w-40"
+            className="min-w-40 h-10 rounded-[10px]"
           >
             {precondConfirm ? (
               <><CheckCircle2 className="size-3.5 mr-1.5" />{t("preconditioned")}</>
@@ -112,7 +109,7 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
             )}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -1404,3 +1404,26 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 - `src/app/(dashboard)/map/map-client.tsx` — tab switcher → underline+motion; sliders → slim; vehicle select → auth-input; plan CTA → h-11; trip summary text sizing.
 
 **Dependencies:** Framer Motion (already in tree), `auth-input` CSS class (already in `globals.css`).
+
+---
+
+## Flux 2027 Design System — Vehicle Card Polish (Wave 3A)
+
+**What it does:** Visual polish pass on all vehicle dashboard cards to align with the 2027 design system. Changes across every card: shadcn `Card`/`CardHeader`/`CardContent` replaced with `GlassCard` + plain `<div>` wrappers; all colored icons converted to monochrome `size-4 text-muted-foreground shrink-0`; section labels changed to `text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50`; hero/stat numbers changed from `font-bold`/`font-semibold` to `font-thin`.
+
+- `DepartureCard`: Removed old `Card` imports; time input uses `auth-input w-full` (borderless bottom-line); buttons updated to `h-10 rounded-[10px]`.
+- `CommandPanel`: Quick-action buttons converted from large `min-h-[80px]` card grid to compact `size-9 rounded-full` circular icon-only buttons with `aria-label` for accessibility.
+- `BatteryHealthCard`: Created with `GlassCard`, `font-thin` percentage, monochrome `HeartPulse` icon.
+- `StatsGrid`: Created with `GlassCard` per stat tile, monochrome icons, `text-[10px]` labels, `text-sm font-medium` values.
+- `TirePressureCard`: Created with `GlassCard`, `font-thin` pressure numbers, `text-[10px]` position labels.
+- `WeatherRangeCard`: Created with `GlassCard`, monochrome weather icons, `font-thin` range number.
+- `DoorsWindowsCard`: Created with `GlassCard`, monochrome `DoorOpen` icon, `text-[10px]` sub-labels.
+- `ScoresCard`: Created with `GlassCard`, `font-thin` score numbers, `text-[10px]` labels with icons.
+- `SentryDashcamCard`: Created with `GlassCard`, monochrome `Shield`/`Camera` icons.
+- `SoftwareCard`: Created with `GlassCard`, monochrome `Cpu` icon.
+
+**How to use:** Cards are imported and rendered in the vehicle dashboard. `CommandPanel` is used in the dashboard quick-actions area.
+
+**Key files:** `src/components/vehicle/DepartureCard.tsx`, `src/components/vehicle/CommandPanel.tsx`, `src/components/vehicle/BatteryHealthCard.tsx`, `src/components/vehicle/StatsGrid.tsx`, `src/components/vehicle/TirePressureCard.tsx`, `src/components/vehicle/WeatherRangeCard.tsx`, `src/components/vehicle/DoorsWindowsCard.tsx`, `src/components/vehicle/ScoresCard.tsx`, `src/components/vehicle/SentryDashcamCard.tsx`, `src/components/vehicle/SoftwareCard.tsx`.
+
+**Dependencies:** `GlassCard` (`src/components/ui/glass-card.tsx`). No new npm packages.
