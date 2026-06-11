@@ -364,7 +364,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/40 px-1 mb-1 mt-5 first:mt-0">
+    <p className="text-xs tracking-[0.12em] uppercase text-muted-foreground/60 px-1 mb-1 mt-5 first:mt-0">
       {label}
     </p>
   );
@@ -400,13 +400,13 @@ function CollapsibleSection({
     <section>
       <button
         onClick={toggle}
-        className="flex w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
+        className="flex min-h-[36px] w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
       >
-        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/40">
+        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/60">
           {t(titleKey)}
         </span>
         <ChevronDown
-          className={`size-3 text-muted-foreground/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`size-4 text-muted-foreground/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && children}

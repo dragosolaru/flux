@@ -16,8 +16,8 @@ function ScoreRing({ score, label, icon: Icon }: {
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className={cn("text-2xl font-thin tabular-nums", color)}>{score}</div>
-      <div className="flex items-center gap-1 text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+      <div className={cn("text-2xl font-light tabular-nums", color)}>{score}</div>
+      <div className="flex items-center gap-1 text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
         <Icon className="size-3" />
         {label}
       </div>
@@ -43,7 +43,7 @@ export function ScoresCard({
   return (
     <GlassCard>
       <div className="p-4 space-y-3">
-        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
           Scores
         </span>
         <div className="flex gap-8">

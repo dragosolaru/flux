@@ -100,7 +100,7 @@ export function Sidebar() {
         <Icon className="size-4" />
         <span className="flex-1">{t(item.labelKey)}</span>
         {needsUnlock && (
-          <span aria-hidden className="text-[10px] text-muted-foreground/70 transition-opacity group-hover:text-foreground">
+          <span aria-hidden className="text-xs text-muted-foreground/70 transition-opacity group-hover:text-foreground">
             ✦
           </span>
         )}
@@ -127,7 +127,7 @@ export function Sidebar() {
             <Zap className="size-4" />
           </div>
           <div className="font-semibold tracking-tight">Flux</div>
-          <div className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="ml-auto text-xs uppercase tracking-wider text-muted-foreground">
             DAO Lab
           </div>
         </div>
@@ -135,7 +135,7 @@ export function Sidebar() {
         <nav className="flex-1 space-y-5 overflow-y-auto p-3">
           {SECTIONS.map((section) => (
             <div key={section.titleKey} className="space-y-1">
-              <div className="px-3 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              <div className="px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
                 {t(section.titleKey)}
               </div>
               {section.items.map(renderItem)}

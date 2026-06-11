@@ -39,7 +39,7 @@ export function WeatherRangeCard({ vehicleId }: WeatherRangeCardProps) {
   return (
     <GlassCard>
       <div className="p-4 space-y-2">
-        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
           Weather &amp; Range
         </span>
         {isLoading || !data ? (
@@ -63,7 +63,7 @@ export function WeatherRangeCard({ vehicleId }: WeatherRangeCardProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="cursor-default space-y-0.5">
-                      <div className="text-xl font-thin tabular-nums">
+                      <div className="text-xl font-light tabular-nums">
                         {data.derating.deratedKm} km
                         {data.derating.totalPct < -0.5 && (
                           <span className="ml-1.5 text-sm font-normal text-muted-foreground">

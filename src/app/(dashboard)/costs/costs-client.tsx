@@ -196,7 +196,7 @@ function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
                 <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground">
                   {label}
                 </span>
-                <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-[10px] shadow-lg backdrop-blur-sm group-hover:block">
+                <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-xs shadow-lg backdrop-blur-sm group-hover:block">
                   <span className="font-semibold">{m.costRon.toFixed(0)} lei</span>
                   <span className="ml-1 text-muted-foreground">· {m.kwh.toFixed(1)} kWh</span>
                 </div>

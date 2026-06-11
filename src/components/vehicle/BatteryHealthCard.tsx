@@ -25,7 +25,7 @@ export function BatteryHealthCard({
       <div className="p-4 space-y-3">
         <div className="flex items-center gap-2">
           <HeartPulse className="size-4 text-muted-foreground shrink-0" />
-          <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+          <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
             Battery Health
           </span>
         </div>
@@ -34,7 +34,7 @@ export function BatteryHealthCard({
             <div className="flex items-end gap-1">
               <span
                 className={cn(
-                  "text-2xl font-thin tabular-nums",
+                  "text-2xl font-light tabular-nums",
                   batteryHealthPct >= 90
                     ? "text-chart-2"
                     : batteryHealthPct >= 80

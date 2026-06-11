@@ -56,7 +56,7 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
       <div className="space-y-4">
         {/* Scheduled departure */}
         <div className="space-y-2">
-          <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+          <p className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
             {t("departure_label")}
           </p>
           <p className="text-xs text-muted-foreground">{t("departure_hint")}</p>
@@ -89,7 +89,7 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
 
         {/* Precondition now */}
         <div className="space-y-2">
-          <p className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+          <p className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
             {t("precondition_label")}
           </p>
           <p className="text-xs text-muted-foreground">{t("precondition_hint")}</p>

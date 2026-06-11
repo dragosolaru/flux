@@ -62,7 +62,7 @@ export function StatsGrid({ state }: StatsGridProps) {
             <div className="flex flex-col gap-1 p-4">
               <div className="flex items-center gap-1.5">
                 <Icon className="size-4 text-muted-foreground shrink-0" />
-                <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+                <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
                   {s.label}
                 </span>
               </div>

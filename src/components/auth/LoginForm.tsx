@@ -74,7 +74,7 @@ export function LoginForm({ mode }: LoginFormProps) {
 
       <form onSubmit={onSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground/50 mb-1 block">
+          <label htmlFor="email" className="text-xs uppercase tracking-[0.1em] text-muted-foreground/60 mb-1 block">
             {t("email_label")}
           </label>
           <input
@@ -88,7 +88,7 @@ export function LoginForm({ mode }: LoginFormProps) {
           />
         </div>
         <div>
-          <label htmlFor="password" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground/50 mb-1 block">
+          <label htmlFor="password" className="text-xs uppercase tracking-[0.1em] text-muted-foreground/60 mb-1 block">
             {t("password_label")}
           </label>
           <input

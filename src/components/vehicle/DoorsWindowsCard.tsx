@@ -55,7 +55,7 @@ export function DoorsWindowsCard({
       <div className="p-4 space-y-3">
         <div className="flex items-center gap-2">
           <DoorOpen className="size-4 text-muted-foreground shrink-0" />
-          <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+          <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
             Doors &amp; Windows
           </span>
         </div>
@@ -65,7 +65,7 @@ export function DoorsWindowsCard({
           <>
             {doorsOpen && (
               <div>
-                <p className="mb-1.5 text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">Doors</p>
+                <p className="mb-1.5 text-xs tracking-[0.12em] uppercase text-muted-foreground/70">Doors</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   <StatusDot open={doorsOpen.frontLeft} label="FL" />
                   <StatusDot open={doorsOpen.frontRight} label="FR" />
@@ -76,7 +76,7 @@ export function DoorsWindowsCard({
             )}
             {windowsOpen && (
               <div>
-                <p className="mb-1.5 text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">Windows</p>
+                <p className="mb-1.5 text-xs tracking-[0.12em] uppercase text-muted-foreground/70">Windows</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   <StatusDot open={windowsOpen.frontLeft} label="FL" />
                   <StatusDot open={windowsOpen.frontRight} label="FR" />

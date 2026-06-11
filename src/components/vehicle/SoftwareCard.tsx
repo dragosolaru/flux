@@ -20,7 +20,7 @@ export function SoftwareCard({
       <div className="p-4 space-y-2">
         <div className="flex items-center gap-2">
           <Cpu className="size-4 text-muted-foreground shrink-0" />
-          <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+          <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
             Software
           </span>
         </div>

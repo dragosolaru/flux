@@ -103,6 +103,7 @@ export function PriceCurveChart({
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => (v * 100).toFixed(0)}
+            label={{ value: "ct/kWh", angle: -90, position: "insideLeft", offset: 10, style: { fontSize: 10, fill: "currentColor", opacity: 0.5 } }}
           />
           <Tooltip content={<GlassTooltip />} />
 

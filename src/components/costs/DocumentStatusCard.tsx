@@ -128,10 +128,10 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <StatusIcon status={doc.status} />
               <span className="text-xs text-muted-foreground">{t(`status.${STATUS_KEY[doc.status]}`)}</span>
               {doc.source === "email" && (
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">email</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">email</span>
               )}
               {doc.source === "whatsapp" && (
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">WhatsApp</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">WhatsApp</span>
               )}
             </div>
 

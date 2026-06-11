@@ -1463,3 +1463,22 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/(dashboard)/map/map-client.tsx` (sheet bottom anchor + drag-end state sync + content bottom padding), `src/app/globals.css` (`.leaflet-bottom` offset, standalone media query).
 
 **Dependencies:** None new. Applies to the shared `StationMap`/`TripMap` Leaflet components, so `/charging-map` gets the attribution fix via the same global CSS.
+
+---
+
+## Accessibility & UX Polish — Wave 5 (User Research)
+
+**What it does:** P0/P1 accessibility and readability fixes across the app based on user research across 10 personas.
+
+1. **Text size floor (12px min):** All `text-[10px]` user-visible labels replaced with `text-xs` (12px) across vehicle cards, settings, sidebar, auth, and chart tooltips. Passes WCAG AA at iOS Large Text sizes.
+2. **Contrast improvement:** Section header and stat label opacity raised from `/40`–`/50` to `/60`–`/70` on `text-muted-foreground`, improving readability without visual noise.
+3. **Auth input border visibility:** `.auth-input` border-bottom raised from 12% to 22% opacity; focus state to 70%. Input boundaries are now visible without looking like traditional form fields.
+4. **Font weight on card numbers:** `font-thin` (weight 100) changed to `font-light` (weight 300) on BatteryHealthCard, ScoresCard, TirePressureCard, WeatherRangeCard numeric readouts. Dashboard hero SOC stays `font-thin` (large text, readable).
+5. **PriceCurveChart Y-axis unit label:** YAxis now shows `ct/kWh` label so users know the unit without reading the tooltip.
+6. **CollapsibleSection tap target:** ChevronDown icon `size-3` → `size-4`; toggle button gets `min-h-[36px]` to meet 44px-class tap target guidelines.
+
+**How to use:** Automatic — all changes are in UI components with no API or configuration changes.
+
+**Key files:** `src/app/globals.css`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/components/vehicle/StatsGrid.tsx`, `src/components/vehicle/BatteryHealthCard.tsx`, `src/components/vehicle/ScoresCard.tsx`, `src/components/vehicle/TirePressureCard.tsx`, `src/components/vehicle/WeatherRangeCard.tsx`, `src/components/vehicle/DepartureCard.tsx`, `src/components/vehicle/DoorsWindowsCard.tsx`, `src/components/vehicle/SentryDashcamCard.tsx`, `src/components/vehicle/SoftwareCard.tsx`, `src/components/energy/PriceCurveChart.tsx`, `src/components/auth/LoginForm.tsx`, `src/components/layout/Sidebar.tsx`.
+
+**Dependencies:** None new.

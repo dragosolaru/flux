@@ -22,14 +22,14 @@ function TireBar({
     <div className="flex flex-col items-center gap-1">
       <div
         className={cn(
-          "text-base font-thin tabular-nums",
+          "text-base font-light tabular-nums",
           isLow || isHigh ? "text-destructive" : "text-foreground",
         )}
       >
         {psi}
         <span className="ml-0.5 text-xs font-normal text-muted-foreground">psi</span>
       </div>
-      <div className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">{label}</div>
+      <div className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">{label}</div>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function TirePressureCard({ tirePressures: t }: TirePressureCardProps) {
   return (
     <GlassCard>
       <div className="p-4 space-y-3">
-        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
           Tire Pressure
         </span>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">

@@ -19,7 +19,7 @@ function StatusBadge({ live, label }: { live: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide",
         live
           ? "bg-chart-2/15 text-chart-2"
           : "bg-amber-500/15 text-amber-600 dark:text-amber-400",

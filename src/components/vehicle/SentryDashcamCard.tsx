@@ -23,7 +23,7 @@ export function SentryDashcamCard({
   return (
     <GlassCard>
       <div className="p-4 space-y-3">
-        <span className="text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50">
+        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/70">
           Security
         </span>
         {showSentry && (

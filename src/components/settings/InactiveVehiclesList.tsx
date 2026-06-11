@@ -97,7 +97,7 @@ export function InactiveVehiclesList({
         >
           <span>
             {t("inactive_vehicles_title")}{" "}
-            <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px]">
+            <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-xs">
               {inactiveVehicles.length}
             </span>
           </span>
