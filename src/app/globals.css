@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.65rem;
+  --radius: 0.625rem; /* was 0.65rem */
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -109,6 +109,46 @@
   border-color: oklch(1 0 0 / 6%);
 }
 
+/* Solid surface card — no blur, for static content */
+.data-card {
+  background: oklch(0.13 0.015 265);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+}
+
+/* Slightly elevated interactive card */
+.action-card {
+  background: oklch(0.16 0.012 265);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid oklch(1 0 0 / 0.05);
+}
+
+/* Auth borderless input */
+.auth-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: 0;
+  padding: 0.5rem 0;
+  font-size: 0.9375rem;
+  width: 100%;
+  color: inherit;
+  transition: border-color 200ms ease;
+}
+.auth-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+.auth-input::placeholder {
+  color: oklch(1 0 0 / 0.25);
+}
+
+/* Ambient background tinting based on vehicle state */
+.ambient-charging { background-color: oklch(0.12 0.028 250) !important; }
+.ambient-low      { background-color: oklch(0.12 0.025 45) !important;  }
+.ambient-full     { background-color: oklch(0.12 0.022 162) !important; }
+
 /* Clean minimal card — replaces the heavy glass pattern */
 .surface-card {
   background: oklch(0.13 0.015 265);
@@ -127,10 +167,14 @@
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+  --text-2xs: 0.625rem;
+  --text-xs: 0.6875rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -179,6 +223,7 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     overscroll-behavior: none;
+    transition: background-color 1.4s ease; /* ambient tinting */
   }
   main {
     -webkit-overflow-scrolling: touch;

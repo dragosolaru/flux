@@ -73,7 +73,7 @@ export function TopBar() {
     <header className="shrink-0 bg-background">
       {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
       <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
-      <div className="flex h-11 min-w-0 items-center gap-2 md:border-b px-4 md:h-14 md:px-6">
+      <div className="flex h-10 min-w-0 items-center gap-2 md:border-b px-4 md:h-14 md:px-6">
       <div className="md:hidden flex shrink-0 items-center gap-2 text-sm font-semibold">Flux</div>
 
       <div className="min-w-0 flex-1"><VehicleSwitcher /></div>

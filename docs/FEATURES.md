@@ -1286,3 +1286,31 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/globals.css`, `src/components/layout/TopBar.tsx`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/app/(dashboard)/garage/garage-client.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`, `src/components/auth/LoginForm.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
 
 **Dependencies:** No new deps — all changes are Tailwind utility classes and CSS custom properties.
+
+---
+
+## Flux 2027 Design System — Foundation Layer
+
+**What it does:** Establishes the CSS token foundation, a scroll-aware navigation hook, and a redesigned floating-pill bottom nav for the "Flux 2027" visual direction.
+
+**Changes:**
+
+- `globals.css` — `--radius` tightened to `0.625rem`. New `@theme inline` tokens: `--radius-xs/sm/md/lg/xl/pill`, `--text-2xs/xs`. New utility classes: `.data-card` (static content surface), `.action-card` (interactive elevated card), `.auth-input` (borderless auth form input with animated underline), `.ambient-charging/low/full` (background tinting for vehicle state). Body rule gains `transition: background-color 1.4s ease` to support smooth ambient tinting.
+- `useScrollDirection.ts` (new hook) — returns `"top" | "up" | "down"` based on `window.scrollY` delta, using `requestAnimationFrame` throttling and a configurable threshold (default 8px). Passive scroll listener, cleans up on unmount.
+- `BottomNav.tsx` — full rewrite to a **floating centered pill** (`position: fixed`, centered via `left: 50% / translateX: -50%`). Pill slides down off-screen when `scrollDir === "down"` (Framer Motion `animate.y`). Active tab shows animated label with `AnimatePresence` height transition. Capability gating (lock indicator ✦) and `SlideUpMenu` are preserved. Tab order: Car · Map · Charging · More.
+- `TopBar.tsx` — `h-11 → h-10` on mobile (saves 4px).
+- `(dashboard)/layout.tsx` — main element gains `pb-[calc(72px+env(safe-area-inset-bottom))]` to prevent the floating pill from covering content.
+
+**How to use:**
+- Utility classes (`.data-card`, `.action-card`, `.auth-input`, `.ambient-*`) are available globally.
+- `useScrollDirection(threshold?)` — import from `@/hooks/useScrollDirection`; returns the current scroll direction.
+- Bottom nav auto-hides on scroll down and reappears on scroll up or when the More sheet is open.
+
+**Key files:**
+- `src/app/globals.css`
+- `src/hooks/useScrollDirection.ts`
+- `src/components/layout/BottomNav.tsx`
+- `src/components/layout/TopBar.tsx`
+- `src/app/(dashboard)/layout.tsx`
+
+**Dependencies:** Framer Motion v12 (already installed). No new npm packages.
