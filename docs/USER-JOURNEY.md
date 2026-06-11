@@ -5,6 +5,8 @@
 >
 > Kept honest: every journey described here exists in shipped code, not in a roadmap.
 
+**Last updated: 2026-06-11** — reflects the Flux 2027 design system (floating pill nav, onboarding overlay, 3-state map sheet, ambient dashboard tinting, borderless auth inputs).
+
 ---
 
 ## Table of Contents
@@ -19,6 +21,7 @@
 8. [Navigation Structure](#8-navigation-structure)
 9. [Feature Gates](#9-feature-gates)
 10. [PWA Install Flow](#10-pwa-install-flow)
+11. [Design System — Flux 2027](#11-design-system--flux-2027)
 
 ---
 
@@ -51,7 +54,7 @@ The user sees:
 
 Options:
 - Google OAuth (one tap, no password needed)
-- Email + password form
+- Email + password form (borderless bottom-line inputs, "flux" wordmark above the form, minimal centered layout)
 
 Copy confirms: *Free during beta — no credit card needed.*
 
@@ -59,26 +62,35 @@ On success → redirect to `/dashboard`.
 
 ---
 
-### Step 3 — Dashboard (empty state)
+### Step 3 — Onboarding Overlay (new users, first `/dashboard` visit)
 
-No vehicle yet. The user sees:
-- An **empty hero card** with prompt to add a vehicle
-- A **"Getting Started" checklist card** (4 steps, none complete):
-  1. ⬜ Add a vehicle — links to garage/add modal
-  2. ⬜ Upload a receipt — links to `/costs`
-  3. ⬜ Set home location — links to `/settings#home-location`
-  4. ⬜ Explore demo mode — links to `/garage`
+Before the dashboard is shown, a **fullscreen 3-screen onboarding overlay** covers the page (`localStorage["flux-onboarding-v2"]` controls visibility). Slides:
+
+1. **Welcome** — "flux" wordmark + brief value prop CTA
+2. **Track costs** — cost-tracking pitch with CTA
+3. **Plan trips** — trip-planning pitch with CTA
+
+Navigation: advance via CTA buttons; skip via "Skip" link on screens 1–2. On completion or skip the overlay sets `flux-onboarding-v2=done` in localStorage and the user sees the dashboard for the first time.
 
 ---
 
-### Step 4 — Add Vehicle (modal)
+### Step 4 — Dashboard (empty state)
 
-Triggered from the checklist or from **Garage → Add**.
+No vehicle yet. The user sees:
+- An **empty hero** — SOC placeholder, prompt to add a vehicle
+- No checklist card (the overlay has replaced the old Getting Started checklist for new users)
+
+---
+
+### Step 5 — Add Vehicle (modal)
+
+Triggered from the empty hero or **Garage → Add**.
 
 Fields:
 - **Model** — dropdown (Model 3, Model Y, Model S, Model X)
 - **Year** — dropdown (2018–2025)
 - **Nickname** — free text (required)
+- **VIN (optional)** — auto-detects model + year from a 17-char Tesla VIN
 - **Scenario** — radio selection for mock behaviour:
   - **Commuter** — short daily trips, mostly home charging
   - **Weekend errands** — irregular usage pattern
@@ -91,23 +103,21 @@ On success: success screen → "View vehicle" → `/dashboard?v={vehicleId}`.
 
 ---
 
-### Step 5 — Live Dashboard with Mock Data
+### Step 6 — Live Dashboard with Mock Data
 
 The user now sees:
-- **Battery ring** — SOC %, range in km
-- **Status** — charging / driving / parked / preconditioned
+- **SOC hero** — battery % in `text-7xl font-thin`, range below in `text-lg font-light text-muted-foreground`; floats directly on the page background with no card chrome
+- **Ambient tinting** — `document.body` gains `ambient-charging` / `ambient-low` / `ambient-full` CSS class based on battery state; the page background slowly transitions colour (1.4s ease)
 - **Live badge** — pulsates while fetching; refreshes every 30s
-- **Stat chips** — power (kW), temperature (°C), odometer (km), charging current
-- **Quick actions** — Lock, Unlock, Climate On/Off, Honk, Flash (mock engine simulates responses)
+- **Stat chips** — power (kW), temperature (°C), odometer (km), charging current, last-charge kWh (horizontal scroll)
+- **Quick actions** — `size-9 rounded-full` circular icon-only buttons (Climate, Lock, Charge) with `aria-label`; no text labels
 - **Mock banner** — blue strip at top indicating demo data
-
-The checklist step 1 (Add vehicle) now shows ✅.
 
 ---
 
-### Step 6 — Connect Real Tesla (optional)
+### Step 7 — Connect Real Tesla (optional)
 
-From: onboarding card, settings, or garage vehicle menu.
+From: settings or garage vehicle menu.
 
 Flow:
 1. Click "Connect Tesla" → `/api/tesla/connect`
@@ -126,13 +136,13 @@ Note: *Virtual Key must be added via Tesla app → Security → Virtual Keys for
 ### Morning check
 
 1. Open app (installed as PWA or browser) → `/dashboard`
-2. See battery % and estimated range → decide if top-up needed
+2. See battery % and estimated range — ambient body colour hints at charge state (green tint = full, red tint = low)
 3. If parked at home with ≥ 80% → no action; close app
-4. If parked at home with < 30% → tap "Climate On" (warms battery) + check `/energy` for cheapest charging window
+4. If parked at home with < 30% → tap circular Climate action (warms battery) + check `/energy` for cheapest charging window
 
 ### Charging session start
 
-1. Plugin in → `/charging` → live status card shows power input (kW), current SOC, time to 80%
+1. Plugin in → **Charging** tab (bottom nav) → live status card shows power input (kW), current SOC, time to 80%
 2. Optional: adjust charge limit slider (default: 80%, slider range: 50–100%)
 3. Optional: toggle scheduled charging → set departure time → Tesla will optimise when to start
 
@@ -148,42 +158,48 @@ Note: *Virtual Key must be added via Tesla app → Security → Virtual Keys for
 
 > Persona: planning a trip from Florești (Cluj) to Alicante, Spain — ~2 100 km.
 
-### Step 1 — Plan route (`/trip` or `/map` → Plan tab)
+### Step 1 — Open the map (`/map` → Plan tab)
+
+Tap the **Map** tab in the floating pill bottom nav. The bottom sheet starts at mid height (44 vh). Tap to the Plan tab.
 
 Form inputs:
-- **Origin** — "Florești, Cluj" (geocoded via Nominatim)
+- **Origin** — "Florești, Cluj" (typeahead geocoded via Nominatim/TomTom/Photon with **location bias** — origin searches bias toward the user's current GPS position; destination searches bias toward the selected origin)
 - **Destination** — "Alicante, Spain"
-- **Battery %** — slider, current SOC (e.g. 87%)
-- **Vehicle** — selected automatically if only one vehicle
+- **Battery %** — slim custom SOC slider (h-1 track, circular thumb)
+- **Options disclosure** (collapsed by default) — arrival SOC target, vehicle selector
 
 Click **Plan route**.
 
 ### Step 2 — Review results
 
+After planning, the sheet auto-collapses to 68 px showing a compact summary strip (time · km · stops · cost) so the route polyline is visible. Tap the strip or handle pill to expand to mid or full height.
+
 The planner returns:
 - **Total distance** — e.g. 2 012 km
 - **Estimated duration** — e.g. 20h 40min (inc. charging breaks + traffic delay)
 - **Charging stops** — typically 9–12 stops along route corridor with:
-  - Station name + network
+  - Station name + network badge
+  - Reliability badge (verified/stale/offline) from OCM
   - SOC on arrival (e.g. 14%) and departure (e.g. 85%)
   - Charging duration (e.g. 28 min at 250 kW Supercharger)
   - Energy added (kWh) and estimated cost (€)
-- **Variants** — Fastest / Fewest stops / Cheapest (toggle between)
-- **Cost comparison** — EV total vs petrol equivalent (configurable L/100km + €/L)
+- **Variants** — distinct road alternatives (via ORS/OSRM), each with semantic label: Fastest / Fewest stops / Cheapest; chips show `h m · km · stops · €` for direct comparison
+- **Cost comparison** — EV total vs petrol equivalent (user-configurable L/100km + €/L, persisted in localStorage)
+- Preconditioning badge on each DC fast-charge stop (auto for Superchargers, amber recommendation for others)
 
 Warning shown if partial route due to coverage gaps.
 
-### Step 3 — Send to car
+### Step 3 — Send to Tesla
 
-Click **Send to Tesla** → route + preconditioning commands sent to car:
-- Nav waypoints loaded in Tesla navigation
-- Battery preconditioning for first Supercharger stop starts
+Click **Send to Tesla** → waypoints + preconditioning commands sent:
+- Nav waypoint (next stop or destination) loaded in Tesla navigation
+- Battery preconditioning for the first Supercharger stop starts
 
 Success state shows green confirmation banner.
 
 ### During trip
 
-The `/charging` screen updates as each stop is visited. `/dashboard` shows live range and position.
+The **Charging** tab updates as each stop is visited. The **Car** tab (dashboard) shows live range and position.
 
 ---
 
@@ -193,7 +209,7 @@ The `/charging` screen updates as each stop is visited. `/dashboard` shows live 
 
 ### Receipt upload flow
 
-1. `/costs` → **Add receipt** button
+1. `/costs` → FAB (`+` button, bottom-right) → opens upload card
 2. Camera icon → take photo of paper receipt, or upload PDF
 3. OCR (Claude Vision) extracts:
    - Total cost (RON/EUR/other)
@@ -205,7 +221,7 @@ The `/charging` screen updates as each stop is visited. `/dashboard` shows live 
 
 ### WhatsApp receipt inbox (Pro)
 
-1. Settings → Notifications → configure WhatsApp number
+1. Settings → expand "Avansat" section → configure WhatsApp number
 2. When charging at a public station that sends a WhatsApp receipt:
    - Forward message to Flux WhatsApp inbox
    - System auto-extracts cost + kWh
@@ -226,7 +242,7 @@ The `/charging` screen updates as each stop is visited. `/dashboard` shows live 
 
 ### Upgrade gate
 
-- A **lock icon (✦)** appears on gated nav items and feature buttons
+- A **lock icon (✦)** appears on gated items
 - Clicking a gated feature shows an inline upgrade card:
   - Current plan (Free) vs Pro (€4.99/month)
   - Feature list comparison
@@ -240,7 +256,7 @@ The `/charging` screen updates as each stop is visited. `/dashboard` shows live 
 
 ### Manage subscription
 
-1. `/settings` → Billing section
+1. `/settings` → expand "Contul & Billing" section
 2. **Manage plan** button → Stripe Customer Portal
 3. Change card, cancel, view invoices — all handled by Stripe; no sensitive data in Flux DB
 
@@ -269,10 +285,11 @@ Each screen is listed with its route, primary content blocks, and the most commo
 
 | Block | Content |
 |-------|---------|
+| "flux" wordmark | Tagline centered above form |
 | Google button | One-tap OAuth |
-| Email form | Email + password + submit |
+| Email form | Borderless bottom-line inputs (`auth-input` class), micro-labels above fields |
 | Error state | "Invalid email or password" inline |
-| Footer | "New here?" → `/register` |
+| Footer | "New here?" → `/register` (inline `·` separator) |
 
 ---
 
@@ -280,10 +297,11 @@ Each screen is listed with its route, primary content blocks, and the most commo
 
 | Block | Content |
 |-------|---------|
+| "flux" wordmark | Tagline centered above form |
 | Google button | One-tap OAuth |
-| Email form | Email + password |
+| Email form | Borderless bottom-line inputs, micro-labels |
 | Trust copy | "Free during beta — no credit card needed" |
-| Footer | "Already have account?" → `/login` |
+| Footer | "Already have account?" → `/login` (inline `·` separator) |
 
 ---
 
@@ -291,12 +309,14 @@ Each screen is listed with its route, primary content blocks, and the most commo
 
 | Block | Content |
 |-------|---------|
-| Getting Started card | Checklist (only while steps incomplete, dismissible) |
+| OnboardingOverlay | 3-screen fullscreen overlay (new users only, once) |
 | Mock banner | Blue strip (only for demo vehicles) |
-| HeroCard | Battery %, range, live badge, charging ring |
-| Stat chips | kW · °C · km · A (scrollable row) |
-| Quick actions | Lock · Unlock · Climate · Honk · Flash |
+| SOC hero | Battery % (`text-7xl font-thin`), range (`text-lg font-light`), no card chrome |
+| Ambient tinting | Body background shifts: green (≥80%), red (≤20%), blue (charging) |
+| Stat chips | kW · °C · km · A · last-charge kWh (horizontal scroll) |
+| Quick actions | Circular icon-only buttons (`size-9 rounded-full`): Climate · Lock · Charge |
 | Charging overlay | If active: SOC bar, power, time to target |
+| Vehicle cards | Battery health, tires, doors/windows, scores, software, weather range |
 | Pull-to-refresh | Drag down (mobile) → immediate refetch |
 
 **Most common action:** Check battery on arrival / departure
@@ -340,27 +360,34 @@ Each screen is listed with its route, primary content blocks, and the most commo
 
 ### `/map` — Unified Map
 
-Two modes, toggled via tab bar inside the sheet:
+Full-screen map with a **3-state draggable bottom sheet**. The handle pill at the top of the sheet advances through states on tap; dragging also snaps to the nearest state.
+
+| Sheet state | Height | Contents |
+|-------------|--------|---------|
+| Collapsed | 68 px | Summary strip: nearest station or active trip (time · km · stops · cost) |
+| Mid | 44 vh | Explore mode: filter chips + station list; Plan mode: form + results |
+| Full | 90 dvh | Full detail list or full trip results |
 
 #### Explore tab
 | Block | Content |
 |-------|---------|
-| Full-screen map | Cluster pins → individual station pins |
-| Filter toggle pill | Power / connector filter chips |
-| Station count badge | Live count, pulsates while loading |
-| Station tap | Opens detail sheet: name, power, connectors, availability |
+| Full-screen map | CARTO Voyager tiles; clustered station pins |
+| Filter chips | Compact `h-7 text-xs` pills: power tier + connector type |
+| Station count badge | Live count, pulsates while loading; "Looking for stations…" in cold areas |
+| Station tap | Opens detail sheet; map stays interactive |
 | Locate me | Centers map on user position |
 
 #### Plan tab
 | Block | Content |
 |-------|---------|
-| Origin / Destination | Geocoding search with typeahead |
-| Battery % sliders | Current SOC + target arrival SOC |
-| Vehicle selector | Dropdown if multi-vehicle |
-| Plan button | Triggers route computation |
-| Results summary | Distance · time · stops · cost (compact strip) |
-| Stop list | Expandable list of charging stops |
-| Route on map | Polyline + stop markers stay visible while reading results |
+| Origin / Destination | Geocoding search with typeahead + location bias (origin → user GPS; destination → origin point) |
+| Battery % sliders | Slim custom track (h-1), circular thumb; Current SOC + arrival SOC target |
+| Options disclosure | Collapsed by default: vehicle selector, arrival SOC |
+| Plan button | `h-11 rounded-[10px]` primary CTA |
+| Results summary | Distance · time · stops · cost (compact strip in collapsed sheet) |
+| Stop list | Expandable list of charging stops with network + reliability badges |
+| Variant chips | Distinct road alternatives; semantic badges: Fastest / Fewest stops / Cheapest |
+| Tab switcher | Underline style with Framer Motion indicator |
 
 ---
 
@@ -368,26 +395,27 @@ Two modes, toggled via tab bar inside the sheet:
 
 | Block | Content |
 |-------|---------|
-| Full-screen map | Cluster bubbles → individual pins |
-| Filter toggle | Power (50kW+, fast, slow) + connector (Type 2, CCS, Tesla) |
-| Station count badge | Live count with ingestion status |
-| Detail sheet | Name, address, connectors, availability badge, last verified |
+| Full-screen map | CARTO Voyager tiles; clustered station bubbles |
+| Filter chips | Power (All/50+/150+/350 kW) + connector (Type 2/CCS/CHAdeMO/Tesla) |
+| Station count badge | Live count with ingestion status; cold-area polling indicator |
+| Detail sheet | Name, address, connectors, availability badge (operational/stale/offline/unknown) |
+| List sheet | Bottom sheet: in-view stations sorted by distance + debounced search |
 | Locate me | GPS centering |
 
 ---
 
-### `/trip` — Trip Planner (legacy)
+### `/trip` — Trip Planner
 
-Standalone trip planner (pre-dates `/map`). Same form as Map → Plan tab.
+Standalone trip planner. Same planning logic as Map → Plan tab.
 
 | Block | Content |
 |-------|---------|
-| Route form | Origin, destination, battery %, vehicle |
-| Plan variants | Fastest · Fewest stops · Cheapest |
-| Results | Distance, duration, stop cards |
-| Fuel comparison | EV vs petrol cost (configurable) |
+| Route form | Origin + destination with typeahead + location bias; Options disclosure (battery %, vehicle, arrival SOC) |
+| Plan variants | Distinct road alternatives with semantic badges (Fastest / Fewest stops / Cheapest) |
+| Results | Distance, duration, stop cards with reliability badges |
+| Fuel comparison | EV vs petrol cost (user-configurable via inline inputs, persisted in localStorage) |
 | Send to Tesla | Share route + preconditioning |
-| Recent searches | Last 5 routes |
+| Recent destinations | Last 5 destinations (localStorage, LIFO, deletable) |
 
 ---
 
@@ -395,10 +423,10 @@ Standalone trip planner (pre-dates `/map`). Same form as Map → Plan tab.
 
 | Block | Content |
 |-------|---------|
-| KPI strip | Cost/km · home split · total kWh · efficiency · fuel savings |
+| KPI strip | Cost/km · home split · total kWh · efficiency · fuel savings (horizontal scroll) |
 | Monthly chart | 12-month bar chart, home vs public colour split |
-| Add receipt | Upload photo/PDF → OCR |
-| Document list | Status · extracted data · inline edit · delete |
+| FAB | `+` button (bottom-right, `bottom-24 right-4`) opens upload/ingest card |
+| Document list | Timeline-style: coloured dot+line per status; inline edit · delete |
 | Export CSV | Pro feature |
 
 ---
@@ -408,25 +436,26 @@ Standalone trip planner (pre-dates `/map`). Same form as Map → Plan tab.
 | Block | Content |
 |-------|---------|
 | Vehicle selector | Dropdown |
-| Action grid | Lock · Unlock · Climate On · Climate Off · Honk · Flash Lights |
-| Command status | Spinner → success/error toast |
+| Action grid | 2-column grid: Lock · Unlock · Climate On · Climate Off · Honk · Flash Lights |
+| Command status | Optimistic UI (instant state change) → success/error toast on server response |
 | Virtual Key hint | Shown if commands not pairing |
 
 ---
 
 ### `/settings` — Preferences
 
-| Section | Key settings |
-|---------|-------------|
-| Preferences | Language (EN/RO/DE/FR/HU), currency display |
-| Home location | Address + geocode verify (used for charging location tagging) |
-| Tariff | Energy provider, hourly rate, or live Tibber integration |
-| Notifications | WhatsApp number (Pro), email inbox (Pro) |
-| Vehicles | List · deactivate · delete · scenario switcher (mock only) |
-| Billing | Current plan, Upgrade CTA, Manage via Stripe Portal |
-| Account | Name, email, export all data (GDPR), delete account |
-| Charger network | Station count statistics |
-| Virtual Key | Setup guide link |
+Settings uses **collapsible sections** with progressive disclosure. Section collapse state persists to localStorage.
+
+| Section | Collapsed by default | Key settings |
+|---------|---------------------|-------------|
+| Esențial | No | Language (EN/RO/DE/FR/HU), currency display, Install app |
+| Home location | No | Address + geocode verify |
+| Energy tariff | No | Provider, hourly rate, Tibber |
+| Vehicles | No | List · scenario switcher (mock) · deactivate · inactive vehicles list |
+| Contul & Billing | Yes | Name, email, current plan, Upgrade CTA, Manage via Stripe Portal, GDPR export, delete account |
+| Avansat | Yes | WhatsApp number (Pro), charger network health stats |
+
+All inputs use `auth-input` (borderless bottom-line style). No colored icon circles — bare monochrome icons only.
 
 ---
 
@@ -452,16 +481,33 @@ Standalone trip planner (pre-dates `/map`). Same form as Map → Plan tab.
 
 ## 8. Navigation Structure
 
-### Bottom Navigation (mobile, always visible)
+### Bottom Navigation (mobile — floating pill)
 
-| Tab | Route | Gate |
-|-----|-------|------|
-| Dashboard | `/dashboard` | VEHICLE capability |
-| Charging | `/charging` | VEHICLE capability |
-| Map | `/map` | None |
-| More | Slide-up menu | None |
+The bottom nav is a **centered floating pill** that auto-hides when scrolling down and reappears when scrolling up or reaching the top. It sits `14px + env(safe-area-inset-bottom)` from the screen bottom.
 
-Locked tabs show a lock icon (✦) if the vehicle capability is absent (no vehicle connected or only inactive vehicles).
+| Tab | Route | Notes |
+|-----|-------|-------|
+| Car | `/dashboard` | Vehicle state |
+| Map | `/map` | Unified map + trip planner |
+| Charging | `/charging` | Charging sessions |
+| More | Slide-up sheet | Secondary destinations |
+
+Tapping the active tab scrolls the page back to the top.
+
+#### More sheet (SlideUpMenu)
+
+A glass slide-up sheet with a **2-column grid of compact monochrome tiles** (no colored icon circles). Items ordered by use frequency:
+
+| Tile | Route |
+|------|-------|
+| Costs | `/costs` |
+| Energy | `/energy` |
+| Charging map | `/charging-map` |
+| Commands | `/commands` |
+| Settings | `/settings` |
+| About data | `/about-data` |
+
+Drag down or tap X to dismiss.
 
 ### Sidebar (desktop, `md:` breakpoint)
 
@@ -499,7 +545,7 @@ Flux uses a capabilities model. Each capability is derived server-side from the 
 | `COMMANDS` | Remote lock/unlock/climate | Virtual Key paired in Tesla app |
 | `PRO` | 2nd+ vehicle, 4th+ doc upload, CSV export, WhatsApp/email inbox | Subscribe at `/pricing` → Stripe |
 
-In the UI, gated features show a **✦ lock icon** on sidebar items. Attempting to use a gated feature (add 2nd vehicle, export CSV) shows an inline upgrade card.
+In the UI, gated features show a **✦ lock icon**. Attempting to use a gated feature shows an inline upgrade card.
 
 ---
 
@@ -519,14 +565,46 @@ Flux is installable as a Progressive Web App.
 3. User follows system flow manually
 
 ### Post-install behaviour
-- Opens in standalone mode (no browser chrome)
+- Opens in **standalone mode** (no browser chrome)
 - Service worker caches app shell + last `/dashboard` visit
 - Offline: shows cached data with stale indicator
 - Updates: service worker refreshes on next network connection
+- **Map screens**: bottom sheet anchored above the floating pill nav (standalone-mode CSS offset); Leaflet attribution and controls lifted above the home indicator; iOS rubber-band over-scroll disabled
+- **Sheet state after drag**: snapped sheet state is preserved so the nav offset applies correctly after a drag release
 
 ### Install button in Settings
-`/settings` → bottom section → "Add to home screen" button (only shown if not already installed or on iOS).
+`/settings` → Esențial section → "Install app" row (only shown if not already installed or on iOS).
 
 ---
 
-*Last updated: 2026-06-11. Covers all shipped features as of commit `8076732`.*
+## 11. Design System — Flux 2027
+
+The 2027 design language applies across the entire app. Key principles:
+
+### Ambient numbers
+Hero stats (battery %, range, score numbers, tire pressures) use `font-thin` (`font-weight: 100`). They float on the bare page background with no card chrome. The dashboard SOC is `text-7xl font-thin tracking-tight`.
+
+### Floating pill nav
+The bottom nav is a pill-shaped floating element centered above the home indicator. It auto-hides on scroll down, returns on scroll up. Four tabs only (Car / Map / Charging / More) — secondary destinations live in the More grid.
+
+### Monochrome icons
+All icons throughout the app are `text-muted-foreground` (no colored circles). Section labels use `text-[10px] tracking-[0.12em] uppercase text-muted-foreground/50`.
+
+### Auth input pattern
+Text inputs (login, register, settings, modals) use `.auth-input`: borderless with only a bottom border-line, uppercase micro-label above. No rounded box border.
+
+### 3-state bottom sheet (map)
+The map sheet has three discrete snap heights: 68 px (collapsed summary) → 44 vh (mid / form) → 90 dvh (full). The handle pill clicks through these states; drag snaps to nearest.
+
+### Collapsible settings
+Long settings pages use collapsible sections (Contul & Billing, Avansat) to reduce initial scroll depth. Row height `min-h-[44px]`, section headers near-invisible structural markers.
+
+### Ambient body tinting (dashboard)
+`document.body` gains a CSS class based on battery state: `ambient-full` (≥80%), `ambient-low` (≤20%), `ambient-charging` (charging active). A 1.4s `background-color` transition in `globals.css` creates a slow ambient colour shift. Classes clean up on component unmount.
+
+### Button sizing
+Primary buttons: `h-11 rounded-[10px]`. Secondary/icon: `h-10 rounded-[10px]`. Circular quick-action buttons: `size-9 rounded-full`. Touch minimum: 44px.
+
+---
+
+*Last updated: 2026-06-11. Covers all shipped features as of the Flux 2027 design system.*
