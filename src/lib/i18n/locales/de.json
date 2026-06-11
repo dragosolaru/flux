@@ -789,5 +789,17 @@
     "plan_hint": "Route mit Ladestopps planen",
     "no_stations": "Keine Stationen in diesem Bereich gefunden",
     "drag_to_expand": "Nach oben ziehen zum Erweitern"
+  },
+  "onboarding_v2": {
+    "welcome_title": "Willkommen bei Flux",
+    "welcome_sub": "Dein E-Auto, elegant verwaltet.",
+    "welcome_cta": "Loslegen",
+    "step_costs_title": "Jeden Ladevorgang verfolgen",
+    "step_costs_body": "Leite Quittungen an dein Postfach weiter — Flux liest sie automatisch.",
+    "step_costs_cta": "Weiter",
+    "step_trip_title": "Klügere Fahrten planen",
+    "step_trip_body": "Routenbasierte Ladestopps, Live-Reichweitenberechnung.",
+    "step_trip_cta": "Los geht's",
+    "skip": "Überspringen"
   }
 }

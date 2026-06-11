@@ -789,5 +789,17 @@
     "plan_hint": "Plan a route with charging stops",
     "no_stations": "No stations found in this area",
     "drag_to_expand": "Drag up to expand"
+  },
+  "onboarding_v2": {
+    "welcome_title": "Welcome to Flux",
+    "welcome_sub": "Your EV, beautifully managed.",
+    "welcome_cta": "Get started",
+    "step_costs_title": "Track every charge",
+    "step_costs_body": "Forward receipts to your inbox — Flux reads them automatically.",
+    "step_costs_cta": "Next",
+    "step_trip_title": "Plan smarter trips",
+    "step_trip_body": "Route-aware charging stops, live range calculation.",
+    "step_trip_cta": "Let's go",
+    "skip": "Skip"
   }
 }

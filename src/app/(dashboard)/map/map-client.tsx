@@ -64,15 +64,18 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 // Bottom sheet snap points (px from bottom of screen)
 // ---------------------------------------------------------------------------
 
-const PEEK = 96;
+// Collapsed: 68px peek above bottom nav (Wave 2E spec)
+const PEEK = 68;
 // Taller peek used when a computed plan exists: leaves room for the compact
 // route summary strip while keeping the map (and its polyline) visible.
 const PEEK_SUMMARY = 158;
 function halfHeight() {
-  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.45) : 400;
+  // Mid: 44vh (Wave 2E spec)
+  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
 }
 function fullHeight() {
-  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.88) : 700;
+  // Full: 90dvh (Wave 2E spec) — use innerHeight as dvh proxy
+  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 720;
 }
 
 // Convert snap height → y offset (0 = fully open = sheet bottom at FULL height)
@@ -145,6 +148,12 @@ export function MapClient() {
   const searchParams = useSearchParams();
   const initialMode: MapMode = searchParams.get("mode") === "plan" ? "plan" : "explore";
   const [mode, setMode] = useState<MapMode>(initialMode);
+
+  // ---- 3-state sheet ----
+  type SheetState = "collapsed" | "mid" | "full";
+  const [sheetState, setSheetState] = useState<SheetState>(
+    initialMode === "plan" ? "mid" : "collapsed",
+  );
 
   // ---- Bottom sheet state ----
   // fullH is initialized lazily from window so it reflects the real viewport
@@ -279,6 +288,23 @@ export function MapClient() {
   // route stays visible on the map.
   const peekH = mode === "plan" && plan !== null ? PEEK_SUMMARY : PEEK;
 
+  function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
+    if (state === "collapsed") return 68;
+    if (state === "mid") return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
+    return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 700;
+  }
+
+  function applySheetState(state: "collapsed" | "mid" | "full") {
+    setSheetState(state);
+    snapTo(sheetStateToH(state), fullH);
+  }
+
+  function cycleSheetState() {
+    applySheetState(
+      sheetState === "collapsed" ? "mid" : sheetState === "mid" ? "full" : "collapsed",
+    );
+  }
+
   const canPlan = origin !== null && destination !== null;
 
   function handleLocateOrigin() {
@@ -326,7 +352,7 @@ export function MapClient() {
       setSharedRoute(false);
       // Collapse to summary peek so the route is visible on the map —
       // details stay one drag away (Google Maps pattern).
-      snapTo(PEEK_SUMMARY, fullH);
+      applySheetState("collapsed");
     } catch (err) {
       setPlanError(err instanceof Error ? err.message : tTrip("infeasible_hint"));
     } finally {
@@ -397,10 +423,9 @@ export function MapClient() {
   function switchMode(next: MapMode) {
     setMode(next);
     if (next === "plan") {
-      // No plan yet → open the form at half height; plan exists → summary peek.
-      snapTo(plan ? PEEK_SUMMARY : halfHeight(), fullH);
+      applySheetState(plan ? "collapsed" : "mid");
     } else {
-      snapTo(PEEK, fullH);
+      applySheetState("collapsed");
     }
   }
 
@@ -457,7 +482,7 @@ export function MapClient() {
                 key={String(opt.value)}
                 onClick={() => setMinKw(opt.value)}
                 aria-pressed={minKw === opt.value}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                className={`h-7 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   minKw === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
                     : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
@@ -473,7 +498,7 @@ export function MapClient() {
                 key={String(opt.value)}
                 onClick={() => setConnector(opt.value)}
                 aria-pressed={connector === opt.value}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                className={`h-7 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   connector === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
                     : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
@@ -500,7 +525,31 @@ export function MapClient() {
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
         >
-          <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
+          {/* Clickable handle pill — cycles collapsed → mid → full */}
+          <button
+            onClick={cycleSheetState}
+            className="mx-auto mb-2 flex w-full cursor-pointer items-center justify-center py-1"
+            aria-label="Toggle sheet height"
+          >
+            <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
+          </button>
+
+          {/* Collapsed summary strip */}
+          {sheetState === "collapsed" && (
+            <button
+              onClick={cycleSheetState}
+              className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between"
+            >
+              <span className="truncate text-sm text-muted-foreground">
+                {mode === "plan" && plan && activePlan
+                  ? `${Math.floor(activePlan.totalMinutes / 60)}h ${activePlan.totalMinutes % 60}min · ${Math.round(activePlan.totalDistanceKm)} km`
+                  : stations.length > 0
+                    ? `${stations[0].name ?? tCharging("station_fallback")} · ${stations[0].maxPowerKw != null ? `${stations[0].maxPowerKw} kW` : ""}`
+                    : tMap("explore_hint")}
+              </span>
+              <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
+            </button>
+          )}
 
           {/* Mode tabs */}
           <div className="mt-3 flex gap-1 px-4 pb-3">
@@ -530,7 +579,7 @@ export function MapClient() {
               the peek state shows the key numbers while the map shows the route. */}
           {mode === "plan" && plan && activePlan && (
             <button
-              onClick={() => snapTo(snapH <= peekH ? halfHeight() : PEEK_SUMMARY, fullH)}
+              onClick={() => applySheetState(sheetState === "collapsed" ? "mid" : "collapsed")}
               className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-left"
             >
               <div className="min-w-0">
@@ -551,15 +600,15 @@ export function MapClient() {
                   €{activePlan.tripEnergyCostEur.toFixed(2)}
                 </span>
                 <ChevronUp
-                  className={`size-4 text-muted-foreground transition-transform ${snapH > peekH ? "rotate-180" : ""}`}
+                  className={`size-4 text-muted-foreground transition-transform ${sheetState !== "collapsed" ? "rotate-180" : ""}`}
                 />
               </span>
             </button>
           )}
         </div>
 
-        {/* Sheet content — only rendered when sheet is at HALF or FULL */}
-        {snapH > peekH && (
+        {/* Sheet content — only rendered when sheet is at MID or FULL */}
+        {sheetState !== "collapsed" && (
           <div className="overflow-y-auto px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]" style={{ height: `${snapH - peekH}px` }}>
             {mode === "explore" ? (
               <ExploreContent

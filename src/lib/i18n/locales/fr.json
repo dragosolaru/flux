@@ -789,5 +789,17 @@
     "plan_hint": "Planifier un itinéraire avec des arrêts de recharge",
     "no_stations": "Aucune borne trouvée dans cette zone",
     "drag_to_expand": "Faites glisser vers le haut pour agrandir"
+  },
+  "onboarding_v2": {
+    "welcome_title": "Bienvenue sur Flux",
+    "welcome_sub": "Votre VE, géré élégamment.",
+    "welcome_cta": "Commencer",
+    "step_costs_title": "Suivre chaque recharge",
+    "step_costs_body": "Transférez vos reçus par email — Flux les lit automatiquement.",
+    "step_costs_cta": "Suivant",
+    "step_trip_title": "Planifiez des trajets plus intelligents",
+    "step_trip_body": "Arrêts de recharge adaptés à l'itinéraire, calcul de l'autonomie en temps réel.",
+    "step_trip_cta": "C'est parti",
+    "skip": "Passer"
   }
 }

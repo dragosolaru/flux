@@ -789,5 +789,17 @@
     "plan_hint": "Planifică o rută cu opriri de încărcare",
     "no_stations": "Nicio stație găsită în această zonă",
     "drag_to_expand": "Trage în sus pentru a extinde"
+  },
+  "onboarding_v2": {
+    "welcome_title": "Bun venit în Flux",
+    "welcome_sub": "Mașina ta EV, gestionată elegant.",
+    "welcome_cta": "Începe",
+    "step_costs_title": "Urmărește fiecare încărcare",
+    "step_costs_body": "Trimite chitanțele pe email — Flux le citește automat.",
+    "step_costs_cta": "Înainte",
+    "step_trip_title": "Planifică curse mai inteligente",
+    "step_trip_body": "Opriri de încărcare adaptate rutei, calcul live al autonomiei.",
+    "step_trip_cta": "Să mergem",
+    "skip": "Sari peste"
   }
 }

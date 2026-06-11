@@ -1352,3 +1352,29 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/(dashboard)/settings/settings-client.tsx`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
 
 **Dependencies:** React `useState`, `localStorage`, `lucide-react` `ChevronDown`, `next-intl`.
+
+---
+
+## Flux 2027 Design System — Map 3-State Bottom Sheet
+
+**What it does:** The map bottom sheet now cycles through 3 discrete snap heights via a clickable drag handle: collapsed (68 px — shows summary strip only), mid (44 vh — shows charger list or trip form), full (90 dvh — full screen). Clicking the handle pill advances through the states; dragging still snaps to the nearest. Filter chips updated to compact `h-7 text-xs rounded-full`.
+
+**How to use:** Visit `/map`. Tap the handle pill at the top of the bottom sheet to cycle states. The collapsed state shows the nearest charger name/power or an active trip summary strip.
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx`.
+
+**Dependencies:** Framer Motion (`useAnimation`, `motion.div`). No new npm packages.
+
+---
+
+## Flux 2027 Design System — Onboarding Overlay v2
+
+**What it does:** Full-screen 3-screen onboarding overlay shown once to new users (`localStorage["flux-onboarding-v2"] !== "done"`). Screens: Welcome → Track costs → Plan trips. Animated slide transitions (`AnimatePresence` + `motion.div`). Replaces `GettingStartedCard` in the dashboard return tree.
+
+**How to use:** Shown automatically on first visit to `/dashboard`. Advance via CTA buttons; skip via "Skip" link on screens 1–2. Sets `flux-onboarding-v2=done` in localStorage on completion or skip.
+
+**Key files:** `src/components/onboarding/OnboardingOverlay.tsx` (new), `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
+
+**i18n namespace:** `onboarding_v2` in all 5 locales. Keys: `welcome_title`, `welcome_sub`, `welcome_cta`, `step_costs_title`, `step_costs_body`, `step_costs_cta`, `step_trip_title`, `step_trip_body`, `step_trip_cta`, `skip`.
+
+**Dependencies:** Framer Motion (`AnimatePresence`, `motion.div`), `next-intl`. No new npm packages.

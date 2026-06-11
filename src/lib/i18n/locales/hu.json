@@ -789,5 +789,17 @@
     "plan_hint": "Útvonal tervezése töltési megállókkal",
     "no_stations": "Nem találhatók állomások ezen a területen",
     "drag_to_expand": "Húzza felfelé a kibontáshoz"
+  },
+  "onboarding_v2": {
+    "welcome_title": "Üdvözöl a Flux",
+    "welcome_sub": "Az elektromos autód, elegánsan kezelve.",
+    "welcome_cta": "Kezdés",
+    "step_costs_title": "Kövesd minden töltésedet",
+    "step_costs_body": "Küldd a nyugtákat e-mailre — a Flux automatikusan olvassa őket.",
+    "step_costs_cta": "Tovább",
+    "step_trip_title": "Tervezz okosabb utakat",
+    "step_trip_body": "Útvonalhoz igazított töltési megállók, valós idejű hatótávolság-számítás.",
+    "step_trip_cta": "Indulás",
+    "skip": "Kihagyás"
   }
 }
