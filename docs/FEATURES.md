@@ -1294,23 +1294,28 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **What it does:** Establishes the CSS token foundation, a scroll-aware navigation hook, and a redesigned floating-pill bottom nav for the "Flux 2027" visual direction.
 
 **Changes:**
+- `globals.css` — `--radius` tightened to `0.625rem`. New `@theme inline` tokens: `--radius-xs/sm/md/lg/xl/pill`, `--text-2xs/xs`. New utility classes: `.data-card`, `.action-card`, `.auth-input`, `.ambient-charging/low/full`. Body gains `transition: background-color 1.4s ease`.
+- `useScrollDirection.ts` (new) — returns `"top" | "up" | "down"` via rAF-throttled passive scroll listener.
+- `BottomNav.tsx` — full rewrite to floating centered pill. Auto-hides on scroll down. Tab order: Car · Map · Charging · More.
+- `TopBar.tsx` — `h-11 → h-10` mobile.
+- `(dashboard)/layout.tsx` — `pb-[calc(72px+env(safe-area-inset-bottom))]` on main.
 
-- `globals.css` — `--radius` tightened to `0.625rem`. New `@theme inline` tokens: `--radius-xs/sm/md/lg/xl/pill`, `--text-2xs/xs`. New utility classes: `.data-card` (static content surface), `.action-card` (interactive elevated card), `.auth-input` (borderless auth form input with animated underline), `.ambient-charging/low/full` (background tinting for vehicle state). Body rule gains `transition: background-color 1.4s ease` to support smooth ambient tinting.
-- `useScrollDirection.ts` (new hook) — returns `"top" | "up" | "down"` based on `window.scrollY` delta, using `requestAnimationFrame` throttling and a configurable threshold (default 8px). Passive scroll listener, cleans up on unmount.
-- `BottomNav.tsx` — full rewrite to a **floating centered pill** (`position: fixed`, centered via `left: 50% / translateX: -50%`). Pill slides down off-screen when `scrollDir === "down"` (Framer Motion `animate.y`). Active tab shows animated label with `AnimatePresence` height transition. Capability gating (lock indicator ✦) and `SlideUpMenu` are preserved. Tab order: Car · Map · Charging · More.
-- `TopBar.tsx` — `h-11 → h-10` on mobile (saves 4px).
-- `(dashboard)/layout.tsx` — main element gains `pb-[calc(72px+env(safe-area-inset-bottom))]` to prevent the floating pill from covering content.
+**Key files:** `src/app/globals.css`, `src/hooks/useScrollDirection.ts`, `src/components/layout/BottomNav.tsx`, `src/components/layout/TopBar.tsx`, `src/app/(dashboard)/layout.tsx`.
 
-**How to use:**
-- Utility classes (`.data-card`, `.action-card`, `.auth-input`, `.ambient-*`) are available globally.
-- `useScrollDirection(threshold?)` — import from `@/hooks/useScrollDirection`; returns the current scroll direction.
-- Bottom nav auto-hides on scroll down and reappears on scroll up or when the More sheet is open.
+**Dependencies:** Framer Motion (already installed). No new npm packages.
 
-**Key files:**
-- `src/app/globals.css`
-- `src/hooks/useScrollDirection.ts`
-- `src/components/layout/BottomNav.tsx`
-- `src/components/layout/TopBar.tsx`
-- `src/app/(dashboard)/layout.tsx`
+---
 
-**Dependencies:** Framer Motion v12 (already installed). No new npm packages.
+## Flux 2027 Design System — Auth Borderless Inputs & Minimal Layout
+
+**What it does:** Visual redesign of `/login` and `/register` — borderless bottom-line inputs, compact buttons, minimal centered layout. Zero API/logic changes.
+
+**Changes:**
+- `LoginForm.tsx` — inputs use `.auth-input` class (borderless bottom-line). Uppercase micro-labels above fields. `h-10 rounded-[10px]` on all buttons. `space-y-5` form spacing. Toggle link inline with `·` separator.
+- `login/page.tsx` + `register/page.tsx` — `flex min-h-[100dvh]` centered layout, `max-w-xs`, "flux" wordmark + tagline above form.
+
+**Key files:** `src/components/auth/LoginForm.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`, `src/lib/i18n/locales/*.json`.
+
+**i18n:** `auth.email_label`, `auth.password_label`, `auth.tagline` in all 5 locales.
+
+**Dependencies:** No new npm packages.

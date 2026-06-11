@@ -58,7 +58,7 @@ export function LoginForm({ mode }: LoginFormProps) {
       <button
         type="button"
         onClick={() => signIn("google", { callbackUrl })}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/6 bg-white/[0.04] py-3 text-sm font-medium transition-colors hover:bg-white/[0.07]"
+        className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-white/6 bg-white/[0.04] h-10 text-sm font-medium transition-colors hover:bg-white/[0.07]"
       >
         <GoogleMark />
         {t("google")}
@@ -72,10 +72,10 @@ export function LoginForm({ mode }: LoginFormProps) {
         <div className="flex-1 border-t border-white/6" />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <label htmlFor="email" className="text-sm font-medium">
-            {t("email")}
+      <form onSubmit={onSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="email" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground/50 mb-1 block">
+            {t("email_label")}
           </label>
           <input
             id="email"
@@ -84,12 +84,12 @@ export function LoginForm({ mode }: LoginFormProps) {
             value={email}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
-            className="w-full rounded-xl border border-white/6 bg-white/[0.04] px-4 py-3 text-base placeholder-muted-foreground/60 focus:border-primary/50 focus:outline-none"
+            className="auth-input"
           />
         </div>
-        <div className="space-y-1.5">
-          <label htmlFor="password" className="text-sm font-medium">
-            {t("password")}
+        <div>
+          <label htmlFor="password" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground/50 mb-1 block">
+            {t("password_label")}
           </label>
           <input
             id="password"
@@ -99,13 +99,13 @@ export function LoginForm({ mode }: LoginFormProps) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full rounded-xl border border-white/6 bg-white/[0.04] px-4 py-3 text-base placeholder-muted-foreground/60 focus:border-primary/50 focus:outline-none"
+            className="auth-input"
           />
         </div>
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          className="w-full rounded-[10px] bg-primary h-10 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           {pending
             ? mode === "login"
@@ -116,6 +116,24 @@ export function LoginForm({ mode }: LoginFormProps) {
               : t("submit_register")}
         </button>
       </form>
+
+      <p className="text-[12px] text-muted-foreground/60 text-center">
+        {mode === "login" ? (
+          <>
+            {t("no_account")}{" · "}
+            <a href="/register" className="underline underline-offset-2">
+              {t("create_account")}
+            </a>
+          </>
+        ) : (
+          <>
+            {t("have_account")}{" · "}
+            <a href="/login" className="underline underline-offset-2">
+              {t("sign_in_link")}
+            </a>
+          </>
+        )}
+      </p>
     </div>
   );
 }

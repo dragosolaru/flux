@@ -156,6 +156,26 @@
   border-radius: 1rem;
 }
 
+/* Borderless bottom-line input — Flux 2027 auth design */
+.auth-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: 0;
+  padding: 0.5rem 0;
+  font-size: 0.9375rem; /* 15px — iOS zoom safe */
+  width: 100%;
+  color: inherit;
+  transition: border-color 200ms ease;
+}
+.auth-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+.auth-input::placeholder {
+  color: oklch(1 0 0 / 0.25);
+}
+
 /* Floating pill — for map overlay buttons */
 .pill-float {
   background: oklch(0.16 0.015 265 / 0.92);
