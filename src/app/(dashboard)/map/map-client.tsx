@@ -200,10 +200,14 @@ export function MapClient() {
 
   function onDragEnd() {
     const currentH = fullH - currentSheetY.current;
-    const snaps = [peekH, halfHeight(), fullH];
+    const halfH = halfHeight();
+    const snaps = [peekH, halfH, fullH];
     const nearest = snaps.reduce((best, h) =>
       Math.abs(h - currentH) < Math.abs(best - currentH) ? h : best,
     );
+    // Keep sheetState in sync so the collapsed bottom offset (clearing the
+    // floating BottomNav) applies after drags, not just after taps.
+    setSheetState(nearest === fullH ? "full" : nearest === halfH ? "mid" : "collapsed");
     snapTo(nearest, fullH);
   }
 
@@ -518,10 +522,17 @@ export function MapClient() {
       )}
 
       {/* LAYER 3: Bottom sheet */}
+      {/* Collapsed: anchored above the floating BottomNav pill (14px gap +
+          ~50px pill + safe area) so the summary strip stays visible/tappable.
+          Mid/full: anchored at the screen bottom edge and slides over the nav. */}
       <motion.div
         animate={controls}
         initial={{ y: snapToY(initialSnapH, fullH) }}
-        className="absolute inset-x-0 bottom-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl"
+        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          sheetState === "collapsed"
+            ? "bottom-[calc(env(safe-area-inset-bottom)+78px)]"
+            : "bottom-0"
+        }`}
         style={{ height: `${fullH}px` }}
       >
         {/* Drag handle area */}
@@ -612,7 +623,7 @@ export function MapClient() {
 
         {/* Sheet content — only rendered when sheet is at MID or FULL */}
         {sheetState !== "collapsed" && (
-          <div className="overflow-y-auto px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]" style={{ height: `${snapH - peekH}px` }}>
+          <div className="overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+90px)]" style={{ height: `${snapH - peekH}px` }}>
             {mode === "explore" ? (
               <ExploreContent
                 stations={stations}

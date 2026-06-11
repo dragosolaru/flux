@@ -251,6 +251,20 @@
   }
 }
 
+/* Leaflet bottom controls (attribution, locate button) — lift above the iOS
+   home indicator so they aren't pinned to the screen edge in standalone PWA. */
+.leaflet-bottom {
+  bottom: calc(env(safe-area-inset-bottom) + 8px);
+}
+
+/* Installed PWA (standalone) — kill iOS rubber-band over-scroll + tap flash. */
+@media all and (display-mode: standalone) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+}
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

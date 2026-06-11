@@ -1451,3 +1451,15 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx` (`bias` prop), `src/app/(dashboard)/map/map-client.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/external/routing/planner.ts` (`planTripVariants` dedup signature).
 
 **Dependencies:** None new — existing TomTom/Photon/Nominatim cascade, browser geolocation.
+
+---
+
+## PWA Standalone Display Fixes
+
+**What it does:** Fixes installed-PWA (display-mode: standalone) layout collisions on the map screens. The map bottom sheet's collapsed summary strip is now anchored at `bottom: calc(env(safe-area-inset-bottom) + 78px)` so it sits fully visible and tappable above the floating pill BottomNav (which sits at `bottom: calc(14px + env(safe-area-inset-bottom))`); in mid/full states the sheet returns to the screen bottom edge and slides over the nav. Drag-release now syncs the 3-state sheet state so the offset applies after drags too. Leaflet bottom controls (attribution, locate button) are lifted by `env(safe-area-inset-bottom) + 8px` so the attribution stays readable above the home indicator. A `display-mode: standalone` media query disables iOS rubber-band over-scroll and the tap highlight flash.
+
+**How to use:** Automatic. Visible on `/map` and `/charging-map` in the installed PWA (or any mobile viewport with a bottom safe area).
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx` (sheet bottom anchor + drag-end state sync + content bottom padding), `src/app/globals.css` (`.leaflet-bottom` offset, standalone media query).
+
+**Dependencies:** None new. Applies to the shared `StationMap`/`TripMap` Leaflet components, so `/charging-map` gets the attribution fix via the same global CSS.
