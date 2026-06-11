@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { UpgradeButton } from "@/components/billing/UpgradeButton";
 import { cardVariants } from "@/lib/animations/variants";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,6 @@ export function IngestCard({
   const t = useTranslations();
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
   const atFreeTierLimit = hasProSubscription === false && docsThisMonth >= FREE_TIER_MAX;
   const uploadDisabled = disabled || atFreeTierLimit;
@@ -56,83 +55,75 @@ export function IngestCard({
 
   return (
     <motion.div variants={cardVariants}>
-      <Card>
-        <CardContent className="p-4 sm:p-5">
-          <div className="mb-3">
-            <h3 className="text-sm font-semibold">{t("ingest.title")}</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">{t("ingest.subtitle")}</p>
+      <GlassCard className="p-4 sm:p-5">
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold">{t("ingest.title")}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("ingest.subtitle")}</p>
+        </div>
+
+        {hasProSubscription === false && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              {t("ingest.free_tier_usage", { used: docsThisMonth, max: FREE_TIER_MAX })}
+            </p>
+            {atFreeTierLimit && (
+              <UpgradeButton
+                label={t("ingest.upgrade_cta")}
+                size="sm"
+                variant="default"
+              />
+            )}
           </div>
+        )}
 
-          {hasProSubscription === false && (
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2">
-              <p className="text-xs text-muted-foreground">
-                {t("ingest.free_tier_usage", { used: docsThisMonth, max: FREE_TIER_MAX })}
-              </p>
-              {atFreeTierLimit && (
-                <UpgradeButton
-                  label={t("ingest.upgrade_cta")}
-                  size="sm"
-                  variant="default"
-                />
-              )}
-            </div>
-          )}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            onChange={handleFile}
+            className="hidden"
+            disabled={uploadDisabled}
+          />
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onChange={handleFile}
-              className="hidden"
-              disabled={uploadDisabled}
-            />
+          <Option
+            icon={
+              uploading
+                ? <Loader2 className="size-4 animate-spin" />
+                : <Camera className="size-4" />
+            }
+            label={t("ingest.option.upload.label")}
+            hint={uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
+            onClick={pickFile}
+            disabled={uploadDisabled}
+          />
 
-            <Option
-              icon={
-                uploading
-                  ? <Loader2 className="size-5 animate-spin" />
-                  : <Camera className="size-5" />
-              }
-              label={t("ingest.option.upload.label")}
-              hint={uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
-              onClick={pickFile}
-              disabled={uploadDisabled}
-              hovered={hoveredKey === "upload"}
-              onHoverChange={(h) => setHoveredKey(h ? "upload" : null)}
-            />
+          <Option
+            icon={<Mail className="size-4" />}
+            label={t("ingest.option.email.label")}
+            hint={email ?? "—"}
+            monoHint
+            onClick={email ? copyEmail : undefined}
+            disabled={!email}
+            trailing={
+              email ? (
+                copied ? (
+                  <Check className="size-3.5 text-chart-2" />
+                ) : (
+                  <Copy className="size-3.5 text-muted-foreground" />
+                )
+              ) : null
+            }
+          />
 
-            <Option
-              icon={<Mail className="size-5" />}
-              label={t("ingest.option.email.label")}
-              hint={email ?? "—"}
-              monoHint
-              onClick={email ? copyEmail : undefined}
-              disabled={!email}
-              trailing={
-                email ? (
-                  copied ? (
-                    <Check className="size-3.5 text-chart-2" />
-                  ) : (
-                    <Copy className="size-3.5 text-muted-foreground" />
-                  )
-                ) : null
-              }
-              hovered={hoveredKey === "email"}
-              onHoverChange={(h) => setHoveredKey(h ? "email" : null)}
-            />
-
-            <Option
-              icon={<MessageCircle className="size-5" />}
-              label={t("ingest.option.whatsapp.label")}
-              hint={t("ingest.option.whatsapp.description")}
-              disabled
-              hovered={false}
-              onHoverChange={() => undefined}
-            />
-          </div>
-        </CardContent>
-      </Card>
+          <Option
+            icon={<MessageCircle className="size-4" />}
+            label={t("ingest.option.whatsapp.label")}
+            hint={t("ingest.option.whatsapp.description")}
+            disabled
+          />
+        </div>
+      </GlassCard>
     </motion.div>
   );
 }
@@ -145,8 +136,6 @@ interface OptionProps {
   onClick?: () => void;
   disabled?: boolean;
   trailing?: React.ReactNode;
-  hovered: boolean;
-  onHoverChange: (hovered: boolean) => void;
 }
 
 function Option({
@@ -157,8 +146,6 @@ function Option({
   onClick,
   disabled,
   trailing,
-  hovered,
-  onHoverChange,
 }: OptionProps) {
   const interactive = !disabled && onClick != null;
   const Tag = interactive ? motion.button : motion.div;
@@ -166,8 +153,6 @@ function Option({
     <Tag
       type={interactive ? "button" : undefined}
       onClick={interactive ? onClick : undefined}
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => onHoverChange(false)}
       whileTap={interactive ? { scale: 0.97 } : undefined}
       disabled={disabled}
       className={cn(
@@ -177,12 +162,7 @@ function Option({
           : "opacity-60",
       )}
     >
-      <div
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-md transition-colors",
-          hovered ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
-        )}
-      >
+      <div className="flex size-4 shrink-0 items-center justify-center text-muted-foreground">
         {icon}
       </div>
       <div className="min-w-0 flex-1">

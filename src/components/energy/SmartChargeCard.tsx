@@ -98,7 +98,7 @@ function VehicleRecommendation({
       onClick={hasCommandsReady ? handleSchedule : undefined}
       disabled={!hasCommandsReady || isPending || scheduled}
       className={[
-        "mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all",
+        "mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-[10px] text-sm font-semibold transition-all",
         scheduled
           ? "bg-chart-2 text-white"
           : "bg-primary text-primary-foreground hover:bg-primary/90",
@@ -133,9 +133,7 @@ function VehicleRecommendation({
 
       {/* Key recommendation details */}
       <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chart-2/15">
-          <Clock className="size-5 text-chart-2" />
-        </div>
+        <Clock className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold">
             {t("start_at")}{" "}
@@ -187,9 +185,7 @@ export function SmartChargeCard({
         {/* Header row */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-chart-2/15">
-              <Zap className="size-4 text-chart-2" />
-            </div>
+            <Zap className="size-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold">{t("smart_charge_title")}</h2>
           </div>
           <span className="rounded-full bg-chart-2/15 px-2.5 py-0.5 text-xs font-medium text-chart-2">

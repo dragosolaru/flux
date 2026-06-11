@@ -6,7 +6,6 @@ import {
   AlertTriangle, CheckCircle2, ExternalLink, Flame, Fuel,
   HelpCircle, Home, Loader2, Pencil, Trash2, XCircle, Zap,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,13 +101,13 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
   const canEdit = (doc.status === "done" || doc.status === "needs_review") && !nonElec;
 
   return (
-    <Card className={cn(
-      "transition-colors",
-      doc.status === "needs_review" && !nonElec && "border-yellow-500/40",
-      doc.status === "error" && "border-destructive/40",
-      nonElec && "border-orange-400/40",
+    <div className={cn(
+      "rounded-[14px] bg-white/[0.04] px-4 py-3 transition-colors",
+      doc.status === "needs_review" && !nonElec && "border border-yellow-500/40",
+      doc.status === "error" && "border border-destructive/40",
+      nonElec && "border border-orange-400/40",
+      !(doc.status === "needs_review" && !nonElec) && doc.status !== "error" && !nonElec && "border border-white/[0.05]",
     )}>
-      <CardContent className="py-3 px-4">
         <div className="flex items-start gap-3">
           {/* Type icon */}
           <div className="mt-0.5 shrink-0">
@@ -285,7 +284,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                 href={doc.view_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                className="flex h-10 w-10 items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground"
                 aria-label={t("ariaOpen")}
                 title={t("ariaOpen")}
               >
@@ -295,7 +294,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {canEdit && !editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                className="flex h-10 w-10 items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground"
                 aria-label={t("ariaEdit")}
                 title={t("ariaEdit")}
               >
@@ -305,7 +304,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             {!confirmDelete && onDelete && (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded text-muted-foreground hover:text-destructive"
+                className="flex h-10 w-10 items-center justify-center rounded-[10px] text-muted-foreground hover:text-destructive"
                 aria-label={t("ariaDelete")}
                 title={t("ariaDelete")}
               >
@@ -314,7 +313,6 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

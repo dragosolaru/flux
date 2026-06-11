@@ -153,9 +153,7 @@ export function EnergyClient() {
           <motion.div variants={cardVariants}>
             <GlassCard className="p-4" animate={false}>
               <div className="flex items-center gap-3">
-                <div className="flex size-8 items-center justify-center rounded-full bg-chart-2/15">
-                  <Zap className="size-4 text-chart-2" />
-                </div>
+                <Zap className="size-4 text-muted-foreground shrink-0" />
                 <div>
                   <p className="text-sm font-medium">
                     {t("cheapest_window_label")}:{" "}

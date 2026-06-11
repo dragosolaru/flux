@@ -134,7 +134,7 @@ export function ChargingClient({
               color={ringColor(data.chargingState)}
             >
               <div className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-4xl font-bold tabular-nums leading-none">
+                <span className="text-4xl font-thin tabular-nums leading-none">
                   {Math.round(data.batteryLevel ?? 0)}%
                 </span>
                 {isCharging && (
@@ -215,7 +215,7 @@ export function ChargingClient({
               <Button
                 onClick={saveChargeLimit}
                 disabled={isPending || limit === data.chargeLimit}
-                className="w-full min-h-[44px]"
+                className="w-full h-10 rounded-[10px]"
               >
                 {isPending ? tc("limit_saving") : tc("limit_save")}
               </Button>
@@ -230,7 +230,7 @@ export function ChargingClient({
           <p className="text-sm font-semibold">{tc("scheduled_title")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{tc("scheduled_description")}</p>
         </div>
-        <div className="flex items-center justify-between min-h-[44px]">
+        <div className="flex items-center justify-between">
           <span className="text-sm">{tc("scheduled_enabled")}</span>
           <Switch checked={scheduled} onCheckedChange={setScheduled} />
         </div>
@@ -246,7 +246,7 @@ export function ChargingClient({
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setScheduleTime(e.target.value)
               }
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[44px] w-full sm:w-auto"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm h-10 w-full sm:w-auto"
             />
           </div>
         )}
@@ -272,7 +272,7 @@ export function ChargingClient({
                     },
                   });
                 }}
-                className="min-h-[44px]"
+                className="h-10 rounded-[10px]"
               >
                 <RefreshCw
                   className={syncMutation.isPending ? "animate-spin" : ""}
@@ -337,14 +337,10 @@ function HistoryCard({
     <motion.li variants={fadeInUp}>
       <GlassCard className="p-4 flex items-start gap-4">
         {/* Icon */}
-        <div
-          className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl ${
-            isHome
-              ? "bg-chart-2/15 text-chart-2"
-              : "bg-primary/15 text-primary"
-          }`}
-        >
-          {isHome ? <Home size={18} /> : <MapPin size={18} />}
+        <div className="mt-1 shrink-0">
+          {isHome
+            ? <Home className="size-4 text-muted-foreground" />
+            : <MapPin className="size-4 text-muted-foreground" />}
         </div>
 
         {/* Content */}

@@ -157,7 +157,7 @@ function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
       className="glass-card overflow-visible rounded-2xl p-4"
     >
       <div className="mb-3 flex items-center gap-2">
-        <TrendingUp className="size-4 text-primary" />
+        <TrendingUp className="size-4 text-muted-foreground" />
         <span className="text-sm font-semibold">{t("chart_monthly_trend")}</span>
       </div>
 
@@ -228,10 +228,10 @@ function KpiChipsRow({ data }: { data: CostsResponse }) {
           variants={fadeInUp}
           className="glass-card flex min-w-[120px] snap-center flex-col items-center gap-1 rounded-2xl px-4 py-3 text-center"
         >
-          <span className={cn("mb-0.5", item.accent ?? "text-muted-foreground")}>
+          <span className="mb-0.5 text-muted-foreground">
             {item.icon}
           </span>
-          <span className="text-lg font-bold tabular-nums leading-none">{item.value}</span>
+          <span className="text-lg font-thin tabular-nums leading-none">{item.value}</span>
           <span className="text-[11px] text-muted-foreground">{item.label}</span>
         </motion.div>
       ))}

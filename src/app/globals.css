@@ -101,7 +101,7 @@
   background: oklch(1 0 0 / 5%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid oklch(1 0 0 / 8%);
+  border: 1px solid oklch(1 0 0 / 5%);
   border-radius: var(--radius-xl);
 }
 .dark .glass-card {

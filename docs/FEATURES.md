@@ -510,6 +510,15 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 ---
 
+## 22. Flux 2027 Design System — Energy / Costs / Charging Polish
+
+**What it does:** Visual polish pass (Wave 3B) removing colored icon circles, enforcing `font-thin` on hero numbers, fixing button heights to `h-10 rounded-[10px]`, and softening the glass-card border from 8% to 5% opacity.
+**Entry point:** UI-only — no API changes. Affects `/(dashboard)/charging`, `/(dashboard)/energy`, `/(dashboard)/costs`.
+**Key files:** `src/components/energy/SmartChargeCard.tsx`, `src/components/costs/IngestCard.tsx`, `src/components/costs/DocumentStatusCard.tsx`, `src/app/(dashboard)/charging/charging-client.tsx`, `src/app/(dashboard)/energy/energy-client.tsx`, `src/app/(dashboard)/costs/costs-client.tsx`, `src/app/globals.css`.
+**Dependencies:** GlassCard (`@/components/ui/glass-card`), Framer Motion, Tailwind CSS v4.
+
+---
+
 ## 22. Pricing Page
 
 **What it does:** Public marketing page comparing Free (€0) and Pro (€4.99/mo or €39/yr) tiers with feature lists. Renders `UpgradeButton` for authenticated free-tier users and a `/login` redirect for unauthenticated visitors.
