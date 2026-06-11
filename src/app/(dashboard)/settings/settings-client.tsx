@@ -139,20 +139,17 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <SectionHeader label={t("section.preferences")} />
         <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRow
-            icon={<Globe className="size-4 text-green-400" />}
-            iconBg="bg-green-500/20"
+            icon={<Globe className="size-4 text-muted-foreground shrink-0" />}
             label={t("locale.label")}
             control={<LocalePicker />}
           />
           <SettingsRow
-            icon={<DollarSign className="size-4 text-yellow-400" />}
-            iconBg="bg-yellow-500/20"
+            icon={<DollarSign className="size-4 text-muted-foreground shrink-0" />}
             label={t("currency.label")}
             control={<CurrencyPicker />}
           />
           <SettingsRow
-            icon={<Smartphone className="size-4 text-cyan-400" />}
-            iconBg="bg-cyan-500/20"
+            icon={<Smartphone className="size-4 text-muted-foreground shrink-0" />}
             label={t("install_app.label")}
             control={<InstallAppButton />}
           />
@@ -164,8 +161,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <SectionHeader label={t("section.location")} />
         <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
-            icon={<MapPin className="size-4 text-red-400" />}
-            iconBg="bg-red-500/20"
+            icon={<MapPin className="size-4 text-muted-foreground shrink-0" />}
             label={t("home_location.label")}
           >
             <HomeLocationPicker />
@@ -178,8 +174,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <SectionHeader label={t("section.tariff")} />
         <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
-            icon={<Zap className="size-4 text-yellow-400" />}
-            iconBg="bg-yellow-500/20"
+            icon={<Zap className="size-4 text-muted-foreground shrink-0" />}
             label={t("tariff.label")}
           >
             <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
@@ -195,8 +190,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
             <GlassCard className="divide-y divide-white/[0.04]">
               <Link href="/garage" className="block">
                 <SettingsRow
-                  icon={<ChevronRight className="size-4 text-muted-foreground" />}
-                  iconBg="bg-white/5"
+                  icon={<ChevronRight className="size-4 text-muted-foreground shrink-0" />}
                   label={t("vehicles.go_to_garage")}
                   chevron
                 />
@@ -207,8 +201,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
           <GlassCard className="divide-y divide-white/[0.04]">
             {activeVehicles.length === 0 ? (
               <SettingsRow
-                icon={<Car className="size-4 text-blue-400" />}
-                iconBg="bg-blue-500/20"
+                icon={<Car className="size-4 text-muted-foreground shrink-0" />}
                 label={t("vehicles.empty")}
               />
             ) : (
@@ -216,8 +209,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                 v.dataSource === "mock" ? (
                   <SettingsRowExpanded
                     key={v.id}
-                    icon={<Car className="size-4 text-blue-400" />}
-                    iconBg="bg-blue-500/20"
+                    icon={<Car className="size-4 text-muted-foreground shrink-0" />}
                     label={v.nickname ?? v.displayName}
                   >
                     <div className="flex flex-col gap-2">
@@ -235,9 +227,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                   </SettingsRowExpanded>
                 ) : (
                   <div key={v.id} className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
-                      <Car className="size-4 text-blue-400" />
-                    </div>
+                    <Car className="size-4 text-muted-foreground shrink-0" />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {v.nickname ?? v.displayName}
                     </span>
@@ -251,8 +241,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
             )}
             <Link href="/garage" className="block">
               <SettingsRow
-                icon={<ChevronRight className="size-4 text-muted-foreground" />}
-                iconBg="bg-white/5"
+                icon={<ChevronRight className="size-4 text-muted-foreground shrink-0" />}
                 label={t("vehicles.go_to_garage")}
                 chevron
               />
@@ -277,14 +266,12 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <section>
           <GlassCard className="divide-y divide-white/[0.04]">
             <SettingsRow
-              icon={<User className="size-4 text-blue-400" />}
-              iconBg="bg-blue-500/20"
+              icon={<User className="size-4 text-muted-foreground shrink-0" />}
               label={t("account.name")}
               value={userName ?? "—"}
             />
             <SettingsRow
-              icon={<Mail className="size-4 text-purple-400" />}
-              iconBg="bg-purple-500/20"
+              icon={<Mail className="size-4 text-muted-foreground shrink-0" />}
               label={t("account.email")}
               value={userEmail ?? "—"}
             />
@@ -294,9 +281,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <section id="billing" className="mt-3">
           <GlassCard className="divide-y divide-white/[0.04]">
             <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-                <CreditCard className="size-4 text-primary" />
-              </div>
+              <CreditCard className="size-4 text-muted-foreground shrink-0" />
               <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">
@@ -335,9 +320,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <section className="mt-3">
           <GlassCard>
             <div className="flex flex-wrap items-center gap-3 px-4 py-4">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/20">
-                <Trash2 className="size-4 text-destructive" />
-              </div>
+              <Trash2 className="size-4 text-destructive shrink-0" />
               <span className="min-w-0 flex-1 text-sm font-medium text-destructive">
                 {t("danger_zone.delete_button")}
               </span>
@@ -356,8 +339,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <section id="whatsapp">
           <GlassCard className="divide-y divide-white/[0.04]">
             <SettingsRowExpanded
-              icon={<MessageCircle className="size-4 text-green-400" />}
-              iconBg="bg-green-500/20"
+              icon={<MessageCircle className="size-4 text-muted-foreground shrink-0" />}
               label="WhatsApp"
             >
               <WhatsAppPhonePicker />
@@ -368,8 +350,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <section id="charger-health" className="mt-3">
           <GlassCard className="divide-y divide-white/[0.04]">
             <SettingsRowExpanded
-              icon={<Zap className="size-4 text-amber-400" />}
-              iconBg="bg-amber-500/20"
+              icon={<Zap className="size-4 text-muted-foreground shrink-0" />}
               label={t("charger.label")}
             >
               <ChargerHealthCard />
@@ -435,19 +416,17 @@ function CollapsibleSection({
 
 interface SettingsRowProps {
   icon: React.ReactNode;
-  iconBg: string;
+  iconBg?: string;
   label: string;
   value?: string;
   control?: React.ReactNode;
   chevron?: boolean;
 }
 
-function SettingsRow({ icon, iconBg, label, value, control, chevron }: SettingsRowProps) {
+function SettingsRow({ icon, label, value, control, chevron }: SettingsRowProps) {
   return (
     <div className="flex min-h-[44px] items-center gap-3 px-4 py-2.5">
-      <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-        {icon}
-      </div>
+      {icon}
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
       {value && <span className="max-w-[40%] truncate text-sm text-muted-foreground">{value}</span>}
       {control && <div className="shrink-0">{control}</div>}
@@ -458,21 +437,19 @@ function SettingsRow({ icon, iconBg, label, value, control, chevron }: SettingsR
 
 interface SettingsRowExpandedProps {
   icon: React.ReactNode;
-  iconBg: string;
+  iconBg?: string;
   label: string;
   children: React.ReactNode;
 }
 
-function SettingsRowExpanded({ icon, iconBg, label, children }: SettingsRowExpandedProps) {
+function SettingsRowExpanded({ icon, label, children }: SettingsRowExpandedProps) {
   return (
     <div className="px-4 py-2.5">
       <div className="mb-3 flex items-center gap-3">
-        <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-          {icon}
-        </div>
+        {icon}
         <span className="text-sm font-medium">{label}</span>
       </div>
-      <div className="ml-11">{children}</div>
+      <div className="ml-7">{children}</div>
     </div>
   );
 }

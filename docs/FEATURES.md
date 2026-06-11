@@ -1387,3 +1387,20 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **i18n namespace:** `onboarding_v2` in all 5 locales. Keys: `welcome_title`, `welcome_sub`, `welcome_cta`, `step_costs_title`, `step_costs_body`, `step_costs_cta`, `step_trip_title`, `step_trip_body`, `step_trip_cta`, `skip`.
 
 **Dependencies:** Framer Motion (`AnimatePresence`, `motion.div`), `next-intl`. No new npm packages.
+
+
+---
+
+## Flux 2027 Design System — Settings / Map / Garage Polish (Wave 3C)
+
+**What it does:** Removes colored icon circles from Settings rows; replaces bordered inputs and selects with `auth-input` (bottom-line style); updates the Map bottom sheet tab switcher from pill style to underline/motion indicator; replaces SOC sliders with slim custom track (h-1) + circular thumb; updates AddVehicleModal to use plain `div` container instead of shadcn Card, and removes the success circle bg container. All buttons capped at `h-11 rounded-[10px]` (primary) / `h-10 rounded-[10px]` (secondary).
+
+**How to use:** Visit `/settings`, `/map`, `/garage` to see the visual changes. No new functionality — styling-only polish.
+
+**Key files:**
+- `src/app/(dashboard)/settings/settings-client.tsx` — icon bg containers removed; `SettingsRow`/`SettingsRowExpanded` simplified.
+- `src/app/(dashboard)/garage/garage-client.tsx` — AddVehicleCard icon cleaned.
+- `src/components/onboarding/AddVehicleModal.tsx` — Card → plain div; inputs/selects → auth-input; success icon circle removed; button heights.
+- `src/app/(dashboard)/map/map-client.tsx` — tab switcher → underline+motion; sliders → slim; vehicle select → auth-input; plan CTA → h-11; trip summary text sizing.
+
+**Dependencies:** Framer Motion (already in tree), `auth-input` CSS class (already in `globals.css`).

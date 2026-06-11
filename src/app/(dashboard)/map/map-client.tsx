@@ -552,27 +552,24 @@ export function MapClient() {
           )}
 
           {/* Mode tabs */}
-          <div className="mt-3 flex gap-1 px-4 pb-3">
-            <button
-              onClick={() => switchMode("explore")}
-              className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${
-                mode === "explore"
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-white/5"
-              }`}
-            >
-              {tMap("tab_explore")}
-            </button>
-            <button
-              onClick={() => switchMode("plan")}
-              className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${
-                mode === "plan"
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-white/5"
-              }`}
-            >
-              {tMap("tab_plan")}
-            </button>
+          <div className="mt-3 flex gap-0 px-4 pb-3">
+            {(["explore", "plan"] as MapMode[]).map((tabMode) => (
+              <button
+                key={tabMode}
+                onClick={() => switchMode(tabMode)}
+                className={`relative flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  mode === tabMode ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {tabMode === "explore" ? tMap("tab_explore") : tMap("tab_plan")}
+                {mode === tabMode && (
+                  <motion.div
+                    layoutId="tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground rounded-full"
+                  />
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Compact route summary — always visible once a plan exists, so
@@ -583,9 +580,9 @@ export function MapClient() {
               className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-left"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
-                  <span className="font-normal text-muted-foreground">
+                <p className="truncate">
+                  <span className="text-sm font-medium">{Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min</span>
+                  <span className="text-xs text-muted-foreground">
                     {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
                     {activePlan.stops.length === 0
                       ? tTrip("stops_count_zero")
@@ -596,7 +593,7 @@ export function MapClient() {
                 </p>
               </div>
               <span className="ml-2 flex shrink-0 items-center gap-1.5">
-                <span className="text-sm font-semibold text-green-400">
+                <span className="text-sm font-medium text-green-400">
                   €{activePlan.tripEnergyCostEur.toFixed(2)}
                 </span>
                 <ChevronUp
@@ -844,7 +841,7 @@ function PlanContent({
             step={5}
             value={startSoc}
             onChange={(e) => setStartSoc(Number(e.target.value))}
-            className="soc-slider mt-1 w-full accent-primary"
+            className="mt-1 w-full h-1 appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
         <div>
@@ -859,7 +856,7 @@ function PlanContent({
             step={5}
             value={arrivalSoc}
             onChange={(e) => setArrivalSoc(Number(e.target.value))}
-            className="soc-slider mt-1 w-full accent-primary"
+            className="mt-1 w-full h-1 appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
       </div>
@@ -871,7 +868,7 @@ function PlanContent({
           <select
             value={vehicleId}
             onChange={(e) => setVehicleId(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-sm"
+            className="auth-input w-full"
           >
             <option value="">{tTrip("vehicle_default")}</option>
             {vehicles.map((v) => (
@@ -887,7 +884,7 @@ function PlanContent({
       <button
         onClick={onPlan}
         disabled={!canPlan || loading}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
       >
         {loading ? (
           <>

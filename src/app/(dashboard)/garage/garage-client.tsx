@@ -116,9 +116,7 @@ function AddVehicleCard() {
             className="w-full aspect-[16/7] rounded-3xl border-2 border-dashed border-white/15 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/25 transition-colors flex flex-col items-center justify-center gap-2"
             style={{ minHeight: 0 }}
           >
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white/8">
-              <Plus className="size-6 text-primary" />
-            </div>
+            <Plus className="size-5 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">
               {tg("add_vehicle")}
             </span>

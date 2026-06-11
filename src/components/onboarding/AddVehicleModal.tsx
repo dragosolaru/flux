@@ -8,9 +8,7 @@ import { CheckCircle, CheckCircle2, Lock, PlusCircle, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UpgradeButton } from "@/components/billing/UpgradeButton";
 import { useCapabilities } from "@/hooks/useCapabilities";
@@ -155,32 +153,32 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
-          <Card className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto">
-            <CardHeader className="relative pb-3">
+          <div className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-white/[0.04] px-5 py-4">
+            <div className="relative pb-3">
               <div className="mb-2 flex items-center gap-2">
                 <BrandLogo brand="tesla" className="size-6 text-red-400" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tesla</span>
               </div>
 
-              <CardTitle className="pr-8">
+              <h2 className="pr-8 text-lg font-semibold">
                 {step === "details" ? t("add_vehicle.title") : t("add_vehicle.title_success")}
-              </CardTitle>
-              <CardDescription>
+              </h2>
+              <p className="text-sm text-muted-foreground">
                 {step === "details"
                   ? t("add_vehicle.description")
                   : t("add_vehicle.description_success")}
-              </CardDescription>
+              </p>
 
               <button
                 onClick={close}
-                className="absolute right-3 top-3 flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                className="absolute right-0 top-0 flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
                 aria-label="Close"
               >
                 <X className="size-4" />
               </button>
-            </CardHeader>
+            </div>
 
-            <CardContent>
+            <div className="mt-4">
               {step === "details" && isFreeTierBlocked && (
                 <div className="flex flex-col items-center gap-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-5 text-center">
                   <Lock className="size-8 text-amber-500" />
@@ -200,7 +198,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       id="model"
                       value={model}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setModel(e.target.value)}
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                      className="auth-input w-full"
                     >
                       {TESLA_MODELS.map((m) => (
                         <option key={m} value={m}>{m}</option>
@@ -214,7 +212,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       id="year"
                       value={year}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setYear(e.target.value)}
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                      className="auth-input w-full"
                     >
                       {Array.from({ length: 8 }, (_, i) => 2025 - i).map((y) => (
                         <option key={y} value={y}>{y}</option>
@@ -226,25 +224,26 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                     <Label htmlFor="nickname">
                       {t("add_vehicle.field_nickname")} <span className="text-destructive">*</span>
                     </Label>
-                    <Input
+                    <input
                       id="nickname"
                       placeholder={t("add_vehicle.field_nickname_placeholder")}
                       value={nickname}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                       autoFocus
+                      className="auth-input w-full"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label htmlFor="vin">{t("add_vehicle.vin_label")}</Label>
                     <div className="relative">
-                      <Input
+                      <input
                         id="vin"
                         placeholder={t("add_vehicle.vin_placeholder")}
                         value={vin}
                         onChange={handleVinChange}
                         maxLength={17}
-                        className="font-mono uppercase pr-8"
+                        className="auth-input w-full font-mono uppercase pr-8"
                       />
                       {vin && (
                         <button
@@ -277,7 +276,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                           type="button"
                           onClick={() => setScenario(sv)}
                           className={cn(
-                            "rounded-lg border p-3 text-left transition-colors",
+                            "rounded-[10px] border p-3 text-left transition-colors",
                             scenario === sv
                               ? "border-primary bg-primary/10 text-primary"
                               : "hover:bg-muted",
@@ -296,7 +295,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                     </p>
                   )}
 
-                  <Button type="submit" disabled={loading} className="w-full">
+                  <Button type="submit" disabled={loading} className="h-11 w-full rounded-[10px]">
                     {loading ? t("add_vehicle.submitting") : t("add_vehicle.submit")}
                   </Button>
                 </form>
@@ -304,9 +303,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
               {step === "success" && (
                 <div className="flex flex-col items-center gap-4 py-4 text-center">
-                  <div className="flex size-16 items-center justify-center rounded-full bg-chart-2/20">
-                    <CheckCircle2 className="size-8 text-chart-2" />
-                  </div>
+                  <CheckCircle2 className="size-8 text-muted-foreground" />
                   <div>
                     <p className="text-lg font-semibold">{nickname}</p>
                     <p className="text-sm text-muted-foreground">
@@ -317,12 +314,12 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                     </p>
                   </div>
                   <div className="flex w-full gap-2 pt-2">
-                    <Button variant="outline" onClick={() => { reset(); }} className="flex-1">
+                    <Button variant="outline" onClick={() => { reset(); }} className="h-10 flex-1 rounded-[10px]">
                       {t("add_vehicle.btn_add_another")}
                     </Button>
                     <Button
                       onClick={() => { close(); router.push(`/dashboard?v=${createdId}`); }}
-                      className="flex-1"
+                      className="h-11 flex-1 rounded-[10px]"
                     >
                       {t("add_vehicle.btn_view_vehicle")}
                     </Button>
@@ -331,12 +328,12 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
               )}
 
               {step !== "success" && (
-                <Button variant="ghost" size="sm" className="mt-3 w-full text-muted-foreground" onClick={close}>
+                <Button variant="ghost" size="sm" className="mt-3 h-10 w-full rounded-[10px] text-muted-foreground" onClick={close}>
                   Cancel
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </>
