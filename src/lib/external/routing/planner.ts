@@ -454,19 +454,20 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
 
   const built = results.filter((v): v is TripVariant => v !== null);
 
-  // Keep distinct options only. The signature is based on the *plan output*
-  // (rounded distance + the exact set of charging stops + rounded total time),
-  // NOT the strategy that produced it. This collapses two strategies that
-  // happen to yield the identical road and the identical single stop — which
-  // previously showed up as two visually identical variants ("Fastest" and
-  // "Fewest stops" both 476 km · 1 stop · €12.36). Genuinely different roads
-  // still differ in distance and/or station set, so real alternatives survive.
+  // Keep distinct options only. The signature leads with the road alternative
+  // index so genuinely different roads NEVER collapse into one variant, even
+  // when they happen to share the same stops, distance and time bucket
+  // (e.g. two motorway corridors Florești → Paris). Within the SAME road, the
+  // plan-output part (rounded distance + exact set of charging stops + rounded
+  // total time) still collapses two strategies that yield identical plans —
+  // which previously showed up as two visually identical variants ("Fastest"
+  // and "Fewest stops" both 476 km · 1 stop · €12.36).
   const seen = new Set<string>();
   const distinct = built
     .sort((a, b) => a.plan.totalMinutes - b.plan.totalMinutes)
     .filter((v) => {
       const stopIds = v.plan.stops.map((s) => s.station.id).join(",");
-      const sig = `${Math.round(v.plan.totalDistanceKm)}-${stopIds}-${Math.round(v.plan.totalMinutes / 5)}`;
+      const sig = `${v.roadIndex}-${Math.round(v.plan.totalDistanceKm)}-${stopIds}-${Math.round(v.plan.totalMinutes / 5)}`;
       if (seen.has(sig)) return false;
       seen.add(sig);
       return true;

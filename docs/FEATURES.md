@@ -1439,3 +1439,15 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/components/layout/SlideUpMenu.tsx`.
 
 **Dependencies:** None — Framer Motion and `useCapabilities` already in use.
+
+---
+
+## Trip Planning Accuracy — Geocode Bias + Distinct Route Variants
+
+**What it does:** Two accuracy fixes for trip planning. (1) Geocoding now supports location bias and country filtering, so ambiguous place names ("Florești" — 3+ towns in Romania) resolve to the one near the user, and destination searches favor the travel direction. (2) Route variant dedup no longer collapses genuinely different roads that happen to share the same charging stops and time bucket — the dedup signature now leads with the road alternative index, so distinct corridors survive while two strategies producing the identical plan on the same road still collapse.
+
+**How to use:** `GET /api/geocode?q=...` accepts optional `lat`/`lng` (bias point, validated finite + in range) and `cc` (comma-separated ISO country codes, e.g. `ro,hu`). Bias maps to TomTom `lat`/`lon`, Photon `lat`/`lon`, Nominatim unbounded `viewbox`; `cc` maps to TomTom `countrySet` and Nominatim `countrycodes` (Photon has no country filter). The UI wires bias automatically: origin search → user location (silent geolocate / map center), destination search → selected origin. No params → behavior unchanged.
+
+**Key files:** `src/app/api/geocode/route.ts`, `src/components/trip/GeocodingSearch.tsx` (`bias` prop), `src/app/(dashboard)/map/map-client.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/external/routing/planner.ts` (`planTripVariants` dedup signature).
+
+**Dependencies:** None new — existing TomTom/Photon/Nominatim cascade, browser geolocation.

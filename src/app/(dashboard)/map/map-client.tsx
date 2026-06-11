@@ -307,6 +307,12 @@ export function MapClient() {
 
   const canPlan = origin !== null && destination !== null;
 
+  // Geocode bias: searches rank results near the user first ("Florești" →
+  // the one nearby, not the wrong county). Destination favors the origin so
+  // results lean toward the travel direction.
+  const originBias = exploreUserLoc ?? exploreCenter;
+  const destinationBias = origin ? { lat: origin.lat, lng: origin.lng } : originBias;
+
   function handleLocateOrigin() {
     if (!navigator.geolocation) {
       toast.error(tTrip("use_my_location"));
@@ -625,6 +631,8 @@ export function MapClient() {
                 setOrigin={setOrigin}
                 destination={destination}
                 setDestination={setDestination}
+                originBias={originBias}
+                destinationBias={destinationBias}
                 startSoc={startSoc}
                 setStartSoc={setStartSoc}
                 arrivalSoc={arrivalSoc}
@@ -751,6 +759,8 @@ interface PlanContentProps {
   setOrigin: (p: GeoPoint | null) => void;
   destination: GeoPoint | null;
   setDestination: (p: GeoPoint | null) => void;
+  originBias: { lat: number; lng: number } | null;
+  destinationBias: { lat: number; lng: number } | null;
   startSoc: number;
   setStartSoc: (v: number) => void;
   arrivalSoc: number;
@@ -784,6 +794,8 @@ function PlanContent({
   setOrigin,
   destination,
   setDestination,
+  originBias,
+  destinationBias,
   startSoc,
   setStartSoc,
   arrivalSoc,
@@ -818,6 +830,7 @@ function PlanContent({
         onLocate={onLocateOrigin}
         locating={locating}
         locateTitle={locating ? tTrip("locating") : tTrip("use_my_location")}
+        bias={originBias}
       />
 
       {/* Destination */}
@@ -825,6 +838,7 @@ function PlanContent({
         placeholder={tTrip("destination_placeholder")}
         value={destination}
         onChange={setDestination}
+        bias={destinationBias}
       />
 
       {/* SOC sliders */}

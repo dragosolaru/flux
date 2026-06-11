@@ -20,6 +20,7 @@ interface GeocodingSearchProps {
   locateTitle?: string;
   onFocus?: () => void;
   onBlur?: () => void;
+  bias?: { lat: number; lng: number } | null;
 }
 
 interface NominatimResult {
@@ -32,7 +33,7 @@ function shortName(displayName: string): string {
   return displayName.split(",")[0]?.trim() ?? displayName;
 }
 
-export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle, onFocus, onBlur }: GeocodingSearchProps) {
+export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle, onFocus, onBlur, bias }: GeocodingSearchProps) {
   const t = useTranslations("trip");
   const [inputValue, setInputValue] = useState(value ? shortName(value.name) : "");
   const [results, setResults] = useState<NominatimResult[]>([]);
@@ -60,6 +61,9 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const biasLat = bias?.lat;
+  const biasLng = bias?.lng;
+
   const search = useCallback(async (q: string) => {
     if (q.length < 2) {
       setResults([]);
@@ -68,7 +72,9 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const biasParams =
+        biasLat !== undefined && biasLng !== undefined ? `&lat=${biasLat}&lng=${biasLng}` : "";
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}${biasParams}`);
       const data = await res.json() as { results: NominatimResult[] };
       setResults(data.results ?? []);
       setOpen(true);
@@ -77,7 +83,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [biasLat, biasLng]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const q = e.target.value;

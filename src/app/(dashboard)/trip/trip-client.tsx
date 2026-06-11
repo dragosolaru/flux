@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2 } from "lucide-react";
@@ -122,10 +122,26 @@ export function TripClient() {
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
   const [destFocused, setDestFocused] = useState(false);
   const [recents, setRecents] = useState<RecentDestination[]>(getRecentDestinations);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Silent locate so geocode searches can be biased toward the user even
+  // before they tap "use my location" — failures are fine, bias is optional.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => undefined,
+      { timeout: 3000 },
+    );
+  }, []);
 
   const showRecents = destFocused && destination === null && recents.length > 0;
 
   const canPlan = origin !== null && destination !== null;
+
+  // Geocode bias: origin searches favor results near the user; destination
+  // searches favor the chosen origin (travel direction) when available.
+  const destinationBias = origin ? { lat: origin.lat, lng: origin.lng } : userLoc;
 
   function handleLocateOrigin() {
     if (!navigator.geolocation) {
@@ -138,6 +154,7 @@ export function TripClient() {
         try {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
+          setUserLoc({ lat, lng });
           const name = await reverseGeocode(lat, lng);
           setOrigin({ name, lat, lng });
         } catch {
@@ -355,6 +372,7 @@ export function TripClient() {
               onLocate={handleLocateOrigin}
               locating={locating}
               locateTitle={locating ? t("locating") : t("use_my_location")}
+              bias={userLoc}
             />
 
             <div className="relative">
@@ -364,6 +382,7 @@ export function TripClient() {
                 onChange={handleDestinationChange}
                 onFocus={() => setDestFocused(true)}
                 onBlur={() => setTimeout(() => setDestFocused(false), 150)}
+                bias={destinationBias}
               />
 
               {/* Recent destinations dropdown */}

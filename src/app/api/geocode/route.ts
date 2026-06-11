@@ -32,14 +32,41 @@ interface TomTomResult {
 // "no results". 600/h ≈ 10/min of active typing, plenty for trip planning.
 const GEOCODE_MAX_PER_HOUR = 600;
 
+interface GeocodeBias {
+  lat: number;
+  lng: number;
+}
+
+function parseBias(sp: URLSearchParams): GeocodeBias | null {
+  const latRaw = sp.get("lat");
+  const lngRaw = sp.get("lng");
+  if (!latRaw || !lngRaw) return null;
+  const lat = Number(latRaw);
+  const lng = Number(lngRaw);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return { lat, lng };
+}
+
+function parseCountryCodes(sp: URLSearchParams): string | null {
+  const cc = sp.get("cc");
+  if (!cc || !/^[a-z]{2}(,[a-z]{2})*$/i.test(cc)) return null;
+  return cc.toLowerCase();
+}
+
 // TomTom Search (fuzzy) — primary. Excellent global coverage incl. small places
 // (e.g. Ksamil, AL) + typo tolerance, reliable from serverless. Needs the key.
-async function tomtomSearch(q: string): Promise<GeocodeHit[]> {
+async function tomtomSearch(q: string, bias: GeocodeBias | null, cc: string | null): Promise<GeocodeHit[]> {
   const key = process.env.TOMTOM_API_KEY;
   if (!key) return [];
   const url = new URL(`https://api.tomtom.com/search/2/search/${encodeURIComponent(q)}.json`);
   url.searchParams.set("key", key);
   url.searchParams.set("limit", "6");
+  if (bias) {
+    url.searchParams.set("lat", String(bias.lat));
+    url.searchParams.set("lon", String(bias.lng));
+  }
+  if (cc) url.searchParams.set("countrySet", cc);
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(8000),
@@ -62,9 +89,11 @@ async function tomtomSearch(q: string): Promise<GeocodeHit[]> {
 }
 
 // Photon (Komoot, OSM) — free, no key, good fuzzy matching. Secondary fallback.
-async function photonSearch(q: string): Promise<GeocodeHit[]> {
+// No country filter support; bias-only.
+async function photonSearch(q: string, bias: GeocodeBias | null): Promise<GeocodeHit[]> {
+  const biasParams = bias ? `&lat=${bias.lat}&lon=${bias.lng}` : "";
   const res = await fetch(
-    `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=default`,
+    `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=default${biasParams}`,
     { headers: { "User-Agent": "Flux-TripPlanner/1.0" }, signal: AbortSignal.timeout(8000), next: { revalidate: 300 } },
   );
   if (!res.ok) return [];
@@ -78,8 +107,15 @@ async function photonSearch(q: string): Promise<GeocodeHit[]> {
 }
 
 // Nominatim (OSM) — free, no key, but rate-limited on shared IPs. Last fallback.
-async function nominatimSearch(q: string, acceptLanguage: string): Promise<GeocodeHit[]> {
+async function nominatimSearch(q: string, acceptLanguage: string, bias: GeocodeBias | null, cc: string | null): Promise<GeocodeHit[]> {
   const params = new URLSearchParams({ format: "json", addressdetails: "1", limit: "6", q });
+  // Nominatim has no true bias param; an unbounded viewbox weights results
+  // toward the preferred area without excluding the rest of the world.
+  if (bias) {
+    params.set("viewbox", `${bias.lng - 3},${bias.lat + 3},${bias.lng + 3},${bias.lat - 3}`);
+    params.set("bounded", "0");
+  }
+  if (cc) params.set("countrycodes", cc);
   const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
     headers: { "User-Agent": "Flux-TripPlanner/1.0 (contact@daolab.io)", "Accept-Language": acceptLanguage },
     signal: AbortSignal.timeout(8000),
@@ -106,13 +142,15 @@ export async function GET(req: NextRequest) {
   }
 
   const acceptLanguage = req.headers.get("accept-language") ?? "en,ro,de,fr,hu";
+  const bias = parseBias(req.nextUrl.searchParams);
+  const cc = parseCountryCodes(req.nextUrl.searchParams);
 
   // Try providers in order of reliability/coverage; each is isolated so a failing
   // or blocked provider falls through to the next instead of returning empty.
   const providers: Array<() => Promise<GeocodeHit[]>> = [
-    () => tomtomSearch(q),
-    () => photonSearch(q),
-    () => nominatimSearch(q, acceptLanguage),
+    () => tomtomSearch(q, bias, cc),
+    () => photonSearch(q, bias),
+    () => nominatimSearch(q, acceptLanguage, bias, cc),
   ];
 
   for (const provider of providers) {
