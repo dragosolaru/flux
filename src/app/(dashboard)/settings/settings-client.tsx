@@ -135,7 +135,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Account section */}
       <section>
         <SectionHeader label={t("section.account")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRow
             icon={<User className="size-4 text-blue-400" />}
             iconBg="bg-blue-500/20"
@@ -154,7 +154,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Preferences section */}
       <section>
         <SectionHeader label={t("section.preferences")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRow
             icon={<Globe className="size-4 text-green-400" />}
             iconBg="bg-green-500/20"
@@ -179,7 +179,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Location section */}
       <section id="home-location">
         <SectionHeader label={t("section.location")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
             icon={<MapPin className="size-4 text-red-400" />}
             iconBg="bg-red-500/20"
@@ -202,7 +202,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
         <SectionHeader label={t("section.vehicles")} />
         <VehicleSectionBoundary
           fallback={
-            <GlassCard className="divide-y divide-white/5">
+            <GlassCard className="divide-y divide-white/[0.04]">
               <Link href="/garage" className="block">
                 <SettingsRow
                   icon={<ChevronRight className="size-4 text-muted-foreground" />}
@@ -214,7 +214,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
             </GlassCard>
           }
         >
-          <GlassCard className="divide-y divide-white/5">
+          <GlassCard className="divide-y divide-white/[0.04]">
             {activeVehicles.length === 0 ? (
               <SettingsRow
                 icon={<Car className="size-4 text-blue-400" />}
@@ -281,7 +281,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Energy tariff section */}
       <section id="tariff">
         <SectionHeader label={t("section.tariff")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
             icon={<Zap className="size-4 text-yellow-400" />}
             iconBg="bg-yellow-500/20"
@@ -295,7 +295,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Charger data health section */}
       <section id="charger-health">
         <SectionHeader label={t("section.charger")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <SettingsRowExpanded
             icon={<Zap className="size-4 text-amber-400" />}
             iconBg="bg-amber-500/20"
@@ -309,7 +309,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       {/* Subscription section */}
       <section id="billing">
         <SectionHeader label={t("section.billing")} />
-        <GlassCard className="divide-y divide-white/5">
+        <GlassCard className="divide-y divide-white/[0.04]">
           <div className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
               <CreditCard className="size-4 text-primary" />
@@ -370,7 +370,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">
       {label}
     </p>
   );

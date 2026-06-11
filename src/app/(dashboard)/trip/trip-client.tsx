@@ -334,7 +334,7 @@ export function TripClient() {
           /* Compact pill summary */
           <button
             onClick={() => setFormCollapsed(false)}
-            className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl"
+            className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] p-3 shadow-2xl backdrop-blur-md"
           >
             <div className="flex min-w-0 items-center gap-2">
               <Route className="size-4 shrink-0 text-primary" />
@@ -346,7 +346,7 @@ export function TripClient() {
           </button>
         ) : (
           /* Full form */
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-background/80 p-3 shadow-2xl backdrop-blur-xl">
+          <div className="space-y-2 rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] p-3 shadow-2xl backdrop-blur-md">
             <GeocodingSearch
               placeholder={t("origin_placeholder")}
               value={origin}
@@ -475,7 +475,7 @@ export function TripClient() {
                     <select
                       value={vehicleId}
                       onChange={(e) => setVehicleId(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm backdrop-blur-sm"
+                      className="w-full rounded-lg border border-white/6 bg-white/[0.04] px-3 py-1.5 text-sm"
                     >
                       <option value="">{t("vehicle_default")}</option>
                       {vehicles.map((v) => (
@@ -492,7 +492,7 @@ export function TripClient() {
             <button
               onClick={handlePlan}
               disabled={!canPlan || loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
             >
               {loading ? (
                 <>
@@ -525,7 +525,7 @@ export function TripClient() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/10 bg-background/95 shadow-2xl backdrop-blur-xl"
+          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-white/6 bg-[oklch(0.13_0.015_265/0.97)] shadow-2xl backdrop-blur-md"
         >
           {/* Handle — always visible, outside the collapsible area so scroll
               state never hides it. */}
@@ -594,8 +594,8 @@ export function TripClient() {
                       aria-pressed={active}
                       className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
                         active
-                          ? "border-primary bg-primary/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
+                          ? "border-primary/50 bg-primary/12"
+                          : "border-white/6 bg-white/[0.04] hover:bg-white/[0.07]"
                       }`}
                     >
                       <span className={`truncate text-xs font-semibold ${
@@ -688,7 +688,7 @@ export function TripClient() {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleShareToTesla}
                         disabled={sharing}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition-opacity hover:opacity-90 disabled:opacity-60"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/6 bg-white/[0.04] py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/[0.08] disabled:opacity-50"
                       >
                         {sharing ? (
                           <Loader2 className="size-4 animate-spin" />

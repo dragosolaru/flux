@@ -1264,3 +1264,25 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 - **Docs:** Austria connector comment corrected (Burgenland state endpoint, not national).
 
 **Key files:** `src/lib/chargers/ingest/bulk.ts`, `src/lib/chargers/repository.ts`, `src/lib/chargers/query.ts`, `src/lib/chargers/ingest/austria.ts`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `supabase/migrations/022_batch_upsert_chargers.sql`.
+
+---
+
+## Visual Design Refresh — Tesla/Apple-inspired Clean Dark Theme
+
+**What it does:** A pure styling pass to modernize the app's visual language, inspired by the Tesla app, Apple Maps, and ABRP. No API, hook, or state changes — className/CSS updates only.
+
+**Changes:**
+- `globals.css` — added `.surface-card` (minimal elevation card, no blur) and `.pill-float` (floating pill for map overlays); tightened dark-mode border opacity from 8% → 6% and filter chips from `white/10` → `white/6`.
+- `TopBar.tsx` — `h-11` on mobile, car icon prefix on vehicle picker, `gap-1` on right controls, border only on `md:`.
+- `dashboard-client.tsx` — HeroCard drops gradient bg for clean dark surface `oklch(0.13 0.02 265)`; border reduced to `white/6`; stat chips use flat `bg-white/[0.04] border-white/6`; quick-action buttons same treatment.
+- `charging-map-client.tsx` — filter toggle uses `.pill-float`; filter rows use `border-white/6`; station count badge uses `.pill-float`.
+- `StationMap.tsx` — cluster bubbles switch from dark-glass to primary-blue pill (`oklch(0.62 0.19 250 / 0.9)`); location button uses cleaner rounded-xl surface.
+- `settings-client.tsx` — section headers `text-[10px] tracking-widest text-muted-foreground/50`; dividers `divide-white/[0.04]`.
+- `garage-client.tsx` — vehicle card overlay `border-white/6`; silhouette opacity raised to 30%; demo badge slightly more subtle.
+- `login/page.tsx` + `register/page.tsx` — removed `glass-card` wrapper; forms float directly on the dark background.
+- `LoginForm.tsx` — inputs `text-base` (prevents iOS auto-zoom); borders `white/6`; Google button `bg-white/[0.04]`.
+- `trip-client.tsx` — Plan button flat `bg-primary rounded-xl` (no gradient); search overlay + results sheet use `border-white/6 bg-[oklch(…/0.92)] backdrop-blur-md`.
+
+**Key files:** `src/app/globals.css`, `src/components/layout/TopBar.tsx`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`, `src/components/charging-map/StationMap.tsx`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/app/(dashboard)/garage/garage-client.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`, `src/components/auth/LoginForm.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`.
+
+**Dependencies:** No new deps — all changes are Tailwind utility classes and CSS custom properties.

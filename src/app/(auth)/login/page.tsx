@@ -12,8 +12,8 @@ export default async function LoginPage() {
   const t = await getTranslations("auth");
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="glass-card px-6 py-8 shadow-2xl">
+    <div className="w-full max-w-sm px-2">
+      <div className="px-6 py-8">
         <div className="mb-6">
           <h1 className="text-xl font-semibold">{t("title_login")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("subtitle_login")}</p>

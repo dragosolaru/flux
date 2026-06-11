@@ -82,13 +82,13 @@ function stationIcon(
   return icon;
 }
 
-// Cluster bubble — dark glass circle with a white count, matching the app UI.
+// Cluster bubble — primary-blue pill with white count, clean and prominent.
 function clusterIcon(cluster: { getChildCount: () => number }): L.DivIcon {
   const count = cluster.getChildCount();
-  const size = count < 10 ? 34 : count < 100 ? 40 : 48;
+  const size = count < 10 ? 32 : count < 100 ? 38 : 46;
   return L.divIcon({
     className: "",
-    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,.85);color:#fff;font-size:13px;font-weight:600;border:2px solid rgba(255,255,255,.5);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)">${count}</div>`,
+    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:oklch(0.62 0.19 250 / 0.9);color:#fff;font-size:12px;font-weight:600;border-radius:9999px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">${count}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -237,7 +237,7 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
         <button
           onClick={handleClick}
           title={t("locate_me")}
-          className="flex items-center justify-center bg-background/80 backdrop-blur-sm border border-white/10 rounded-lg p-2 shadow-lg hover:bg-background/90 transition-colors"
+          className="flex items-center justify-center rounded-xl bg-[oklch(0.16_0.015_265/0.92)] border border-white/8 p-2 shadow-lg hover:bg-[oklch(0.19_0.015_265/0.92)] transition-colors backdrop-blur-md"
           style={{ width: "44px", height: "44px" }}
         >
           {locating ? (

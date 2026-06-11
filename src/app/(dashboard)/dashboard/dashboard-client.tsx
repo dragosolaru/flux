@@ -82,11 +82,11 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
 
   return (
     <GlassCard
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950/80 to-slate-900/80 p-3 md:p-6"
+      className="relative overflow-hidden rounded-3xl bg-[oklch(0.13_0.02_265)] p-4 md:p-6"
       animate={false}
     >
-      {/* glassmorphism overlay */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03]" />
+      {/* Subtle top-edge highlight */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/6" />
 
       {/* Header row */}
       <div className="relative mb-2 flex items-center justify-between gap-2 md:mb-6">
@@ -272,16 +272,13 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
     >
       {chips.map((chip) => (
         <motion.div key={chip.key} variants={cardVariants} className="snap-center">
-          <GlassCard
-            animate={false}
-            className="flex w-[96px] shrink-0 flex-col items-center gap-1 p-2"
-          >
+          <div className="flex w-[96px] shrink-0 flex-col items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/6 p-2.5">
             {chip.icon}
             <div className="text-center text-sm font-semibold tabular-nums leading-tight">
               {chip.value}
             </div>
             <div className="text-center text-xs text-muted-foreground">{chip.label}</div>
-          </GlassCard>
+          </div>
         </motion.div>
       ))}
     </motion.div>
@@ -387,10 +384,10 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`glass-card flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl p-1.5 transition-colors disabled:opacity-50 ${
+          className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-2xl border p-2 transition-colors disabled:opacity-50 ${
             action.active
-              ? "border-primary/40 bg-primary/15 text-primary"
-              : "text-foreground hover:bg-white/5"
+              ? "border-primary/30 bg-primary/12 text-primary"
+              : "border-white/6 bg-white/[0.04] text-foreground hover:bg-white/[0.07]"
           }`}
         >
           {action.inFlight ? (

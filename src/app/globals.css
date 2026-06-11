@@ -75,8 +75,8 @@
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.97 0 0);
 
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 6%);
+  --input: oklch(1 0 0 / 8%);
   --ring: oklch(0.62 0.19 250);
 
   /* chart colors — vivid on dark */
@@ -106,7 +106,24 @@
 }
 .dark .glass-card {
   background: oklch(1 0 0 / 4%);
-  border-color: oklch(1 0 0 / 8%);
+  border-color: oklch(1 0 0 / 6%);
+}
+
+/* Clean minimal card — replaces the heavy glass pattern */
+.surface-card {
+  background: oklch(0.13 0.015 265);
+  border: 1px solid oklch(1 0 0 / 0.06);
+  border-radius: 1rem;
+}
+
+/* Floating pill — for map overlay buttons */
+.pill-float {
+  background: oklch(0.16 0.015 265 / 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 9999px;
+  box-shadow: 0 2px 12px oklch(0 0 0 / 0.4);
 }
 
 @theme inline {

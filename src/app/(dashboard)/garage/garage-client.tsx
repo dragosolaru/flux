@@ -57,8 +57,8 @@ function VehicleHeroCard({
           className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${gradient} aspect-[16/7]`}
           style={{ minHeight: 0 }}
         >
-          {/* Glassmorphism overlay */}
-          <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03]" />
+          {/* Subtle border overlay */}
+          <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/6" />
 
           {/* Content */}
           <div className="relative flex h-full flex-col justify-between p-5">
@@ -73,21 +73,21 @@ function VehicleHeroCard({
                 )}
               </div>
               {vehicle.dataSource === "mock" && (
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/70">
+                <span className="rounded-full bg-white/8 px-2.5 py-1 text-xs font-medium text-white/60">
                   {tg("mock_label")}
                 </span>
               )}
             </div>
 
-            {/* Vehicle silhouette */}
+            {/* Vehicle silhouette — slightly more visible at 30% */}
             {vehicle.model && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[45%] opacity-20 text-white pointer-events-none">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[48%] opacity-30 text-white pointer-events-none">
                 <VehicleModelImage model={vehicle.model} className="w-full h-auto" />
               </div>
             )}
 
             {/* Bottom hint */}
-            <p className="text-xs text-white/40">{tg("tap_to_open")}</p>
+            <p className="text-xs text-white/35">{tg("tap_to_open")}</p>
           </div>
         </motion.div>
       </Link>
@@ -173,7 +173,7 @@ export function GarageClient() {
 
       {/* Tariff hint */}
       {caps?.hasTariff && tariff && tariff.cheapestAvgPrice < tariff.currentPrice && (
-        <GlassCard animate={false} className="flex items-center gap-2 px-3 py-2 text-sm text-chart-2">
+        <GlassCard animate={false} className="flex items-center gap-2 px-3 py-2 text-sm text-chart-2 border-white/6 bg-white/[0.03]">
           <Zap className="size-3.5 shrink-0" />
           <span>
             {tg("tariff_hint_cheapest")}{" "}

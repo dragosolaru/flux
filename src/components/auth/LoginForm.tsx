@@ -58,18 +58,18 @@ export function LoginForm({ mode }: LoginFormProps) {
       <button
         type="button"
         onClick={() => signIn("google", { callbackUrl })}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium transition-colors hover:bg-white/8"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/6 bg-white/[0.04] py-3 text-sm font-medium transition-colors hover:bg-white/[0.07]"
       >
         <GoogleMark />
         {t("google")}
       </button>
 
       <div className="relative flex items-center">
-        <div className="flex-1 border-t border-white/10" />
-        <span className="mx-3 text-xs uppercase tracking-wide text-muted-foreground">
+        <div className="flex-1 border-t border-white/6" />
+        <span className="mx-3 text-xs uppercase tracking-wide text-muted-foreground/60">
           {t("or")}
         </span>
-        <div className="flex-1 border-t border-white/10" />
+        <div className="flex-1 border-t border-white/6" />
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -84,7 +84,7 @@ export function LoginForm({ mode }: LoginFormProps) {
             value={email}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder-muted-foreground focus:border-primary/60 focus:outline-none"
+            className="w-full rounded-xl border border-white/6 bg-white/[0.04] px-4 py-3 text-base placeholder-muted-foreground/60 focus:border-primary/50 focus:outline-none"
           />
         </div>
         <div className="space-y-1.5">
@@ -99,7 +99,7 @@ export function LoginForm({ mode }: LoginFormProps) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder-muted-foreground focus:border-primary/60 focus:outline-none"
+            className="w-full rounded-xl border border-white/6 bg-white/[0.04] px-4 py-3 text-base placeholder-muted-foreground/60 focus:border-primary/50 focus:outline-none"
           />
         </div>
         <button

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
-import { LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
+import { Car, LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,17 +29,22 @@ function VehicleSwitcher() {
 
   if (!vehicles || vehicles.length === 0) return null;
 
+  const current = vehicles.find((v: { id: string; nickname: string | null; displayName: string }) => v.id === currentId);
+  const label = current ? (current.nickname ?? current.displayName) : t("select_vehicle");
+
   return (
-    <div className="flex min-w-0 items-center">
+    <div className="relative flex items-center">
+      <Car className="pointer-events-none absolute left-2 size-3.5 text-muted-foreground" />
       <select
         value={currentId ?? ""}
         onChange={(e: ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
-        className="h-8 w-full min-w-0 max-w-[40vw] cursor-pointer truncate rounded-md border bg-background px-2 pr-7 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring md:max-w-xs"
+        className="h-8 cursor-pointer rounded-full border-0 bg-white/6 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring max-w-[140px] truncate"
         aria-label={t("select_vehicle")}
+        title={label}
       >
-        {!currentId && <option value="">— {t("select_vehicle")} —</option>}
+        {!currentId && <option value="">{t("select_vehicle")}</option>}
         {vehicles.map((v: { id: string; nickname: string | null; displayName: string }) => (
           <option key={v.id} value={v.id}>
             {v.nickname ?? v.displayName}
@@ -68,12 +73,12 @@ export function TopBar() {
     <header className="shrink-0 bg-background">
       {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
       <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
-      <div className="flex h-11 min-w-0 items-center gap-2 border-b px-4 md:h-14 md:gap-3 md:px-6">
-      <div className="md:hidden flex shrink-0 items-center gap-2 font-semibold">Flux</div>
+      <div className="flex h-11 min-w-0 items-center gap-2 md:border-b px-4 md:h-14 md:px-6">
+      <div className="md:hidden flex shrink-0 items-center gap-2 text-sm font-semibold">Flux</div>
 
       <div className="min-w-0 flex-1"><VehicleSwitcher /></div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         {/* Theme toggle */}
         <Button
           variant="ghost"
