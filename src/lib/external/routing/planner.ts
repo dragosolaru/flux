@@ -247,7 +247,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   let warning: string | null = null;
   let iter = 0;
 
-  while (kmLeft > 0 && iter++ < 8) {
+  while (kmLeft > 0 && iter++ < 30) {
     if (kmLeft <= rangeNow) {
       // Can reach destination with at least arrivalSocPct remaining
       kmFromStart += kmLeft;
@@ -260,10 +260,11 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const targetKm = kmFromStart + rangeNow * 0.85;
     const searchCenter = pointAlongRoute(polyline, targetKm, origin, destination, distanceKm);
 
-    // Find compatible station within 100km detour, scored by power/price/detour
+    // Find compatible station within 150km detour, scored by power/price/detour.
+    // 150km radius covers sparse corridor areas in Eastern/Southern Europe.
     const candidates = allStations
       .map((st) => ({ st, dist: haversine(searchCenter, st) }))
-      .filter((c) => c.dist < 100 && (c.st.maxKw ?? 0) > 0)
+      .filter((c) => c.dist < 150 && (c.st.maxKw ?? 0) > 0)
       .map((c) => ({
         ...c,
         score: scoreStation(c.st, c.dist, spec.maxDcChargingRateKw),
@@ -327,9 +328,10 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     totalEnergyKwh += energyAddedKwh;
   }
 
-  if (iter >= 8) {
-    feasible = false;
-    warning = "Route planner exceeded maximum iterations; result may be incomplete.";
+  if (iter >= 30) {
+    // Show partial result with a warning rather than blocking the whole plan —
+    // a nearly-complete plan is still useful for the user to review.
+    warning = "Route planner reached stop limit; some legs near the destination may be approximate.";
   }
 
   // Second pass: re-route THROUGH the chosen charging stops so the polyline
