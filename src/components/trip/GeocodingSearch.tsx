@@ -136,7 +136,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
           onBlur={onBlur}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className={`w-full rounded-lg border bg-background py-2 pl-9 ${inputPr} text-sm focus:outline-none focus:ring-2 focus:ring-ring`}
+          className={`w-full rounded-lg border bg-background py-2 pl-9 ${inputPr} text-base focus:outline-none focus:ring-2 focus:ring-ring`}
         />
         <span className="absolute right-3 flex items-center gap-1">
           {loading ? (

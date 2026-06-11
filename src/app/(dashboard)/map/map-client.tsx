@@ -436,10 +436,10 @@ export function MapClient() {
         <div className="absolute left-3 top-3 z-[1000]">
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className={`flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 text-sm font-medium shadow-xl backdrop-blur-xl transition-colors ${
+            className={`pill-float flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
               hasActiveFilter
-                ? "border-primary/40 bg-primary/10 text-foreground"
-                : "border-white/10 bg-background/80 text-muted-foreground"
+                ? "!border-primary/40 !bg-primary/15 text-foreground"
+                : "text-muted-foreground"
             }`}
           >
             <SlidersHorizontal className="size-3.5" />
@@ -451,7 +451,7 @@ export function MapClient() {
 
       {mode === "explore" && showFilters && (
         <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5">
-          <div className="flex min-h-[44px] items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-2 shadow-xl backdrop-blur-xl scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
             {POWER_OPTIONS.map((opt) => (
               <button
                 key={String(opt.value)}
@@ -459,15 +459,15 @@ export function MapClient() {
                 aria-pressed={minKw === opt.value}
                 className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                   minKw === opt.value
-                    ? "border-primary bg-primary/10 font-semibold text-foreground"
-                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                    ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
+                    : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
                 }`}
               >
                 {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
               </button>
             ))}
           </div>
-          <div className="flex min-h-[44px] items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-background/80 px-3 py-2 shadow-xl backdrop-blur-xl scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
             {CONNECTOR_OPTIONS.map((opt) => (
               <button
                 key={String(opt.value)}
@@ -475,8 +475,8 @@ export function MapClient() {
                 aria-pressed={connector === opt.value}
                 className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                   connector === opt.value
-                    ? "border-primary bg-primary/10 font-semibold text-foreground"
-                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                    ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
+                    : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
                 }`}
               >
                 {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
@@ -490,7 +490,7 @@ export function MapClient() {
       <motion.div
         animate={controls}
         initial={{ y: snapToY(initialSnapH, fullH) }}
-        className="absolute inset-x-0 bottom-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/10 bg-background/90 shadow-2xl backdrop-blur-2xl"
+        className="absolute inset-x-0 bottom-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl"
         style={{ height: `${fullH}px` }}
       >
         {/* Drag handle area */}
