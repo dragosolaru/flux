@@ -482,7 +482,7 @@
       "fallbackName": "Document",
       "addManually": "Yes, add manually",
       "lowConfidence": "Some fields have low confidence. Review and correct if needed.",
-      "fieldCost": "Electricity cost (RON)",
+      "fieldCost": "Electricity cost",
       "fieldKwh": "Electricity kWh",
       "confirmDelete": "Are you sure?",
       "ariaOpen": "Open document",

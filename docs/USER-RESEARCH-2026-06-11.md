@@ -251,6 +251,49 @@ Five additional personas from Moldova, France, Finland, Romania (UX designer), B
 
 ---
 
+## Wave 2 — Batch 5 (2026-06-12): Final 5 personas
+
+| Persona | Score | Top Pain | Top Praise |
+|---------|-------|----------|------------|
+| Emma, 26, Edinburgh UK (NHS junior doctor) | 7/10 | Map defaults to Bucharest (not Edinburgh); no offline route caching; no CO2/sustainability metrics, only financial | Smart charge scheduling; send-to-Tesla nav; trip planner for Highlands |
+| Lucia, 29, Barcelona ES (graphic designer) | 7.5/10 | Radius inconsistency: rounded-2xl / rounded-[10px] / rounded-full / rounded-xl mixed; icon color inconsistency SlideUpMenu (mono) vs dashboard chips (semantic) | Ambient tinting; floating pill nav; font-thin hero number |
+| Ivan, 33, Sofia BG (developer) | 7/10 | Default map center Bucharest; fieldCost "Electricity cost (RON)" hardcoded in English locale; Bulgarian networks missing; no BGN currency | Auth discipline; Zod schemas; personal efficiency learning |
+| Sophie, 45, Paris FR (lawyer) | 6/10 | **CRITICAL**: Anthropic billing URL exposed to users in OCR error messages; costs in RON; "Télémétrie du véhicule" jargon | SOC hero clear; charging history clean |
+| Rafael, 37, Lisbon PT (product designer) | 7.5/10 | `auth-input` defined twice in globals.css (duplicate at lines 128 & 160); multiple competing card primitives; native `<select>` breaks design language in trip planner | OKLCH token system; ambient tinting; floating pill nav spring animation |
+
+**Wave 2 Batch 5 average: 7.0/10**
+
+### Bugs fixed from Wave 2 Batch 5
+
+- **CRITICAL**: `document-parser.ts` Anthropic API errors no longer expose billing URLs or internal infrastructure details to users — replaced with generic user-friendly messages
+- `en.json` `ingest.fieldCost`: "Electricity cost (RON)" → "Electricity cost" (no hardcoded currency)
+- `fr.json` `about_data.category.telemetry.label`: "Télémétrie du véhicule" → "Données du véhicule" (less technical jargon)
+- `globals.css`: duplicate `.auth-input` definition removed (was defined twice at lines 128 and 160)
+
+---
+
+## Wave 2 Summary (2026-06-12)
+
+25 personas across 5 batches. Overall average: **6.5/10** (up from Wave 1 5.67/10).
+
+### Top systemic issues (appear in 3+ personas)
+
+| Issue | Frequency | Status |
+|-------|-----------|--------|
+| RON currency hardcoded throughout costs pipeline | 8/25 personas | ⏳ Not yet fixed (architectural) |
+| Non-Tesla vehicles not supported | 6/25 personas | ⏳ Not yet fixed (architectural) |
+| Default map/origin center Bucharest, not user location | 4/25 personas | ⏳ Logged |
+| formatRelativeTime hardcoded English | 2/25 personas | ✅ Fixed Batch 1 |
+| Cold derating formula wrong | 2/25 personas | ✅ Fixed Batch 1 + Batch 4 |
+| Wind derating linear (wrong physics) | 2/25 personas | ✅ Fixed Batch 4 |
+| German Sie-form inconsistency | 1/25 personas | ✅ Fixed Batch 3 |
+| Quick action buttons below 44px HIG | 1/25 personas | ✅ Fixed Batch 3 |
+| reverseGeocode calls Nominatim directly (GDPR) | 1/25 personas | ✅ Fixed Batch 2 |
+| Anthropic billing URL exposed in errors | 1/25 personas | ✅ Fixed Batch 5 |
+| auth-input CSS duplicate | 1/25 personas | ✅ Fixed Batch 5 |
+
+---
+
 ## Methodology note
 
 This synthesis is based on structured persona reviews conducted in June 2026. Each persona was given a scripted task set covering: vehicle connection, dashboard reading, trip planning, cost intelligence, smart charging, settings configuration, and upgrade/paywall encounter. Reviews were scored on a 10-point scale (overall experience quality). Personas were selected to span age range (25–55), geography (RO, DE, IE), device profile (iPhone SE to iPhone 15, mid-range Android), EV experience level (new owner to power user), and use case (personal, expat cross-border, fleet management).

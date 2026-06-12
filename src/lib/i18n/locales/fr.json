@@ -744,7 +744,7 @@
     "footer": "Connectez un véhicule réel via les Paramètres pour passer des données démo aux données en direct pour ce véhicule. Les services de la plateforme (tarif, réseau de recharge, météo, routage) utilisent des fournisseurs fictifs dans cette démo.",
     "category": {
       "telemetry": {
-        "label": "Télémétrie du véhicule",
+        "label": "Données du véhicule",
         "liveDesc": "En temps réel depuis l'API OEM",
         "mockDesc": "Simulateur de scénarios Tier-3"
       },

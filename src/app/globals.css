@@ -124,26 +124,6 @@
   border: 1px solid oklch(1 0 0 / 0.05);
 }
 
-/* Auth borderless input */
-.auth-input {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid oklch(1 0 0 / 0.22);
-  border-radius: 0;
-  padding: 0.5rem 0;
-  font-size: 0.9375rem;
-  width: 100%;
-  color: inherit;
-  transition: border-color 200ms ease;
-}
-.auth-input:focus {
-  outline: none;
-  border-bottom-color: oklch(1 0 0 / 0.70);
-}
-.auth-input::placeholder {
-  color: oklch(1 0 0 / 0.25);
-}
-
 /* Ambient background tinting based on vehicle state */
 .ambient-charging { background-color: oklch(0.12 0.028 250) !important; }
 .ambient-low      { background-color: oklch(0.12 0.025 45) !important;  }

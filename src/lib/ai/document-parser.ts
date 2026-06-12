@@ -89,12 +89,12 @@ export async function parseDocument(doc: Document): Promise<ParsedDocument> {
     });
   } catch (err) {
     if (err instanceof APIError) {
-      if (err.status === 401) throw new Error("Cheia API Anthropic este invalidă. Verifică ANTHROPIC_API_KEY în setările Vercel.");
+      if (err.status === 401) throw new Error("OCR service configuration error. Contact support.");
       if (err.status === 402 || (err.message && err.message.includes("credit balance"))) {
-        throw new Error("Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing.");
+        throw new Error("OCR service temporarily unavailable. Please try again later.");
       }
-      if (err.status === 429) throw new Error("Prea multe cereri către Anthropic. Încearcă din nou în câteva secunde.");
-      if (err.status >= 500) throw new Error("Serviciul Anthropic este temporar indisponibil. Încearcă din nou.");
+      if (err.status === 429) throw new Error("OCR service is busy. Please try again in a few seconds.");
+      if (err.status >= 500) throw new Error("OCR service temporarily unavailable. Please try again.");
     }
     throw err;
   }
