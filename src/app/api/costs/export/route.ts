@@ -7,6 +7,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 const QuerySchema = z.object({ vehicleId: z.string().uuid() });
 
+function sanitizeCsvCell(value: string | number | null | undefined): string {
+  const str = value == null ? "" : String(value);
+  // Prefix formula-injection triggers with a tab to neutralize them in Excel/LibreOffice.
+  if (/^[=+\-@\t\r]/.test(str)) return `\t${str}`;
+  return str;
+}
+
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -53,12 +60,7 @@ export async function GET(request: Request) {
       r.original_amount, r.original_currency, r.cost_ron,
       r.provider_name, r.charger_network, r.location_name, r.created_at,
     ]
-      .map((v) => {
-        const s = v == null ? "" : String(v).replace(/"/g, '""');
-        // Guard against CSV formula injection (Excel/LibreOffice execute cells
-        // starting with = + - @ as formulas when opened).
-        return /^[=+\-@]/.test(s) ? `'${s}` : s;
-      })
+      .map((v) => sanitizeCsvCell(v).replace(/"/g, '""'))
       .map((v) => `"${v}"`)
       .join(","),
   );

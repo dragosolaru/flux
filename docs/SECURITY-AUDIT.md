@@ -91,6 +91,12 @@ as unverified; the table below reflects code actually inspected and re-fixed.
 | 29 | High | `/api/user` | Deletes on `energy_costs`/`command_events`/`charging_sessions` used a non-existent `user_id` column — erasure silently no-op (relied on cascade) | Delete by `vehicle_id` |
 | 30 | Medium | `billing/checkout`, `billing/portal` | Attacker-controlled `Origin` header used for Stripe redirect URLs | Use server-side `NEXTAUTH_URL` |
 
+### Fixed this pass
+
+| # | Severity | Area | Finding | Fix |
+|---|---|---|---|---|
+| 34 | Low | `costs/export` | CSV cells not guarded against `= + - @` formula injection | Added `sanitizeCsvCell()` helper that prefixes dangerous cells with `\t`; covers `=`, `+`, `-`, `@`, `\t`, `\r` triggers |
+
 ### Still open (tracked, not yet done)
 
 | # | Severity | Area | Finding |
@@ -98,7 +104,52 @@ as unverified; the table below reflects code actually inspected and re-fixed.
 | 31 | Medium | `billing/webhook` | No idempotency/ordering guard — retried/out-of-order Stripe events can flip tier. Needs a `stripe_events(id pk)` dedupe table |
 | 32 | Medium | `inbound-email` | `?secret=` query-param fallback still present (finding #20 not applied) — should be header-only |
 | 33 | Medium | `tesla/command`, `tesla/refresh` | Legacy live routes lack rate limits + own command allowlist; supersede with `/api/vehicles/[id]/commands` or delete |
-| 34 | Low | `costs/export` | CSV cells not guarded against `= + - @` formula injection |
+
+---
+
+## RLS Audit (2026-06-12)
+
+Audit scope: `energy_costs`, `charging_sessions`, `trips`, `command_events`, `documents`.
+Method: migrations inspected for `ENABLE ROW LEVEL SECURITY` + `CREATE POLICY`; API routes grep'd for `.eq("user_id", …)` and vehicle-ownership checks.
+
+### RLS enabled in migrations
+
+| Table | RLS enabled | Policy |
+|-------|-------------|--------|
+| `documents` | ✅ migration 006 | `for all using (user_id = auth.uid())` — direct user_id column |
+| `energy_costs` | ✅ migration 006 | `for all using (vehicle_id in (select id from vehicles where user_id = auth.uid()))` |
+| `charging_sessions` | ✅ migration 002 | `for all using (vehicle_id in (select id from vehicles where user_id = auth.uid()))` |
+| `trips` | ✅ migration 002 | `for all using (vehicle_id in (select id from vehicles where user_id = auth.uid()))` |
+| `command_events` | ✅ migration 002 | `for all using (vehicle_id in (select id from vehicles where user_id = auth.uid()))` |
+
+All five tables have RLS enabled and policies covering SELECT/INSERT/UPDATE/DELETE via the `for all` shorthand.
+
+### API route user_id filter audit
+
+All routes use the admin client (`createSupabaseAdminClient()`) which bypasses RLS, so ownership must be enforced at the application layer.
+
+| Route | Table(s) accessed | Ownership enforced? |
+|-------|-------------------|---------------------|
+| `GET /api/costs/export` | `vehicles` + `energy_costs` | ✅ vehicles checked with `.eq("user_id", userId)` before energy_costs query |
+| `GET /api/costs` | `vehicles` + `energy_costs` + `trips` | ✅ vehicle ownership checked; trips filtered by `vehicle_id` (already verified owned) |
+| `GET /api/documents` | `vehicles` + `documents` | ✅ vehicle `.eq("user_id", userId)`; documents `.eq("vehicle_id", …).eq("user_id", userId)` |
+| `POST /api/documents` | `vehicles` + `documents` | ✅ vehicle `.eq("user_id", userId)` before insert |
+| `GET /api/documents/[id]` | `documents` | ✅ `.eq("id", documentId).eq("user_id", userId)` |
+| `PATCH /api/documents/[id]` | `documents` + `energy_costs` | ✅ document `.eq("user_id", userId)`; energy_costs update scoped by `document_id` (already verified owned doc) |
+| `DELETE /api/documents/[id]` | `documents` | ✅ `.eq("id", documentId).eq("user_id", userId)` |
+| `POST /api/vehicles/[id]/commands` | `vehicles` + `command_events` (via `recordCommandEvent`) | ✅ vehicle `.eq("user_id", session.user.id)`; command events inserted for verified vehicle_id |
+| `GET /api/vehicles/[id]/state` | `vehicles` | ✅ `.eq("user_id", session.user.id)` |
+| `POST /api/vehicles/[id]/charging-history` | `vehicles` + `charging_sessions` | ✅ vehicle `.eq("user_id", session.user.id)`; sessions upserted for verified vehicle_id |
+
+### Gaps / notes
+
+- **`/api/user/export` — stale column references (finding #29 area):** The export route queries `charging_sessions`, `command_events` with `.eq("user_id", userId)`. Neither table has a direct `user_id` column — these queries silently return empty arrays. This is a data-export gap, not a security vulnerability (no data leaks), but the GDPR export omits these records. Tracked under finding #29 which was marked fixed but the export route was not updated. Should filter by `vehicle_id in (select id from vehicles where user_id = userId)` or join through vehicles. **Not a blocker for multi-tenant security.**
+- **`/api/costs` trips query:** Trips are filtered only by `vehicle_id` (no direct `user_id` filter), but vehicleId ownership is verified before the trips query executes. This is safe by construction.
+- **RLS as defence-in-depth:** Because the app uses the service-role admin client, RLS policies are not the primary enforcement layer — they are a backstop for any direct Supabase client access (e.g., from future client-side queries using the anon key). All policies are correctly scoped. No gaps in migration-level RLS.
+
+### Verdict
+
+No cross-tenant data leakage paths identified for the five audited tables. The admin-client pattern is consistently paired with application-layer ownership checks. The only functional gap is the GDPR export silently returning empty `charging_sessions` and `command_events` due to the wrong filter column — this is a data completeness issue, not a security issue.
 
 ---
 
@@ -106,11 +157,11 @@ as unverified; the table below reflects code actually inspected and re-fixed.
 
 1. **Upstash Redis rate limiter** — replace in-memory `Map` (per-instance, resets on cold start; currently undermines the `register` brute-force limit too)
 2. **Stripe webhook idempotency** (finding #31)
-3. **RLS audit** on `energy_costs`, `charging_sessions`, `trips`, `command_events`
-4. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
-5. **WhatsApp phone→user registration** — required before WhatsApp ingest can safely auto-attribute (currently unmatched-pool only)
-6. **Remove `?secret=` query fallback** on inbound-email (finding #32)
-7. **Tesla token revocation detection** + **key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`
+3. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
+4. **WhatsApp phone→user registration** — required before WhatsApp ingest can safely auto-attribute (currently unmatched-pool only)
+5. **Remove `?secret=` query fallback** on inbound-email (finding #32)
+6. **Tesla token revocation detection** + **key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`
+7. **Fix GDPR export** — `charging_sessions` and `command_events` queries in `/api/user/export` use non-existent `user_id` column; should join through `vehicles`
 
 > Process note: keep this document in lockstep with the code. The second pass marked
 > #19/#20/#22/#23 resolved while the fixes were absent — always re-grep the code before
