@@ -13,6 +13,7 @@ import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/compone
 import { CostSummary } from "@/components/trip/CostSummary";
 import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { apiFetch } from "@/lib/api-fetch";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
@@ -103,6 +104,7 @@ function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): Vari
 
 export function TripClient() {
   const t = useTranslations("trip");
+  const { fromEUR } = useCurrency();
   const { data: vehicles } = useVehicles();
   const [vehicleId, setVehicleId] = useState<string>("");
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
@@ -636,7 +638,7 @@ export function TripClient() {
                           : v.plan.stops.length === 1
                             ? t("stops_count_one")
                             : t("stops_count_other", { count: v.plan.stops.length })}`}
-                        {v.plan.tripEnergyCostEur > 0 && ` · €${v.plan.tripEnergyCostEur.toFixed(2)}`}
+                        {v.plan.tripEnergyCostEur > 0 && ` · ${fromEUR(v.plan.tripEnergyCostEur)}`}
                       </span>
                     </button>
                   );

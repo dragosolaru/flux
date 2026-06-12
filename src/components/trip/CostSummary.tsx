@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Fuel } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getFuelComparison, setFuelComparison } from "@/lib/fuel-comparison";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface CostSummaryProps {
   origin: string;
@@ -42,6 +43,7 @@ export function CostSummary({
   trafficDelayMinutes = 0,
 }: CostSummaryProps) {
   const t = useTranslations("trip");
+  const { fromEUR } = useCurrency();
   const [showFuel, setShowFuel] = useState(false);
   const [fuel, setFuel] = useState(getFuelComparison);
 
@@ -91,7 +93,7 @@ export function CostSummary({
             {tripEnergyKwh.toFixed(1)} kWh
           </span>
           <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 font-medium text-green-400">
-            €{tripEnergyCostEur.toFixed(2)}
+            {fromEUR(tripEnergyCostEur)}
           </span>
           {chargingMinutes > 0 && (
             <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
@@ -121,7 +123,7 @@ export function CostSummary({
         <div className="space-y-1.5 rounded-xl border border-white/8 bg-white/5 p-3 text-sm backdrop-blur-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("ev_cost_label")}</span>
-            <span className="font-medium text-green-400">€{tripEnergyCostEur.toFixed(2)}</span>
+            <span className="font-medium text-green-400">{fromEUR(tripEnergyCostEur)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">
@@ -130,12 +132,12 @@ export function CostSummary({
                 pricePerL: fuel.priceEurL,
               })}
             </span>
-            <span className="font-medium">€{petrolCostEur.toFixed(2)}</span>
+            <span className="font-medium">{fromEUR(petrolCostEur)}</span>
           </div>
           <div className="h-px bg-white/8" />
           <div className="flex justify-between font-semibold">
             <span>{t("savings_label")}</span>
-            <span className="text-green-400">€{savingsEur.toFixed(2)}</span>
+            <span className="text-green-400">{fromEUR(savingsEur)}</span>
           </div>
 
           <div className="h-px bg-white/8" />

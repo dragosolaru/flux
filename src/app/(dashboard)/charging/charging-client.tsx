@@ -21,6 +21,7 @@ import {
 } from "@/lib/animations/variants";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useChargingHistorySync } from "@/hooks/useChargingHistorySync";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import type { ChargingSessionRow } from "./page";
@@ -322,6 +323,7 @@ function HistoryCard({
   row: ChargingSessionRow;
   tc: ReturnType<typeof useTranslations<"charging">>;
 }) {
+  const { fromEUR } = useCurrency();
   const isHome =
     !row.location_name || row.location_name.toLowerCase().includes("home");
 
@@ -362,7 +364,7 @@ function HistoryCard({
                 : `— ${tc("history_kwh")}`}
             </span>
             <span className="text-xs text-muted-foreground">
-              {row.cost_eur != null ? `€${row.cost_eur.toFixed(2)}` : "—"}
+              {row.cost_eur != null ? fromEUR(row.cost_eur) : "—"}
             </span>
           </div>
           {/* Location label */}

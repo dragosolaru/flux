@@ -3,6 +3,7 @@
 import { Thermometer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ReliabilityBadge } from "./ReliabilityBadge";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const PRECONDITION_MIN_KW = 50;
 
@@ -39,6 +40,7 @@ interface StopCardProps {
 
 export function StopCard({ stop, index, preconditioned = false }: StopCardProps) {
   const t = useTranslations("trip");
+  const { fromEUR } = useCurrency();
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
   const precondition = needsPreconditioning(station.maxKw);
   const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
@@ -54,7 +56,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
         {/* Row 1: name + cost */}
         <div className="flex items-baseline justify-between gap-2">
           <p className="truncate text-sm font-medium leading-tight">{station.name}</p>
-          <span className="shrink-0 text-sm font-semibold text-green-400">€{costEur.toFixed(2)}</span>
+          <span className="shrink-0 text-sm font-semibold text-green-400">{fromEUR(costEur)}</span>
         </div>
 
         {/* Row 2: all stats in one line */}

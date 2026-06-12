@@ -39,12 +39,15 @@ export function formatMoney(
   amount: number,
   currency: Currency,
   locale: Locale,
+  maxFractionDigits?: number,
 ): string {
   const intlLocale = locale === "ro" ? "ro-RO" : "en-GB";
+  const max = maxFractionDigits ?? (currency === "HUF" ? 0 : 2);
   return new Intl.NumberFormat(intlLocale, {
     style: "currency",
     currency,
-    maximumFractionDigits: currency === "HUF" ? 0 : 2,
+    maximumFractionDigits: max,
+    minimumFractionDigits: Math.min(2, max),
   }).format(amount);
 }
 

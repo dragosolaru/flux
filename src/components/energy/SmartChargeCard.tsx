@@ -17,6 +17,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { computeSmartCharge } from "@/lib/external/tariffs/recommend";
 import { getModelSpec } from "@/lib/brands/models";
 import { useCapabilities } from "@/hooks/useCapabilities";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { cardVariants } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
@@ -37,6 +38,7 @@ function VehicleRecommendation({
   forecast: TariffForecast;
 }) {
   const t = useTranslations("energy");
+  const { fromEUR } = useCurrency();
   const [scheduled, setScheduled] = useState(false);
   const { mutate, isPending } = useVehicleCommand();
   const { data: caps } = useCapabilities();
@@ -144,7 +146,7 @@ function VehicleRecommendation({
           <p className="text-sm text-muted-foreground">
             {t("save")}{" "}
             <span className="font-semibold text-chart-2">
-              €{rec.savingsEur.toFixed(2)}
+              {fromEUR(rec.savingsEur)}
             </span>{" "}
             · ~{Math.round(rec.hoursNeeded * 10) / 10}h {t("to_target")}
           </p>

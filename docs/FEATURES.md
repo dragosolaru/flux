@@ -1520,3 +1520,31 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 - `e2e/helpers/auth.ts` — `loginAs(page, email, password)` helper used by all authenticated specs
 
 **Dependencies:** `@playwright/test ^1.60.0` (already in devDependencies). Run `npx playwright install --with-deps chromium` once to download the browser binary.
+
+---
+
+## Display Currency Conversion (user-selected currency everywhere)
+
+**What it does:** All money shown in the UI is converted to the user's preferred currency (Settings → Currency, stored in `profiles.display_currency`). Storage stays canonical — costs in RON, trip/charging estimates in EUR — and conversion happens only at render time via BNR exchange rates. Until rates load (or if BNR is unavailable), amounts fall back to their canonical currency so a number is never shown with the wrong symbol. Subscription prices on `/pricing` remain in EUR (Stripe-billed).
+
+**How to use:** Pick a currency in Settings. Covered surfaces: costs KPI chips + monthly chart tooltip, trip planner (summary chips, variant chips, stop cards, station detail, fuel comparison), map sheet route summary, charging history, smart-charge savings.
+
+**Key files:**
+- `src/app/api/exchange-rates/route.ts` — auth + rate-limited; returns `{ display, ronPerEur, ronPerDisplay }` from the user's profile + BNR cache
+- `src/hooks/useCurrency.ts` — `fromRON(amount)` / `fromEUR(amount)` formatters in the user's currency
+- `src/lib/currency/format.ts` — `formatMoney` gained optional `maxFractionDigits` (chart tooltips use 0, cost/km uses 3)
+- Display call sites: `costs-client.tsx`, `trip-client.tsx`, `map-client.tsx`, `charging-client.tsx`, `CostSummary.tsx`, `StopCard.tsx`, `StationDetailSheet.tsx`, `SmartChargeCard.tsx`
+
+**Dependencies:** `getExchangeRate` (BNR client, `exchange_rates` cache table), `usePreferences` currency picker (migration 008).
+
+---
+
+## Map Detail Sheets Above Bottom Sheet (z-index fix)
+
+**What it does:** Station/stop detail sheets (`StationDetailSheet`, `ChargerDetailSheet`) now open as true modals above the map's main bottom sheet. Previously they rendered at `z-[500]` under the sheet (`z-[900]`), so on mobile the detail card appeared trapped behind the planner and its tap-to-dismiss backdrop was unreachable.
+
+**How to use:** Tap any charging stop or station on `/map` — the detail card slides up over everything; tap the backdrop, the X, or press Escape to close.
+
+**Key files:** `src/components/trip/StationDetailSheet.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx` (backdrop `z-[1090]`, sheet `z-[1100]`).
+
+**Dependencies:** None new.

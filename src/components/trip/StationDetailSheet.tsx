@@ -5,6 +5,7 @@ import { X, Zap, Clock, Battery, BatteryFull } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChargingStop } from "@/lib/external/routing/types";
 import { ReliabilityBadge } from "./ReliabilityBadge";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface StationDetailSheetProps {
   stop: ChargingStop;
@@ -19,6 +20,7 @@ function networkBadgeClass(networkId: string): string {
 
 export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
   const t = useTranslations("trip.station");
+  const { fromEUR } = useCurrency();
   const { station, arriveSoc, departSoc, chargingMinutes, energyAddedKwh, costEur } = stop;
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
     <>
       {/* Backdrop — tap to dismiss */}
       <div
-        className="fixed inset-0 z-[490] bg-black/20 backdrop-blur-[1px]"
+        className="fixed inset-0 z-[1090] bg-black/20 backdrop-blur-[1px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -43,7 +45,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
         role="dialog"
         aria-modal="true"
         aria-label={station.name}
-        className="fixed bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
+        className="fixed bottom-0 left-0 right-0 z-[1100] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}
@@ -128,7 +130,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             {costEur > 0 && (
               <div className="flex-1 rounded-xl border border-white/10 bg-white/60 px-3 py-2.5 dark:bg-zinc-800/60">
                 <p className="text-xs text-muted-foreground">{t("cost")}</p>
-                <p className="mt-0.5 text-sm font-semibold text-green-400">€{costEur.toFixed(2)}</p>
+                <p className="mt-0.5 text-sm font-semibold text-green-400">{fromEUR(costEur)}</p>
               </div>
             )}
           </div>

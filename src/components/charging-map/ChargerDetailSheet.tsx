@@ -49,7 +49,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
     <>
       {/* Backdrop — tap to dismiss. Absolute so it only covers <main>, not BottomNav. */}
       <div
-        className="absolute inset-0 z-[490] bg-black/20 backdrop-blur-[1px]"
+        className="absolute inset-0 z-[1090] bg-black/20 backdrop-blur-[1px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -60,7 +60,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
-        className="absolute bottom-0 left-0 right-0 z-[500] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
+        className="absolute bottom-0 left-0 right-0 z-[1100] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
         style={{ maxHeight: "85dvh" }}
       >
         {/* Handle bar */}

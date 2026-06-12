@@ -31,6 +31,7 @@ import {
 } from "@/hooks/useDocuments";
 import { useCosts } from "@/hooks/useCosts";
 import { useCapabilities } from "@/hooks/useCapabilities";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import type { CostAggregation, MonthlyBucket, Document } from "@/types/costs";
@@ -52,10 +53,7 @@ function fmt(n: number | null | undefined, decimals = 2) {
   return n.toFixed(decimals);
 }
 
-function fmtRon(n: number | null | undefined) {
-  if (n == null) return "—";
-  return `${n.toFixed(2)} lei`;
-}
+type MoneyFormatter = (amount: number, maxFractionDigits?: number) => string;
 
 // ─── KPI chip data builder ────────────────────────────────────────────────────
 
@@ -69,13 +67,14 @@ interface KpiItem {
 function buildKpiItems(
   data: CostsResponse,
   t: ReturnType<typeof useTranslations<"costs">>,
+  fromRON: MoneyFormatter,
 ): KpiItem[] {
   const items: KpiItem[] = [];
   const hasData = data.totalCostRon > 0;
 
   items.push({
     icon: <TrendingUp className="size-5" />,
-    value: fmtRon(data.totalCostRon),
+    value: fromRON(data.totalCostRon),
     label: t("kpi_total_lei"),
     accent: "text-primary",
   });
@@ -100,7 +99,7 @@ function buildKpiItems(
     icon: <Car className="size-5" />,
     value:
       data.costPerKmBlended != null
-        ? `${fmt(data.costPerKmBlended, 3)} lei`
+        ? fromRON(data.costPerKmBlended, 3)
         : hasData
           ? t("no_data")
           : "—",
@@ -121,10 +120,10 @@ function buildKpiItems(
     value:
       hasData && data.totalKm > 0 && data.petrolEquivalentCostRon > 0
         ? savingsRon > 0
-          ? fmtRon(savingsRon)
+          ? fromRON(savingsRon)
           : savingsRon < 0
-            ? `-${fmtRon(-savingsRon)}`
-            : "0 lei"
+            ? `-${fromRON(-savingsRon)}`
+            : fromRON(0)
         : "—",
     label: t("kpi_fuel_saving"),
     accent:
@@ -142,6 +141,7 @@ function buildKpiItems(
 
 function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
   const t = useTranslations("costs");
+  const { fromRON } = useCurrency();
   if (months.length === 0) return null;
 
   const visible = months.slice(-12);
@@ -197,7 +197,7 @@ function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
                   {label}
                 </span>
                 <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-xs shadow-lg backdrop-blur-sm group-hover:block">
-                  <span className="font-semibold">{m.costRon.toFixed(0)} lei</span>
+                  <span className="font-semibold">{fromRON(m.costRon, 0)}</span>
                   <span className="ml-1 text-muted-foreground">· {m.kwh.toFixed(1)} kWh</span>
                 </div>
               </div>
@@ -213,7 +213,8 @@ function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
 
 function KpiChipsRow({ data }: { data: CostsResponse }) {
   const t = useTranslations("costs");
-  const items = buildKpiItems(data, t);
+  const { fromRON } = useCurrency();
+  const items = buildKpiItems(data, t, fromRON);
 
   return (
     <motion.div

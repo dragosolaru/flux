@@ -25,6 +25,7 @@ import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
 import { apiFetch } from "@/lib/api-fetch";
 import { useVehicles } from "@/hooks/useVehicles";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
@@ -142,6 +143,7 @@ export function MapClient() {
   const tMap = useTranslations("map");
   const tTrip = useTranslations("trip");
   const tCharging = useTranslations("chargingMap");
+  const { fromEUR } = useCurrency();
 
   const searchParams = useSearchParams();
   const initialMode: MapMode = searchParams.get("mode") === "plan" ? "plan" : "explore";
@@ -609,7 +611,7 @@ export function MapClient() {
               </div>
               <span className="ml-2 flex shrink-0 items-center gap-1.5">
                 <span className="text-sm font-medium text-green-400">
-                  €{activePlan.tripEnergyCostEur.toFixed(2)}
+                  {fromEUR(activePlan.tripEnergyCostEur)}
                 </span>
                 <ChevronUp
                   className={`size-4 text-muted-foreground transition-transform ${sheetState !== "collapsed" ? "rotate-180" : ""}`}
