@@ -126,6 +126,22 @@ async function nominatimSearch(q: string, acceptLanguage: string, bias: GeocodeB
   return data.map((r) => ({ name: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) }));
 }
 
+interface NominatimReverseResult {
+  display_name: string;
+}
+
+async function nominatimReverse(lat: number, lon: number): Promise<string> {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Flux-TripPlanner/1.0 (contact@daolab.io)" },
+    signal: AbortSignal.timeout(8000),
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) throw new Error("reverse geocode failed");
+  const data = (await res.json()) as NominatimReverseResult;
+  return data.display_name;
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -134,6 +150,24 @@ export async function GET(req: NextRequest) {
 
   if (!(await checkRateLimit(session.user.id, "geocode", GEOCODE_MAX_PER_HOUR))) {
     return NextResponse.json({ results: [] }, { status: 429 });
+  }
+
+  // Reverse geocode: ?reverse=1&lat=&lon=
+  const reverse = req.nextUrl.searchParams.get("reverse");
+  if (reverse === "1") {
+    const latRaw = req.nextUrl.searchParams.get("lat");
+    const lonRaw = req.nextUrl.searchParams.get("lon");
+    const lat = Number(latRaw);
+    const lon = Number(lonRaw);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return NextResponse.json({ name: null }, { status: 400 });
+    }
+    try {
+      const name = await nominatimReverse(lat, lon);
+      return NextResponse.json({ name });
+    } catch {
+      return NextResponse.json({ name: null });
+    }
   }
 
   const q = req.nextUrl.searchParams.get("q")?.trim();

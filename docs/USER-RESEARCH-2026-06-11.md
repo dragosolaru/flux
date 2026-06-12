@@ -175,6 +175,33 @@ Five additional personas from Moldova, France, Finland, Romania (UX designer), B
 
 ---
 
+## Wave 2 — Batch 2 (2026-06-12): Mountain/analytical/architect/non-tech/international
+
+| Persona | Score | Top Pain | Top Praise |
+|---------|-------|----------|------------|
+| Florin, 39, Brașov RO (mountain guide) | 6/10 | No offline support; no elevation derating (uphill costs 15-20% extra); sparse Carpathian charging coverage | OSRM real-road routing; piecewise cold derating; OCM+Overpass stations |
+| Amira, 34, Toulouse FR (aerospace engineer) | 5/10 | Petrol comparison hardcoded to RON constants; no per-session charge curve (kW, SoC%, duration); French tariffs missing (EDF, Engie) | CSV export schema clean; Wh/km KPI; OCR receipt scanning |
+| Patrick, 44, Dublin IE (senior architect) | 7/10 | `reverseGeocode` called Nominatim directly from browser (GDPR/rate-limit bypass); in-memory rate limiting; Stripe idempotency #31 open | Auth/ownership patterns solid; mock/live gating clean; AES-256-GCM token encryption |
+| Miriam, 52, Vienna AT (non-technical) | 6/10 | Austrian tariff providers missing (only Romanian shown); settings 7+ sections overwhelming; no data collection disclosure screen | SOC hero readable; German translations natural; round action buttons obvious |
+| Mehmet, 31, Istanbul TR (commuter) | 6/10 | All costs in RON; no Turkish locale; Turkey not in bulk charger import | OCR receipt (WhatsApp ingest); smart charge timing concept; trip planner |
+
+**Wave 2 Batch 2 average: 6.0/10**
+
+### Bugs fixed from Wave 2 Batch 2
+
+- `reverseGeocode()` in `map-client.tsx` → now proxied through `/api/geocode?reverse=1` instead of calling Nominatim directly from browser (fixes GDPR GPS leak + rate-limit bypass; Patrick's finding)
+- `/api/geocode` route → added reverse geocoding handler (`?reverse=1&lat=&lon=`) server-side with auth + rate-limit
+
+### Known issues logged (not yet fixed)
+
+- Petrol comparison constants hardcoded to RON in `src/app/api/costs/route.ts` (PETROL_PRICE_RON=7.5, PETROL_L_PER_100KM=7) — needs user-configurable or exchange-rate-based currency conversion
+- No elevation/altitude derating for mountain routes (significant for Carpathians, Alps)
+- No per-session charge curve export (kW delivered, SoC%, duration)
+- Austrian/Western EU tariff providers missing from the provider registry
+- Turkish locale (tr) not implemented; Turkey not in bulk charger country list
+
+---
+
 ## Methodology note
 
 This synthesis is based on structured persona reviews conducted in June 2026. Each persona was given a scripted task set covering: vehicle connection, dashboard reading, trip planning, cost intelligence, smart charging, settings configuration, and upgrade/paywall encounter. Reviews were scored on a 10-point scale (overall experience quality). Personas were selected to span age range (25–55), geography (RO, DE, IE), device profile (iPhone SE to iPhone 15, mid-range Android), EV experience level (new owner to power user), and use case (personal, expat cross-border, fleet management).

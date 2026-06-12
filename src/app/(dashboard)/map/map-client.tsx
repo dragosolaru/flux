@@ -87,16 +87,12 @@ function snapToY(snapH: number, fullH: number): number {
 // Trip helper
 // ---------------------------------------------------------------------------
 
-interface NominatimReverseResult {
-  display_name: string;
-}
-
 async function reverseGeocode(lat: number, lon: number): Promise<string> {
-  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
-  const res = await fetch(url, { headers: { "User-Agent": "Flux-MapScreen/1.0" } });
-  if (!res.ok) throw new Error("reverse geocode failed");
-  const data = (await res.json()) as NominatimReverseResult;
-  return data.display_name;
+  const res = await apiFetch<{ name: string | null }>(
+    `/api/geocode?reverse=1&lat=${lat}&lon=${lon}`
+  );
+  if (!res.name) throw new Error("reverse geocode failed");
+  return res.name;
 }
 
 interface VariantLabel {

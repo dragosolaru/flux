@@ -599,6 +599,8 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 **Derating model (updated 2026-06-12):** Piecewise linear calibrated against real-world EV cold-weather data: 15→0°C at −1%/°C; 0→−10°C at −1.5%/°C; below −10°C at −2%/°C (Nordic extreme). Previous flat 0.5%/°C under-reported cold losses by ~50% at −20°C.
 
+**Known gap:** No elevation/altitude derating — mountain routes (e.g. Transfăgărășan, Alpine passes) add 15–20% consumption for 1200m elevation gain that the model does not yet account for.
+
 ---
 
 ## 26. Scenario Switcher (Demo Vehicles)
