@@ -22,7 +22,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
-import { type ChecklistData } from "@/components/onboarding/GettingStartedCard";
+import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -443,7 +443,7 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist: _checklist, lastCharge }: DashboardClientProps) {
+export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist, lastCharge }: DashboardClientProps) {
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
   const containerRef = useRef<HTMLElement>(null);
@@ -495,6 +495,8 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
       </AnimatePresence>
 
       <VehicleNotifications vehicleId={vehicleId} />
+
+      <GettingStartedCard data={checklist} />
 
       <HeroCard state={data} isLoading={isLoading} isFetching={isFetching} vehicleName={vehicleName} />
 
