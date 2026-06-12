@@ -1500,3 +1500,23 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/globals.css`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/components/vehicle/StatsGrid.tsx`, `src/components/vehicle/BatteryHealthCard.tsx`, `src/components/vehicle/ScoresCard.tsx`, `src/components/vehicle/TirePressureCard.tsx`, `src/components/vehicle/WeatherRangeCard.tsx`, `src/components/vehicle/DepartureCard.tsx`, `src/components/vehicle/DoorsWindowsCard.tsx`, `src/components/vehicle/SentryDashcamCard.tsx`, `src/components/vehicle/SoftwareCard.tsx`, `src/components/energy/PriceCurveChart.tsx`, `src/components/auth/LoginForm.tsx`, `src/components/layout/Sidebar.tsx`.
 
 **Dependencies:** None new.
+
+---
+
+## Playwright E2E Test Scaffold
+
+**What it does:** End-to-end test suite covering auth, garage, costs, and trip planner flows. Smoke tests (no credentials needed) verify public page rendering and auth redirects in CI on every push. Authenticated tests are gated behind `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` and skipped when those env vars are absent.
+
+**How to use:** `npm run test:e2e` — runs all Playwright tests against a locally running app (`npm run start`). Override the target with `PLAYWRIGHT_BASE_URL=https://...`. In CI, `e2e-smoke` job in `.github/workflows/ci.yml` runs only `smoke.spec.ts` (no credentials required).
+
+**Key files:**
+- `playwright.config.ts` — Playwright config, `testDir: ./e2e`, single Chromium project, webServer wiring
+- `e2e/smoke.spec.ts` — public pages: login form renders, pricing tiers visible, unauthenticated redirect
+- `e2e/auth.spec.ts` — login/register form rendering, invalid credentials, successful login redirect
+- `e2e/garage.spec.ts` — Add vehicle modal, form fields, submit → "Vehicle added!" confirmation
+- `e2e/costs.spec.ts` — costs page load, KPI chips, FAB for document upload
+- `e2e/trip.spec.ts` — trip page load, origin/destination inputs, Plan route button
+- `e2e/authed-flow.spec.ts` — full end-to-end: login → garage (integration smoke)
+- `e2e/helpers/auth.ts` — `loginAs(page, email, password)` helper used by all authenticated specs
+
+**Dependencies:** `@playwright/test ^1.60.0` (already in devDependencies). Run `npx playwright install --with-deps chromium` once to download the browser binary.
