@@ -482,7 +482,7 @@
       "fallbackName": "Dokumentum",
       "addManually": "Igen, hozzáadom kézzel",
       "lowConfidence": "Néhány mező alacsony megbízhatóságú. Ellenőrizd és javítsd, ha szükséges.",
-      "fieldCost": "Villamosenergia-költség (RON)",
+      "fieldCost": "Villamosenergia-költség",
       "fieldKwh": "Villamosenergia kWh",
       "confirmDelete": "Biztos vagy benne?",
       "ariaOpen": "Dokumentum megnyitása",

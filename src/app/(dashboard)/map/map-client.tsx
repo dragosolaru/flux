@@ -119,13 +119,15 @@ function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): Vari
 // Explore-mode station state
 // ---------------------------------------------------------------------------
 
-const DEFAULT_LAT = 44.4268;
-const DEFAULT_LNG = 26.1025;
+// Central Europe — neutral default before geolocation resolves.
+// The map requests geolocation on mount and updates this immediately.
+const DEFAULT_LAT = 48.0;
+const DEFAULT_LNG = 14.0;
 const DEFAULT_BBOX: ViewportBBox = {
-  minLat: DEFAULT_LAT - 0.5,
-  minLng: DEFAULT_LNG - 0.7,
-  maxLat: DEFAULT_LAT + 0.5,
-  maxLng: DEFAULT_LNG + 0.7,
+  minLat: DEFAULT_LAT - 5,
+  minLng: DEFAULT_LNG - 8,
+  maxLat: DEFAULT_LAT + 5,
+  maxLng: DEFAULT_LNG + 8,
 };
 
 function toBBox(lat: number, lng: number): ViewportBBox {

@@ -482,7 +482,7 @@
       "fallbackName": "Document",
       "addManually": "Da, adaug manual",
       "lowConfidence": "Unele câmpuri au încredere scăzută. Verifică și corectează dacă e necesar.",
-      "fieldCost": "Cost curent (RON)",
+      "fieldCost": "Cost curent",
       "fieldKwh": "kWh electricitate",
       "confirmDelete": "Ești sigur?",
       "ariaOpen": "Deschide documentul",

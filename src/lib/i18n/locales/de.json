@@ -482,7 +482,7 @@
       "fallbackName": "Dokument",
       "addManually": "Ja, manuell hinzufügen",
       "lowConfidence": "Einige Felder haben geringe Zuverlässigkeit. Bei Bedarf überprüfen und korrigieren.",
-      "fieldCost": "Stromkosten (RON)",
+      "fieldCost": "Stromkosten",
       "fieldKwh": "Strom kWh",
       "confirmDelete": "Bist du sicher?",
       "ariaOpen": "Dokument öffnen",

@@ -482,7 +482,7 @@
       "fallbackName": "Document",
       "addManually": "Oui, ajouter manuellement",
       "lowConfidence": "Certains champs ont une faible confiance. Vérifiez et corrigez si nécessaire.",
-      "fieldCost": "Coût électricité (RON)",
+      "fieldCost": "Coût électricité",
       "fieldKwh": "kWh électricité",
       "confirmDelete": "Êtes-vous sûr ?",
       "ariaOpen": "Ouvrir le document",
