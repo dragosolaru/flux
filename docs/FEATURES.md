@@ -1466,6 +1466,20 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 
 **Key files:** `src/app/(dashboard)/map/map-client.tsx` (sheet bottom anchor + drag-end state sync + content bottom padding), `src/app/globals.css` (`.leaflet-bottom` offset, standalone media query).
 
+---
+
+## Security hardening: webhook auth + Tesla route rate limits
+
+**What it does:** Two security fixes:
+1. Inbound-email webhook (`POST /api/documents/inbound-email`) accepts **only** the `x-webhook-secret` header for authentication. The `?secret=` query-param fallback was removed to prevent secrets leaking into access logs and proxy caches.
+2. `GET /api/tesla/vehicle` (legacy live-vehicle-data endpoint) now enforces a rate limit of 60 requests per window via `checkRateLimit(userId, "tesla-vehicle", 60)`, consistent with other Tesla routes.
+
+**How to use:** No API change — callers must send `x-webhook-secret: <value>` header (never a query param). The Tesla vehicle route rate-limit is transparent to callers; breaches return HTTP 429.
+
+**Key files:** `src/app/api/documents/inbound-email/route.ts`, `src/app/api/tesla/vehicle/route.ts`.
+
+**Dependencies:** `src/lib/rate-limit.ts`.
+
 **Dependencies:** None new. Applies to the shared `StationMap`/`TripMap` Leaflet components, so `/charging-map` gets the attribution fix via the same global CSS.
 
 ---

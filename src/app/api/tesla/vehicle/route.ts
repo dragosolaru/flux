@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { fetchVehicleData } from "@/lib/tesla/api";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const querySchema = z.object({
   vehicleId: z.string().uuid().optional(),
@@ -17,6 +18,10 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await checkRateLimit(session.user.id, "tesla-vehicle", 60)) {
+    return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
   const { searchParams } = new URL(req.url);
