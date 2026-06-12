@@ -192,8 +192,28 @@ Five additional personas from Moldova, France, Finland, Romania (UX designer), B
 - `reverseGeocode()` in `map-client.tsx` → now proxied through `/api/geocode?reverse=1` instead of calling Nominatim directly from browser (fixes GDPR GPS leak + rate-limit bypass; Patrick's finding)
 - `/api/geocode` route → added reverse geocoding handler (`?reverse=1&lat=&lon=`) server-side with auth + rate-limit
 
+---
+
+## Wave 2 — Batch 3 (2026-06-12): Shift workers, skeptics, analysts, small-screen, engineers
+
+| Persona | Score | Top Pain | Top Praise |
+|---------|-------|----------|------------|
+| Daniela, 36, Cluj RO (nurse, shift worker) | 6/10 | Smart charging optimizes for cheapest rate only — no departure-time constraint ("100% by 6am") | Dashboard clear in Romanian; charging history by location |
+| Piotr, 48, Gdańsk PL (VW ID.4 user) | 5/10 | Non-Tesla users can't enter real vehicle specs; hardcoded Bucharest default coords; Romanian tariff providers shown to PL users; mock weather | Trip planner uses real roads (OSRM); OCM station data |
+| Yuki, 29, Frankfurt DE (data analyst) | 6.5/10 | Mixed currency: costs in RON but smart-charge savings in € on same screen; `map.explore_hint` uses formal "Ihrer" (Sie-form) vs rest "du"; Romanian tariffs shown to DE users | Smart charge schedule concrete timing; OCR receipt ingestion |
+| Valentina, 33, Madrid ES (iPhone 13 mini) | 7/10 | Chip row has no scroll peek on 375px screen; quick-action buttons 36px (< 44px HIG minimum); Tesla-centric copy | Ambient glow tinting; floating pill nav; font-thin SOC hero |
+| Andile, 27, Eindhoven NL (ASML engineer) | 7.5/10 | Bottom sheet hand-rolled (~350 lines) with PEEK constant vs hardcoded `68` off-by-one; wind derating assumes headwind always; no Dutch tariff providers | Piecewise cold derating; real-road OSRM routing; personal efficiency derivation |
+
+**Wave 2 Batch 3 average: 6.4/10**
+
+### Bugs fixed from Wave 2 Batch 3
+
+- `de.json` `map.explore_hint`: "Ihrer Nähe" (Sie-form) → "deiner Nähe" (du-form) for consistency
+- Quick action buttons: `size-9` (36px) → `size-11` (44px) to meet Apple HIG 44pt minimum
+
 ### Known issues logged (not yet fixed)
 
+- Smart charging needs departure-time constraint ("ensure 100% by 06:00") — separate from tariff optimization
 - Petrol comparison constants hardcoded to RON in `src/app/api/costs/route.ts` (PETROL_PRICE_RON=7.5, PETROL_L_PER_100KM=7) — needs user-configurable or exchange-rate-based currency conversion
 - No elevation/altitude derating for mountain routes (significant for Carpathians, Alps)
 - No per-session charge curve export (kW delivered, SoC%, duration)

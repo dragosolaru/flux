@@ -384,7 +384,7 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`size-9 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50 flex items-center justify-center ${
+          className={`size-11 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50 flex items-center justify-center ${
             action.active
               ? "bg-primary/20 text-primary"
               : "bg-white/8 text-foreground hover:bg-white/[0.14]"
