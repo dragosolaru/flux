@@ -215,6 +215,35 @@ Five additional personas from Moldova, France, Finland, Romania (UX designer), B
 
 - Smart charging needs departure-time constraint ("ensure 100% by 06:00") — separate from tariff optimization
 - Petrol comparison constants hardcoded to RON in `src/app/api/costs/route.ts` (PETROL_PRICE_RON=7.5, PETROL_L_PER_100KM=7) — needs user-configurable or exchange-rate-based currency conversion
+
+---
+
+## Wave 2 — Batch 4 (2026-06-12): Non-EU markets, power users, academics
+
+| Persona | Score | Top Pain | Top Praise |
+|---------|-------|----------|------------|
+| Mohammed, 38, Casablanca MA | 5/10 | Default origin hardcoded Bucharest; no Morocco charging data; RON currency; no "no chargers" graceful message | Trip SOC sliders; send to Tesla; French translations |
+| James, 41, London UK | 6.5/10 | RON currency throughout; no Octopus Go/UK tariffs; UK charging networks not in receipt ingest | Cost-per-km blended KPI; trip variant comparison; one-tap smart charge schedule |
+| Lars, 50, Stockholm SE | 6/10 | TIBBER_TOKEN shared across all users (single env var, not per-user OAuth); no push notifications/autonomous charging; RON cost pipeline | Tibber API real integration; smart charge timing concrete |
+| Anna, 31, Warsaw PL (Nissan Leaf) | 4/10 | App is Tesla-only; no Nissan Connect; vehicle defaults to Tesla specs; RON/Polish providers missing | CHAdeMO filter in trip planner; monthly cost bar chart honest |
+| Tomáš, 44, Prague CZ (EV professor) | 6.5/10 | Wind model linear (−1%/5m/s) but aero drag ∝ v³ — 10m/s headwind at 130km/h should be ~15%, not 2%; `getPersonalEfficiency` uses charger outlet energy (includes 10-15% AC charging losses → overstated range); no elevation derating | Piecewise temp derating; OSRM real-road routing; station reliability badges |
+
+**Wave 2 Batch 4 average: 5.7/10**
+
+### Bugs fixed from Wave 2 Batch 4
+
+- Wind derating slope: `−1%/5m/s` → `−3.5%/5m/s` — closer to real-world 10-15% at 10 m/s headwind
+- Temperature derating floor: `-50%` → `-40%` (more aligned with AAA/ADAC/Geotab measured max ~38-42%)
+- Below -10°C slope: `2.0%/°C` → `1.5%/°C` for better -20°C accuracy (~37.5% vs real ~35-40%)
+
+### Known issues logged (not yet fixed)
+
+- Smart charging needs departure-time constraint ("ensure 100% by 06:00") — separate from tariff optimization
+- Petrol comparison constants hardcoded to RON in `src/app/api/costs/route.ts` (PETROL_PRICE_RON=7.5, PETROL_L_PER_100KM=7)
+- `TIBBER_TOKEN` is a single server-side env var — all users see same prices (no per-user OAuth)
+- `getPersonalEfficiency` uses charger outlet energy including AC charging losses (~10-15%) → understates real consumption → range estimates slightly optimistic
+- Non-Tesla vehicles (Nissan, VW, Škoda) cannot register with real specs; all trip planning uses Tesla defaults
+- RON currency pervasive throughout costs pipeline — blocks adoption in UK, DE, FR, PL, TR, etc.
 - No elevation/altitude derating for mountain routes (significant for Carpathians, Alps)
 - No per-session charge curve export (kW delivered, SoC%, duration)
 - Austrian/Western EU tariff providers missing from the provider registry
