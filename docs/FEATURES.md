@@ -597,6 +597,8 @@ While queries are loading, 4 `animate-pulse` skeleton blocks are shown. If any i
 
 **Dependencies:** Supabase (vehicle state for lat/lng). Weather data is mock-only; no external API key required.
 
+**Derating model (updated 2026-06-12):** Piecewise linear calibrated against real-world EV cold-weather data: 15→0°C at −1%/°C; 0→−10°C at −1.5%/°C; below −10°C at −2%/°C (Nordic extreme). Previous flat 0.5%/°C under-reported cold losses by ~50% at −20°C.
+
 ---
 
 ## 26. Scenario Switcher (Demo Vehicles)

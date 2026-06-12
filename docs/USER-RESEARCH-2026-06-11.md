@@ -150,6 +150,31 @@ Move the charging scenario selection out of AddVehicleModal day-1 onboarding int
 
 ---
 
+## Wave 2 — Batch 1 (2026-06-12): International personas
+
+Five additional personas from Moldova, France, Finland, Romania (UX designer), Belgium.
+
+| Persona | Score | Top Pain | Top Praise |
+|---------|-------|----------|------------|
+| Bogdan, 32, Chișinău MD | 8/10 | All data is mock; no Moldovan energy providers (Union Fenosa); `"trip"` key left in English in ro.json | Trip planner RO corridor; costs in lei; minimalist mobile UI |
+| Isabelle, 41, Lyon FR | 6/10 | `formatRelativeTime` hardcoded English ("now"/"3h ago") on chip; `fmtRon()` ignores currency → RON shown to FR users; Tesla-centric copy alienates Peugeot users | French translations excellent; dashboard visual quality; trip planner for road trips |
+| Sven, 45, Helsinki FI | 6/10 | Cold derating formula uses 0.5%/°C — at −20°C shows −17.5% but real is 30-40%; weather data is mock-only; no HVAC load model | Battery health history; trip planner SoC curves; preconditioning badges |
+| Carolina, 28, Bucharest RO (UX designer) | 7.5/10 | `formatRelativeTime` hardcoded English; chip `w-[96px]` without `truncate`; SlideUpMenu X button `rounded-md` on `rounded-t-3xl` sheet (visual inconsistency) | OKLCH navy color tokens; ambient tinting; floating pill nav with easing |
+| Kevin, 35, Antwerp BE | 7/10 | No multi-vehicle org/fleet structure; cost tracking RON-hardcoded; no fleet reporting/export | Trip planner highway corridors; OCR cost tracking; charging map with kW filter |
+
+**Wave 2 Batch 1 average: 6.9/10** (up from 5.67 Wave 1 — design improvements visible)
+
+### Bugs fixed from Wave 2 Batch 1
+
+- `formatRelativeTime()` → now uses i18n keys (`dashboard.time_now/time_min_ago/time_hour_ago/time_day_ago`) in all 5 locales
+- `nav.trip` in ro.json → "Planificator de trasee" (was "Trip planner")
+- `nav.mobile.trip` in ro.json → "Traseu" (was "Drum")
+- SlideUpMenu X button → `rounded-full` (was `rounded-md`)
+- Stat chip value → `truncate` class added (was overflow-unsafe)
+- Cold weather derating formula → piecewise model: 1%/°C (15→0°C), 1.5%/°C (0→−10°C), 2%/°C (<−10°C)
+
+---
+
 ## Methodology note
 
 This synthesis is based on structured persona reviews conducted in June 2026. Each persona was given a scripted task set covering: vehicle connection, dashboard reading, trip planning, cost intelligence, smart charging, settings configuration, and upgrade/paywall encounter. Reviews were scored on a 10-point scale (overall experience quality). Personas were selected to span age range (25–55), geography (RO, DE, IE), device profile (iPhone SE to iPhone 15, mid-range Android), EV experience level (new owner to power user), and use case (personal, expat cross-border, fleet management).

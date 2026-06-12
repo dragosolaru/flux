@@ -31,7 +31,7 @@
     "costs": "Costuri",
     "energy": "Energie & tarife",
     "charging_map": "Harta stațiilor",
-    "trip": "Trip planner",
+    "trip": "Planificator de trasee",
     "settings": "Setări",
     "about": "Despre",
     "more": "Mai mult",
@@ -43,7 +43,7 @@
     "mobile": {
       "car": "Mașina",
       "charging": "Încărcare",
-      "trip": "Drum",
+      "trip": "Traseu",
       "map": "Hartă",
       "costs": "Costuri",
       "energy": "Energie",
@@ -321,7 +321,11 @@
     "chip_odometer": "Odometru",
     "chip_last_seen": "Văzut",
     "chip_last_charge": "Ultima încărcare",
-    "action_charge": "Încărcare"
+    "action_charge": "Încărcare",
+    "time_now": "acum",
+    "time_min_ago": "{m}m în urmă",
+    "time_hour_ago": "{h}h în urmă",
+    "time_day_ago": "{d}z în urmă"
   },
   "charging": {
     "page_title": "Încărcare",

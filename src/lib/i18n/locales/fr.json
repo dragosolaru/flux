@@ -321,7 +321,11 @@
     "chip_odometer": "Odomètre",
     "chip_last_seen": "Vu",
     "chip_last_charge": "Dernière recharge",
-    "action_charge": "Recharge"
+    "action_charge": "Recharge",
+    "time_now": "maintenant",
+    "time_min_ago": "il y a {m}m",
+    "time_hour_ago": "il y a {h}h",
+    "time_day_ago": "il y a {d}j"
   },
   "charging": {
     "page_title": "Recharge",

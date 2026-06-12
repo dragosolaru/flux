@@ -321,7 +321,11 @@
     "chip_odometer": "Odometer",
     "chip_last_seen": "Last seen",
     "chip_last_charge": "Last charge",
-    "action_charge": "Charge"
+    "action_charge": "Charge",
+    "time_now": "now",
+    "time_min_ago": "{m}m ago",
+    "time_hour_ago": "{h}h ago",
+    "time_day_ago": "{d}d ago"
   },
   "charging": {
     "page_title": "Charging",

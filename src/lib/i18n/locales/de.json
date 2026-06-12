@@ -321,7 +321,11 @@
     "chip_odometer": "Km-Stand",
     "chip_last_seen": "Zuletzt",
     "chip_last_charge": "Letzte Ladung",
-    "action_charge": "Laden"
+    "action_charge": "Laden",
+    "time_now": "jetzt",
+    "time_min_ago": "vor {m} Min.",
+    "time_hour_ago": "vor {h} Std.",
+    "time_day_ago": "vor {d} T."
   },
   "charging": {
     "page_title": "Laden",

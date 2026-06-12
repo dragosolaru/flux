@@ -240,7 +240,7 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
       ? {
           key: "lastseen",
           icon: <RefreshCw className="size-4 text-muted-foreground" />,
-          value: formatRelativeTime(state.lastSeenAt),
+          value: formatRelativeTime(state.lastSeenAt, td),
           label: td("chip_last_seen"),
         }
       : null,
@@ -250,7 +250,7 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
           icon: <History className="size-4 text-emerald-400" />,
           value: lastCharge.energyKwh != null
             ? `+${lastCharge.energyKwh.toFixed(1)} kWh`
-            : formatRelativeTime(lastCharge.endedAt),
+            : formatRelativeTime(lastCharge.endedAt, td),
           label: td("chip_last_charge"),
         }
       : null,
@@ -269,7 +269,7 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
         <motion.div key={chip.key} variants={cardVariants} className="snap-center">
           <div className="flex w-[96px] shrink-0 flex-col items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/6 p-2.5">
             {chip.icon}
-            <div className="text-center text-sm font-semibold tabular-nums leading-tight">
+            <div className="w-full text-center text-sm font-semibold tabular-nums leading-tight truncate">
               {chip.value}
             </div>
             <div className="text-center text-xs text-muted-foreground">{chip.label}</div>
@@ -280,14 +280,17 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
   );
 }
 
-function formatRelativeTime(isoString: string): string {
+function formatRelativeTime(
+  isoString: string,
+  t: (key: string, values?: Record<string, number>) => string
+): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
   const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return "now";
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 1) return t("time_now");
+  if (diffMin < 60) return t("time_min_ago", { m: diffMin });
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
-  return `${Math.floor(diffH / 24)}d ago`;
+  if (diffH < 24) return t("time_hour_ago", { h: diffH });
+  return t("time_day_ago", { d: Math.floor(diffH / 24) });
 }
 
 // --------------------------------------------------------------------------

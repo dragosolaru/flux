@@ -321,7 +321,11 @@
     "chip_odometer": "Km-óra",
     "chip_last_seen": "Utoljára",
     "chip_last_charge": "Utolsó töltés",
-    "action_charge": "Töltés"
+    "action_charge": "Töltés",
+    "time_now": "most",
+    "time_min_ago": "{m} perce",
+    "time_hour_ago": "{h} órája",
+    "time_day_ago": "{d} napja"
   },
   "charging": {
     "page_title": "Töltés",

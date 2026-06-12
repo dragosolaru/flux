@@ -82,7 +82,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
                 type="button"
                 onClick={onClose}
                 aria-label={t("common.close")}
-                className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+                className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
               >
                 <X className="size-4" />
               </button>
