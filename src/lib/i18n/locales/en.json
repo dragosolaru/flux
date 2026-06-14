@@ -640,6 +640,7 @@
     },
     "infeasible_title": "Route cannot be completed",
     "infeasible_hint": "Try a higher starting battery or select a specific vehicle.",
+    "network_error": "No internet connection. Check your network and try again.",
     "derate_note": "* Range reduced by {pct}% due to temperatures.",
     "stops_count_zero": "No stops",
     "stops_count_one": "1 stop",

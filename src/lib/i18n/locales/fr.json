@@ -640,6 +640,7 @@
     },
     "infeasible_title": "L'itinéraire ne peut pas être complété",
     "infeasible_hint": "Essayez un pourcentage de batterie plus élevé ou sélectionnez un véhicule spécifique.",
+    "network_error": "Pas de connexion internet. Vérifiez votre réseau et réessayez.",
     "derate_note": "* Autonomie réduite de {pct}% en raison des températures.",
     "stops_count_zero": "Aucun arrêt",
     "stops_count_one": "1 arrêt",

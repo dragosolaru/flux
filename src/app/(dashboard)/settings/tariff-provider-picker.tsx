@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { ChevronDown } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 interface TariffProviderPickerProps {
@@ -37,16 +38,19 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
 
   return (
     <div className="flex flex-col gap-2">
-      <select
-        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-        value={selected}
-        onChange={handleChange}
-        disabled={isPending}
-      >
-        {providers.map((p) => (
-          <option key={p.id} value={p.id}>{p.displayName}</option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          className="w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm"
+          value={selected}
+          onChange={handleChange}
+          disabled={isPending}
+        >
+          {providers.map((p) => (
+            <option key={p.id} value={p.id}>{p.displayName}</option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      </div>
       <p className="text-xs text-muted-foreground">
         {t("mockNote")}
       </p>

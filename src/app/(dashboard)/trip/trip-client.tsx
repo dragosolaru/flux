@@ -493,18 +493,21 @@ export function TripClient() {
                 {vehicles && vehicles.length > 0 && (
                   <div>
                     <label className="mb-1 block text-xs text-muted-foreground">{t("vehicle_label")}</label>
-                    <select
-                      value={vehicleId}
-                      onChange={(e) => setVehicleId(e.target.value)}
-                      className="w-full rounded-lg border border-white/6 bg-white/[0.04] px-3 py-1.5 text-sm"
-                    >
-                      <option value="">{t("vehicle_default")}</option>
-                      {vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.nickname ?? v.displayName}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={vehicleId}
+                        onChange={(e) => setVehicleId(e.target.value)}
+                        className="w-full appearance-none rounded-lg border border-white/6 bg-white/[0.04] px-3 py-1.5 pr-8 text-sm"
+                      >
+                        <option value="">{t("vehicle_default")}</option>
+                        {vehicles.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.nickname ?? v.displayName}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    </div>
                   </div>
                 )}
               </div>

@@ -640,6 +640,7 @@
     },
     "infeasible_title": "Route kann nicht abgeschlossen werden",
     "infeasible_hint": "Versuche einen höheren Startakku oder wähle ein bestimmtes Fahrzeug.",
+    "network_error": "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut.",
     "derate_note": "* Reichweite um {pct}% aufgrund von Temperaturen reduziert.",
     "stops_count_zero": "Keine Stopps",
     "stops_count_one": "1 Stopp",

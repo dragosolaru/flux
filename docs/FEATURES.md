@@ -1596,3 +1596,21 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/lib/currency/format.ts`, `src/hooks/usePullToRefresh.ts`, `src/components/settings/CurrencyPicker.tsx`, `src/components/settings/LocalePicker.tsx`, `src/components/settings/ScenarioPicker.tsx`, `src/components/layout/TopBar.tsx`, `src/components/onboarding/GettingStartedCard.tsx`, `src/lib/api-fetch.ts`, `src/lib/i18n/locales/*.json`.
 
 **Dependencies:** None new.
+
+---
+
+## Cross-Device Polish Round 2 (P26–P45 bug fixes)
+
+**What it does:** Second batch of UX fixes from a 25-persona audit (P26–P45) covering remaining `<select>` elements, network error handling, and input validation.
+
+**Fixes included:**
+
+1. **`<select>` appearance-none — remaining elements** (`src/app/globals.css`, `src/app/(dashboard)/energy/energy-client.tsx`, `src/app/(dashboard)/settings/tariff-provider-picker.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/app/(dashboard)/map/map-client.tsx`): Every remaining `<select>` in the app now uses `appearance-none` + a ChevronDown indicator, eliminating the native iOS/Android picker arrow that conflicted with the glass UI. The `auth-input` CSS class also gains a CSS SVG fallback via `select.auth-input` in globals.css for the onboarding model/year dropdowns.
+
+2. **Trip planner offline error** (`src/app/(dashboard)/map/map-client.tsx`, all 5 locale files `trip.network_error`): When route planning fails due to no internet (`!navigator.onLine` or `message === "Failed to fetch"`), the user now sees a translated "No internet connection. Check your network and try again." message instead of the raw `Failed to fetch` JS error or the misleading "Route may be too long" infeasibility hint.
+
+3. **Nickname max length** (`src/components/onboarding/AddVehicleModal.tsx`): The nickname input now enforces `maxLength={50}` at the HTML level, matching the server-side validation, so users on mobile can't accidentally type overlong names before submitting.
+
+**Key files:** `src/app/globals.css`, `src/app/(dashboard)/energy/energy-client.tsx`, `src/app/(dashboard)/settings/tariff-provider-picker.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/app/(dashboard)/map/map-client.tsx`, `src/components/onboarding/AddVehicleModal.tsx`, `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** None new.

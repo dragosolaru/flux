@@ -640,6 +640,7 @@
     },
     "infeasible_title": "Az útvonal nem fejezhető be",
     "infeasible_hint": "Próbálj magasabb akkumulátor százalékot vagy válassz egy adott járművet.",
+    "network_error": "Nincs internetkapcsolat. Ellenőrizd a hálózatot és próbáld újra.",
     "derate_note": "* A hatótáv {pct}%-kal csökkent a hőmérséklet miatt.",
     "stops_count_zero": "Nincs megálló",
     "stops_count_one": "1 megálló",

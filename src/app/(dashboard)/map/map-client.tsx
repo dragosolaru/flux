@@ -366,7 +366,9 @@ export function MapClient() {
       // details stay one drag away (Google Maps pattern).
       applySheetState("collapsed");
     } catch (err) {
-      setPlanError(err instanceof Error ? err.message : tTrip("infeasible_hint"));
+      const msg = err instanceof Error ? err.message : "";
+      const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
+      setPlanError(isNetworkError ? tTrip("network_error") : msg || tTrip("infeasible_hint"));
     } finally {
       setLoading(false);
     }
@@ -892,18 +894,21 @@ function PlanContent({
       {vehicles.length > 0 && (
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">{tTrip("vehicle_label")}</label>
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            className="auth-input w-full"
-          >
-            <option value="">{tTrip("vehicle_default")}</option>
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.nickname ?? v.displayName}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={vehicleId}
+              onChange={(e) => setVehicleId(e.target.value)}
+              className="auth-input w-full appearance-none pr-5"
+            >
+              <option value="">{tTrip("vehicle_default")}</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.nickname ?? v.displayName}
+                </option>
+              ))}
+            </select>
+            <ChevronUp className="pointer-events-none absolute right-0 top-1/2 size-3.5 -translate-y-1/2 rotate-180 text-muted-foreground/60" />
+          </div>
         </div>
       )}
 

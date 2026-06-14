@@ -230,6 +230,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       value={nickname}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                       autoFocus
+                      maxLength={50}
                       className="auth-input w-full"
                     />
                   </div>

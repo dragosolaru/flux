@@ -640,6 +640,7 @@
     },
     "infeasible_title": "Ruta nu poate fi finalizată",
     "infeasible_hint": "Încearcă cu un procent de baterie mai mare sau selectează un vehicul specific.",
+    "network_error": "Fără conexiune internet. Verifică rețeaua și încearcă din nou.",
     "derate_note": "* Autonomia redusă cu {pct}% din cauza temperaturilor.",
     "stops_count_zero": "Fără opriri",
     "stops_count_one": "1 oprire",
