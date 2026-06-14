@@ -293,7 +293,7 @@
     "cta": "Zum Startbildschirm hinzufügen",
     "dismiss": "Nicht jetzt",
     "installed": "Installiert",
-    "unsupported_hint": "Über das Browsermenü installieren"
+    "unsupported_hint": "In Chrome oder Edge öffnen, um Flux als App zu installieren"
   },
   "getting_started": {
     "title": "Erste Schritte",

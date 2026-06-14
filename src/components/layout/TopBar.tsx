@@ -6,7 +6,7 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
-import { Car, LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
+import { Car, ChevronDown, LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ function VehicleSwitcher() {
         onChange={(e: ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
-        className="h-8 cursor-pointer rounded-full border-0 bg-white/6 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring max-w-[140px] truncate"
+        className="h-8 max-w-[140px] cursor-pointer appearance-none rounded-full border-0 bg-white/6 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
         aria-label={t("select_vehicle")}
         title={label}
       >
@@ -51,6 +51,7 @@ function VehicleSwitcher() {
           </option>
         ))}
       </select>
+      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
 }

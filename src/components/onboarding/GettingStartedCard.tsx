@@ -37,7 +37,10 @@ export function GettingStartedCard({ data }: Props) {
     { done: data.hasVehicle, labelKey: "step_vehicle" as const, href: "/garage" },
     { done: data.hasDocument, labelKey: "step_receipt" as const, href: "/costs" },
     { done: data.hasHomeLocation, labelKey: "step_home" as const, href: "/settings#home-location" },
-    { done: false, labelKey: "step_explore" as const, href: "/garage" },
+    // Only shown for demo (mock) users — hides for real-vehicle owners.
+    ...(data.hasMockVehicle
+      ? [{ done: true, labelKey: "step_explore" as const, href: "/garage" }]
+      : []),
   ];
 
   const doneCount = steps.filter((s) => s.done).length;

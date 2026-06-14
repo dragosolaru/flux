@@ -293,7 +293,7 @@
     "cta": "Add to Home Screen",
     "dismiss": "Not now",
     "installed": "Installed",
-    "unsupported_hint": "Use your browser menu to install"
+    "unsupported_hint": "Open in Chrome or Edge to install Flux as an app"
   },
   "getting_started": {
     "title": "Getting Started",

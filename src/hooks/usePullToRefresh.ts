@@ -36,6 +36,11 @@ export function usePullToRefresh(
     const el: HTMLElement | null = containerRef.current ?? document.querySelector("main");
     if (!el) return;
 
+    // Prevent native browser pull-to-refresh from firing alongside our custom one.
+    const body = document.body;
+    const prev = body.style.overscrollBehavior;
+    body.style.overscrollBehavior = "contain";
+
     function onTouchStart(e: TouchEvent) {
       if (disabledRef.current) return;
       if ((el as HTMLElement).scrollTop > 0) return;
@@ -69,6 +74,7 @@ export function usePullToRefresh(
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     el.addEventListener("touchend", onTouchEnd);
     return () => {
+      body.style.overscrollBehavior = prev;
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);

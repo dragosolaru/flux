@@ -35,13 +35,21 @@ export function isCurrency(value: string | undefined | null): value is Currency 
  *
  * For display-only formatting (no conversion). Conversion happens in convert.ts.
  */
+const INTL_LOCALE: Record<Locale, string> = {
+  ro: "ro-RO",
+  en: "en-GB",
+  de: "de-DE",
+  fr: "fr-FR",
+  hu: "hu-HU",
+};
+
 export function formatMoney(
   amount: number,
   currency: Currency,
   locale: Locale,
   maxFractionDigits?: number,
 ): string {
-  const intlLocale = locale === "ro" ? "ro-RO" : "en-GB";
+  const intlLocale = INTL_LOCALE[locale] ?? "en-GB";
   const max = maxFractionDigits ?? (currency === "HUF" ? 0 : 2);
   return new Intl.NumberFormat(intlLocale, {
     style: "currency",
@@ -60,7 +68,7 @@ export function formatMoneyCompact(
   currency: Currency,
   locale: Locale,
 ): string {
-  const intlLocale = locale === "ro" ? "ro-RO" : "en-GB";
+  const intlLocale = INTL_LOCALE[locale] ?? "en-GB";
   return new Intl.NumberFormat(intlLocale, {
     style: "currency",
     currency,
@@ -73,6 +81,6 @@ export function formatMoneyCompact(
  * Format kWh values consistently. Not currency, but groups with money displays.
  */
 export function formatKwh(kwh: number, locale: Locale): string {
-  const intlLocale = locale === "ro" ? "ro-RO" : "en-GB";
+  const intlLocale = INTL_LOCALE[locale] ?? "en-GB";
   return `${new Intl.NumberFormat(intlLocale, { maximumFractionDigits: 1 }).format(kwh)} kWh`;
 }

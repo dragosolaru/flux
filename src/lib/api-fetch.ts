@@ -15,6 +15,10 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined") {
+      window.location.href = "/login";
+      await new Promise(() => {});
+    }
     const error = await res
       .json()
       .catch(() => ({ message: res.statusText }));

@@ -1572,3 +1572,27 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/(dashboard)/map/map-client.tsx`.
 
 **Dependencies:** None new.
+
+---
+
+## Cross-Device Polish (P0/P1 bug fixes)
+
+**What it does:** Batch of fixes identified through a 25-persona cross-device audit covering iOS Safari, Android Chrome/Firefox, and desktop browsers.
+
+**Fixes included:**
+
+1. **Number formatting per locale** (`src/lib/currency/format.ts`): `formatMoney`, `formatMoneyCompact`, and `formatKwh` now use the correct IETF locale for each app language — `de-DE` (German), `fr-FR` (French), `hu-HU` (Hungarian), `ro-RO` (Romanian), `en-GB` (English). Previously all non-Romanian users got English-style formatting (dots as decimals).
+
+2. **Pull-to-refresh overscroll** (`src/hooks/usePullToRefresh.ts`): Sets `document.body.style.overscrollBehavior = "contain"` while the hook is active, preventing the native browser pull-to-refresh from firing simultaneously with the custom gesture on iOS Safari and Android Chrome.
+
+3. **`<select>` cross-browser styling** (`CurrencyPicker.tsx`, `LocalePicker.tsx`, `ScenarioPicker.tsx`, `TopBar.tsx`): All `<select>` elements now use `appearance-none` + an absolute-positioned `ChevronDown` icon, so the glass-UI style applies consistently on iOS Safari (which overrides native select styling otherwise), Android, and desktop.
+
+4. **`GettingStartedCard` step_explore** (`src/components/onboarding/GettingStartedCard.tsx`): The "Explore the demo" step is now conditional — only shown for users with a mock vehicle, and marked as done immediately (they've already set up the demo). Previously it was always shown and always undone, so the card could never auto-dismiss for real-vehicle users who completed the other 3 steps.
+
+5. **Firefox PWA hint** (all 5 locale files, `pwa.unsupported_hint`): Updated from the vague "Use your browser menu to install" (implying Firefox can install PWAs from a menu, which it can't) to "Open in Chrome or Edge to install Flux as an app" — actionable for users who arrived via Firefox.
+
+6. **Session expiry redirect** (`src/lib/api-fetch.ts`): On client-side 401 responses, `apiFetch` now redirects to `/login` instead of throwing an unhandled error, ensuring expired sessions don't leave the user on a broken page.
+
+**Key files:** `src/lib/currency/format.ts`, `src/hooks/usePullToRefresh.ts`, `src/components/settings/CurrencyPicker.tsx`, `src/components/settings/LocalePicker.tsx`, `src/components/settings/ScenarioPicker.tsx`, `src/components/layout/TopBar.tsx`, `src/components/onboarding/GettingStartedCard.tsx`, `src/lib/api-fetch.ts`, `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** None new.

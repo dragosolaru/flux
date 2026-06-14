@@ -293,7 +293,7 @@
     "cta": "Adaugă pe ecranul principal",
     "dismiss": "Nu acum",
     "installed": "Instalat",
-    "unsupported_hint": "Folosește meniul browserului pentru a instala"
+    "unsupported_hint": "Deschide în Chrome sau Edge pentru a instala Flux ca aplicație"
   },
   "getting_started": {
     "title": "Primii pași",

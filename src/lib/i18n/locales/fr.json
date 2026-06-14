@@ -293,7 +293,7 @@
     "cta": "Ajouter à l'écran d'accueil",
     "dismiss": "Pas maintenant",
     "installed": "Installée",
-    "unsupported_hint": "Utilisez le menu du navigateur pour installer"
+    "unsupported_hint": "Ouvrez dans Chrome ou Edge pour installer Flux comme application"
   },
   "getting_started": {
     "title": "Premiers pas",

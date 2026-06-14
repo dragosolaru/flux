@@ -293,7 +293,7 @@
     "cta": "Főképernyőre adás",
     "dismiss": "Most nem",
     "installed": "Telepítve",
-    "unsupported_hint": "Telepítés a böngésző menüjéből"
+    "unsupported_hint": "Nyissa meg Chrome-ban vagy Edge-ben a Flux alkalmazásként való telepítéséhez"
   },
   "getting_started": {
     "title": "Első lépések",

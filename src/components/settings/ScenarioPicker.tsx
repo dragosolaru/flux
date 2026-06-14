@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
@@ -48,21 +48,24 @@ export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: Scena
 
   return (
     <div className="flex items-center gap-2">
-      <select
-        value={selected}
-        onChange={handleChange}
-        disabled={isPending || disabled}
-        className={cn(
-          "rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm",
-          "disabled:opacity-50",
-        )}
-      >
-        {SCENARIOS.map((id) => (
-          <option key={id} value={id}>
-            {t(`scenarios.${id}.label`)}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          value={selected}
+          onChange={handleChange}
+          disabled={isPending || disabled}
+          className={cn(
+            "appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 pr-7 text-sm",
+            "disabled:opacity-50",
+          )}
+        >
+          {SCENARIOS.map((id) => (
+            <option key={id} value={id}>
+              {t(`scenarios.${id}.label`)}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      </div>
       {isPending && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
     </div>
   );
