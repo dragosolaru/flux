@@ -1548,3 +1548,27 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/components/trip/StationDetailSheet.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx` (backdrop `z-[1090]`, sheet `z-[1100]`).
 
 **Dependencies:** None new.
+
+---
+
+## Settings Rows: Single-Label Layout (display fix)
+
+**What it does:** Language, Display currency, and Install-app rows in Settings now use the expanded layout (label on top, control below) instead of the compact horizontal row. Previously the compact row showed the label on the left while the picker control rendered its *own* label + description on the right — a duplicated label, and the left one was clipped ("M…", "Instalează a…"). The pickers no longer render a duplicate label (the row provides it; the `<select>` keeps an `aria-label` for accessibility). Expanded-row vertical padding nudged up (`py-2.5` → `py-3.5`) so the whole section breathes.
+
+**How to use:** Settings → Preferences. Each preference shows one clear label, a short description, and a full-width control.
+
+**Key files:** `src/app/(dashboard)/settings/settings-client.tsx`, `src/components/settings/LocalePicker.tsx`, `src/components/settings/CurrencyPicker.tsx`, `src/components/pwa/InstallAppButton.tsx`.
+
+**Dependencies:** None new.
+
+---
+
+## Map Collapsed Sheet: Explore/Plan Tabs No Longer Clipped
+
+**What it does:** On `/map`, the collapsed bottom sheet's Explore/Plan tabs were rendering below the visible peek window and spilling into the floating bottom-nav zone, so they appeared cut off. The collapsed peek height is now tall enough to show the handle, summary strip, and both tabs above the nav (`PEEK` 68 → 132). The two sources of truth for collapsed height (`PEEK`/`PEEK_SUMMARY` and `sheetStateToH`) are unified so taps and drags agree. In Plan mode the redundant collapsed summary strip is suppressed — the richer route summary (time · km · cost) already serves as the peek.
+
+**How to use:** Open `/map`; the collapsed sheet shows the Explore/Plan tabs clearly. Tap a tab to switch, tap the handle to expand.
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx`.
+
+**Dependencies:** None new.

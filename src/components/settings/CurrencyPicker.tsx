@@ -18,16 +18,14 @@ export function CurrencyPicker() {
 
   return (
     <div className="space-y-2">
-      <label htmlFor="currency-picker" className="text-sm font-medium">
-        {t("settings.currency.label")}
-      </label>
       <p className="text-xs text-muted-foreground">{t("settings.currency.description")}</p>
       <select
         id="currency-picker"
+        aria-label={t("settings.currency.label")}
         disabled={update.isPending}
         value={current}
         onChange={(e) => update.mutate({ displayCurrency: e.target.value as Currency })}
-        className="w-full max-w-xs rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
+        className="w-full max-w-xs rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm disabled:opacity-50"
       >
         {SUPPORTED_CURRENCIES.map((cur) => (
           <option key={cur} value={cur}>

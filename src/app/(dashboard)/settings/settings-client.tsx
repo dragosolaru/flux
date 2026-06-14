@@ -138,21 +138,24 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
       <section>
         <SectionHeader label={t("section.preferences")} />
         <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRow
+          <SettingsRowExpanded
             icon={<Globe className="size-4 text-muted-foreground shrink-0" />}
             label={t("locale.label")}
-            control={<LocalePicker />}
-          />
-          <SettingsRow
+          >
+            <LocalePicker />
+          </SettingsRowExpanded>
+          <SettingsRowExpanded
             icon={<DollarSign className="size-4 text-muted-foreground shrink-0" />}
             label={t("currency.label")}
-            control={<CurrencyPicker />}
-          />
-          <SettingsRow
+          >
+            <CurrencyPicker />
+          </SettingsRowExpanded>
+          <SettingsRowExpanded
             icon={<Smartphone className="size-4 text-muted-foreground shrink-0" />}
             label={t("install_app.label")}
-            control={<InstallAppButton />}
-          />
+          >
+            <InstallAppButton />
+          </SettingsRowExpanded>
         </GlassCard>
       </section>
 
@@ -444,7 +447,7 @@ interface SettingsRowExpandedProps {
 
 function SettingsRowExpanded({ icon, label, children }: SettingsRowExpandedProps) {
   return (
-    <div className="px-4 py-2.5">
+    <div className="px-4 py-3.5">
       <div className="mb-3 flex items-center gap-3">
         {icon}
         <span className="text-sm font-medium">{label}</span>

@@ -65,11 +65,13 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 // Bottom sheet snap points (px from bottom of screen)
 // ---------------------------------------------------------------------------
 
-// Collapsed: 68px peek above bottom nav (Wave 2E spec)
-const PEEK = 68;
-// Taller peek used when a computed plan exists: leaves room for the compact
+// Collapsed peek must be tall enough to show the handle, the summary strip and
+// the Explore/Plan tabs *above* the floating bottom nav — otherwise the tabs
+// spill into the nav's zone and get visually clipped.
+const PEEK = 132;
+// Taller peek used when a computed plan exists: also leaves room for the compact
 // route summary strip while keeping the map (and its polyline) visible.
-const PEEK_SUMMARY = 158;
+const PEEK_SUMMARY = 152;
 function halfHeight() {
   // Mid: 44vh (Wave 2E spec)
   return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
@@ -293,7 +295,7 @@ export function MapClient() {
   const peekH = mode === "plan" && plan !== null ? PEEK_SUMMARY : PEEK;
 
   function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
-    if (state === "collapsed") return 68;
+    if (state === "collapsed") return peekH;
     if (state === "mid") return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
     return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 700;
   }
@@ -551,18 +553,18 @@ export function MapClient() {
             <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
           </button>
 
-          {/* Collapsed summary strip */}
-          {sheetState === "collapsed" && (
+          {/* Collapsed summary strip — explore mode only. In plan mode the
+              compact route summary below already carries the peek content, so
+              showing this too would be redundant and overflow the peek. */}
+          {sheetState === "collapsed" && mode === "explore" && (
             <button
               onClick={cycleSheetState}
               className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between"
             >
               <span className="truncate text-sm text-muted-foreground">
-                {mode === "plan" && plan && activePlan
-                  ? `${Math.floor(activePlan.totalMinutes / 60)}h ${activePlan.totalMinutes % 60}min · ${Math.round(activePlan.totalDistanceKm)} km`
-                  : stations.length > 0
-                    ? `${stations[0].name ?? tCharging("station_fallback")} · ${stations[0].maxPowerKw != null ? `${stations[0].maxPowerKw} kW` : ""}`
-                    : tMap("explore_hint")}
+                {stations.length > 0
+                  ? `${stations[0].name ?? tCharging("station_fallback")} · ${stations[0].maxPowerKw != null ? `${stations[0].maxPowerKw} kW` : ""}`
+                  : tMap("explore_hint")}
               </span>
               <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
             </button>

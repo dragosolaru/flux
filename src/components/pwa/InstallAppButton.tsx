@@ -30,7 +30,7 @@ export function InstallAppButton() {
   }
 
   return (
-    <span className="text-right text-xs leading-relaxed text-muted-foreground">
+    <span className="text-xs leading-relaxed text-muted-foreground">
       {isIOSDevice ? t("ios_hint") : t("unsupported_hint")}
     </span>
   );
