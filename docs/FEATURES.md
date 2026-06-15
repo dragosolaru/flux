@@ -1730,3 +1730,29 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **Key files:** `src/app/api/user/export/route.ts`, `src/components/billing/UpgradeButton.tsx`, `src/components/billing/ManageSubscriptionButton.tsx`, `src/lib/i18n/locales/*.json`.
 
 **Dependencies:** sonner (toast), next-intl (i18n).
+
+---
+
+## Domain Math Fixes — Tariffs, Costs, Trip Planner
+
+**What it does:** Corrects six domain/math bugs that produced silently wrong numbers in three features.
+
+**Fixes:**
+
+1. **Overnight loop in smart charge recommendation** (`src/lib/external/tariffs/recommend.ts` — `findCheapestWindow`): The old algorithm also scanned hours 0..fromHour, so early-morning hours that had already passed today were recommended as "future" windows. Fixed by only iterating `fromHour..ceiling` (no backward scan).
+
+2. **Departure-time constraint in `computeSmartCharge`** (same file): The algorithm previously picked the globally cheapest window regardless of when the user needs the car. Added `departureHour` parameter forwarded as `beforeHour` to `findCheapestWindow`, so windows starting at or after departure are excluded.
+
+3. **kWh inconsistency in costs route** (`src/app/api/costs/route.ts`): `homeKwh` used `vehicle_kwh_attributed ?? 0` (dropping rows with only `total_kwh`) while `publicKwh` used `total_kwh ?? 0` (ignoring attributed). Both now use `vehicle_kwh_attributed ?? total_kwh ?? 0` — consistent across home and public rows.
+
+4. **`whPerKm` unit label** (`src/app/(dashboard)/costs/costs-client.tsx`): KPI chip showed "Wh" instead of "Wh/km". Corrected the inline unit string.
+
+5. **Trip planner detour undercount** (`src/lib/external/routing/planner.ts`): Detour cost was multiplied by `0.3` (neither a round-trip nor a sensible approximation) instead of `2` (to-station + back-to-route). Both `segmentKm` and `remainingNeededPct` now use `detourKm * 2`.
+
+6. **Hardcoded petrol price** (`src/app/api/costs/route.ts`): `PETROL_PRICE_RON = 7.5` is a static Romanian national average approximation. Added comment explaining BNR does not provide fuel prices and this figure is not shown as a live market rate.
+
+**How to use:** No API or UI changes required — fixes are internal to the computation path. Affected endpoints: `GET /api/tariffs/prices` (smart charge), `GET /api/costs` (kWh/unit label), `POST /api/trip-plan` (detour factor).
+
+**Key files:** `src/lib/external/tariffs/recommend.ts`, `src/app/api/costs/route.ts`, `src/app/(dashboard)/costs/costs-client.tsx`, `src/lib/external/routing/planner.ts`.
+
+**Dependencies:** None new.

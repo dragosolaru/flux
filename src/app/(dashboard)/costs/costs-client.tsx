@@ -109,7 +109,7 @@ function buildKpiItems(
 
   items.push({
     icon: <Gauge className="size-5" />,
-    value: data.whPerKm != null ? `${fmt(data.whPerKm, 0)} Wh` : "—",
+    value: data.whPerKm != null ? `${fmt(data.whPerKm, 0)} Wh/km` : "—",
     label: t("kpi_wh_per_km_label"),
     accent: "text-chart-3",
   });

@@ -1,26 +1,23 @@
 import type { HourlyPrice, SmartChargeRecommendation, TariffForecast } from "./types";
 
 /**
- * Find the cheapest contiguous N-hour window in the remaining hours of today
- * (from `fromHour` onward, wrapping into early AM is intentional for overnight charging).
+ * Find the cheapest contiguous N-hour window starting at or after `fromHour`.
+ * Only future hours are considered — early-AM hours that have already passed
+ * today are excluded so we never recommend a window that starts in the past.
+ * An optional `beforeHour` cap filters out windows that start at or after the
+ * departure time (so the car is ready by the time the user leaves).
  */
 export function findCheapestWindow(
   prices: HourlyPrice[],
   hoursNeeded: number,
   fromHour: number = new Date().getHours(),
+  beforeHour?: number,
 ): { startHour: number; avgPrice: number } {
   const n = Math.max(1, Math.round(hoursNeeded));
-  // Look at hours fromHour..23 (don't wrap past midnight for simplicity)
+  const ceiling = beforeHour !== undefined ? Math.min(24, beforeHour) : 24;
   const candidates: { startHour: number; avgPrice: number }[] = [];
 
-  for (let start = fromHour; start + n <= 24; start++) {
-    const window = prices.slice(start, start + n);
-    const avg = window.reduce((s, p) => s + p.priceEurKwh, 0) / window.length;
-    candidates.push({ startHour: start, avgPrice: avg });
-  }
-
-  // Also consider early-AM hours (0..fromHour-n) if there's an overnight window
-  for (let start = 0; start + n <= fromHour; start++) {
+  for (let start = fromHour; start + n <= ceiling; start++) {
     const window = prices.slice(start, start + n);
     const avg = window.reduce((s, p) => s + p.priceEurKwh, 0) / window.length;
     candidates.push({ startHour: start, avgPrice: avg });
@@ -52,6 +49,8 @@ export function buildForecast(
 /**
  * Compute a smart-charge recommendation for a single vehicle.
  * Returns null when charging is already done or no benefit.
+ * Pass `departureHour` to exclude windows that start at or after departure —
+ * without it the algorithm may recommend hours the car won't be ready in time.
  */
 export function computeSmartCharge(
   batteryLevel: number,
@@ -59,6 +58,7 @@ export function computeSmartCharge(
   chargingRateKw: number,
   batteryCapacityKwh: number,
   prices: HourlyPrice[],
+  departureHour?: number,
 ): SmartChargeRecommendation | null {
   if (batteryLevel >= chargeLimit) return null;
 
@@ -69,7 +69,7 @@ export function computeSmartCharge(
   const currentPrice = prices[currentHour]?.priceEurKwh ?? 0;
   const currentCostEur = kwhNeeded * currentPrice;
 
-  const { startHour, avgPrice } = findCheapestWindow(prices, hoursNeeded, currentHour);
+  const { startHour, avgPrice } = findCheapestWindow(prices, hoursNeeded, currentHour, departureHour);
   const optimalCostEur = kwhNeeded * avgPrice;
   const savingsEur = currentCostEur - optimalCostEur;
 

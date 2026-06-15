@@ -5,6 +5,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import type { MonthlyBucket, CostAggregation } from "@/types/costs";
 
+// Static reference price (~Romanian national average). BNR does not provide fuel
+// prices, so this is a fixed approximation used only for the petrol-vs-EV savings
+// comparison — not shown as a live market figure.
 const PETROL_PRICE_RON = 7.5;
 const PETROL_L_PER_100KM = 7;
 const PETROL_COST_PER_KM = (PETROL_PRICE_RON * PETROL_L_PER_100KM) / 100;
@@ -71,8 +74,8 @@ export async function GET(request: Request) {
   const totalKwh = costs.reduce((s, r) => s + (r.vehicle_kwh_attributed ?? r.total_kwh ?? 0), 0);
   const homeRows = costs.filter(r => r.document_type === "home_bill");
   const publicRows = costs.filter(r => r.document_type === "public_receipt");
-  const homeKwh = homeRows.reduce((s, r) => s + (r.vehicle_kwh_attributed ?? 0), 0);
-  const publicKwh = publicRows.reduce((s, r) => s + (r.total_kwh ?? 0), 0);
+  const homeKwh = homeRows.reduce((s, r) => s + (r.vehicle_kwh_attributed ?? r.total_kwh ?? 0), 0);
+  const publicKwh = publicRows.reduce((s, r) => s + (r.vehicle_kwh_attributed ?? r.total_kwh ?? 0), 0);
   const homeCostRon = homeRows.reduce((s, r) => s + r.cost_ron, 0);
   const publicCostRon = publicRows.reduce((s, r) => s + r.cost_ron, 0);
 

@@ -282,8 +282,9 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const chosen = candidates[0]!.st;
     const detourKm = candidates[0]!.dist;
 
-    // Drive to station: consume range corresponding to (targetKm - kmFromStart) + detour×0.5 (one-way)
-    const segmentKm = (targetKm - kmFromStart) + detourKm * 0.3; // light detour cost
+    // Drive to station: consume range for route segment plus round-trip detour
+    // (detour to the station and back to the route = 2× the off-route distance).
+    const segmentKm = (targetKm - kmFromStart) + detourKm * 2;
     socNow -= (segmentKm / deratedFullRangeKm) * 100;
     kmFromStart = targetKm;
     kmLeft = distanceKm - kmFromStart;
@@ -292,7 +293,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
 
     // Charge to either the strategy target or enough for the remaining leg
     // including the arrivalSocPct buffer at the next stop/destination.
-    const remainingNeededPct = ((kmLeft + detourKm * 0.3) / deratedFullRangeKm) * 100 + arrivalSocPct;
+    const remainingNeededPct = ((kmLeft + detourKm * 2) / deratedFullRangeKm) * 100 + arrivalSocPct;
     const departSoc = Math.min(chargeTarget, Math.max(arriveSoc + 5, Math.min(95, Math.ceil(remainingNeededPct))));
     const energyAddedKwh = ((departSoc - arriveSoc) / 100) * spec.batteryCapacityKwh;
     // SoC-dependent charge curve (ABRP-style) instead of a flat average rate —
