@@ -75,6 +75,9 @@ const PEEK_SUMMARY = 152;
 // Plan mode before a route is computed has no summary strip — only the handle and
 // the Explore/Plan tabs — so a shorter peek avoids dead space above the nav.
 const PEEK_TABS = 96;
+// Plan mid before route: absolute height so the form (2 inputs + sliders + vehicle
+// picker + button + 90px bottom padding ≈ 360px) fills the panel without dead space.
+const MID_PLAN_H = 460;
 function halfHeight() {
   // Mid: 44vh (Wave 2E spec)
   return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
@@ -167,7 +170,9 @@ export function MapClient() {
 
   // Landing directly in plan mode (e.g. /map?mode=plan) opens at half so the
   // form is immediately usable; explore starts at peek.
-  const initialSnapH = initialMode === "plan" ? halfHeight() : PEEK;
+  const initialSnapH = initialMode === "plan"
+    ? Math.min(MID_PLAN_H, typeof window !== "undefined" ? Math.round(window.innerHeight * 0.75) : MID_PLAN_H)
+    : PEEK;
 
   // Drag tracking refs (not used in render, safe as refs)
   const dragStartY = useRef(0);
@@ -301,7 +306,13 @@ export function MapClient() {
 
   function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
     if (state === "collapsed") return peekH;
-    if (state === "mid") return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
+    if (state === "mid") {
+      const h = typeof window !== "undefined" ? window.innerHeight : 850;
+      // Plan mode with no computed route: use a content-sized absolute height so the
+      // form fills the sheet without a dark gap. Cap at 75% for very small screens.
+      if (mode === "plan" && plan === null) return Math.min(MID_PLAN_H, Math.round(h * 0.75));
+      return Math.round(h * 0.44);
+    }
     return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 700;
   }
 

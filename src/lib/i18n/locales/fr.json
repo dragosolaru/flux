@@ -480,7 +480,8 @@
         "insufficientCredits": "Crédits Anthropic insuffisants. Ajoutez des crédits sur console.anthropic.com/settings/billing, puis re-téléversez le document.",
         "invalidKey": "La clé API Anthropic est invalide. Vérifiez la variable ANTHROPIC_API_KEY dans Vercel.",
         "rateLimit": "Trop de requêtes. Réessayez dans quelques secondes.",
-        "overloaded": "Le service IA est temporairement surchargé. Réessayez."
+        "overloaded": "Le service IA est temporairement surchargé. Réessayez.",
+        "timeout": "Le traitement a pris trop de temps. Supprimez et réimportez le document."
       },
       "status": {
         "done": "Traité",

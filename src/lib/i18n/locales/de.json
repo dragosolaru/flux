@@ -480,7 +480,8 @@
         "insufficientCredits": "Unzureichendes Anthropic-Guthaben. Füge Guthaben unter console.anthropic.com/settings/billing hinzu und lade das Dokument erneut hoch.",
         "invalidKey": "Der Anthropic-API-Schlüssel ist ungültig. Überprüfe die Variable ANTHROPIC_API_KEY in Vercel.",
         "rateLimit": "Zu viele Anfragen. Versuche es in ein paar Sekunden erneut.",
-        "overloaded": "Der KI-Dienst ist vorübergehend überlastet. Versuche es erneut."
+        "overloaded": "Der KI-Dienst ist vorübergehend überlastet. Versuche es erneut.",
+        "timeout": "Die Verarbeitung hat zu lange gedauert. Lösche das Dokument und lade es erneut hoch."
       },
       "status": {
         "done": "Verarbeitet",

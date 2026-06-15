@@ -480,7 +480,8 @@
         "insufficientCredits": "Insufficient Anthropic credits. Add credits at console.anthropic.com/settings/billing, then re-upload the document.",
         "invalidKey": "The Anthropic API key is invalid. Check the ANTHROPIC_API_KEY variable in Vercel.",
         "rateLimit": "Too many requests. Try again in a few seconds.",
-        "overloaded": "The AI service is temporarily overloaded. Try again."
+        "overloaded": "The AI service is temporarily overloaded. Try again.",
+        "timeout": "Processing took too long. Delete and re-upload the document."
       },
       "status": {
         "done": "Processed",

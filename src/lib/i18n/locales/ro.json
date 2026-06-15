@@ -480,7 +480,8 @@
         "insufficientCredits": "Credite Anthropic insuficiente. Adaugă credite la console.anthropic.com/settings/billing, apoi re-uploadează documentul.",
         "invalidKey": "Cheia API Anthropic este invalidă. Verifică variabila ANTHROPIC_API_KEY în Vercel.",
         "rateLimit": "Prea multe cereri. Încearcă din nou în câteva secunde.",
-        "overloaded": "Serviciul AI este temporar suprasolicitat. Încearcă din nou."
+        "overloaded": "Serviciul AI este temporar suprasolicitat. Încearcă din nou.",
+        "timeout": "Procesarea a durat prea mult. Șterge și încarcă din nou documentul."
       },
       "status": {
         "done": "Procesat",

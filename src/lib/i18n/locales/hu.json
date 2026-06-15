@@ -480,7 +480,8 @@
         "insufficientCredits": "Nincs elég Anthropic kredit. Adj hozzá kreditet a console.anthropic.com/settings/billing oldalon, majd töltsd fel újra a dokumentumot.",
         "invalidKey": "Az Anthropic API-kulcs érvénytelen. Ellenőrizd az ANTHROPIC_API_KEY változót a Vercelben.",
         "rateLimit": "Túl sok kérés. Próbáld újra néhány másodperc múlva.",
-        "overloaded": "Az AI-szolgáltatás átmenetileg túlterhelt. Próbáld újra."
+        "overloaded": "Az AI-szolgáltatás átmenetileg túlterhelt. Próbáld újra.",
+        "timeout": "A feldolgozás túl sokáig tartott. Töröld és töltsd fel újra a dokumentumot."
       },
       "status": {
         "done": "Feldolgozva",

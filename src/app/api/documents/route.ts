@@ -11,6 +11,11 @@ import { canUploadDocument } from "@/lib/subscription";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
+// OCR runs in an `after()` task; if the process dies mid-run a row can stay
+// "processing" forever and the client polls indefinitely. Surface rows stuck
+// past this threshold as errored so the UI shows a clear state and stops polling.
+const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
+
 const GetQuerySchema = z.object({
   vehicleId: z.string().uuid(),
 });
@@ -49,12 +54,20 @@ export async function GET(request: Request) {
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
   // Generate short-lived signed URLs for viewing documents
+  const now = Date.now();
   const docsWithUrls = await Promise.all(
-    (documents ?? []).map(async (doc: { storage_path: string } & Record<string, unknown>) => {
+    (documents ?? []).map(async (doc: { storage_path: string; status: string; created_at: string; error_message: string | null } & Record<string, unknown>) => {
       const { data: signed } = await supabase.storage
         .from("documents")
         .createSignedUrl(doc.storage_path, SIGNED_URL_TTL_SECONDS);
-      return { ...doc, view_url: signed?.signedUrl ?? null };
+      const isStuck =
+        (doc.status === "processing" || doc.status === "pending") &&
+        now - new Date(doc.created_at).getTime() > PROCESSING_TIMEOUT_MS;
+      return {
+        ...doc,
+        ...(isStuck ? { status: "error", error_message: "processing-timeout" } : {}),
+        view_url: signed?.signedUrl ?? null,
+      };
     }),
   );
 

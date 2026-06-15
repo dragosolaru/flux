@@ -1681,3 +1681,29 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** the components above + `src/lib/i18n/locales/*.json`.
 
 **Dependencies:** None new.
+
+---
+
+## Deferred Fixes Batch — OCR Timeout, GeocodingSearch ARIA, Map Mid-State
+
+**What it does:** Three targeted fixes from the round-3/4 deferred list.
+
+### 1. OCR processing timeout surfaced to users
+
+Stuck documents (status `"processing"` or `"pending"` for > 5 minutes) are mapped to `status:"error"` with `error_message:"processing-timeout"` in the GET `/api/documents` response. `DocumentStatusCard` translates this key via `friendlyErrorKey → "timeout"` → locale key `costs.docStatus.friendlyError.timeout`.
+
+**Key files:** `src/app/api/documents/route.ts`, `src/components/costs/DocumentStatusCard.tsx`, locale files.
+
+### 2. GeocodingSearch keyboard navigation + combobox ARIA
+
+The location search input now supports full keyboard navigation: ArrowDown/ArrowUp move the active option, Enter selects it, Escape closes the dropdown. The input carries `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-autocomplete`, and `aria-activedescendant`. The listbox has `role="listbox"` and each option has `role="option"` with `aria-selected`.
+
+**Key files:** `src/components/trip/GeocodingSearch.tsx`.
+
+### 3. Map Plan-mode mid-snap dead space
+
+In plan mode before a route is computed, the mid-state sheet snap was a fixed 44% of viewport height. On tall phones (>= ~860px) the plan form content (two location inputs + SOC sliders + vehicle picker + button + 90px bottom padding ≈ 360px) is shorter than 44vh, leaving a visible dark gap inside the sheet. Fix: the mid snap in plan-no-route mode now uses `MID_PLAN_H = 460px` (capped at 75% for small screens), which matches or slightly overflows the form content on all modern phone sizes.
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx` (`MID_PLAN_H` constant, `sheetStateToH`, `initialSnapH`).
+
+**Dependencies:** None new.

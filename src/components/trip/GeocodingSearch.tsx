@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, X, Loader2, LocateFixed } from "lucide-react";
 
@@ -40,8 +40,10 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   // Sync inputValue when external value changes — adjust state during render
   // (React's recommended pattern over a setState-in-effect).
@@ -78,6 +80,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}${biasParams}`);
       const data = await res.json() as { results: NominatimResult[] };
       setResults(data.results ?? []);
+      setActiveIndex(-1);
       setOpen(true);
     } catch {
       setResults([]);
@@ -112,9 +115,19 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && open && results.length > 0) {
+    if (!open || results.length === 0) {
+      if (e.key === "Escape") setOpen(false);
+      return;
+    }
+    if (e.key === "ArrowDown") {
       e.preventDefault();
-      handleSelect(results[0]);
+      setActiveIndex((i) => (i + 1) % results.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i <= 0 ? results.length - 1 : i - 1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      handleSelect(results[activeIndex >= 0 ? activeIndex : 0]);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -134,6 +147,11 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
         <input
           type="text"
           inputMode="search"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
@@ -175,15 +193,23 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+        >
           {results.length === 0 ? (
             <div className="px-3 py-2 text-sm text-muted-foreground">{t("location_not_found")}</div>
           ) : (
             results.map((r, i) => (
               <button
                 key={i}
+                id={`${listboxId}-opt-${i}`}
+                role="option"
+                aria-selected={i === activeIndex}
                 onClick={() => handleSelect(r)}
-                className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                onMouseEnter={() => setActiveIndex(i)}
+                className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm ${i === activeIndex ? "bg-muted" : "hover:bg-muted"}`}
               >
                 <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                 <span className="line-clamp-2">{r.name}</span>

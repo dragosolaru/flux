@@ -41,6 +41,7 @@ function NonElectricityIcon({ type }: { type: NonElectricityType }) {
 // Returns the friendlyError i18n key suffix, or null to show the raw message.
 function friendlyErrorKey(raw: string | null): string | null {
   if (!raw) return "unknown";
+  if (raw === "processing-timeout") return "timeout";
   if (raw.includes("credit balance") || raw.includes("too low")) return "insufficientCredits";
   if (raw.includes("invalid_api_key") || raw.includes("401")) return "invalidKey";
   if (raw.includes("rate_limit") || raw.includes("429")) return "rateLimit";
