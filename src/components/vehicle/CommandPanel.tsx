@@ -21,7 +21,11 @@ interface CommandPanelProps {
 export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const t = useTranslations("commands");
   const caps = useBrandCapabilities(brand);
-  const { mutate, isPending, variables } = useVehicleCommand();
+  const { mutate, isPending, variables, isError, error } = useVehicleCommand();
+  const MAPPED = ["error_rate_limit", "error_vcp_required", "error_not_supported"];
+  const errorText = isError
+    ? t(error && MAPPED.includes(error.message) ? error.message : "error")
+    : null;
 
   function send(command: CommandName, args?: Record<string, unknown>) {
     // Toasts + optimistic update are handled centrally in useVehicleCommand;
@@ -112,6 +116,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   }
 
   return (
+    <div className="flex flex-col gap-2">
     <motion.div
       variants={staggerContainer}
       initial="hidden"
@@ -125,7 +130,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => send(cmd)}
-              disabled={isPending || !state}
+              disabled={isSending}
               title={label}
               aria-label={label}
               className={[
@@ -154,5 +159,11 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
         );
       })}
     </motion.div>
+      {errorText && (
+        <p role="alert" className="text-xs text-destructive">
+          {errorText}
+        </p>
+      )}
+    </div>
   );
 }

@@ -36,7 +36,7 @@ function VehicleSwitcher() {
     <div className="relative flex items-center">
       <Car className="pointer-events-none absolute left-2 size-3.5 text-muted-foreground" />
       <select
-        value={currentId ?? ""}
+        value={current ? currentId! : ""}
         onChange={(e: ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
@@ -44,7 +44,7 @@ function VehicleSwitcher() {
         aria-label={t("select_vehicle")}
         title={label}
       >
-        {!currentId && <option value="">{t("select_vehicle")}</option>}
+        {!current && <option value="">{t("select_vehicle")}</option>}
         {vehicles.map((v: { id: string; nickname: string | null; displayName: string }) => (
           <option key={v.id} value={v.id}>
             {v.nickname ?? v.displayName}

@@ -31,20 +31,24 @@ export function useCurrency() {
     retry: 1,
   });
 
+  // Guard against a bad/zero rate payload — dividing by 0 would render
+  // "∞"/"NaN" everywhere, so fall back to the canonical currency instead.
+  const valid = !!data && data.ronPerDisplay > 0 && data.ronPerEur > 0;
+
   function fromRON(amount: number, maxFractionDigits?: number): string {
-    if (!data) return formatMoney(amount, "RON", locale, maxFractionDigits);
-    return formatMoney(amount / data.ronPerDisplay, data.display, locale, maxFractionDigits);
+    if (!valid) return formatMoney(amount, "RON", locale, maxFractionDigits);
+    return formatMoney(amount / data!.ronPerDisplay, data!.display, locale, maxFractionDigits);
   }
 
   function fromEUR(amount: number, maxFractionDigits?: number): string {
-    if (!data) return formatMoney(amount, "EUR", locale, maxFractionDigits);
+    if (!valid) return formatMoney(amount, "EUR", locale, maxFractionDigits);
     return formatMoney(
-      (amount * data.ronPerEur) / data.ronPerDisplay,
-      data.display,
+      (amount * data!.ronPerEur) / data!.ronPerDisplay,
+      data!.display,
       locale,
       maxFractionDigits,
     );
   }
 
-  return { currency: data?.display ?? null, fromRON, fromEUR };
+  return { currency: valid ? data!.display : null, fromRON, fromEUR };
 }

@@ -39,7 +39,7 @@ const iconCache = new Map<string, L.DivIcon>();
 // "1.79 RON · 22 kW" — price only when known, power always when known.
 function pinLabel(maxPowerKw: number | null, pricing: Charger["pricing"]): string {
   const parts: string[] = [];
-  if (pricing) parts.push(`${pricing.perKwh.toFixed(2)} ${pricing.currency}`);
+  if (pricing && Number.isFinite(pricing.perKwh)) parts.push(`${pricing.perKwh.toFixed(2)} ${pricing.currency}`);
   if (maxPowerKw) parts.push(`${Math.round(maxPowerKw)} kW`);
   return parts.join(" · ");
 }

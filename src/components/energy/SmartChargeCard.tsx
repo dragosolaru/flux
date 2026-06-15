@@ -86,9 +86,11 @@ function VehicleRecommendation({
         args: { time: startTimeMinutes },
       },
       {
-        onSuccess: () => {
-          setScheduled(true);
-          setTimeout(() => setScheduled(false), 10_000);
+        // Confirm only on a real success — the hook toasts rejections
+        // (success:false) and errors centrally. Keep the confirmed state
+        // rather than auto-reverting, which read as "not scheduled".
+        onSuccess: (data) => {
+          if (data.success) setScheduled(true);
         },
       },
     );

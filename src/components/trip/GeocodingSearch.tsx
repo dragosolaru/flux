@@ -53,15 +53,24 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
     setInputValue(value ? shortName(value.name) : "");
   }
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click/tap
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handleClick(e: Event) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("touchstart", handleClick);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("touchstart", handleClick);
+    };
+  }, []);
+
+  // Clear any pending debounce on unmount so search() can't fire after teardown.
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
 
   const biasLat = bias?.lat;
@@ -154,8 +163,12 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
           aria-activedescendant={open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => {
+          onFocus={(e) => {
             if (results.length > 0) setOpen(true);
+            // Pull the field into view so the results dropdown isn't hidden
+            // behind the on-screen keyboard in the bottom sheet on mobile.
+            const el = e.currentTarget;
+            setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
             onFocus?.();
           }}
           onBlur={onBlur}
