@@ -47,7 +47,7 @@ export async function getExchangeRate(
     .eq("currency", currency)
     .single();
 
-  if (cached) return cached.rate_to_ron;
+  if (cached?.rate_to_ron) return cached.rate_to_ron;
 
   // Try fetching for requested date; BNR may not publish on weekends/holidays
   // so we try up to 5 previous days

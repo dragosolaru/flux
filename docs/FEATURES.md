@@ -1614,3 +1614,25 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/globals.css`, `src/app/(dashboard)/energy/energy-client.tsx`, `src/app/(dashboard)/settings/tariff-provider-picker.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/app/(dashboard)/map/map-client.tsx`, `src/components/onboarding/AddVehicleModal.tsx`, `src/lib/i18n/locales/*.json`.
 
 **Dependencies:** None new.
+
+---
+
+## Cross-Device Polish Round 3 (P46+ data & correctness fixes)
+
+**What it does:** Third persona-audit batch. This sub-section covers the data/correctness fixes; the error-handling and accessibility slices are documented in the two sections that follow.
+
+**Fixes included:**
+
+1. **Charging cost shown for RON users** (`src/app/(dashboard)/charging/charging-client.tsx`): the history rows read only `cost_eur`, which is null for nearly all users (mock sessions, OCR, and non-EUR Tesla syncs never populate it). The row now prefers `cost_ron` (`fromRON`) and falls back to `cost_eur`, so the Romanian-majority audience finally sees per-session cost.
+
+2. **Charging history date respects app locale** (`src/app/(dashboard)/charging/charging-client.tsx`): date was formatted with the browser-default locale; now uses the next-intl `useLocale()` value for consistency with the rest of the UI.
+
+3. **SmartChargeCard cache-key drift** (`src/components/energy/SmartChargeCard.tsx`): queried `["vehicle-state", id]` while the rest of the app (and command invalidation) uses `["vehicle", id]`. Aligned so the card's SOC/charge-limit/plugged state updates immediately after any command instead of waiting out its stale time.
+
+4. **Exchange-rate zero guard** (`src/lib/external/bnr/client.ts`): a cached `exchange_rates` row with `rate_to_ron === 0` was treated as valid, producing `Infinity`/`∞` in conversions. Now only truthy rates short-circuit the cache lookup.
+
+5. **OCR confidence NaN guard** (`src/lib/costs/processor.ts`): if a parsed document was missing `confidence.cost_total`/`document_type`, `Math.min(NaN, …)` made `criticalConfidence < threshold` false and silently marked the doc `done` instead of `needs_review`. Missing confidences now default to 0.
+
+**Key files:** `src/app/(dashboard)/charging/charging-client.tsx`, `src/components/energy/SmartChargeCard.tsx`, `src/lib/external/bnr/client.ts`, `src/lib/costs/processor.ts`.
+
+**Dependencies:** None new.

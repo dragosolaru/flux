@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { BatteryCharging, RefreshCw, Clock, Zap, Home, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -323,11 +323,12 @@ function HistoryCard({
   row: ChargingSessionRow;
   tc: ReturnType<typeof useTranslations<"charging">>;
 }) {
-  const { fromEUR } = useCurrency();
+  const { fromEUR, fromRON } = useCurrency();
+  const locale = useLocale();
   const isHome =
     !row.location_name || row.location_name.toLowerCase().includes("home");
 
-  const date = new Date(row.started_at).toLocaleDateString(undefined, {
+  const date = new Date(row.started_at).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -364,7 +365,11 @@ function HistoryCard({
                 : `— ${tc("history_kwh")}`}
             </span>
             <span className="text-xs text-muted-foreground">
-              {row.cost_eur != null ? fromEUR(row.cost_eur) : "—"}
+              {row.cost_ron != null
+                ? fromRON(row.cost_ron)
+                : row.cost_eur != null
+                  ? fromEUR(row.cost_eur)
+                  : "—"}
             </span>
           </div>
           {/* Location label */}

@@ -129,8 +129,8 @@ export async function processDocument(documentId: string): Promise<void> {
     }
 
     const criticalConfidence = Math.min(
-      parsed.confidence.cost_total,
-      parsed.confidence.document_type,
+      parsed.confidence.cost_total ?? 0,
+      parsed.confidence.document_type ?? 0,
     );
     const finalStatus = criticalConfidence < CONFIDENCE_THRESHOLD ? "needs_review" : "done";
 

@@ -46,7 +46,7 @@ function VehicleRecommendation({
   const hasCommandsReady = caps?.hasCommandsReady ?? false;
 
   const { data: state } = useQuery({
-    queryKey: ["vehicle-state", vehicle.id],
+    queryKey: ["vehicle", vehicle.id],
     queryFn: () => apiFetch<VehicleState>(`/api/vehicles/${vehicle.id}/state`),
     staleTime: 30_000,
   });
