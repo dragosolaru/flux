@@ -1202,11 +1202,25 @@ All responsive — full values restore at `md:` breakpoint.
 
 **What it does:** Replaces `mock-weather.ts` (deterministic formula) with real temperature, wind, and precipitation from Open-Meteo's public API. Range derating now uses actual conditions at the trip origin so cold/wet trips show a shorter derated range than summer trips.
 
-**How to use:** Automatic in `POST /api/trip-plan`. The `getWeatherAsync(lat, lng)` helper fetches current conditions and caches per 0.1° cell for 15 minutes. Falls back to a mild neutral snapshot if the API is unreachable.
+**How to use:** Automatic in `POST /api/trip-plan`. The `getWeatherAsync(lat, lng)` helper fetches current conditions and caches per 0.1° cell. The in-memory cache has a **30-minute TTL** (`CACHE_TTL_MS`); entries older than that trigger a refetch so stale weather is never served indefinitely. Falls back to a mild neutral snapshot if the API is unreachable.
 
 **Important:** Open-Meteo free tier is non-commercial only. Production SaaS use requires a paid plan ($29–99/month). Set `OPEN_METEO_API_KEY` if/when upgrading (currently unused — the public endpoint works without a key).
 
 **Key files:** `src/lib/external/weather/providers/open-meteo.ts` (new), `src/app/api/trip-plan/route.ts` (uses `getWeatherAsync`).
+
+## External-provider data fixes (weather TTL, Tibber DST + zero-price)
+
+**What it does:** Three backend correctness fixes for external data providers.
+
+1. **Weather cache TTL** — the in-memory Open-Meteo `Map` cache previously had no expiry, so the first fetched snapshot for a given 0.1° cell was served forever. Cache entries now store `fetchedAt` and are gated by a 30-minute `CACHE_TTL_MS`; expired entries fall through to a refetch (both the sync `getCurrent` wrapper and `getWeatherAsync`).
+2. **Tibber DST-safe hour mapping** — hourly price points were mapped to hours via `new Date(startsAt).getHours()`, which re-interprets the timestamp in the *server's* timezone and breaks across DST boundaries. `parseLocalHour()` now reads the `HH` field straight from the ISO 8601 string, which already carries the home's correct local offset on each side of a DST change. No hardcoded UTC offset.
+3. **Zero-price "free charging" guard** — a Tibber price of `0` (or missing) means "no data", not free electricity. Such entries are now dropped from the price list (`if (!(priceEurKwh > 0)) return null`), and the no-cache fallback returns an empty array instead of 24 zero-priced hours, so downstream smart-charge/forecast logic falls back rather than reporting free charging. Legitimately low but non-zero prices are unaffected.
+
+**How to use:** Transparent to callers. Used by `GET /api/tariffs/prices`, `GET /api/tariffs/settings`, and `POST /api/trip-plan` (home tariff + weather derating).
+
+**Key files:** `src/lib/external/weather/providers/open-meteo.ts`, `src/lib/external/tariffs/providers/tibber.ts`.
+
+**Dependencies:** Open-Meteo public API, Tibber GraphQL (`TIBBER_TOKEN`).
 
 ## Charger Sources — Austria (data.gv.at) + France IRVE (data.gouv.fr)
 

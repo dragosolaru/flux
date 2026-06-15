@@ -56,6 +56,16 @@ function toDateKey(date: Date): string {
   return date.toISOString().slice(0, 10); // "YYYY-MM-DD"
 }
 
+// Extract the local wall-clock hour from a Tibber ISO 8601 timestamp.
+// The string carries the home's own offset, so its "HH" field already is the
+// local hour regardless of DST. Returns null if the format is unrecognised.
+function parseLocalHour(startsAt: string): number | null {
+  const match = /T(\d{2}):/.exec(startsAt);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : null;
+}
+
 async function fetchTibberPrices(date: Date): Promise<HourlyPrice[]> {
   const token = process.env.TIBBER_TOKEN;
   if (!token) {
@@ -118,14 +128,21 @@ async function fetchTibberPrices(date: Date): Promise<HourlyPrice[]> {
     );
   }
 
-  // Map to HourlyPrice — startsAt is an ISO timestamp; extract the local hour
-  return entries.map((entry) => {
-    const hour = new Date(entry.startsAt).getHours();
-    return {
-      hour,
-      priceEurKwh: Math.round(entry.total * 1000) / 1000,
-    };
-  });
+  // Map to HourlyPrice — startsAt is an ISO 8601 string carrying the home's own
+  // UTC offset (e.g. "2026-06-15T14:00:00.000+02:00"). The wall-clock portion is
+  // already the local hour, and Tibber emits the correct offset on each side of a
+  // DST change. Read the hour straight from the string instead of going through
+  // Date#getHours(), which would re-interpret it in the *server's* timezone.
+  return entries
+    .map((entry) => {
+      const hour = parseLocalHour(entry.startsAt);
+      if (hour === null) return null;
+      const priceEurKwh = Math.round(entry.total * 1000) / 1000;
+      // A 0 / non-positive price means missing data, not free charging — drop it.
+      if (!(priceEurKwh > 0)) return null;
+      return { hour, priceEurKwh };
+    })
+    .filter((p): p is HourlyPrice => p !== null);
 }
 
 async function getCachedOrFetch(date: Date): Promise<HourlyPrice[]> {
@@ -170,11 +187,9 @@ export const tibber: TariffProvider = {
       return cached.prices;
     }
 
-    // No cache yet — return zero prices for all 24 hours as a safe fallback
-    return Array.from({ length: 24 }, (_, hour) => ({
-      hour,
-      priceEurKwh: 0,
-    }));
+    // No cache yet — return no prices. Zero-priced hours would be read as "free
+    // charging" downstream, so an empty list correctly signals "data unavailable".
+    return [];
   },
 };
 

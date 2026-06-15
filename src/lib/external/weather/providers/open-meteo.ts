@@ -60,21 +60,36 @@ async function getCurrent(lat: number, lng: number): Promise<WeatherSnapshot> {
 // Synchronous WeatherProvider wrapper: fetches weather lazily and caches per
 // (lat,lng) rounded to 0.1°. Falls back to mock-weather if the fetch fails —
 // so the trip planner never hard-fails for weather alone.
-const cache = new Map<string, WeatherSnapshot>();
+interface WeatherCacheEntry {
+  snapshot: WeatherSnapshot;
+  fetchedAt: number; // Date.now()
+}
+
+// 30 min TTL — forecasts change slowly but must not be served indefinitely.
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const cache = new Map<string, WeatherCacheEntry>();
+
+function getFresh(key: string): WeatherSnapshot | undefined {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.fetchedAt < CACHE_TTL_MS) {
+    return entry.snapshot;
+  }
+  return undefined;
+}
 
 export const openMeteoWeather: WeatherProvider = {
   id: "open-meteo",
   displayName: "Open-Meteo",
   getCurrent(lat: number, lng: number): WeatherSnapshot {
     const key = `${lat.toFixed(1)},${lng.toFixed(1)}`;
-    // Return cached if available
-    const cached = cache.get(key);
+    // Return cached if still fresh
+    const cached = getFresh(key);
     if (cached) return cached;
 
     // Fire-and-forget: kick off the fetch so the next call gets real data.
-    // The first call (and any cache miss) returns a neutral mild snapshot.
+    // The first call (and any expired entry) returns a neutral mild snapshot.
     getCurrent(lat, lng)
-      .then((snap) => cache.set(key, snap))
+      .then((snap) => cache.set(key, { snapshot: snap, fetchedAt: Date.now() }))
       .catch(() => {}); // silence — fallback to mild snap
 
     // Mild neutral snapshot for the first hit (avoids blocking the planner).
@@ -88,11 +103,11 @@ export const openMeteoWeather: WeatherProvider = {
  */
 export async function getWeatherAsync(lat: number, lng: number): Promise<WeatherSnapshot> {
   const key = `${lat.toFixed(1)},${lng.toFixed(1)}`;
-  const cached = cache.get(key);
+  const cached = getFresh(key);
   if (cached) return cached;
   try {
     const snap = await getCurrent(lat, lng);
-    cache.set(key, snap);
+    cache.set(key, { snapshot: snap, fetchedAt: Date.now() });
     return snap;
   } catch {
     return { tempC: 15, windSpeedMs: 3, windDirDeg: 270, precipMmH: 0, cloudCoverPct: 30, humidityPct: 60, conditionLabel: "Partly cloudy" };
