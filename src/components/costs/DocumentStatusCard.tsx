@@ -70,8 +70,19 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
   const locale = useLocale();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [costRon, setCostRon] = useState(String(doc.parsed_json?.cost_total ?? ""));
+  // Amount is in the document's own currency (parsed.currency), not RON — the
+  // server converts on save so foreign receipts never get stored as raw RON.
+  const [amount, setAmount] = useState(String(doc.parsed_json?.cost_total ?? ""));
   const [kwh, setKwh] = useState(String(doc.parsed_json?.total_kwh ?? ""));
+  const currency = doc.parsed_json?.currency ?? "RON";
+
+  // Re-seed from the latest parsed values when opening the form, so a poll that
+  // finishes OCR after first render doesn't leave the inputs stale on submit.
+  function openEdit() {
+    setAmount(String(doc.parsed_json?.cost_total ?? ""));
+    setKwh(String(doc.parsed_json?.total_kwh ?? ""));
+    setEditing(true);
+  }
 
   const errorKey = friendlyErrorKey(doc.error_message);
   const errorText = errorKey
@@ -88,10 +99,11 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
 
   function handleEdit(e: FormEvent) {
     e.preventDefault();
-    const cost = parseFloat(costRon);
+    const cost = parseFloat(amount);
     const energy = parseFloat(kwh);
     onEdit?.(doc.id, {
-      cost_ron: cost > 0 ? cost : undefined,
+      original_amount: cost > 0 ? cost : undefined,
+      original_currency: cost > 0 ? currency : undefined,
       total_kwh: energy > 0 ? energy : undefined,
     });
     setEditing(false);
@@ -189,8 +201,8 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => setEditing(true)}
+                    className="h-9 text-xs"
+                    onClick={openEdit}
                   >
                     {t("addManually")}
                   </Button>
@@ -198,7 +210,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-xs text-destructive hover:text-destructive"
+                      className="h-9 text-xs text-destructive hover:text-destructive"
                       onClick={() => setConfirmDelete(true)}
                     >
                       {tc("delete")}
@@ -220,15 +232,15 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
               <form onSubmit={handleEdit} className="mt-2 space-y-2">
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1">
-                    <Label htmlFor={`cost-${doc.id}`} className="text-xs">{t("fieldCost")}</Label>
+                    <Label htmlFor={`cost-${doc.id}`} className="text-xs">{t("fieldCost")} ({currency})</Label>
                     <Input
                       id={`cost-${doc.id}`}
                       type="number"
                       step="0.01"
                       min="0"
-                      value={costRon}
-                      onChange={(e) => setCostRon(e.target.value)}
-                      className="h-7 text-xs"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="h-9 text-xs"
                     />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -240,17 +252,17 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       min="0"
                       value={kwh}
                       onChange={(e) => setKwh(e.target.value)}
-                      className="h-7 text-xs"
+                      className="h-9 text-xs"
                     />
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button type="submit" size="sm" className="h-6 text-xs">{tc("save")}</Button>
+                  <Button type="submit" size="sm" className="h-9 text-xs">{tc("save")}</Button>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-6 text-xs"
+                    className="h-9 text-xs"
                     onClick={() => setEditing(false)}
                   >
                     {tc("cancel")}
@@ -266,7 +278,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="h-6 text-xs"
+                  className="h-9 text-xs"
                   onClick={handleDelete}
                 >
                   {tc("delete")}
@@ -274,7 +286,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 text-xs"
+                  className="h-9 text-xs"
                   onClick={() => setConfirmDelete(false)}
                 >
                   {tc("cancel")}
@@ -299,7 +311,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             )}
             {canEdit && !editing && (
               <button
-                onClick={() => setEditing(true)}
+                onClick={openEdit}
                 className="flex h-10 w-10 items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground"
                 aria-label={t("ariaEdit")}
                 title={t("ariaEdit")}

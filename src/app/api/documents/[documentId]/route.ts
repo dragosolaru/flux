@@ -4,11 +4,15 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getExchangeRate } from "@/lib/external/bnr/client";
 
 const uuidSchema = z.string().uuid();
 
+// Cost is edited in the document's own currency (original_amount + original_currency);
+// the RON value is derived server-side so foreign receipts never land in cost_ron raw.
 const PatchSchema = z.object({
-  cost_ron: z.number().positive().optional(),
+  original_amount: z.number().positive().optional(),
+  original_currency: z.string().length(3).optional(),
   total_kwh: z.number().positive().optional(),
   vehicle_kwh_attributed: z.number().positive().optional(),
   provider_name: z.string().max(200).optional(),
@@ -77,8 +81,30 @@ export async function PATCH(
 
   if (!doc) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
+  // Convert the edited amount from its document currency to RON using the
+  // rate at the document's date (same path the OCR pipeline uses on ingest).
+  let costRon: number | undefined;
+  let exchangeRate: number | undefined;
+  let originalCurrency: string | undefined;
+  if (parsed.data.original_amount !== undefined) {
+    const pj = (doc as { parsed_json: Record<string, unknown> | null }).parsed_json;
+    originalCurrency = (parsed.data.original_currency ?? (pj?.currency as string | undefined) ?? "RON").toUpperCase();
+    const docDate = pj?.period_end
+      ? new Date(pj.period_end as string)
+      : pj?.session_timestamp
+        ? new Date(pj.session_timestamp as string)
+        : new Date();
+    exchangeRate = originalCurrency === "RON" ? 1 : await getExchangeRate(originalCurrency, docDate);
+    costRon = parsed.data.original_amount * exchangeRate;
+  }
+
   const updates: Record<string, unknown> = { is_manually_edited: true };
-  if (parsed.data.cost_ron !== undefined) updates.cost_ron = parsed.data.cost_ron;
+  if (costRon !== undefined) {
+    updates.original_amount = parsed.data.original_amount;
+    updates.original_currency = originalCurrency;
+    updates.exchange_rate = exchangeRate;
+    updates.cost_ron = costRon;
+  }
   if (parsed.data.total_kwh !== undefined) updates.total_kwh = parsed.data.total_kwh;
   if (parsed.data.vehicle_kwh_attributed !== undefined) updates.vehicle_kwh_attributed = parsed.data.vehicle_kwh_attributed;
   if (parsed.data.provider_name !== undefined) updates.provider_name = parsed.data.provider_name;
@@ -98,7 +124,7 @@ export async function PATCH(
       .update(updates)
       .eq("document_id", documentId);
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
-  } else if ((doc as { vehicle_id: string | null }).vehicle_id && (parsed.data.cost_ron || parsed.data.total_kwh)) {
+  } else if ((doc as { vehicle_id: string | null }).vehicle_id && (parsed.data.original_amount || parsed.data.total_kwh)) {
     // Non-electricity doc manually confirmed — create energy_cost record.
     // Re-verify vehicle ownership even though document is already scoped to userId,
     // to ensure the vehicle_id FK is still valid and belongs to this user.
@@ -120,10 +146,10 @@ export async function PATCH(
       period_end: parsed.data.period_end ?? (pj?.period_end as string | null) ?? today,
       total_kwh: parsed.data.total_kwh ?? null,
       vehicle_kwh_attributed: parsed.data.total_kwh ?? null,
-      original_amount: parsed.data.cost_ron ?? 0,
-      original_currency: "RON",
-      exchange_rate: 1,
-      cost_ron: parsed.data.cost_ron ?? 0,
+      original_amount: parsed.data.original_amount ?? 0,
+      original_currency: originalCurrency ?? "RON",
+      exchange_rate: exchangeRate ?? 1,
+      cost_ron: costRon ?? 0,
       is_manually_edited: true,
     });
   }
