@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -29,6 +29,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
+import type { RouteLine } from "@/components/trip/TripMap";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
@@ -393,6 +394,29 @@ export function MapClient() {
   const variants = plan?.variants ?? [];
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
 
+  // One line per unique physical road (deduped by roadIndex). The active road
+  // is whichever the selected variant uses. Returns [] for a single road so
+  // TripMap falls back to the plain active-polyline render.
+  const activeRoadIndex = variants[activeVariant]?.roadIndex ?? null;
+  const routeLines = useMemo<RouteLine[]>(() => {
+    const byRoad = new Map<number, TripVariant>();
+    for (const v of variants) {
+      if (!v.plan.polyline) continue;
+      if (!byRoad.has(v.roadIndex)) byRoad.set(v.roadIndex, v);
+    }
+    if (byRoad.size < 2) return [];
+    return [...byRoad.values()].map((v) => ({
+      index: v.roadIndex,
+      coordinates: v.plan.polyline!.coordinates,
+      active: v.roadIndex === activeRoadIndex,
+    }));
+  }, [variants, activeRoadIndex]);
+
+  function handleRouteSelect(roadIndex: number) {
+    const idx = variants.findIndex((v) => v.roadIndex === roadIndex);
+    if (idx >= 0) setActiveVariant(idx);
+  }
+
   const teslaVehicle = plan?.vehicle?.brand === "tesla" ? plan.vehicle : null;
   const canShare = teslaVehicle !== null && activePlan !== null && activePlan.feasible !== false;
 
@@ -472,6 +496,8 @@ export function MapClient() {
             polyline={activePlan?.polyline ?? null}
             className="h-full w-full"
             onStationSelect={setSelectedStop}
+            routes={routeLines}
+            onRouteSelect={handleRouteSelect}
           />
         ) : (
           <StationMap
@@ -581,7 +607,7 @@ export function MapClient() {
             >
               <span className="truncate text-sm text-muted-foreground">
                 {stations.length > 0
-                  ? `${stations[0].name ?? tCharging("station_fallback")} · ${stations[0].maxPowerKw != null ? `${stations[0].maxPowerKw} kW` : ""}`
+                  ? `${stations[0].name ?? tCharging("station_fallback")}${stations[0].maxPowerKw != null ? ` · ${stations[0].maxPowerKw} kW` : ""}`
                   : tMap("explore_hint")}
               </span>
               <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
