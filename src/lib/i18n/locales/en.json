@@ -110,6 +110,7 @@
       "upgrade_cta": "Upgrade to Pro",
       "vin_label": "VIN (optional)",
       "vin_placeholder": "e.g. 5YJ3E1EA1LF000001",
+      "clear_vin": "Clear VIN",
       "vin_detected": "Detected: {variant} ({year})"
     },
     "connectTesla": {

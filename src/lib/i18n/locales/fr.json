@@ -110,6 +110,7 @@
       "upgrade_cta": "Passer à Pro",
       "vin_label": "NIV (optionnel)",
       "vin_placeholder": "ex : 5YJ3E1EA1LF000001",
+      "clear_vin": "Effacer le NIV",
       "vin_detected": "Détecté : {variant} ({year})"
     },
     "connectTesla": {

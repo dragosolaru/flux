@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, Flame, Fuel,
   HelpCircle, Home, Loader2, Pencil, Trash2, XCircle, Zap,
@@ -66,6 +66,7 @@ const STATUS_KEY: Record<Document["status"], string> = {
 export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCardProps) {
   const t = useTranslations("costs.docStatus");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [costRon, setCostRon] = useState(String(doc.parsed_json?.cost_total ?? ""));
@@ -86,9 +87,11 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
 
   function handleEdit(e: FormEvent) {
     e.preventDefault();
+    const cost = parseFloat(costRon);
+    const energy = parseFloat(kwh);
     onEdit?.(doc.id, {
-      cost_ron: parseFloat(costRon) || undefined,
-      total_kwh: parseFloat(kwh) || undefined,
+      cost_ron: cost > 0 ? cost : undefined,
+      total_kwh: energy > 0 ? energy : undefined,
     });
     setEditing(false);
   }
@@ -148,7 +151,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       <span>{parsed.period_start.slice(0, 7)} – {parsed.period_end.slice(0, 7)}</span>
                     )}
                     {parsed.session_timestamp && (
-                      <span>{new Date(parsed.session_timestamp).toLocaleDateString("ro-RO")}</span>
+                      <span>{new Date(parsed.session_timestamp).toLocaleDateString(locale)}</span>
                     )}
                     {parsed.total_kwh != null && (
                       <span>{parsed.total_kwh.toFixed(1)} kWh</span>
@@ -170,7 +173,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
             )}
 
             {doc.status === "error" && (
-              <p className="mt-1 text-xs text-destructive leading-snug">
+              <p role="alert" className="mt-1 text-xs text-destructive leading-snug">
                 {errorText}
               </p>
             )}
@@ -221,6 +224,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       id={`cost-${doc.id}`}
                       type="number"
                       step="0.01"
+                      min="0"
                       value={costRon}
                       onChange={(e) => setCostRon(e.target.value)}
                       className="h-7 text-xs"
@@ -232,6 +236,7 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       id={`kwh-${doc.id}`}
                       type="number"
                       step="0.1"
+                      min="0"
                       value={kwh}
                       onChange={(e) => setKwh(e.target.value)}
                       className="h-7 text-xs"

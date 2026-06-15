@@ -31,6 +31,7 @@ interface AddVehicleModalProps {
 export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }: AddVehicleModalProps) {
   const t = useTranslations("onboarding");
   const tScenarios = useTranslations("scenarios");
+  const tc = useTranslations("common");
 
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -171,8 +172,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
               <button
                 onClick={close}
-                className="absolute right-0 top-0 flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
-                aria-label="Close"
+                className="absolute right-0 top-0 flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                aria-label={tc("close")}
               >
                 <X className="size-4" />
               </button>
@@ -250,8 +251,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                         <button
                           type="button"
                           onClick={clearVin}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label="Clear VIN"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={t("add_vehicle.clear_vin")}
                         >
                           <X className="size-3.5" />
                         </button>
@@ -291,7 +292,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                   </div>
 
                   {error && (
-                    <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                       {error}
                     </p>
                   )}
@@ -329,8 +330,8 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
               )}
 
               {step !== "success" && (
-                <Button variant="ghost" size="sm" className="mt-3 h-10 w-full rounded-[10px] text-muted-foreground" onClick={close}>
-                  Cancel
+                <Button variant="ghost" size="sm" className="mt-3 h-11 w-full rounded-[10px] text-muted-foreground" onClick={close}>
+                  {tc("cancel")}
                 </Button>
               )}
             </div>

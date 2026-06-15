@@ -110,6 +110,7 @@
       "upgrade_cta": "Frissítés Pro-ra",
       "vin_label": "VIN (opcionális)",
       "vin_placeholder": "pl.: 5YJ3E1EA1LF000001",
+      "clear_vin": "VIN törlése",
       "vin_detected": "Felismert: {variant} ({year})"
     },
     "connectTesla": {

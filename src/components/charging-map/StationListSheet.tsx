@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Search, X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Charger, ChargerAvailability } from "@/lib/chargers/types";
@@ -49,6 +50,12 @@ export function StationListSheet({
 }: StationListSheetProps) {
   const t = useTranslations("chargingMap");
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const sorted = [...stations]
     .map((s) => ({ s, d: distanceM(center, { lat: s.lat, lng: s.lng }) }))
     .sort((a, b) => a.d - b.d);
@@ -65,6 +72,7 @@ export function StationListSheet({
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={t("nearby_title")}
         className="absolute bottom-0 left-0 right-0 z-[1600] flex flex-col rounded-t-3xl border-t border-white/10 bg-white/95 shadow-xl backdrop-blur-xl dark:bg-zinc-900/95"
         style={{ maxHeight: "75dvh" }}
       >

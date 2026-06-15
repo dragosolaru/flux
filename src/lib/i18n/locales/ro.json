@@ -110,6 +110,7 @@
       "upgrade_cta": "Upgrade la Pro",
       "vin_label": "VIN (opțional)",
       "vin_placeholder": "ex: 5YJ3E1EA1LF000001",
+      "clear_vin": "Șterge VIN",
       "vin_detected": "Detectat: {variant} ({year})"
     },
     "connectTesla": {

@@ -39,10 +39,13 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
     if (!open) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = original;
+      document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
@@ -82,7 +85,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
                 type="button"
                 onClick={onClose}
                 aria-label={t("common.close")}
-                className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+                className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
               >
                 <X className="size-4" />
               </button>
