@@ -14,7 +14,9 @@
     "refresh": "Reîmprospătează",
     "copy": "Copiază",
     "copied": "Copiat",
-    "soon": "Curând"
+    "soon": "Curând",
+    "upgrade": "Treci la Pro",
+    "clear": "Șterge"
   },
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."

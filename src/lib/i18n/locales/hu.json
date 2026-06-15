@@ -14,7 +14,9 @@
     "refresh": "Frissítés",
     "copy": "Másolás",
     "copied": "Másolva",
-    "soon": "Hamarosan"
+    "soon": "Hamarosan",
+    "upgrade": "Váltás Próra",
+    "clear": "Törlés"
   },
   "app": {
     "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."

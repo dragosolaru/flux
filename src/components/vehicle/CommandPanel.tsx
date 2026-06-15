@@ -105,7 +105,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
     return (
       <div className="flex gap-3">
         {buttons.map((_, i) => (
-          <Skeleton key={i} className="size-9 rounded-full" />
+          <Skeleton key={i} className="size-11 rounded-full" />
         ))}
       </div>
     );
@@ -129,7 +129,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
               title={label}
               aria-label={label}
               className={[
-                "size-9 rounded-full flex items-center justify-center transition-all",
+                "size-11 rounded-full flex items-center justify-center transition-all",
                 "bg-white/8 backdrop-blur-sm border border-white/8",
                 active
                   ? "border-primary/60 bg-primary/15 shadow-lg shadow-primary/20"

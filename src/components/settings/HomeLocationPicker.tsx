@@ -109,7 +109,7 @@ export function HomeLocationPicker() {
           )}
         </Button>
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
       {verified && prefs?.homeLat != null && prefs?.homeLng != null && (
         <p className="text-xs text-muted-foreground">
           {prefs.homeLat.toFixed(4)}, {prefs.homeLng.toFixed(4)}

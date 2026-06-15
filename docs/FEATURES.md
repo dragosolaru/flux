@@ -1660,3 +1660,24 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/hooks/useVehicleCommand.ts`, `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/app/(dashboard)/charging/charging-client.tsx`, `src/components/garage/VehicleCardMenu.tsx`, `src/app/(dashboard)/costs/costs-client.tsx`, `src/app/global-error.tsx`, `src/lib/i18n/locales/*.json`.
 
 **Dependencies:** None new.
+
+---
+
+## Cross-Device Polish Round 3 — Accessibility
+
+**What it does:** Closes the recurring a11y gaps a screen-reader / keyboard / motor-impaired user hits across the app (90% mobile). Four root-cause patterns fixed: icon-only buttons relying on `title`, inline errors without `role="alert"`, number inputs without `min`, and tap targets under 44px.
+
+**Fixes included:**
+
+1. **Bottom sheets** (`StationListSheet.tsx`, `SlideUpMenu.tsx`): Escape-to-close + the station sheet gains an `aria-label`; the "More" menu close button goes 32px→44px.
+2. **Inline error live regions** (`DocumentStatusCard.tsx`, `AddVehicleModal.tsx`, `WhatsAppPhonePicker.tsx`, `HomeLocationPicker.tsx`): error `<p>`s now carry `role="alert"`; the phone input also gets `aria-invalid`.
+3. **Select labels** (`ScenarioPicker.tsx`, `tariff-provider-picker.tsx`): both dropdowns gain `aria-label` (matches CurrencyPicker/LocalePicker).
+4. **Number inputs** (`DocumentStatusCard.tsx`): cost/kWh get `min="0"`; non-positive values are ignored on submit. Date also localized (was hardcoded `ro-RO`).
+5. **Tap targets** (`CommandPanel.tsx` 36px→44px incl. skeleton, `AddVehicleModal.tsx` close/clear, `GeocodingSearch.tsx` clear/locate padded + `aria-label`).
+6. **Collapsible sections** (`settings-client.tsx`, `InactiveVehiclesList.tsx`): `min-h-[44px]` + `aria-expanded`; inactive vehicle names get a `title` tooltip.
+7. **Onboarding page dots** (`OnboardingOverlay.tsx`): now interactive `<button>`s (jump to screen) with `aria-label`/`aria-current` and a 32px hit area.
+8. **i18n labels** (`UpgradeButton.tsx`): default label was hardcoded English; now falls back to `common.upgrade`. New keys `common.upgrade`, `common.clear`, `onboarding.add_vehicle.clear_vin`.
+
+**Key files:** the components above + `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** None new.

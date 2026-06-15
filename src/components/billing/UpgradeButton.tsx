@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 interface UpgradeButtonProps {
@@ -14,12 +15,14 @@ interface UpgradeButtonProps {
 
 export function UpgradeButton({
   tier = "pro",
-  label = "Upgrade to Pro",
+  label,
   variant = "default",
   size = "default",
   className,
 }: UpgradeButtonProps) {
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(false);
+  const resolvedLabel = label ?? tc("upgrade");
 
   async function handleUpgrade() {
     setLoading(true);
@@ -50,7 +53,7 @@ export function UpgradeButton({
       disabled={loading}
     >
       {loading && <Loader2 className="size-4 animate-spin" />}
-      {label}
+      {resolvedLabel}
     </Button>
   );
 }

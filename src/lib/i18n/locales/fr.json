@@ -14,7 +14,9 @@
     "refresh": "Actualiser",
     "copy": "Copier",
     "copied": "Copié",
-    "soon": "Bientôt"
+    "soon": "Bientôt",
+    "upgrade": "Passer à Pro",
+    "clear": "Effacer"
   },
   "app": {
     "tagline": "Gérez votre Tesla — coûts, recharge, commandes."

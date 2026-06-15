@@ -100,10 +100,11 @@ export function DangerZone() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="px-6 py-2">
-            <label className="mb-1.5 block text-sm text-muted-foreground">
+            <label htmlFor="confirm-delete-input" className="mb-1.5 block text-sm text-muted-foreground">
               {t("confirm_input_label")}
             </label>
             <Input
+              id="confirm-delete-input"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="DELETE"

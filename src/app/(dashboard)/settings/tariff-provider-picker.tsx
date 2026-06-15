@@ -44,6 +44,7 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
           value={selected}
           onChange={handleChange}
           disabled={isPending}
+          aria-label={t("label")}
         >
           {providers.map((p) => (
             <option key={p.id} value={p.id}>{p.displayName}</option>

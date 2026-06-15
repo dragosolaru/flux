@@ -89,14 +89,22 @@ export function OnboardingOverlay() {
       </AnimatePresence>
 
       {/* Page dots */}
-      <div className="absolute bottom-12 flex gap-2">
-        {screens.map((_, i) => (
-          <div
+      <div className="absolute bottom-12 flex gap-1">
+        {screens.map((s, i) => (
+          <button
             key={i}
-            className={`size-1.5 rounded-full transition-colors ${
-              i === screen ? "bg-foreground" : "bg-muted-foreground/30"
-            }`}
-          />
+            type="button"
+            onClick={() => setScreen(i)}
+            aria-label={s.title}
+            aria-current={i === screen}
+            className="flex items-center justify-center p-2"
+          >
+            <span
+              className={`size-1.5 rounded-full transition-colors ${
+                i === screen ? "bg-foreground" : "bg-muted-foreground/30"
+              }`}
+            />
+          </button>
         ))}
       </div>
     </div>

@@ -93,7 +93,8 @@ export function InactiveVehiclesList({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex w-full items-center justify-between px-1 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+          aria-expanded={open}
+          className="flex min-h-[44px] w-full items-center justify-between px-1 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
         >
           <span>
             {t("inactive_vehicles_title")}{" "}
@@ -117,7 +118,7 @@ export function InactiveVehiclesList({
                   key={v.id}
                   className="flex items-center justify-between gap-2 px-4 py-3"
                 >
-                  <span className="flex-1 truncate text-sm font-medium text-muted-foreground">
+                  <span title={name} className="flex-1 truncate text-sm font-medium text-muted-foreground">
                     {name}
                   </span>
                   <div className="flex shrink-0 items-center gap-2">

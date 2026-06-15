@@ -47,6 +47,7 @@ export function WhatsAppPhonePicker() {
             setValue(e.target.value);
             setError(false);
           }}
+          aria-invalid={error}
           className="text-sm"
         />
         <Button type="submit" size="sm" disabled={update.isPending}>
@@ -59,7 +60,7 @@ export function WhatsAppPhonePicker() {
           )}
         </Button>
       </div>
-      {error && <p className="text-xs text-destructive">{t("invalid")}</p>}
+      {error && <p role="alert" className="text-xs text-destructive">{t("invalid")}</p>}
     </form>
   );
 }

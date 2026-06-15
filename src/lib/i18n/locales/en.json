@@ -14,7 +14,9 @@
     "refresh": "Refresh",
     "copy": "Copy",
     "copied": "Copied",
-    "soon": "Soon"
+    "soon": "Soon",
+    "upgrade": "Upgrade to Pro",
+    "clear": "Clear"
   },
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."

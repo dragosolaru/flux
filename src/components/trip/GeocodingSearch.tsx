@@ -35,6 +35,7 @@ function shortName(displayName: string): string {
 
 export function GeocodingSearch({ placeholder, value, onChange, icon, locating, onLocate, locateTitle, onFocus, onBlur, bias }: GeocodingSearchProps) {
   const t = useTranslations("trip");
+  const tc = useTranslations("common");
   const [inputValue, setInputValue] = useState(value ? shortName(value.name) : "");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,7 +149,11 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
           {loading ? (
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
           ) : value ? (
-            <button onClick={handleClear} className="text-muted-foreground hover:text-foreground">
+            <button
+              onClick={handleClear}
+              aria-label={tc("clear")}
+              className="-m-2 p-2 text-muted-foreground hover:text-foreground"
+            >
               <X className="size-4" />
             </button>
           ) : null}
@@ -156,7 +161,8 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
             <button
               onClick={onLocate}
               title={locateTitle}
-              className="text-muted-foreground hover:text-foreground"
+              aria-label={locateTitle}
+              className="-m-2 p-2 text-muted-foreground hover:text-foreground"
             >
               {locating ? (
                 <Loader2 className="size-4 animate-spin" />

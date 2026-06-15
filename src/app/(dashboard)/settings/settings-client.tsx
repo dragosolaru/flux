@@ -403,7 +403,8 @@ function CollapsibleSection({
     <section>
       <button
         onClick={toggle}
-        className="flex min-h-[36px] w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
+        aria-expanded={open}
+        className="flex min-h-[44px] w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
       >
         <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/60">
           {t(titleKey)}

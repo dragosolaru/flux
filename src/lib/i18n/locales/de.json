@@ -14,7 +14,9 @@
     "refresh": "Aktualisieren",
     "copy": "Kopieren",
     "copied": "Kopiert",
-    "soon": "Bald"
+    "soon": "Bald",
+    "upgrade": "Auf Pro upgraden",
+    "clear": "Löschen"
   },
   "app": {
     "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."
