@@ -1,6 +1,7 @@
 "use client";
 
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export function BatteryGauge({
   size = 220,
   className,
 }: BatteryGaugeProps) {
+  const tc = useTranslations("common");
   const clamped = Math.round(Math.max(0, Math.min(100, level)));
   const stroke = 14;
   const radius = (size - stroke) / 2;
@@ -88,7 +90,7 @@ export function BatteryGauge({
             animate={{ opacity: 1, y: 0 }}
             className="mt-1 text-xs uppercase tracking-wide text-chart-2"
           >
-            Charging
+            {tc("charging")}
           </motion.div>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, isValidElement, useEffect, useState, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
+import { cloneElement, isValidElement, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
   const [vinInfo, setVinInfo] = useState<VinInfo | null>(null);
 
   const router = useRouter();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { data: capabilities } = useCapabilities();
   const { data: vehicles } = useVehicles();
@@ -128,9 +129,29 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { close(); return; }
+      if (e.key !== "Tab") return;
+      const node = dialogRef.current;
+      if (!node) return;
+      const els = Array.from(
+        node.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+      if (els.length === 0) return;
+      const first = els[0]!;
+      const last = els[els.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const triggerEl = trigger && isValidElement(trigger)
@@ -154,7 +175,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
-          <div className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-white/[0.04] px-5 py-4">
+          <div ref={dialogRef} className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-white/[0.04] px-5 py-4">
             <div className="relative pb-3">
               <div className="mb-2 flex items-center gap-2">
                 <BrandLogo brand="tesla" className="size-6 text-red-400" />
@@ -215,7 +236,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setYear(e.target.value)}
                       className="auth-input w-full"
                     >
-                      {Array.from({ length: 8 }, (_, i) => 2025 - i).map((y) => (
+                      {Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - i).map((y) => (
                         <option key={y} value={y}>{y}</option>
                       ))}
                     </select>

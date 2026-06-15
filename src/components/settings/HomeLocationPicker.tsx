@@ -2,7 +2,7 @@
 
 import { Check, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ async function geocode(address: string): Promise<GeocodeResult | null> {
 
 export function HomeLocationPicker() {
   const t = useTranslations();
-  const { data: prefs } = usePreferences();
+  const { data: prefs, isPlaceholderData } = usePreferences();
   const update = useUpdatePreferences();
 
   const [address, setAddress] = useState(prefs?.homeAddress ?? "");
@@ -46,6 +46,16 @@ export function HomeLocationPicker() {
   const [verified, setVerified] = useState(
     prefs?.homeLat != null && prefs?.homeLng != null,
   );
+
+  // usePreferences serves DEFAULT_PREFS (empty) as placeholder on first render;
+  // seed the inputs once the real saved prefs arrive so a stored address shows.
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (isPlaceholderData || hydratedRef.current) return;
+    hydratedRef.current = true;
+    setAddress(prefs?.homeAddress ?? "");
+    setVerified(prefs?.homeLat != null && prefs?.homeLng != null);
+  }, [isPlaceholderData, prefs?.homeAddress, prefs?.homeLat, prefs?.homeLng]);
 
   async function onVerify() {
     if (address.trim().length < 3) return;

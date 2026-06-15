@@ -18,7 +18,8 @@
     "upgrade": "Auf Pro upgraden",
     "clear": "Löschen",
     "checkout_error": "Checkout konnte nicht gestartet werden. Bitte erneut versuchen.",
-    "manage_subscription": "Abonnement verwalten"
+    "manage_subscription": "Abonnement verwalten",
+    "charging": "Lädt"
   },
   "app": {
     "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."
@@ -366,7 +367,11 @@
     "history_public": "Öffentlich",
     "history_sync_success": "{count} Sitzungen synchronisiert",
     "syncSuccess": "{count} Sitzungen synchronisiert",
-    "syncError": "Ladeverlauf konnte nicht synchronisiert werden. Bitte versuche es erneut."
+    "syncError": "Ladeverlauf konnte nicht synchronisiert werden. Bitte versuche es erneut.",
+    "scheduled_save": "Zeitplan speichern",
+    "scheduled_saved": "Ladeplan gespeichert",
+    "scheduled_disabled": "Geplantes Laden deaktiviert",
+    "scheduled_error": "Ladeplan konnte nicht aktualisiert werden"
   },
   "commands": {
     "title": "Befehle",
@@ -700,7 +705,8 @@
     "sharing": "Wird gesendet…",
     "share_sent_title": "An Tesla gesendet",
     "share_sent_detail": "Navigation nach {dest} ist im Auto",
-    "location_not_found": "Ort nicht gefunden"
+    "location_not_found": "Ort nicht gefunden",
+    "extra_cost_label": "Mehrkosten"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

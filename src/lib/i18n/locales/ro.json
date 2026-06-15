@@ -18,7 +18,8 @@
     "upgrade": "Treci la Pro",
     "clear": "Șterge",
     "checkout_error": "Nu s-a putut iniția plata. Te rugăm să încerci din nou.",
-    "manage_subscription": "Gestionează abonamentul"
+    "manage_subscription": "Gestionează abonamentul",
+    "charging": "Se încarcă"
   },
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."
@@ -366,7 +367,11 @@
     "history_public": "Public",
     "history_sync_success": "{count} sesiuni sincronizate",
     "syncSuccess": "{count} sesiuni sincronizate",
-    "syncError": "Nu am putut sincroniza istoricul de încărcare. Încearcă din nou."
+    "syncError": "Nu am putut sincroniza istoricul de încărcare. Încearcă din nou.",
+    "scheduled_save": "Salvează programarea",
+    "scheduled_saved": "Programarea încărcării a fost salvată",
+    "scheduled_disabled": "Încărcarea programată a fost dezactivată",
+    "scheduled_error": "Programarea încărcării nu a putut fi actualizată"
   },
   "commands": {
     "title": "Comenzi",
@@ -700,7 +705,8 @@
     "sharing": "Se trimite…",
     "share_sent_title": "Trimis către Tesla",
     "share_sent_detail": "Navigarea spre {dest} e pe mașină",
-    "location_not_found": "Locația nu a fost găsită"
+    "location_not_found": "Locația nu a fost găsită",
+    "extra_cost_label": "Cost suplimentar"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

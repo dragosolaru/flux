@@ -9,6 +9,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from "next-intl";
 import type { HourlyPrice } from "@/lib/external/tariffs/types";
 
 interface PriceCurveChartProps {
@@ -51,7 +52,8 @@ export function PriceCurveChart({
   cheapestWindowStart,
   cheapestWindowEnd,
 }: PriceCurveChartProps) {
-  if (prices.length === 0) return null;
+  const t = useTranslations("energy");
+  if (prices.length < 2) return null;
 
   const data = prices.map((p) => ({
     hour: p.hour,
@@ -109,7 +111,7 @@ export function PriceCurveChart({
 
           {/* Cheapest window background highlight */}
           {Array.from(
-            { length: cheapestWindowEnd - cheapestWindowStart },
+            { length: Math.max(0, cheapestWindowEnd - cheapestWindowStart) },
             (_, i) => cheapestWindowStart + i,
           ).map((h) => (
             <ReferenceLine
@@ -144,11 +146,11 @@ export function PriceCurveChart({
       <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-sm bg-[hsl(var(--chart-2))]" />
-          Cheapest window
+          {t("cheapest_window_label")}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-sm bg-[hsl(var(--primary))]" />
-          Now
+          {t("now")}
         </span>
       </div>
     </div>

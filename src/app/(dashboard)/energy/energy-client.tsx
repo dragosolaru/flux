@@ -167,9 +167,9 @@ export function EnergyClient() {
                   <p className="text-xs text-muted-foreground">
                     {t("avg_label")}{" "}
                     {(forecast.cheapestAvgPrice * 100).toFixed(1)} ct/kWh ·{" "}
-                    {(
-                      (forecast.currentPrice - forecast.cheapestAvgPrice) *
-                      100
+                    {Math.max(
+                      0,
+                      (forecast.currentPrice - forecast.cheapestAvgPrice) * 100,
                     ).toFixed(1)}{" "}
                     ct/kWh {t("cheapest_window_saves")}
                   </p>
@@ -190,6 +190,7 @@ export function EnergyClient() {
             ) : (
               <div className="relative">
                 <select
+                  aria-label={t("tariff_provider_label")}
                   className="w-full appearance-none rounded-xl border border-white/8 bg-background px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   value={settings?.activeProvider ?? ""}
                   onChange={handleProviderChange}

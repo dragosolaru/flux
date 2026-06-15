@@ -18,7 +18,8 @@
     "upgrade": "Passer à Pro",
     "clear": "Effacer",
     "checkout_error": "Impossible de démarrer le paiement. Veuillez réessayer.",
-    "manage_subscription": "Gérer l'abonnement"
+    "manage_subscription": "Gérer l'abonnement",
+    "charging": "En charge"
   },
   "app": {
     "tagline": "Gérez votre Tesla — coûts, recharge, commandes."
@@ -366,7 +367,11 @@
     "history_public": "Public",
     "history_sync_success": "{count} sessions synchronisées",
     "syncSuccess": "{count} sessions synchronisées",
-    "syncError": "Impossible de synchroniser l'historique de charge. Veuillez réessayer."
+    "syncError": "Impossible de synchroniser l'historique de charge. Veuillez réessayer.",
+    "scheduled_save": "Enregistrer la programmation",
+    "scheduled_saved": "Programmation de charge enregistrée",
+    "scheduled_disabled": "Charge programmée désactivée",
+    "scheduled_error": "Impossible de mettre à jour la programmation de charge"
   },
   "commands": {
     "title": "Commandes",
@@ -700,7 +705,8 @@
     "sharing": "Envoi…",
     "share_sent_title": "Envoyé vers Tesla",
     "share_sent_detail": "Navigation vers {dest} sur la voiture",
-    "location_not_found": "Lieu introuvable"
+    "location_not_found": "Lieu introuvable",
+    "extra_cost_label": "Coût supplémentaire"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

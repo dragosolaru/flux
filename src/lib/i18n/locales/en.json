@@ -18,7 +18,8 @@
     "upgrade": "Upgrade to Pro",
     "clear": "Clear",
     "checkout_error": "Failed to start checkout. Please try again.",
-    "manage_subscription": "Manage subscription"
+    "manage_subscription": "Manage subscription",
+    "charging": "Charging"
   },
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."
@@ -366,7 +367,11 @@
     "history_home": "Home",
     "history_public": "Public",
     "syncSuccess": "Synced {count} sessions",
-    "syncError": "Couldn't sync charging history. Please try again."
+    "syncError": "Couldn't sync charging history. Please try again.",
+    "scheduled_save": "Save schedule",
+    "scheduled_saved": "Charging schedule saved",
+    "scheduled_disabled": "Scheduled charging disabled",
+    "scheduled_error": "Couldn’t update charging schedule"
   },
   "commands": {
     "title": "Commands",
@@ -700,7 +705,8 @@
     "sharing": "Sending…",
     "share_sent_title": "Sent to your Tesla",
     "share_sent_detail": "Navigation to {dest} is on your car",
-    "location_not_found": "Location not found"
+    "location_not_found": "Location not found",
+    "extra_cost_label": "Extra cost"
   },
   "notFoundPage": {
     "heading": "Page not found",

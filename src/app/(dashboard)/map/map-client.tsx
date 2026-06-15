@@ -391,7 +391,7 @@ export function MapClient() {
     }
   }
 
-  const variants = plan?.variants ?? [];
+  const variants = useMemo(() => plan?.variants ?? [], [plan?.variants]);
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
 
   // One line per unique physical road (deduped by roadIndex). The active road

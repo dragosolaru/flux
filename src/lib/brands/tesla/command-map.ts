@@ -39,7 +39,7 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   remote_start:      { teslaCmd: "remote_start_drive",     buildBody: () => undefined },
   schedule_charging: {
     teslaCmd: "set_scheduled_charging",
-    buildBody: (args) => ({ enable: true, time: Number(args?.time ?? 0) }),
+    buildBody: (args) => ({ enable: args?.enable !== false, time: Number(args?.time ?? 0) }),
   },
   schedule_departure: {
     teslaCmd: "set_scheduled_departure",

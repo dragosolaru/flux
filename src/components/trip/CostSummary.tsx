@@ -138,8 +138,10 @@ export function CostSummary({
           </div>
           <div className="h-px bg-white/8" />
           <div className="flex justify-between font-semibold">
-            <span>{t("savings_label")}</span>
-            <span className="text-green-400">{fromEUR(savingsEur)}</span>
+            <span>{savingsEur >= 0 ? t("savings_label") : t("extra_cost_label")}</span>
+            <span className={savingsEur >= 0 ? "text-green-400" : "text-orange-400"}>
+              {fromEUR(Math.abs(savingsEur))}
+            </span>
           </div>
 
           <div className="h-px bg-white/8" />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BatteryCharging, RefreshCw, Clock, Zap, Home, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -68,12 +69,13 @@ export function ChargingClient({
   const { data: caps } = useCapabilities();
   const syncMutation = useChargingHistorySync(vehicleId);
   const tc = useTranslations("charging");
+  const router = useRouter();
 
   const hasSyncedRef = useRef(false);
   useEffect(() => {
     if (caps?.hasLiveVehicle && !hasSyncedRef.current) {
       hasSyncedRef.current = true;
-      syncMutation.mutate();
+      syncMutation.mutate(undefined, { onSuccess: () => router.refresh() });
     }
   }, [caps?.hasLiveVehicle]); // eslint-disable-line
 
@@ -99,6 +101,22 @@ export function ChargingClient({
       command: "set_charge_limit",
       args: { limitPct: limit },
     });
+  }
+
+  function saveSchedule() {
+    const [h, m] = scheduleTime.split(":").map(Number);
+    const minutes = (h ?? 0) * 60 + (m ?? 0);
+    mutate(
+      {
+        vehicleId,
+        command: "schedule_charging",
+        args: { enable: scheduled, time: minutes },
+      },
+      {
+        onSuccess: () => toast.success(scheduled ? tc("scheduled_saved") : tc("scheduled_disabled")),
+        onError: () => toast.error(tc("scheduled_error")),
+      },
+    );
   }
 
   function ringStatusLabel(): string {
@@ -208,7 +226,7 @@ export function ChargingClient({
             <Slider
               value={[limit]}
               onValueChange={(v: number[]) => setLimit(v[0] ?? effectiveLimit)}
-              min={50}
+              min={Math.min(50, limit)}
               max={100}
               step={1}
             />
@@ -251,6 +269,15 @@ export function ChargingClient({
             />
           </div>
         )}
+        <motion.div {...tapShrink}>
+          <Button
+            onClick={saveSchedule}
+            disabled={isPending || !caps?.hasLiveVehicle}
+            className="w-full h-10 rounded-[10px]"
+          >
+            {isPending ? tc("limit_saving") : tc("scheduled_save")}
+          </Button>
+        </motion.div>
       </GlassCard>
 
       {/* Charging history */}
@@ -270,6 +297,7 @@ export function ChargingClient({
                   syncMutation.mutate(undefined, {
                     onSuccess: (result) => {
                       toast.success(tc("syncSuccess", { count: result.synced }));
+                      router.refresh();
                     },
                     onError: () => {
                       toast.error(tc("syncError"));

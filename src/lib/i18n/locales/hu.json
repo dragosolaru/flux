@@ -18,7 +18,8 @@
     "upgrade": "Váltás Próra",
     "clear": "Törlés",
     "checkout_error": "A fizetés nem indítható el. Kérjük, próbálja újra.",
-    "manage_subscription": "Előfizetés kezelése"
+    "manage_subscription": "Előfizetés kezelése",
+    "charging": "Töltés"
   },
   "app": {
     "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."
@@ -366,7 +367,11 @@
     "history_public": "Nyilvános",
     "history_sync_success": "{count} munkamenet szinkronizálva",
     "syncSuccess": "{count} munkamenet szinkronizálva",
-    "syncError": "Nem sikerült szinkronizálni a töltési előzményeket. Kérjük, próbáld újra."
+    "syncError": "Nem sikerült szinkronizálni a töltési előzményeket. Kérjük, próbáld újra.",
+    "scheduled_save": "Ütemezés mentése",
+    "scheduled_saved": "Töltési ütemezés mentve",
+    "scheduled_disabled": "Ütemezett töltés letiltva",
+    "scheduled_error": "A töltési ütemezés nem frissíthető"
   },
   "commands": {
     "title": "Parancsok",
@@ -700,7 +705,8 @@
     "sharing": "Küldés…",
     "share_sent_title": "Elküldve a Teslának",
     "share_sent_detail": "A navigáció ({dest}) az autón van",
-    "location_not_found": "Helyszín nem található"
+    "location_not_found": "Helyszín nem található",
+    "extra_cost_label": "Többletköltség"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

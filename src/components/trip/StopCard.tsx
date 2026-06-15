@@ -66,7 +66,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
           <span>{arriveSoc}%→{departSoc}%</span>
           <span>{energyAddedKwh.toFixed(1)} kWh</span>
           <span>{chargingMinutes} min</span>
-          <span>km {distanceFromStartKm}</span>
+          <span>km {Math.round(distanceFromStartKm)}</span>
           <ReliabilityBadge station={station} />
         </div>
 
