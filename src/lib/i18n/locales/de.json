@@ -241,7 +241,8 @@
       "plan_free_desc": "1 Fahrzeug, 3 Dokumente/Monat.",
       "upgrade_label": "Upgrade auf Pro — €4,99/Mo.",
       "pro_unlock_note": "Pro schaltet frei: unbegrenzte Fahrzeuge, unbegrenztes OCR, Batteriezustandsverfolgung, wöchentlicher E-Mail-Digest.",
-      "see_all_features": "Alle Funktionen ansehen →"
+      "see_all_features": "Alle Funktionen ansehen →",
+      "checkout_success": "Willkommen bei Flux Pro! Dein Abonnement ist jetzt aktiv."
     },
     "whatsapp": {
       "label": "WhatsApp-Nummer",

@@ -1770,3 +1770,17 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **Key files:** `src/lib/external/tariffs/recommend.ts`, `src/app/api/costs/route.ts`, `src/app/(dashboard)/costs/costs-client.tsx`, `src/lib/external/routing/planner.ts`.
 
 **Dependencies:** None new.
+
+## Auth / Billing — UUID-Scoping Consistency, Checkout Feedback, Upsert Error Check
+
+**What it does:** Three bug fixes around user-id scoping and Stripe checkout.
+
+1. **Consistent Supabase UUID scoping** — Some routes filtered Supabase queries with the raw `session.user.id` (which on first OAuth sign-in is Google's numeric `sub`, not the Supabase `auth.users` UUID stored in `vehicles.user_id` / `user_settings.user_id`). Those queries silently returned/affected no rows. Now resolved through `ensureSupabaseUserId(session)` before any DB filter. Fixed routes: `GET/PUT /api/tariffs/settings`, `GET /api/tariffs/prices` (`user_settings`), and `PATCH/DELETE /api/vehicles/[vehicleId]` (`vehicles`).
+2. **Post-checkout success feedback** — After Stripe checkout the user returns to `/settings?checkout=success` but nothing was shown. `SettingsClient` now shows a `toast.success` (i18n key `settings.billing.checkout_success`) and strips the `checkout` param from the URL via `history.replaceState`.
+3. **tariffs/settings PUT upsert error check** — The `user_settings` upsert result's `error` was ignored, returning success even on DB failure. Now returns 500 (`Failed to save settings`) when the upsert errors.
+
+**How to use:** No API contract changes. Checkout success banner appears automatically on `/settings` after a successful Stripe subscription.
+
+**Key files:** `src/app/api/tariffs/settings/route.ts`, `src/app/api/tariffs/prices/route.ts`, `src/app/api/vehicles/[vehicleId]/route.ts`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/lib/supabase/ensure-user.ts`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
+
+**Dependencies:** None new (`sonner` already used for toasts).

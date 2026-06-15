@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { DEFAULT_PROVIDER_ID, listProviders } from "@/lib/external/tariffs/registry";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -12,11 +13,16 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
   const supabase = createSupabaseAdminClient();
   const { data } = await supabase
     .from("user_settings")
     .select("tariff_provider")
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   return NextResponse.json({
@@ -31,7 +37,12 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  if (!await checkRateLimit(session.user.id, "tariff-settings", 20)) {
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
+  if (!await checkRateLimit(userId, "tariff-settings", 20)) {
     return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
@@ -43,11 +54,16 @@ export async function PUT(req: NextRequest) {
   }
 
   const supabase = createSupabaseAdminClient();
-  await supabase.from("user_settings").upsert({
-    user_id: session.user.id,
+  const { error } = await supabase.from("user_settings").upsert({
+    user_id: userId,
     tariff_provider: providerId,
     updated_at: new Date().toISOString(),
   });
+
+  if (error) {
+    console.error("[tariffs/settings/PUT]", error.message);
+    return NextResponse.json({ message: "Failed to save settings" }, { status: 500 });
+  }
 
   return NextResponse.json({ activeProvider: providerId });
 }

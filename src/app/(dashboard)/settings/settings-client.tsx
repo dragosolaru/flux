@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import {
   User,
   Mail,
@@ -65,6 +67,15 @@ interface TariffSettings {
 
 export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
   const t = useTranslations("settings");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success") return;
+    toast.success(t("billing.checkout_success"));
+    const url = new URL(window.location.href);
+    url.searchParams.delete("checkout");
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [searchParams, t]);
 
   const {
     data: allVehicles,

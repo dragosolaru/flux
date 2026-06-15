@@ -241,7 +241,8 @@
       "plan_free_desc": "1 jármű, 3 dokumentum/hó.",
       "upgrade_label": "Upgrade Próra — €4,99/hó",
       "pro_unlock_note": "Pro felold: korlátlan járművek, korlátlan OCR, akkumulátor állapot követés, heti email összefoglaló.",
-      "see_all_features": "Összes funkció megtekintése →"
+      "see_all_features": "Összes funkció megtekintése →",
+      "checkout_success": "Üdvözlünk a Flux Pro csomagban! Az előfizetésed mostantól aktív."
     },
     "whatsapp": {
       "label": "WhatsApp-szám",

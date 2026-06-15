@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { listScenarios } from "@/lib/mock/scenarios";
 import { canAddVehicle } from "@/lib/subscription";
@@ -25,6 +26,10 @@ export async function PATCH(
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
   const { vehicleId } = await params;
   if (!uuidSchema.safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
@@ -46,7 +51,7 @@ export async function PATCH(
 
   // Reactivation check: free tier slot limit
   if (isActive === true) {
-    const check = await canAddVehicle(session.user.id);
+    const check = await canAddVehicle(userId);
     if (!check.allowed) {
       return NextResponse.json({ error: "free_tier_limit" }, { status: 403 });
     }
@@ -59,7 +64,7 @@ export async function PATCH(
     .from("vehicles")
     .select("id, display_name, brand, model, data_source")
     .eq("id", vehicleId)
-    .eq("user_id", session.user.id)
+    .eq("user_id", userId)
     .single();
 
   if (!vehicle) {
@@ -72,7 +77,7 @@ export async function PATCH(
       .from("vehicles")
       .update({ is_active: isActive })
       .eq("id", vehicleId)
-      .eq("user_id", session.user.id);
+      .eq("user_id", userId);
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
@@ -82,7 +87,7 @@ export async function PATCH(
       .from("vehicles")
       .update({ virtual_key_paired: virtualKeyPaired })
       .eq("id", vehicleId)
-      .eq("user_id", session.user.id);
+      .eq("user_id", userId);
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
@@ -150,6 +155,11 @@ export async function DELETE(
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = await ensureSupabaseUserId(session);
+  if (!userId) {
+    return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
   const { vehicleId } = await params;
   if (!uuidSchema.safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
@@ -160,7 +170,7 @@ export async function DELETE(
     .from("vehicles")
     .delete()
     .eq("id", vehicleId)
-    .eq("user_id", session.user.id);
+    .eq("user_id", userId);
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

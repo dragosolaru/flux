@@ -241,7 +241,8 @@
       "plan_free_desc": "1 véhicule, 3 documents/mois.",
       "upgrade_label": "Passer à Pro — 4,99 €/mois",
       "pro_unlock_note": "Pro débloque : véhicules illimités, OCR illimité, suivi de l'état de la batterie, digest email hebdomadaire.",
-      "see_all_features": "Voir toutes les fonctionnalités →"
+      "see_all_features": "Voir toutes les fonctionnalités →",
+      "checkout_success": "Bienvenue dans Flux Pro ! Votre abonnement est maintenant actif."
     },
     "whatsapp": {
       "label": "Numéro WhatsApp",

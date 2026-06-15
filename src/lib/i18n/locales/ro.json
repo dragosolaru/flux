@@ -241,7 +241,8 @@
       "plan_free_desc": "1 vehicul, 3 documente/lună.",
       "upgrade_label": "Upgrade la Pro — €4.99/lună",
       "pro_unlock_note": "Pro include: vehicule nelimitate, OCR nelimitat, monitorizare baterie, digest săptămânal pe email.",
-      "see_all_features": "Vezi toate funcțiile →"
+      "see_all_features": "Vezi toate funcțiile →",
+      "checkout_success": "Bun venit la Flux Pro! Abonamentul tău este acum activ."
     },
     "whatsapp": {
       "label": "Număr WhatsApp",
