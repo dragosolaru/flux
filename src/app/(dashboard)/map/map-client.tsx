@@ -538,7 +538,7 @@ export function MapClient() {
                 key={String(opt.value)}
                 onClick={() => setMinKw(opt.value)}
                 aria-pressed={minKw === opt.value}
-                className={`h-7 shrink-0 rounded-full border px-3 text-xs transition-colors ${
+                className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   minKw === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
                     : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
@@ -554,7 +554,7 @@ export function MapClient() {
                 key={String(opt.value)}
                 onClick={() => setConnector(opt.value)}
                 aria-pressed={connector === opt.value}
-                className={`h-7 shrink-0 rounded-full border px-3 text-xs transition-colors ${
+                className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   connector === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
                     : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
@@ -591,7 +591,7 @@ export function MapClient() {
           {/* Clickable handle pill — cycles collapsed → mid → full */}
           <button
             onClick={cycleSheetState}
-            className="mx-auto mb-2 flex w-full cursor-pointer items-center justify-center py-1"
+            className="mx-auto mb-2 flex min-h-11 w-full cursor-pointer items-center justify-center py-3"
             aria-label="Toggle sheet height"
           >
             <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />

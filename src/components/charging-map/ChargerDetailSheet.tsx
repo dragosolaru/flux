@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
 import { X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Charger } from "@/lib/chargers/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface ChargerDetailSheetProps {
   charger: Charger;
@@ -29,14 +29,7 @@ const STATUS_META: Record<
 
 export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps) {
   const t = useTranslations("chargingMap");
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(onClose);
 
   const displayName = charger.name ?? charger.operator ?? t("station_fallback");
   const totalConnectors = charger.connectors.reduce((sum, c) => sum + c.count, 0);
@@ -57,6 +50,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
       {/* Bottom sheet — absolute so it stays within <main> above BottomNav.
           On md+ screens it becomes a side card anchored to the right. */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
@@ -98,7 +92,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
             <button
               onClick={onClose}
               aria-label={t("close")}
-              className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
               <X className="size-4" />
             </button>

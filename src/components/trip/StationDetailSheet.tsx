@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { X, Zap, Clock, Battery, BatteryFull } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ChargingStop } from "@/lib/external/routing/types";
 import { ReliabilityBadge } from "./ReliabilityBadge";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface StationDetailSheetProps {
   stop: ChargingStop;
@@ -20,16 +20,10 @@ function networkBadgeClass(networkId: string): string {
 
 export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
   const t = useTranslations("trip.station");
+  const tc = useTranslations("common");
   const { fromEUR } = useCurrency();
   const { station, arriveSoc, departSoc, chargingMinutes, energyAddedKwh, costEur } = stop;
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(onClose);
 
   return (
     <>
@@ -42,6 +36,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
 
       {/* Bottom sheet — on md+ screens becomes a side card anchored to the right. */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={station.name}
@@ -72,8 +67,8 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             </div>
             <button
               onClick={onClose}
-              aria-label="Close"
-              className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              aria-label={tc("close")}
+              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
               <X className="size-4" />
             </button>
