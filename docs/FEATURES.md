@@ -1789,6 +1789,24 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 
 ---
 
+---
+
+## Map/Planner UX Bug Fixes — Alt-Route Tap Target + Plan Tab Clip
+
+**What it does:** Two bugs found via a personas audit of `/map?mode=plan` and `/map?mode=explore`:
+
+1. **Alt-route tap-area broken on mobile** (`TripMap.tsx`): The two-layer approach (invisible `weight:8, opacity:0` hit-area + thin `weight:3` dashed line) was completely untappable. SVG uses `pointer-events: visibleStroke` by default, so strokes with `stroke-opacity: 0` receive no events. On mobile, users could never switch to an alternative road by tapping the dashed line. Fixed by collapsing into a single wider polyline: `weight:8, opacity:0.28, dashArray:"6 10"` — large enough to tap, subtle enough to look secondary to the active purple route.
+
+2. **Plan/Explore tabs clipped behind BottomNav** (`map-client.tsx`): `PEEK_TABS = 96` was set too low. Measured real tab-zone height: `pt-2.5(10) + min-h-11 handle(44) + mb-2(8) + mt-3 tab margin(12) + tab row(36) + pb-3(12) = 122px`. With only 96px of peek the bottom 26px of the Explore/Plan tabs overflowed behind the floating BottomNav, making them hard to tap. Fixed: `PEEK_TABS = 128`.
+
+**How to use:** Open `/map?mode=plan`, compute a route — alternative roads are now tappable (wider grey dashed bands). Drag the sheet to collapsed in plan-no-route mode — Explore/Plan tabs are now fully visible above the nav.
+
+**Key files:** `src/components/trip/TripMap.tsx`, `src/app/(dashboard)/map/map-client.tsx`.
+
+**Dependencies:** None.
+
+---
+
 ## Note: UUID-scoping — rute GET/command (follow-up cunoscut)
 
 `state`, `charging-history`, `weather`, `battery-health`, `commands`, `trip-plan` folosesc `session.user.id` direct în filtrele `vehicles.user_id`. Acestea NU sunt sparte în practică — JWT callback-ul (`src/lib/auth.ts:68-92`) rezolvă UUID-ul Supabase la sign-in și îl bake-uie în token. `ensureSupabaseUserId` e aplicat doar pe rutele de scriere (tariffs/settings, vehicles PATCH/DELETE) unde consecința unui UUID greșit e mai severă. Extinderea pe `state` (polled la 30s) ar adăuga un round-trip admin.getUserById pe cel mai fierbinte endpoint — nerecomandat fără un cache de sesiune dedicat.

@@ -158,23 +158,9 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
                 <Polyline
                   key={`alt-${r.index}`}
                   positions={positions}
-                  pathOptions={{ color: "#94a3b8", weight: 8, opacity: 0 }}
-                  eventHandlers={onRouteSelect ? { click: () => onRouteSelect(r.index) } : undefined}
-                >
-                  {/* Wider invisible hit-area above + the thin visible dashed line. */}
-                </Polyline>
-              );
-            })}
-          {routes
-            .filter((r) => !r.active)
-            .map((r) => {
-              const positions = r.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
-              if (positions.length < 2) return null;
-              return (
-                <Polyline
-                  key={`altline-${r.index}`}
-                  positions={positions}
-                  pathOptions={{ color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }}
+                  // weight:8 gives a finger-sized tap target; opacity > 0 keeps
+                  // SVG pointer-events:visibleStroke active (opacity:0 = untappable).
+                  pathOptions={{ color: "#94a3b8", weight: 8, opacity: 0.28, dashArray: "6 10" }}
                   eventHandlers={onRouteSelect ? { click: () => onRouteSelect(r.index) } : undefined}
                 />
               );
