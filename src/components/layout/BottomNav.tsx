@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BatteryCharging, Car, Map, MoreHorizontal } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, type ComponentType } from "react";
 
@@ -42,6 +42,7 @@ export function BottomNav() {
   const { data: caps } = useCapabilities();
   const [moreOpen, setMoreOpen] = useState(false);
   const scrollDir = useScrollDirection();
+  const reduceMotion = useReducedMotion();
 
   const hidden = scrollDir === "down" && !moreOpen;
 
@@ -87,8 +88,8 @@ export function BottomNav() {
           minWidth: 240,
           maxWidth: 300,
         }}
-        animate={{ y: hidden ? 90 : 0 }}
-        transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+        animate={{ y: reduceMotion ? 0 : hidden ? 90 : 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.32, 0.72, 0, 1] }}
       >
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -113,9 +114,9 @@ export function BottomNav() {
                 {isActive && (
                   <motion.span
                     key="label"
-                    initial={{ opacity: 0, height: 0 }}
+                    initial={reduceMotion ? false : { opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
                     className="overflow-hidden text-[11px] text-primary leading-none mt-0.5"
                   >
                     {t(tab.labelKey)}

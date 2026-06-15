@@ -825,6 +825,7 @@
     "step_trip_title": "Planifiez des trajets plus intelligents",
     "step_trip_body": "Arrêts de recharge adaptés à l'itinéraire, calcul de l'autonomie en temps réel.",
     "step_trip_cta": "C'est parti",
-    "skip": "Passer"
+    "skip": "Passer",
+    "step_label": "Étape {n}"
   }
 }

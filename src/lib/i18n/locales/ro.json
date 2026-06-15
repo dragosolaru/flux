@@ -825,6 +825,7 @@
     "step_trip_title": "Planifică curse mai inteligente",
     "step_trip_body": "Opriri de încărcare adaptate rutei, calcul live al autonomiei.",
     "step_trip_cta": "Să mergem",
-    "skip": "Sari peste"
+    "skip": "Sari peste",
+    "step_label": "Pasul {n}"
   }
 }

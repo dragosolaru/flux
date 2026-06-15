@@ -825,6 +825,7 @@
     "step_trip_title": "Tervezz okosabb utakat",
     "step_trip_body": "Útvonalhoz igazított töltési megállók, valós idejű hatótávolság-számítás.",
     "step_trip_cta": "Indulás",
-    "skip": "Kihagyás"
+    "skip": "Kihagyás",
+    "step_label": "{n}. lépés"
   }
 }

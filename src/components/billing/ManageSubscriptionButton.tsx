@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 export function ManageSubscriptionButton() {
@@ -16,10 +17,12 @@ export function ManageSubscriptionButton() {
       const data = await res.json() as { url?: string; message?: string };
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        setLoading(false);
+        return;
       }
+      toast.error(tc("error"));
+      setLoading(false);
     } catch {
+      toast.error(tc("error"));
       setLoading(false);
     }
   }

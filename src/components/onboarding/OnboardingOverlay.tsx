@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 const STORAGE_KEY = "flux-onboarding-v2";
@@ -13,11 +13,26 @@ export function OnboardingOverlay() {
     () => typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) !== "done",
   );
   const [screen, setScreen] = useState(0);
+  const reduceMotion = useReducedMotion();
+  const slideX = reduceMotion ? 0 : 40;
 
   function finish() {
     localStorage.setItem(STORAGE_KEY, "done");
     setVisible(false);
   }
+
+  // Lock body scroll while the overlay is up and allow Escape to dismiss it.
+  useEffect(() => {
+    if (!visible) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") finish(); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -53,13 +68,18 @@ export function OnboardingOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-8">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={current.title}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-8"
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
-          initial={{ x: 40, opacity: 0 }}
+          initial={{ x: slideX, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -40, opacity: 0 }}
+          exit={{ x: -slideX, opacity: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
           className="flex w-full max-w-xs flex-col items-center"
         >
@@ -90,13 +110,13 @@ export function OnboardingOverlay() {
 
       {/* Page dots */}
       <div className="absolute bottom-12 flex gap-1">
-        {screens.map((s, i) => (
+        {screens.map((_, i) => (
           <button
             key={i}
             type="button"
             onClick={() => setScreen(i)}
-            aria-label={s.title}
-            aria-current={i === screen}
+            aria-label={t("step_label", { n: i + 1 })}
+            aria-current={i === screen ? "step" : undefined}
             className="flex items-center justify-center p-2"
           >
             <span

@@ -825,6 +825,7 @@
     "step_trip_title": "Klügere Fahrten planen",
     "step_trip_body": "Routenbasierte Ladestopps, Live-Reichweitenberechnung.",
     "step_trip_cta": "Los geht's",
-    "skip": "Überspringen"
+    "skip": "Überspringen",
+    "step_label": "Schritt {n}"
   }
 }

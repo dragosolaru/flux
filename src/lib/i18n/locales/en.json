@@ -825,6 +825,7 @@
     "step_trip_title": "Plan smarter trips",
     "step_trip_body": "Route-aware charging stops, live range calculation.",
     "step_trip_cta": "Let's go",
-    "skip": "Skip"
+    "skip": "Skip",
+    "step_label": "Step {n}"
   }
 }

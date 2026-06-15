@@ -3,6 +3,7 @@
 import { Camera, Check, Copy, Loader2, Mail, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useRef, useState } from "react";
 
 import { GlassCard } from "@/components/ui/glass-card";
@@ -48,9 +49,13 @@ export function IngestCard({
 
   async function copyEmail() {
     if (!email) return;
-    await navigator.clipboard.writeText(email);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(t("common.error"));
+    }
   }
 
   return (

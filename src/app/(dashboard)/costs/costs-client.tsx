@@ -326,7 +326,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const { mutateAsync: upload, isPending: uploading } = useUploadDocument(vehicleId);
   const { mutate: editDocument } = useEditDocument(vehicleId);
   const { mutate: deleteDocument } = useDeleteDocument(vehicleId);
-  const { mutate: recover, isPending: recovering, data: recoverResult } =
+  const { mutate: recover, isPending: recovering, data: recoverResult, reset: resetRecover } =
     useRecoverDocuments(vehicleId);
   const { data: capabilities } = useCapabilities();
 
@@ -347,7 +347,8 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
   const prevHadPending = useRef(false);
   useEffect(() => {
     prevHadPending.current = false;
-  }, [vehicleId]);
+    resetRecover(); // clear the previous vehicle's recovered-count from the button
+  }, [vehicleId, resetRecover]);
   useEffect(() => {
     const hasPending =
       documents?.some((d) => d.status === "pending" || d.status === "processing") ?? false;
