@@ -1569,6 +1569,8 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 
 **How to use:** Open `/map`; the collapsed sheet shows the Explore/Plan tabs clearly. Tap a tab to switch, tap the handle to expand.
 
+**Update (round 3):** Plan mode *before* a route is computed has no summary strip — only the handle and tabs — so the fixed `PEEK = 132` left ~40px of empty panel background hovering above the floating nav. A third peek height `PEEK_TABS = 96` now applies in that case (`peekH = mode === "plan" ? (plan ? PEEK_SUMMARY : PEEK_TABS) : PEEK`), removing the dead space. Explore (132) and plan-with-route (152) are unchanged.
+
 **Key files:** `src/app/(dashboard)/map/map-client.tsx`.
 
 **Dependencies:** None new.

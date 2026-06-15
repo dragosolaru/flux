@@ -72,6 +72,9 @@ const PEEK = 132;
 // Taller peek used when a computed plan exists: also leaves room for the compact
 // route summary strip while keeping the map (and its polyline) visible.
 const PEEK_SUMMARY = 152;
+// Plan mode before a route is computed has no summary strip — only the handle and
+// the Explore/Plan tabs — so a shorter peek avoids dead space above the nav.
+const PEEK_TABS = 96;
 function halfHeight() {
   // Mid: 44vh (Wave 2E spec)
   return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
@@ -290,9 +293,11 @@ export function MapClient() {
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
 
-  // Peek grows when a plan exists so the compact summary strip fits while the
-  // route stays visible on the map.
-  const peekH = mode === "plan" && plan !== null ? PEEK_SUMMARY : PEEK;
+  // Peek height matches the collapsed content for each mode so no dead space
+  // sits above the floating nav: plan+route → summary strip; plan (no route) →
+  // tabs only; explore → summary strip + tabs.
+  const peekH =
+    mode === "plan" ? (plan !== null ? PEEK_SUMMARY : PEEK_TABS) : PEEK;
 
   function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
     if (state === "collapsed") return peekH;
