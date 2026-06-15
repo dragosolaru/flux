@@ -1707,3 +1707,26 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **Key files:** `src/app/(dashboard)/map/map-client.tsx` (`MID_PLAN_H` constant, `sheetStateToH`, `initialSnapH`).
 
 **Dependencies:** None new.
+
+---
+
+## Billing & GDPR Fixes
+
+**What it does:** Fixes silent GDPR data export gaps and surfaces checkout errors to the user.
+
+**Fixes included:**
+
+1. **GDPR export data** (`src/app/api/user/export/route.ts`): `charging_sessions`, `command_events`, and `energy_costs` have no `user_id` column — they are owned through `vehicles`. The previous query used `vehicles!inner(user_id)` with `.eq("vehicles.user_id", userId)` which returns no data via the admin client (RLS bypassed). Fixed by fetching the user's vehicle IDs first, then filtering child tables with `.in("vehicle_id", vehicleIds)`. Also removed the stale `profiles?.email` reference (profiles table has no email column).
+
+2. **Checkout error toast** (`src/components/billing/UpgradeButton.tsx`): replace `console.error` with `toast.error(tc("checkout_error"))` from sonner. Missing i18n key `checkout_error` added to all 5 locale files.
+
+3. **ManageSubscriptionButton i18n** (`src/components/billing/ManageSubscriptionButton.tsx`): replace hardcoded "Manage subscription" with `tc("manage_subscription")`. Missing i18n key `manage_subscription` added to all 5 locale files.
+
+**How to use:**
+- GDPR export: `GET /api/user/export` (requires auth, rate-limited to 5/period)
+- Checkout: `POST /api/billing/checkout` body `{ tier: "pro" | "pro_annual" }`
+- Subscription portal: `POST /api/billing/portal`
+
+**Key files:** `src/app/api/user/export/route.ts`, `src/components/billing/UpgradeButton.tsx`, `src/components/billing/ManageSubscriptionButton.tsx`, `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** sonner (toast), next-intl (i18n).

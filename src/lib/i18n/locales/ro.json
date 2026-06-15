@@ -16,7 +16,9 @@
     "copied": "Copiat",
     "soon": "Curând",
     "upgrade": "Treci la Pro",
-    "clear": "Șterge"
+    "clear": "Șterge",
+    "checkout_error": "Nu s-a putut iniția plata. Te rugăm să încerci din nou.",
+    "manage_subscription": "Gestionează abonamentul"
   },
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."

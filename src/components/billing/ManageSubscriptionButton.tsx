@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 export function ManageSubscriptionButton() {
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(false);
 
   async function handleManage() {
@@ -25,7 +27,7 @@ export function ManageSubscriptionButton() {
   return (
     <Button variant="outline" size="sm" onClick={handleManage} disabled={loading}>
       {loading && <Loader2 className="size-4 animate-spin" />}
-      Manage subscription
+      {tc("manage_subscription")}
     </Button>
   );
 }

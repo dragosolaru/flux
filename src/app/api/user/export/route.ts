@@ -21,8 +21,16 @@ export async function GET() {
 
   const supabase = createSupabaseAdminClient();
 
+  const { data: vehicles } = await supabase
+    .from("vehicles")
+    .select("id, display_name, brand, model, vin, data_source, is_active, created_at, updated_at")
+    .eq("user_id", userId);
+
+  // charging_sessions, command_events, energy_costs have no user_id column —
+  // ownership is established through vehicles.
+  const vehicleIds = (vehicles ?? []).map((v: { id: string }) => v.id);
+
   const [
-    { data: vehicles },
     { data: chargingSessions },
     { data: documents },
     { data: energyCosts },
@@ -30,25 +38,25 @@ export async function GET() {
     { data: profiles },
     { data: commandEvents },
   ] = await Promise.all([
-    supabase
-      .from("vehicles")
-      .select("id, display_name, brand, model, vin, data_source, is_active, created_at, updated_at")
-      .eq("user_id", userId),
-    supabase
-      .from("charging_sessions")
-      .select("id, vehicle_id, started_at, ended_at, energy_added_kwh, start_battery_level, end_battery_level, location_name, charger_type, created_at")
-      .eq("user_id", userId)
-      .order("started_at", { ascending: false }),
+    vehicleIds.length > 0
+      ? supabase
+          .from("charging_sessions")
+          .select("id, vehicle_id, started_at, ended_at, energy_added_kwh, start_soc, end_soc, location_name, network, cost_eur, cost_ron")
+          .in("vehicle_id", vehicleIds)
+          .order("started_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
     supabase
       .from("documents")
       .select("id, vehicle_id, source, document_type, original_filename, mime_type, status, confidence, parsed_json, error_message, created_at, processed_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("energy_costs")
-      .select("id, vehicle_id, document_id, document_type, period_start, period_end, total_kwh, vehicle_kwh_attributed, original_amount, original_currency, cost_ron, provider_name, charger_network, location_name, created_at")
-      .eq("user_id", userId)
-      .order("period_start", { ascending: false }),
+    vehicleIds.length > 0
+      ? supabase
+          .from("energy_costs")
+          .select("id, vehicle_id, document_id, document_type, period_start, period_end, total_kwh, vehicle_kwh_attributed, original_amount, original_currency, cost_ron, provider_name, charger_network, location_name, created_at")
+          .in("vehicle_id", vehicleIds)
+          .order("period_start", { ascending: false })
+      : Promise.resolve({ data: [] }),
     supabase
       .from("user_settings")
       .select("tariff_provider, currency, locale, home_address, home_lat, home_lng")
@@ -56,14 +64,16 @@ export async function GET() {
       .maybeSingle(),
     supabase
       .from("profiles")
-      .select("id, email, full_name, avatar_url, created_at")
+      .select("id, full_name, avatar_url, created_at")
       .eq("id", userId)
       .maybeSingle(),
-    supabase
-      .from("command_events")
-      .select("id, vehicle_id, command, status, error_message, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false }),
+    vehicleIds.length > 0
+      ? supabase
+          .from("command_events")
+          .select("id, vehicle_id, command, success, error_code, source, issued_at")
+          .in("vehicle_id", vehicleIds)
+          .order("issued_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
   ]);
 
   // Replace storage_path raw values with a placeholder
@@ -78,7 +88,7 @@ export async function GET() {
     exportedAt: new Date().toISOString(),
     user: {
       id: userId,
-      email: session.user.email ?? profiles?.email ?? null,
+      email: session.user.email ?? null,
       name: session.user.name ?? profiles?.full_name ?? null,
     },
     profile: profiles ?? null,

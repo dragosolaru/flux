@@ -16,7 +16,9 @@
     "copied": "Másolva",
     "soon": "Hamarosan",
     "upgrade": "Váltás Próra",
-    "clear": "Törlés"
+    "clear": "Törlés",
+    "checkout_error": "A fizetés nem indítható el. Kérjük, próbálja újra.",
+    "manage_subscription": "Előfizetés kezelése"
   },
   "app": {
     "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."

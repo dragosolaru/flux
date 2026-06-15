@@ -16,7 +16,9 @@
     "copied": "Kopiert",
     "soon": "Bald",
     "upgrade": "Auf Pro upgraden",
-    "clear": "Löschen"
+    "clear": "Löschen",
+    "checkout_error": "Checkout konnte nicht gestartet werden. Bitte erneut versuchen.",
+    "manage_subscription": "Abonnement verwalten"
   },
   "app": {
     "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface UpgradeButtonProps {
@@ -36,10 +37,11 @@ export function UpgradeButton({
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error("[UpgradeButton]", data.message);
+        toast.error(tc("checkout_error"));
         setLoading(false);
       }
     } catch {
+      toast.error(tc("checkout_error"));
       setLoading(false);
     }
   }

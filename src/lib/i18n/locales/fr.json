@@ -16,7 +16,9 @@
     "copied": "Copié",
     "soon": "Bientôt",
     "upgrade": "Passer à Pro",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "checkout_error": "Impossible de démarrer le paiement. Veuillez réessayer.",
+    "manage_subscription": "Gérer l'abonnement"
   },
   "app": {
     "tagline": "Gérez votre Tesla — coûts, recharge, commandes."
