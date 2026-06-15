@@ -271,6 +271,9 @@ export function ChargingClient({
                     onSuccess: (result) => {
                       toast.success(tc("syncSuccess", { count: result.synced }));
                     },
+                    onError: () => {
+                      toast.error(tc("syncError"));
+                    },
                   });
                 }}
                 className="h-10 rounded-[10px]"

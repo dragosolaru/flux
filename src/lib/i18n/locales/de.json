@@ -359,7 +359,8 @@
     "history_home": "Zuhause",
     "history_public": "Öffentlich",
     "history_sync_success": "{count} Sitzungen synchronisiert",
-    "syncSuccess": "{count} Sitzungen synchronisiert"
+    "syncSuccess": "{count} Sitzungen synchronisiert",
+    "syncError": "Ladeverlauf konnte nicht synchronisiert werden. Bitte versuche es erneut."
   },
   "commands": {
     "title": "Befehle",
@@ -376,7 +377,10 @@
     "no_vehicles_title": "Noch keine Fahrzeuge",
     "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden.",
     "success": "Befehl gesendet",
-    "error": "Befehl fehlgeschlagen"
+    "error": "Befehl fehlgeschlagen",
+    "error_rate_limit": "Zu viele Befehle. Bitte warte einen Moment und versuche es erneut.",
+    "error_vcp_required": "Für dieses Auto muss zuerst ein virtueller Schlüssel eingerichtet werden, damit Befehle funktionieren.",
+    "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar."
   },
   "garage": {
     "title": "Garage",
@@ -392,7 +396,8 @@
     "menu_deactivate": "Deaktivieren",
     "deactivate_confirm_title": "Fahrzeug deaktivieren?",
     "deactivate_confirm_desc": "Das Fahrzeug wird aus deiner Garage ausgeblendet. Alle Daten bleiben erhalten und du kannst es jederzeit in den Einstellungen reaktivieren.",
-    "deactivate_confirm_cta": "Deaktivieren"
+    "deactivate_confirm_cta": "Deaktivieren",
+    "deactivate_error": "Fahrzeug konnte nicht deaktiviert werden. Bitte versuche es erneut."
   },
   "costs": {
     "kpi_cost_per_km": "Kosten pro km",
@@ -431,6 +436,8 @@
     "upload_error": "Upload fehlgeschlagen",
     "delete_success": "Dokument gelöscht",
     "delete_error": "Dokument konnte nicht gelöscht werden",
+    "edit_success": "Änderungen gespeichert",
+    "edit_error": "Änderungen konnten nicht gespeichert werden",
     "kpi_total_lei": "Gesamt ausgegeben",
     "kpi_total_kwh": "Gesamt kWh",
     "kpi_home_pct": "Zuhause laden",

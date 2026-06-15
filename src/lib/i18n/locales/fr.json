@@ -359,7 +359,8 @@
     "history_home": "Domicile",
     "history_public": "Public",
     "history_sync_success": "{count} sessions synchronisées",
-    "syncSuccess": "{count} sessions synchronisées"
+    "syncSuccess": "{count} sessions synchronisées",
+    "syncError": "Impossible de synchroniser l'historique de charge. Veuillez réessayer."
   },
   "commands": {
     "title": "Commandes",
@@ -376,7 +377,10 @@
     "no_vehicles_title": "Aucun véhicule encore",
     "no_vehicles_hint": "Ajoutez un véhicule dans le Garage pour envoyer des commandes.",
     "success": "Commande envoyée",
-    "error": "Commande échouée"
+    "error": "Commande échouée",
+    "error_rate_limit": "Trop de commandes. Patientez un instant et réessayez.",
+    "error_vcp_required": "Cette voiture nécessite une clé virtuelle configurée avant que les commandes fonctionnent.",
+    "error_not_supported": "Cette commande n'est pas disponible pour ce véhicule."
   },
   "garage": {
     "title": "Garage",
@@ -392,7 +396,8 @@
     "menu_deactivate": "Désactiver",
     "deactivate_confirm_title": "Désactiver le véhicule ?",
     "deactivate_confirm_desc": "Le véhicule sera masqué de votre garage. Toutes les données sont conservées et vous pouvez le réactiver à tout moment depuis les Paramètres.",
-    "deactivate_confirm_cta": "Désactiver"
+    "deactivate_confirm_cta": "Désactiver",
+    "deactivate_error": "Impossible de désactiver le véhicule. Veuillez réessayer."
   },
   "costs": {
     "kpi_cost_per_km": "Coût par km",
@@ -431,6 +436,8 @@
     "upload_error": "Échec du téléchargement",
     "delete_success": "Document supprimé",
     "delete_error": "Impossible de supprimer le document",
+    "edit_success": "Modifications enregistrées",
+    "edit_error": "Impossible d'enregistrer les modifications",
     "kpi_total_lei": "Total dépensé",
     "kpi_total_kwh": "Total kWh",
     "kpi_home_pct": "Charge domicile",

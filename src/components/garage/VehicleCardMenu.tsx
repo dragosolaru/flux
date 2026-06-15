@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MoreVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -44,7 +45,7 @@ export function VehicleCardMenu({ vehicleId, vehicleName: _vehicleName, onDeacti
       setConfirmOpen(false);
       onDeactivated();
     } catch {
-      // Network error — query refetch will restore state
+      toast.error(t("deactivate_error"));
     } finally {
       setIsPending(false);
     }

@@ -1636,3 +1636,25 @@ Both sources are fault-tolerant (return `[]` on error), fire in parallel with al
 **Key files:** `src/app/(dashboard)/charging/charging-client.tsx`, `src/components/energy/SmartChargeCard.tsx`, `src/lib/external/bnr/client.ts`, `src/lib/costs/processor.ts`.
 
 **Dependencies:** None new.
+
+---
+
+## Cross-Device Polish Round 3 — Error Handling & Feedback
+
+**What it does:** Makes every failable mutation surface a clear, localized message instead of a raw error, a silent no-op, or a white screen.
+
+**Fixes included:**
+
+1. **Vehicle commands** (`src/hooks/useVehicleCommand.ts`, `src/app/api/vehicles/[vehicleId]/commands/route.ts`): the mutation now checks `res.ok`, parses defensively (no more "Unexpected token <" toast on an HTML 5xx), redirects to `/login` on 401 like every `apiFetch` caller, and maps failures to stable i18n keys (`commands.error_rate_limit`, `error_vcp_required`, `error_not_supported`) so raw Tesla Fleet API text never leaks. HTTP-200 `success:false` rejections still surface the car-provided reason.
+
+2. **Charging-history sync** (`src/app/(dashboard)/charging/charging-client.tsx`, `charging.syncError`): the manual "Sync from Tesla" button now shows an error toast on failure instead of just stopping the spinner with no feedback.
+
+3. **Vehicle deactivation** (`src/components/garage/VehicleCardMenu.tsx`, `garage.deactivate_error`): the previously-swallowed catch now shows an error toast.
+
+4. **Document inline edit** (`src/app/(dashboard)/costs/costs-client.tsx`, `costs.edit_success`/`edit_error`): edits were fire-and-forget; they now report success and failure like delete already did.
+
+5. **Root crash boundary** (`src/app/global-error.tsx`, new): catches errors thrown in the root layout (which `error.tsx` cannot) and renders a minimal reload screen instead of a white page. English-only by necessity — it runs outside the i18n provider.
+
+**Key files:** `src/hooks/useVehicleCommand.ts`, `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/app/(dashboard)/charging/charging-client.tsx`, `src/components/garage/VehicleCardMenu.tsx`, `src/app/(dashboard)/costs/costs-client.tsx`, `src/app/global-error.tsx`, `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** None new.

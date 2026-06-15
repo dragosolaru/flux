@@ -435,7 +435,15 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       {hasDocuments ? (
         <TimelineDocList
           documents={documents}
-          onEdit={(id, updates) => editDocument({ documentId: id, updates })}
+          onEdit={(id, updates) =>
+            editDocument(
+              { documentId: id, updates },
+              {
+                onSuccess: () => toast.success(t("edit_success")),
+                onError: () => toast.error(t("edit_error")),
+              },
+            )
+          }
           onDelete={(id) => {
             deleteDocument(id, {
               onSuccess: () => toast.success(t("delete_success")),

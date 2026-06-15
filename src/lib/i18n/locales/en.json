@@ -359,7 +359,8 @@
     "history_cost": "Cost",
     "history_home": "Home",
     "history_public": "Public",
-    "syncSuccess": "Synced {count} sessions"
+    "syncSuccess": "Synced {count} sessions",
+    "syncError": "Couldn't sync charging history. Please try again."
   },
   "commands": {
     "title": "Commands",
@@ -376,7 +377,10 @@
     "no_vehicles_title": "No vehicles yet",
     "no_vehicles_hint": "Add a vehicle in the Garage to send commands.",
     "success": "Command sent",
-    "error": "Command failed"
+    "error": "Command failed",
+    "error_rate_limit": "Too many commands. Please wait a moment and try again.",
+    "error_vcp_required": "This car needs a Virtual Key set up before commands work.",
+    "error_not_supported": "This command isn't available for this vehicle."
   },
   "garage": {
     "title": "Garage",
@@ -392,7 +396,8 @@
     "menu_deactivate": "Deactivate",
     "deactivate_confirm_title": "Deactivate vehicle?",
     "deactivate_confirm_desc": "The vehicle will be hidden from your garage. All data is preserved and you can reactivate it anytime from Settings.",
-    "deactivate_confirm_cta": "Deactivate"
+    "deactivate_confirm_cta": "Deactivate",
+    "deactivate_error": "Couldn't deactivate the vehicle. Please try again."
   },
   "costs": {
     "kpi_cost_per_km": "Cost per km",
@@ -439,6 +444,8 @@
     "upload_error": "Upload failed",
     "delete_success": "Document deleted",
     "delete_error": "Could not delete document",
+    "edit_success": "Changes saved",
+    "edit_error": "Could not save changes",
     "add_receipt": "Add receipt",
     "kpi_total_lei": "Total spent",
     "kpi_total_kwh": "Total kWh",

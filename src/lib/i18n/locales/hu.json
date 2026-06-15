@@ -359,7 +359,8 @@
     "history_home": "Otthon",
     "history_public": "Nyilvános",
     "history_sync_success": "{count} munkamenet szinkronizálva",
-    "syncSuccess": "{count} munkamenet szinkronizálva"
+    "syncSuccess": "{count} munkamenet szinkronizálva",
+    "syncError": "Nem sikerült szinkronizálni a töltési előzményeket. Kérjük, próbáld újra."
   },
   "commands": {
     "title": "Parancsok",
@@ -376,7 +377,10 @@
     "no_vehicles_title": "Még nincs jármű",
     "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez.",
     "success": "Parancs elküldve",
-    "error": "Parancs sikertelen"
+    "error": "Parancs sikertelen",
+    "error_rate_limit": "Túl sok parancs. Várj egy pillanatot, és próbáld újra.",
+    "error_vcp_required": "Ehhez az autóhoz virtuális kulcsot kell beállítani, mielőtt a parancsok működnének.",
+    "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz."
   },
   "garage": {
     "title": "Garázs",
@@ -392,7 +396,8 @@
     "menu_deactivate": "Deaktiválás",
     "deactivate_confirm_title": "Jármű deaktiválása?",
     "deactivate_confirm_desc": "A jármű el lesz rejtve a garázsból. Minden adat megmarad, és bármikor újra aktiválhatod a Beállításokban.",
-    "deactivate_confirm_cta": "Deaktiválás"
+    "deactivate_confirm_cta": "Deaktiválás",
+    "deactivate_error": "Nem sikerült deaktiválni a járművet. Kérjük, próbáld újra."
   },
   "costs": {
     "kpi_cost_per_km": "Költség km-enként",
@@ -431,6 +436,8 @@
     "upload_error": "Feltöltés sikertelen",
     "delete_success": "Dokumentum törölve",
     "delete_error": "Nem sikerült törölni a dokumentumot",
+    "edit_success": "Módosítások mentve",
+    "edit_error": "Nem sikerült menteni a módosításokat",
     "kpi_total_lei": "Összes kiadás",
     "kpi_total_kwh": "Összes kWh",
     "kpi_home_pct": "Otthoni töltés",

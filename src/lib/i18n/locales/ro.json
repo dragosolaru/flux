@@ -359,7 +359,8 @@
     "history_home": "Acasă",
     "history_public": "Public",
     "history_sync_success": "{count} sesiuni sincronizate",
-    "syncSuccess": "{count} sesiuni sincronizate"
+    "syncSuccess": "{count} sesiuni sincronizate",
+    "syncError": "Nu am putut sincroniza istoricul de încărcare. Încearcă din nou."
   },
   "commands": {
     "title": "Comenzi",
@@ -376,7 +377,10 @@
     "no_vehicles_title": "Nicio mașină încă",
     "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi.",
     "success": "Comandă trimisă",
-    "error": "Comandă eșuată"
+    "error": "Comandă eșuată",
+    "error_rate_limit": "Prea multe comenzi. Așteaptă puțin și încearcă din nou.",
+    "error_vcp_required": "Mașina necesită o Cheie Virtuală configurată înainte ca comenzile să funcționeze.",
+    "error_not_supported": "Această comandă nu este disponibilă pentru acest vehicul."
   },
   "garage": {
     "title": "Garaj",
@@ -392,7 +396,8 @@
     "menu_deactivate": "Dezactivează",
     "deactivate_confirm_title": "Dezactivezi vehiculul?",
     "deactivate_confirm_desc": "Vehiculul va fi ascuns din garaj. Toate datele sunt păstrate și îl poți reactiva oricând din Setări.",
-    "deactivate_confirm_cta": "Dezactivează"
+    "deactivate_confirm_cta": "Dezactivează",
+    "deactivate_error": "Nu am putut dezactiva vehiculul. Încearcă din nou."
   },
   "costs": {
     "kpi_cost_per_km": "Cost per km",
@@ -439,6 +444,8 @@
     "upload_error": "Upload eșuat",
     "delete_success": "Document șters",
     "delete_error": "Nu s-a putut șterge documentul",
+    "edit_success": "Modificări salvate",
+    "edit_error": "Nu s-au putut salva modificările",
     "add_receipt": "Adaugă bon",
     "kpi_total_lei": "Total cheltuit",
     "kpi_total_kwh": "Total kWh",

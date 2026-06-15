@@ -16,6 +16,22 @@ interface CommandInput {
 interface CommandResult {
   success: boolean;
   message?: string;
+  result?: string;
+  code?: string;
+}
+
+const MAPPED_ERROR_KEYS = ["error_rate_limit", "error_vcp_required", "error_not_supported"] as const;
+
+// Translate a non-OK command response to a stable i18n key token. Raw upstream
+// (Tesla Fleet API) error text is never surfaced — unknown failures fall back to
+// the generic "error" key so we don't leak internal detail.
+function commandErrorKey(status: number, data: CommandResult): string {
+  if (status === 429) return "error_rate_limit";
+  if (status === 412 || data.code === "VCP_REQUIRED") return "error_vcp_required";
+  if (data.message === "command-not-supported" || data.message === "command-not-supported-live") {
+    return "error_not_supported";
+  }
+  return "error";
 }
 
 interface MutationContext {
@@ -65,7 +81,15 @@ export function useVehicleCommand() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ command, args }),
       });
-      return (await res.json()) as CommandResult;
+      if (res.status === 401 && typeof window !== "undefined") {
+        window.location.href = "/login";
+        await new Promise(() => {});
+      }
+      const data = (await res.json().catch(() => ({}))) as CommandResult;
+      if (!res.ok) {
+        throw new Error(commandErrorKey(res.status, data));
+      }
+      return data;
     },
     onMutate: async ({ vehicleId, command, args }) => {
       const key = ["vehicle", vehicleId] as const;
@@ -82,18 +106,22 @@ export function useVehicleCommand() {
       if (data.success) {
         toast.success(t("success"));
       } else {
-        // Server rejected the command — undo the optimistic change.
+        // Server rejected the command (HTTP 200, success:false) — undo the
+        // optimistic change and surface the car-provided reason if any.
         if (context?.previous) {
           queryClient.setQueryData(context.key, context.previous);
         }
-        toast.error(data.message ?? t("error"));
+        toast.error(data.message ?? data.result ?? t("error"));
       }
     },
     onError: (err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(context.key, context.previous);
       }
-      toast.error(err.message || t("error"));
+      const key = (MAPPED_ERROR_KEYS as readonly string[]).includes(err.message)
+        ? (err.message as (typeof MAPPED_ERROR_KEYS)[number])
+        : "error";
+      toast.error(t(key));
     },
     onSettled: (_data, _err, variables) => {
       // Reconcile with the real server state regardless of outcome.
