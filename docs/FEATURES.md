@@ -1784,3 +1784,9 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **Key files:** `src/app/api/tariffs/settings/route.ts`, `src/app/api/tariffs/prices/route.ts`, `src/app/api/vehicles/[vehicleId]/route.ts`, `src/app/(dashboard)/settings/settings-client.tsx`, `src/lib/supabase/ensure-user.ts`, `src/lib/i18n/locales/{en,ro,de,fr,hu}.json`.
 
 **Dependencies:** None new (`sonner` already used for toasts).
+
+---
+
+## Note: UUID-scoping — rute GET/command (follow-up cunoscut)
+
+`state`, `charging-history`, `weather`, `battery-health`, `commands`, `trip-plan` folosesc `session.user.id` direct în filtrele `vehicles.user_id`. Acestea NU sunt sparte în practică — JWT callback-ul (`src/lib/auth.ts:68-92`) rezolvă UUID-ul Supabase la sign-in și îl bake-uie în token. `ensureSupabaseUserId` e aplicat doar pe rutele de scriere (tariffs/settings, vehicles PATCH/DELETE) unde consecința unui UUID greșit e mai severă. Extinderea pe `state` (polled la 30s) ar adăuga un round-trip admin.getUserById pe cel mai fierbinte endpoint — nerecomandat fără un cache de sesiune dedicat.
