@@ -127,7 +127,7 @@ function AddVehicleCard() {
   );
 }
 
-export function GarageClient() {
+export function GarageClient({ teslaLive }: { teslaLive: boolean }) {
   const tg = useTranslations("garage");
   const queryClient = useQueryClient();
   const { data: vehicles, isLoading } = useVehicles();
@@ -145,7 +145,7 @@ export function GarageClient() {
   }
 
   if (!isLoading && vehicles && vehicles.length === 0) {
-    return <OnboardingHero />;
+    return <OnboardingHero teslaLive={teslaLive} />;
   }
 
   const count = vehicles?.length ?? 0;
@@ -210,7 +210,7 @@ export function GarageClient() {
   );
 }
 
-function OnboardingHero() {
+function OnboardingHero({ teslaLive }: { teslaLive: boolean }) {
   const t = useTranslations();
 
   return (
@@ -231,20 +231,36 @@ function OnboardingHero() {
       </p>
 
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href="/connect/tesla">
-            <Zap className="size-4" />
-            {t("onboarding.cta_primary")}
-          </Link>
-        </Button>
-        <AddVehicleModal
-          trigger={
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-              <Plus className="size-4" />
-              {t("onboarding.cta_secondary")}
+        {teslaLive ? (
+          <>
+            {/* Live integration on: real Tesla connect leads. */}
+            <Button asChild size="lg" className="w-full sm:w-auto">
+              <Link href="/connect/tesla">
+                <Zap className="size-4" />
+                {t("onboarding.cta_primary")}
+              </Link>
             </Button>
-          }
-        />
+            <AddVehicleModal
+              trigger={
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  <Plus className="size-4" />
+                  {t("onboarding.cta_secondary")}
+                </Button>
+              }
+            />
+          </>
+        ) : (
+          // Demo-first default: the Tesla connect flow is a dead end without the
+          // live integration, so the demo vehicle is the primary (and only) CTA.
+          <AddVehicleModal
+            trigger={
+              <Button size="lg" className="w-full sm:w-auto">
+                <Plus className="size-4" />
+                {t("onboarding.cta_secondary")}
+              </Button>
+            }
+          />
+        )}
       </div>
     </PageWrapper>
   );

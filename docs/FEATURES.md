@@ -1807,6 +1807,22 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 
 ---
 
+## Personas Audit Round 2 — Onboarding, Garage, Settings a11y
+
+**What it does:** Resolves the remaining audit findings around first-run flow and dialog accessibility.
+
+1. **OnboardingOverlay focus trap** (P1 a11y) — The full-screen welcome overlay (`role="dialog"`, covers the whole app) only had Escape + scroll-lock; a keyboard / screen-reader user could Tab to the nav behind it. Now it moves focus into the overlay on open, traps Tab (cycling within), and restores focus to the previously-focused element on close — same pattern as `AddVehicleModal`.
+
+2. **Garage empty-state is demo-first when live is off** (P2 UX) — In the default demo configuration (`LIVE_INTEGRATIONS` unset), the prominent "Connect Tesla" CTA led to `/api/tesla/connect`, which returns **410** — a dead end for brand-new users, while the working "Add demo vehicle" was the de-emphasized outline button. The server page now passes `teslaLive = isLiveEnabled("tesla")`; when false, the demo vehicle is the single primary CTA and the dead Tesla-connect button is hidden. When live is enabled, the original two-CTA layout is unchanged.
+
+3. **Settings deactivate now confirms** (P3 consistency) — The Settings vehicle `DeactivateButton` deactivated on a single tap with no confirmation, unlike the garage `VehicleCardMenu` which uses an `AlertDialog`. Settings now uses the same confirmation dialog (reusing the existing `garage.deactivate_confirm_*` keys), with a `toast.error` on failure.
+
+**Key files:** `src/components/onboarding/OnboardingOverlay.tsx`, `src/app/(dashboard)/garage/page.tsx`, `src/app/(dashboard)/garage/garage-client.tsx`, `src/components/settings/DeactivateButton.tsx`.
+
+**Dependencies:** None new.
+
+---
+
 ## Personas Audit Round 2 — Charging, Costs, Settings
 
 **What it does:** Fixes the highest-value issues from a second 3-persona × multi-device audit (Ana/iPhone SE/RO, Klaus/Pixel/DE, Bogdan/Samsung/RO, Lena/iPhone mini/DE, Sophie/VoiceOver/FR).

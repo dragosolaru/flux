@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -15,22 +15,48 @@ export function OnboardingOverlay() {
   const [screen, setScreen] = useState(0);
   const reduceMotion = useReducedMotion();
   const slideX = reduceMotion ? 0 : 40;
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   function finish() {
     localStorage.setItem(STORAGE_KEY, "done");
     setVisible(false);
   }
 
-  // Lock body scroll while the overlay is up and allow Escape to dismiss it.
+  // Lock body scroll, move focus into the overlay, trap Tab, restore focus on
+  // close, and allow Escape to dismiss. Without this a screen-reader / keyboard
+  // user (the overlay covers the whole app) can tab to the nav behind it.
   useEffect(() => {
     if (!visible) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") finish(); };
+    const prevFocus = document.activeElement as HTMLElement | null;
+
+    const focusables = () =>
+      dialogRef.current
+        ? Array.from(
+            dialogRef.current.querySelectorAll<HTMLElement>(
+              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+            ),
+          ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null)
+        : [];
+
+    focusables()[0]?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { finish(); return; }
+      if (e.key !== "Tab") return;
+      const els = focusables();
+      if (els.length === 0) return;
+      const first = els[0]!;
+      const last = els[els.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
+      prevFocus?.focus?.();
     };
   }, [visible]);
 
@@ -69,6 +95,7 @@ export function OnboardingOverlay() {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={current.title}
