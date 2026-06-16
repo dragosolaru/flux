@@ -62,7 +62,9 @@
         "commands": "Configurez la clé virtuelle pour les commandes"
       }
     },
-    "map": "Carte"
+    "map": "Carte",
+    "toggle_theme": "Changer le thème",
+    "open_profile": "Ouvrir le menu profil"
   },
   "mock_banner": {
     "title": "Données simulées",

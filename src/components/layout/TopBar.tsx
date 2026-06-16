@@ -85,7 +85,7 @@ export function TopBar() {
           variant="ghost"
           size="icon"
           className="size-10"
-          aria-label="Toggle theme"
+          aria-label={t("toggle_theme")}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
           <Sun className="size-4 dark:hidden" />
@@ -97,7 +97,7 @@ export function TopBar() {
           <DropdownMenuTrigger asChild>
             <button
               className="flex size-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              aria-label="Open profile menu"
+              aria-label={t("open_profile")}
             >
               <Avatar className="size-8">
                 <AvatarImage src={session?.user?.image ?? undefined} alt={name} />

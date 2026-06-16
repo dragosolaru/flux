@@ -62,7 +62,9 @@
         "commands": "Virtual Key für Befehle einrichten"
       }
     },
-    "map": "Karte"
+    "map": "Karte",
+    "toggle_theme": "Design wechseln",
+    "open_profile": "Profilmenü öffnen"
   },
   "mock_banner": {
     "title": "Simulierte Daten",

@@ -62,7 +62,9 @@
         "commands": "Állítsa be a Virtual Key-t a parancsokhoz"
       }
     },
-    "map": "Térkép"
+    "map": "Térkép",
+    "toggle_theme": "Témaváltás",
+    "open_profile": "Profilmenü megnyitása"
   },
   "mock_banner": {
     "title": "Szimulált adatok",

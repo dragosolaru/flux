@@ -62,7 +62,9 @@
         "tariff": "Configure your energy tariff",
         "commands": "Set up Virtual Key for commands"
       }
-    }
+    },
+    "toggle_theme": "Toggle theme",
+    "open_profile": "Open profile menu"
   },
   "mock_banner": {
     "title": "Simulated data",

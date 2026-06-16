@@ -62,7 +62,9 @@
         "tariff": "Configurează tariful tău de energie",
         "commands": "Configurează Virtual Key pentru comenzi"
       }
-    }
+    },
+    "toggle_theme": "Schimbă tema",
+    "open_profile": "Deschide meniu profil"
   },
   "mock_banner": {
     "title": "Date simulate",
