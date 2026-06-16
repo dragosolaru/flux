@@ -75,7 +75,8 @@ const PEEK = 132;
 const PEEK_SUMMARY = 152;
 // Plan mode before a route is computed has no summary strip — only the handle and
 // the Explore/Plan tabs — so a shorter peek avoids dead space above the nav.
-const PEEK_TABS = 96;
+// Measured: pt-2.5(10) + handle-min-h(44) + mb-2(8) + mt-3(12) + tab-row(36) + pb-3(12) = 122px.
+const PEEK_TABS = 128;
 // Plan mid before route: absolute height so the form (2 inputs + sliders + vehicle
 // picker + button + 90px bottom padding ≈ 360px) fills the panel without dead space.
 const MID_PLAN_H = 460;
