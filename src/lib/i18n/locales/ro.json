@@ -228,7 +228,8 @@
     "scenario": {
       "label": "Scenariu demo",
       "help": "Schimbă comportamentul simulat de condus pentru acest vehicul demo.",
-      "error": "Nu s-a putut schimba scenariul"
+      "error": "Nu s-a putut schimba scenariul",
+      "saved": "Scenariu salvat"
     },
     "account": {
       "name": "Nume",

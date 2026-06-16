@@ -1807,6 +1807,20 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 
 ---
 
+## Quality Polish — Plan Feature Refinements
+
+**What it does:** Small correctness fixes on the Wave-3 plan features:
+
+1. **ScenarioPicker success toast** (`ScenarioPicker.tsx`): `toast.success` was showing `settings.scenario.label` ("Demo scenario") as the success message — the label, not a confirmation. Added `settings.scenario.saved` i18n key in all 5 locales and updated the toast to use it.
+
+2. **`usePullToRefresh` dead ref** (`dashboard-client.tsx`, `usePullToRefresh.ts`): `containerRef = useRef<HTMLElement>(null)` was created in the dashboard but never attached (PageWrapper doesn't accept refs). The hook already falls back to `document.querySelector("main")` when the ref is null. Removed the dead ref from the dashboard and made the hook's first parameter accept `null` explicitly.
+
+**Key files:** `src/components/settings/ScenarioPicker.tsx`, `src/hooks/usePullToRefresh.ts`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/lib/i18n/locales/*.json`.
+
+**Dependencies:** None new.
+
+---
+
 ## Note: UUID-scoping — rute GET/command (follow-up cunoscut)
 
 `state`, `charging-history`, `weather`, `battery-health`, `commands`, `trip-plan` folosesc `session.user.id` direct în filtrele `vehicles.user_id`. Acestea NU sunt sparte în practică — JWT callback-ul (`src/lib/auth.ts:68-92`) rezolvă UUID-ul Supabase la sign-in și îl bake-uie în token. `ensureSupabaseUserId` e aplicat doar pe rutele de scriere (tariffs/settings, vehicles PATCH/DELETE) unde consecința unui UUID greșit e mai severă. Extinderea pe `state` (polled la 30s) ar adăuga un round-trip admin.getUserById pe cel mai fierbinte endpoint — nerecomandat fără un cache de sesiune dedicat.

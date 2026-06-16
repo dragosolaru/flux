@@ -228,7 +228,8 @@
     "scenario": {
       "label": "Demo forgatókönyv",
       "help": "Megváltoztatja a szimulált vezetési viselkedést ennél a demo járműnél.",
-      "error": "Nem sikerült a forgatókönyv váltása"
+      "error": "Nem sikerült a forgatókönyv váltása",
+      "saved": "Forgatókönyv mentve"
     },
     "account": {
       "name": "Név",

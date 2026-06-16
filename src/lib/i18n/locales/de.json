@@ -228,7 +228,8 @@
     "scenario": {
       "label": "Demo-Szenario",
       "help": "Ändert das simulierte Fahrverhalten für dieses Demo-Fahrzeug.",
-      "error": "Szenario konnte nicht gewechselt werden"
+      "error": "Szenario konnte nicht gewechselt werden",
+      "saved": "Szenario gespeichert"
     },
     "account": {
       "name": "Name",

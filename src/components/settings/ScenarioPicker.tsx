@@ -38,7 +38,7 @@ export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: Scena
         });
         // Invalidate vehicle state so dashboard reflects new scenario immediately
         await qc.invalidateQueries({ queryKey: ["vehicle", vehicleId] });
-        toast.success(tSettings("scenario.label"));
+        toast.success(tSettings("scenario.saved"));
       } catch {
         toast.error(tSettings("scenario.error"));
         setSelected((currentScenarioId as ScenarioId) ?? "commuter");

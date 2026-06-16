@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 const DEFAULT_THRESHOLD = 70;
 
 export function usePullToRefresh(
-  containerRef: React.RefObject<HTMLElement | null>,
+  containerRef: React.RefObject<HTMLElement | null> | null,
   onRefresh: () => void,
   options?: { threshold?: number; disabled?: boolean },
 ): { isPulling: boolean; pullProgress: number } {
@@ -33,7 +33,7 @@ export function usePullToRefresh(
   });
 
   useEffect(() => {
-    const el: HTMLElement | null = containerRef.current ?? document.querySelector("main");
+    const el: HTMLElement | null = (containerRef?.current) ?? document.querySelector("main");
     if (!el) return;
 
     // Prevent native browser pull-to-refresh from firing alongside our custom one.

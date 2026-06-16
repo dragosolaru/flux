@@ -14,7 +14,7 @@ import {
   Unlock,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -446,8 +446,7 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist, lastCharge }: DashboardClientProps) {
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
-  const containerRef = useRef<HTMLElement>(null);
-  const { isPulling } = usePullToRefresh(containerRef, refetch, { disabled: isFetching });
+  const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
 
   // Ambient body tinting based on battery state
   useEffect(() => {
