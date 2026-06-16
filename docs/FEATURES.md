@@ -1807,6 +1807,28 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 
 ---
 
+## Personas Audit Round 2 — Charging, Costs, Settings
+
+**What it does:** Fixes the highest-value issues from a second 3-persona × multi-device audit (Ana/iPhone SE/RO, Klaus/Pixel/DE, Bogdan/Samsung/RO, Lena/iPhone mini/DE, Sophie/VoiceOver/FR).
+
+1. **Scheduled charging now persists and reads back** (P1) — Previously `schedule_charging` was a mock no-op and the UI hardcoded `off / 23:00` on every mount, so a saved schedule never survived a reload, and the Save button was gated on `!caps.hasLiveVehicle` — permanently disabled for the 90% demo (mock) users. Now: `VehicleState` carries `scheduledChargingEnabled` + `scheduledChargingStartMinutes`; the mock engine persists them on the command; `/state` returns them (pass through `applyCapabilityMask`); `charging-client` seeds the toggle + time from state; the Save gate is `isPending` only (matching the charge-limit Save). The dormant live Tesla adapter returns `null` for both (mapping is a follow-up).
+
+2. **Receipt amounts/kWh now locale-formatted** (P1) — `DocumentStatusCard` rendered `cost_total.toFixed(2)` / `total_kwh.toFixed(1)` with hardcoded `.` decimals; RO/DE users saw `1234.56` instead of `1.234,56`. Now routed through `formatMoney`/`formatKwh` (with `isCurrency` guard + raw fallback).
+
+3. **`saveSchedule` NaN guard** (P2) — A cleared time input yielded `NaN` minutes; now falls back to 23:00 via `Number.isFinite`.
+
+4. **HomeLocationPicker locale geocoding** (P2) — Nominatim `Accept-Language` was hardcoded `ro,en`, returning Romanian place names to all users; now passes the active locale.
+
+5. **ScenarioPicker stale selection** (P2) — The dropdown only read `currentScenarioId` once; now syncs via a ref-guarded effect when the prop changes.
+
+6. **Slider/Switch a11y** (P3) — The charge-limit `Slider` and scheduled-charging `Switch` had no accessible name; added `aria-label`. The shared `Slider` primitive now forwards `aria-label`/`aria-labelledby` to the Thumb (the element with `role="slider"`), fixing it app-wide.
+
+**Key files:** `src/types/vehicle.ts`, `src/lib/mock/{engine,seed}.ts`, `src/lib/tesla/api.ts`, `src/app/(dashboard)/charging/charging-client.tsx`, `src/components/costs/DocumentStatusCard.tsx`, `src/components/settings/{HomeLocationPicker,ScenarioPicker}.tsx`, `src/components/ui/slider.tsx`, `src/lib/mock/__tests__/engine.test.ts`.
+
+**Dependencies:** None new.
+
+---
+
 ## Quality Polish — Plan Feature Refinements
 
 **What it does:** Small correctness fixes on the Wave-3 plan features:

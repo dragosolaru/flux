@@ -87,6 +87,9 @@ export interface VehicleState {
   chargingState: ChargingState | null;
   chargingRateKw: number | null;
   timeToFullMinutes: number | null;
+  // Scheduled charging — start time persisted so the UI reflects a saved schedule.
+  scheduledChargingEnabled: boolean | null;
+  scheduledChargingStartMinutes: number | null; // minutes after local midnight
   batteryHealthPct: number | null;    // SoH 0–100 %
   cellVoltages: number[] | null;      // per-cell volts (Tesla only)
 

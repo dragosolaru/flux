@@ -304,7 +304,10 @@ export function applyCommand(
     case "activate_sentry":   state.isSentryMode = true;   break;
     case "deactivate_sentry": state.isSentryMode = false;  break;
     case "remote_start":      break;
-    case "schedule_charging":  break; // no mock state mutation needed
+    case "schedule_charging":
+      if (typeof args?.enable === "boolean") state.scheduledChargingEnabled = args.enable;
+      if (typeof args?.time === "number") state.scheduledChargingStartMinutes = args.time;
+      break;
     case "schedule_departure": break; // no mock state mutation needed
     case "precondition_max":   break; // no mock state mutation needed
     case "share_navigation":   break; // accepted; no mock state mutation needed

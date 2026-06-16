@@ -92,6 +92,24 @@ export function ChargingClient({
     }
   }, [data?.chargeLimit]);
 
+  // Seed the scheduled-charging controls from the persisted vehicle state so a
+  // saved schedule survives reloads instead of always showing off / 23:00.
+  const prevServerScheduleRef = useRef<boolean | null | undefined>(undefined);
+  useEffect(() => {
+    const enabled = data?.scheduledChargingEnabled;
+    if (enabled == null || enabled === prevServerScheduleRef.current) return;
+    prevServerScheduleRef.current = enabled;
+    const mins = data?.scheduledChargingStartMinutes;
+    queueMicrotask(() => {
+      setScheduled(enabled);
+      if (mins != null && Number.isFinite(mins)) {
+        const h = Math.floor(mins / 60) % 24;
+        const m = mins % 60;
+        setScheduleTime(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      }
+    });
+  }, [data?.scheduledChargingEnabled, data?.scheduledChargingStartMinutes]);
+
   const effectiveLimit = data?.chargeLimit ?? limit;
   const isCharging = data?.chargingState === "charging";
 
@@ -105,7 +123,7 @@ export function ChargingClient({
 
   function saveSchedule() {
     const [h, m] = scheduleTime.split(":").map(Number);
-    const minutes = (h ?? 0) * 60 + (m ?? 0);
+    const minutes = (Number.isFinite(h) ? h : 23) * 60 + (Number.isFinite(m) ? m : 0);
     mutate(
       {
         vehicleId,
@@ -229,6 +247,7 @@ export function ChargingClient({
               min={Math.min(50, limit)}
               max={100}
               step={1}
+              aria-label={tc("limit_label")}
             />
             <motion.div {...tapShrink}>
               <Button
@@ -251,7 +270,7 @@ export function ChargingClient({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm">{tc("scheduled_enabled")}</span>
-          <Switch checked={scheduled} onCheckedChange={setScheduled} />
+          <Switch checked={scheduled} onCheckedChange={setScheduled} aria-label={tc("scheduled_enabled")} />
         </div>
         {scheduled && (
           <div className="flex flex-wrap items-center gap-3">
@@ -272,7 +291,7 @@ export function ChargingClient({
         <motion.div {...tapShrink}>
           <Button
             onClick={saveSchedule}
-            disabled={isPending || !caps?.hasLiveVehicle}
+            disabled={isPending}
             className="w-full h-10 rounded-[10px]"
           >
             {isPending ? tc("limit_saving") : tc("scheduled_save")}

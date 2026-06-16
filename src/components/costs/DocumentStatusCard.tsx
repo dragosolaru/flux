@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { formatMoney, formatKwh, isCurrency } from "@/lib/currency/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { Document } from "@/types/costs";
 
 interface DocumentStatusCardProps {
@@ -167,11 +169,13 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
                       <span>{new Date(parsed.session_timestamp).toLocaleDateString(locale)}</span>
                     )}
                     {parsed.total_kwh != null && (
-                      <span>{parsed.total_kwh.toFixed(1)} kWh</span>
+                      <span>{formatKwh(parsed.total_kwh, locale as Locale)}</span>
                     )}
                     {parsed.cost_total != null && (
                       <span className="font-medium text-foreground">
-                        {parsed.cost_total.toFixed(2)} {parsed.currency}
+                        {isCurrency(parsed.currency)
+                          ? formatMoney(parsed.cost_total, parsed.currency, locale as Locale)
+                          : `${parsed.cost_total.toFixed(2)} ${parsed.currency ?? ""}`}
                       </span>
                     )}
                   </div>

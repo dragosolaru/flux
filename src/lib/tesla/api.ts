@@ -116,6 +116,9 @@ function mapVehicleData(
     timeToFullMinutes: charge?.time_to_full_charge != null
       ? Math.round(charge.time_to_full_charge * 60)
       : null,
+    // Live scheduled-charging readback not mapped yet (dormant adapter).
+    scheduledChargingEnabled: null,
+    scheduledChargingStartMinutes: null,
     batteryHealthPct: estimateSoH(charge, r.vin),
     cellVoltages: null,
     // drive / motion

@@ -22,6 +22,8 @@ function makeSnapshot(overrides: Partial<MockVehicleSnapshot> = {}): MockVehicle
     chargingState: "disconnected",
     chargingRateKw: null,
     timeToFullMinutes: null,
+    scheduledChargingEnabled: false,
+    scheduledChargingStartMinutes: null,
     batteryHealthPct: null,
     cellVoltages: null,
     motionState: "parked",
@@ -230,6 +232,19 @@ describe("applyCommand", () => {
     const snap = makeSnapshot();
     const result = applyCommand(snap, "activate_sentry", null, tesla);
     expect(result.state.isSentryMode).toBe(true);
+  });
+
+  it("schedule_charging persists enable + start time", () => {
+    const snap = makeSnapshot();
+    const result = applyCommand(snap, "schedule_charging", { enable: true, time: 1380 }, tesla);
+    expect(result.state.scheduledChargingEnabled).toBe(true);
+    expect(result.state.scheduledChargingStartMinutes).toBe(1380);
+  });
+
+  it("schedule_charging can disable a saved schedule", () => {
+    const snap = makeSnapshot({ state: { ...makeSnapshot().state, scheduledChargingEnabled: true } });
+    const result = applyCommand(snap, "schedule_charging", { enable: false, time: 1380 }, tesla);
+    expect(result.state.scheduledChargingEnabled).toBe(false);
   });
 
   it("does not mutate the original snapshot", () => {

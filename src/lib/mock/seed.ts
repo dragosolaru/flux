@@ -59,6 +59,8 @@ export function createInitialSnapshot(
     chargingState: "disconnected",
     chargingRateKw: null,
     timeToFullMinutes: null,
+    scheduledChargingEnabled: false,
+    scheduledChargingStartMinutes: null,
     // Static telemetry — capability mask nulls these for brands that don't expose them
     batteryHealthPct: 92.4,
     cellVoltages: makeCellVoltages(),

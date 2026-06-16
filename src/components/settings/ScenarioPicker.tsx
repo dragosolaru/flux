@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2 } from "lucide-react";
@@ -26,6 +26,16 @@ export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: Scena
     (currentScenarioId as ScenarioId) ?? "commuter",
   );
   const [isPending, startTransition] = useTransition();
+
+  // Keep the dropdown in sync if the parent refetches a different scenario
+  // (e.g. after a change elsewhere) so it never shows a stale selection.
+  const prevScenarioRef = useRef(currentScenarioId);
+  useEffect(() => {
+    if (currentScenarioId && currentScenarioId !== prevScenarioRef.current) {
+      prevScenarioRef.current = currentScenarioId;
+      setSelected(currentScenarioId as ScenarioId);
+    }
+  }, [currentScenarioId]);
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as ScenarioId;
