@@ -593,7 +593,7 @@ export function MapClient() {
           <button
             onClick={cycleSheetState}
             className="mx-auto mb-2 flex min-h-11 w-full cursor-pointer items-center justify-center py-3"
-            aria-label="Toggle sheet height"
+            aria-label={tMap("drag_to_expand")}
           >
             <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
           </button>

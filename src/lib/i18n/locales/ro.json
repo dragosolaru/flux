@@ -19,7 +19,8 @@
     "clear": "Șterge",
     "checkout_error": "Nu s-a putut iniția plata. Te rugăm să încerci din nou.",
     "manage_subscription": "Gestionează abonamentul",
-    "charging": "Se încarcă"
+    "charging": "Se încarcă",
+    "remove": "Elimină"
   },
   "app": {
     "tagline": "Gestionează-ți Tesla — costuri, încărcare, comenzi."

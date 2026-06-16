@@ -104,6 +104,7 @@ function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): Vari
 
 export function TripClient() {
   const t = useTranslations("trip");
+  const tc = useTranslations("common");
   const { fromEUR } = useCurrency();
   const { data: vehicles } = useVehicles();
   const [vehicleId, setVehicleId] = useState<string>("");
@@ -425,7 +426,7 @@ export function TripClient() {
                           setRecents(getRecentDestinations());
                         }}
                         className="pr-3 text-muted-foreground hover:text-foreground"
-                        aria-label="Remove"
+                        aria-label={tc("remove")}
                       >
                         <X className="size-3.5" />
                       </button>

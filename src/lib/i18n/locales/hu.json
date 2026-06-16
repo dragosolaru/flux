@@ -19,7 +19,8 @@
     "clear": "Törlés",
     "checkout_error": "A fizetés nem indítható el. Kérjük, próbálja újra.",
     "manage_subscription": "Előfizetés kezelése",
-    "charging": "Töltés"
+    "charging": "Töltés",
+    "remove": "Eltávolítás"
   },
   "app": {
     "tagline": "Kezelje Tesla-ját — költségek, töltés, parancsok."

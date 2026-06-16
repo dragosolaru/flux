@@ -19,7 +19,8 @@
     "clear": "Löschen",
     "checkout_error": "Checkout konnte nicht gestartet werden. Bitte erneut versuchen.",
     "manage_subscription": "Abonnement verwalten",
-    "charging": "Lädt"
+    "charging": "Lädt",
+    "remove": "Entfernen"
   },
   "app": {
     "tagline": "Verwalte deinen Tesla — Kosten, Laden, Befehle."

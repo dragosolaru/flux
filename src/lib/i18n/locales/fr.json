@@ -19,7 +19,8 @@
     "clear": "Effacer",
     "checkout_error": "Impossible de démarrer le paiement. Veuillez réessayer.",
     "manage_subscription": "Gérer l'abonnement",
-    "charging": "En charge"
+    "charging": "En charge",
+    "remove": "Supprimer"
   },
   "app": {
     "tagline": "Gérez votre Tesla — coûts, recharge, commandes."

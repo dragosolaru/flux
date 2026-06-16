@@ -19,7 +19,8 @@
     "clear": "Clear",
     "checkout_error": "Failed to start checkout. Please try again.",
     "manage_subscription": "Manage subscription",
-    "charging": "Charging"
+    "charging": "Charging",
+    "remove": "Remove"
   },
   "app": {
     "tagline": "Manage your Tesla — costs, charging, commands."
