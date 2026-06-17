@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   BatteryCharging,
   Car,
   Gamepad2,
@@ -41,6 +42,7 @@ const SECTIONS: NavSection[] = [
       { href: "/garage",    labelKey: "garage.title",    icon: LayoutGrid, capability: "NONE" },
       { href: "/dashboard", labelKey: "nav.dashboard",   icon: Car,        capability: "VEHICLE" },
       { href: "/charging",  labelKey: "nav.charging",    icon: BatteryCharging, capability: "VEHICLE" },
+      { href: "/insights",  labelKey: "nav.insights",    icon: BarChart3,  capability: "VEHICLE" },
       { href: "/commands",  labelKey: "nav.commands",    icon: Gamepad2,   capability: "COMMANDS" },
     ],
   },

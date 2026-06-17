@@ -64,7 +64,36 @@
       }
     },
     "toggle_theme": "Schimbă tema",
-    "open_profile": "Deschide meniu profil"
+    "open_profile": "Deschide meniu profil",
+    "insights": "Statistici"
+  },
+  "insights": {
+    "title": "Statistici",
+    "period_7d": "7 zile",
+    "period_30d": "30 zile",
+    "period_1y": "1 an",
+    "period_all": "Tot",
+    "savings_title": "Economii & CO₂",
+    "saved_ron": "Economisit vs benzină",
+    "fuel_saved": "Combustibil economisat",
+    "co2_avoided": "CO₂ evitat",
+    "trees_equivalent": "Copaci / an",
+    "electric_km": "Km electrici",
+    "no_savings_data": "Adaugă costuri pentru a vedea economiile",
+    "battery_title": "Sănătate baterie",
+    "battery_soh": "Stare de sănătate",
+    "vampire_drain": "Pierdere vampire",
+    "no_battery_data": "Istoricul va apărea în timp",
+    "states_title": "Activitate",
+    "driving_km": "Condus",
+    "driving_hours": "Timp condus",
+    "trips": "Curse",
+    "energy_charged": "Energie încărcată",
+    "no_activity_data": "Conduce și încarcă pentru a vedea activitatea",
+    "efficiency_title": "Eficiență",
+    "avg_wh_per_km": "Eficiență medie",
+    "projected_range": "Autonomie proiectată",
+    "no_efficiency_data": "Începe să conduci pentru a vedea eficiența"
   },
   "mock_banner": {
     "title": "Date simulate",

@@ -40,6 +40,7 @@ Dashboard pages live under `src/app/(dashboard)/` (auth-gated layout):
 | `/charging` | Charging | sessions list + history sync |
 | `/commands` | Commands | remote Tesla commands |
 | `/costs` | Costs | OCR cost dashboard + ingest |
+| `/insights` | Insights | savings vs petrol, CO₂, activity, battery health, efficiency |
 | `/energy` | Energy | tariff prices + smart charge timing |
 | `/charging-map` | Charging map | station map |
 | `/trip` | Trip planner | ABRP-style route + charging stops |
@@ -1862,3 +1863,28 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 ## Note: UUID-scoping — rute GET/command (follow-up cunoscut)
 
 `state`, `charging-history`, `weather`, `battery-health`, `commands`, `trip-plan` folosesc `session.user.id` direct în filtrele `vehicles.user_id`. Acestea NU sunt sparte în practică — JWT callback-ul (`src/lib/auth.ts:68-92`) rezolvă UUID-ul Supabase la sign-in și îl bake-uie în token. `ensureSupabaseUserId` e aplicat doar pe rutele de scriere (tariffs/settings, vehicles PATCH/DELETE) unde consecința unui UUID greșit e mai severă. Extinderea pe `state` (polled la 30s) ar adăuga un round-trip admin.getUserById pe cel mai fierbinte endpoint — nerecomandat fără un cache de sesiune dedicat.
+
+---
+
+## Insights Page (`/insights`)
+
+**What it does:** A single analytics page aggregating 4 data dimensions across a user-selectable period (7d / 30d / 1y / all time):
+
+1. **Savings & CO₂** — Total RON saved vs. equivalent petrol car (7 L/100 km × 7.5 RON/L), litres of fuel avoided, kg CO₂ avoided (2.36 kg/L petrol), and tree-equivalents (21 kg CO₂/tree/year). Derived from `/api/costs` (existing).
+
+2. **Activity** — Total km driven, drive time (hours), trip count, kWh charged. Monthly mileage bar chart (last 12 months).
+
+3. **Battery health** — Current State-of-Health % (from `battery_health_history` or live `batteryHealthPct`), SoH sparkline over time, vampire drain (% / h while parked, computed from `vehicle_snapshots` consecutive deltas).
+
+4. **Efficiency** — Average Wh/km (from `trips.energy_used_kwh`), Wh/km by temperature bucket (<0°C, 0–10°C, 10–20°C, 20–30°C, >30°C, correlated with `vehicle_snapshots`), projected range from current `batteryRangeKm`.
+
+**How to use:** Navigate to `/insights` (or via Sidebar / mobile "More" sheet). Period selector in the header filters all sections.
+
+**Key files:**
+- `src/app/(dashboard)/insights/page.tsx` — server page (vehicleId resolution)
+- `src/app/(dashboard)/insights/insights-client.tsx` — client UI with 4 sections
+- `src/app/api/vehicles/[vehicleId]/stats/route.ts` — new endpoint (trips + charging + snapshots)
+- `src/hooks/useStats.ts` — TanStack Query hook for stats API
+- `src/components/layout/Sidebar.tsx` + `SlideUpMenu.tsx` — nav entry added
+
+**Dependencies:** `/api/costs` (savings), `/api/vehicles/[vehicleId]/battery-health` (existing), `/api/vehicles/[vehicleId]/stats` (new), `/api/vehicles/[vehicleId]/state` (projected range). Empty states shown gracefully when tables have no data (new mock users).

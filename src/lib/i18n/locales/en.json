@@ -64,7 +64,36 @@
       }
     },
     "toggle_theme": "Toggle theme",
-    "open_profile": "Open profile menu"
+    "open_profile": "Open profile menu",
+    "insights": "Insights"
+  },
+  "insights": {
+    "title": "Insights",
+    "period_7d": "7 days",
+    "period_30d": "30 days",
+    "period_1y": "1 year",
+    "period_all": "All time",
+    "savings_title": "Savings & CO₂",
+    "saved_ron": "Saved vs petrol",
+    "fuel_saved": "Fuel saved",
+    "co2_avoided": "CO₂ avoided",
+    "trees_equivalent": "Trees / year",
+    "electric_km": "Electric km",
+    "no_savings_data": "Add energy costs to see savings",
+    "battery_title": "Battery health",
+    "battery_soh": "State of health",
+    "vampire_drain": "Vampire drain",
+    "no_battery_data": "History will appear over time",
+    "states_title": "Activity",
+    "driving_km": "Driven",
+    "driving_hours": "Drive time",
+    "trips": "Trips",
+    "energy_charged": "Energy charged",
+    "no_activity_data": "Drive and charge to see activity",
+    "efficiency_title": "Efficiency",
+    "avg_wh_per_km": "Avg efficiency",
+    "projected_range": "Projected range",
+    "no_efficiency_data": "Start driving to see efficiency"
   },
   "mock_banner": {
     "title": "Simulated data",
