@@ -21,6 +21,8 @@ import { toast } from "sonner";
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
+import { SegmentedControl, DesktopSidebar } from "@/components/map/map-ui";
+import { Compass } from "lucide-react";
 import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
 import { apiFetch } from "@/lib/api-fetch";
@@ -487,8 +489,8 @@ export function MapClient() {
   // ---- Render ----
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* LAYER 1: Full-screen map */}
-      <div className="absolute inset-0">
+      {/* LAYER 1: Map — full-screen on mobile, offset by the sidebar on desktop */}
+      <div className="absolute inset-0 lg:left-[380px] xl:left-[400px]">
         {mode === "plan" ? (
           <TripMap
             origin={origin}
@@ -513,9 +515,9 @@ export function MapClient() {
         )}
       </div>
 
-      {/* LAYER 2: Floating top controls (explore mode filters) */}
+      {/* LAYER 2: Floating top controls (explore mode filters) — mobile only */}
       {mode === "explore" && (
-        <div className="absolute left-3 top-3 z-[1000]">
+        <div className="absolute left-3 top-3 z-[1000] lg:hidden">
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`pill-float flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
@@ -532,7 +534,7 @@ export function MapClient() {
       )}
 
       {mode === "explore" && showFilters && (
-        <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5">
+        <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5 lg:hidden">
           <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
             {POWER_OPTIONS.map((opt) => (
               <button
@@ -575,7 +577,7 @@ export function MapClient() {
       <motion.div
         animate={controls}
         initial={{ y: snapToY(initialSnapH, fullH) }}
-        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-2xl border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-[20px] border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/10 lg:hidden ${
           sheetState === "collapsed"
             ? "bottom-[calc(env(safe-area-inset-bottom)+78px)]"
             : "bottom-0"
@@ -584,7 +586,7 @@ export function MapClient() {
       >
         {/* Drag handle area */}
         <div
-          className="cursor-grab touch-none select-none pt-2.5"
+          className="cursor-grab touch-none select-none pt-2"
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
@@ -592,10 +594,10 @@ export function MapClient() {
           {/* Clickable handle pill — cycles collapsed → mid → full */}
           <button
             onClick={cycleSheetState}
-            className="mx-auto mb-2 flex min-h-11 w-full cursor-pointer items-center justify-center py-3"
+            className="mx-auto mb-1.5 flex min-h-9 w-full cursor-pointer items-center justify-center py-2.5"
             aria-label={tMap("drag_to_expand")}
           >
-            <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
+            <div className="h-1 w-9 rounded-full bg-white/25 transition-colors active:bg-white/40" />
           </button>
 
           {/* Collapsed summary strip — explore mode only. In plan mode the
@@ -615,25 +617,17 @@ export function MapClient() {
             </button>
           )}
 
-          {/* Mode tabs */}
-          <div className="mt-3 flex gap-0 px-4 pb-3">
-            {(["explore", "plan"] as MapMode[]).map((tabMode) => (
-              <button
-                key={tabMode}
-                onClick={() => switchMode(tabMode)}
-                className={`relative flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-                  mode === tabMode ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {tabMode === "explore" ? tMap("tab_explore") : tMap("tab_plan")}
-                {mode === tabMode && (
-                  <motion.div
-                    layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground rounded-full"
-                  />
-                )}
-              </button>
-            ))}
+          {/* Mode tabs — segmented control */}
+          <div className="mx-4 mb-1 mt-2">
+            <SegmentedControl<MapMode>
+              layoutId="map-mode-thumb-mobile"
+              value={mode}
+              onChange={switchMode}
+              options={[
+                { value: "explore", label: tMap("tab_explore"), icon: Compass },
+                { value: "plan", label: tMap("tab_plan"), icon: Route },
+              ]}
+            />
           </div>
 
           {/* Compact route summary — always visible once a plan exists, so
@@ -719,6 +713,92 @@ export function MapClient() {
           </div>
         )}
       </motion.div>
+
+      {/* DESKTOP: left sidebar (lg+) — same content, no drag */}
+      <DesktopSidebar title={tMap("title")} icon={Route}>
+        <div className="shrink-0 px-5">
+          <SegmentedControl<MapMode>
+            layoutId="map-mode-thumb-desktop"
+            value={mode}
+            onChange={switchMode}
+            options={[
+              { value: "explore", label: tMap("tab_explore"), icon: Compass },
+              { value: "plan", label: tMap("tab_plan"), icon: Route },
+            ]}
+          />
+          <div className="mt-4 h-px bg-white/6" />
+        </div>
+
+        {/* Explore filters live in the sidebar on desktop */}
+        {mode === "explore" && (
+          <div className="shrink-0 space-y-1.5 px-5 pt-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {POWER_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setMinKw(opt.value)}
+                  aria-pressed={minKw === opt.value}
+                  className={`h-8 shrink-0 rounded-full border px-2.5 text-xs transition-colors ${
+                    minKw === opt.value
+                      ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
+                      : "border-white/6 bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
+                  }`}
+                >
+                  {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto px-5 pb-6 pt-4 scrollbar-none">
+          {mode === "explore" ? (
+            <ExploreContent
+              stations={stations}
+              isFetching={isFetching}
+              snapH={99999}
+              onStationSelect={setSelectedStation}
+              tCharging={tCharging}
+              tMap={tMap}
+            />
+          ) : (
+            <PlanContent
+              vehicles={vehicles ?? []}
+              vehicleId={vehicleId}
+              setVehicleId={setVehicleId}
+              origin={origin}
+              setOrigin={setOrigin}
+              destination={destination}
+              setDestination={setDestination}
+              originBias={originBias}
+              destinationBias={destinationBias}
+              startSoc={startSoc}
+              setStartSoc={setStartSoc}
+              arrivalSoc={arrivalSoc}
+              setArrivalSoc={setArrivalSoc}
+              plan={plan}
+              activePlan={activePlan}
+              variants={variants}
+              activeVariant={activeVariant}
+              setActiveVariant={setActiveVariant}
+              loading={loading}
+              planError={planError}
+              canPlan={canPlan}
+              canShare={canShare}
+              sharing={sharing}
+              sharedRoute={sharedRoute}
+              snapH={99999}
+              onLocateOrigin={handleLocateOrigin}
+              locating={locating}
+              onPlan={handlePlan}
+              onShareToTesla={handleShareToTesla}
+              originShort={originShort}
+              destinationShort={destinationShort}
+              tTrip={tTrip}
+            />
+          )}
+        </div>
+      </DesktopSidebar>
 
       {/* Station detail sheet (explore) */}
       {selectedStation && (
