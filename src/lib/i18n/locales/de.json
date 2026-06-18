@@ -666,6 +666,10 @@
   },
   "trip": {
     "title": "Routenplaner",
+    "stat_time": "Zeit",
+    "stat_distance": "Distanz",
+    "stat_stops": "Stopps",
+    "stat_cost": "Kosten",
     "origin_placeholder": "Wo startest du?",
     "destination_placeholder": "Wohin fährst du?",
     "options": "Optionen",

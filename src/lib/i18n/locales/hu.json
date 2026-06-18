@@ -666,6 +666,10 @@
   },
   "trip": {
     "title": "Útvonaltervező",
+    "stat_time": "Idő",
+    "stat_distance": "Távolság",
+    "stat_stops": "Megállók",
+    "stat_cost": "Költség",
     "origin_placeholder": "Honnan indulsz?",
     "destination_placeholder": "Hova mész?",
     "options": "Beállítások",

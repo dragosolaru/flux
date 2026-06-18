@@ -666,6 +666,10 @@
   },
   "trip": {
     "title": "Planificateur de trajets",
+    "stat_time": "Durée",
+    "stat_distance": "Distance",
+    "stat_stops": "Arrêts",
+    "stat_cost": "Coût",
     "origin_placeholder": "D'où partez-vous ?",
     "destination_placeholder": "Où allez-vous ?",
     "options": "Options",

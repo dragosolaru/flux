@@ -666,6 +666,10 @@
   },
   "trip": {
     "title": "Planificator de trasee",
+    "stat_time": "Durată",
+    "stat_distance": "Distanță",
+    "stat_stops": "Opriri",
+    "stat_cost": "Cost",
     "origin_placeholder": "De unde pleci?",
     "destination_placeholder": "Unde mergi?",
     "options": "Opțiuni",

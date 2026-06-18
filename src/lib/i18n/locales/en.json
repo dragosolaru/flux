@@ -666,6 +666,10 @@
   },
   "trip": {
     "title": "Trip Planner",
+    "stat_time": "Time",
+    "stat_distance": "Distance",
+    "stat_stops": "Stops",
+    "stat_cost": "Cost",
     "origin_placeholder": "Where are you starting?",
     "destination_placeholder": "Where are you going?",
     "options": "Options",
