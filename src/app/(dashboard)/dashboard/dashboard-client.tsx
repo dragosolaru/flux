@@ -18,12 +18,12 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 import { CircularProgress } from "@/components/ui/circular-progress";
-import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
+import { Card, ListRow, SectionHeader, StatTile, TAP } from "@/components/ui-kit";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -62,10 +62,11 @@ function isDataFresh(recordedAt: string): boolean {
   return Date.now() - new Date(recordedAt).getTime() < 5 * 60 * 1000;
 }
 
+// SOC level → token accent class (theme-safe).
 function getSocColor(level: number): string {
-  if (level > 50) return "bg-emerald-500";
-  if (level > 20) return "bg-amber-500";
-  return "bg-red-500";
+  if (level > 50) return "bg-chart-2";
+  if (level > 20) return "bg-chart-3";
+  return "bg-destructive";
 }
 
 // --------------------------------------------------------------------------
@@ -80,6 +81,7 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
       : "—";
   const soc = typeof displayBattery === "number" ? displayBattery : 0;
   const fresh = state ? isDataFresh(state.recordedAt) : false;
+  const charging = state?.chargingState === "charging";
 
   return (
     <div className="relative overflow-hidden px-4 py-4 md:px-6 md:py-6">
@@ -102,14 +104,20 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
           </>
         ) : (
           <>
-            <div className="text-7xl font-thin tracking-tight tabular-nums leading-none">
+            <motion.div
+              key={displayBattery}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="text-7xl font-thin tracking-tight tabular-nums leading-none"
+            >
               {displayBattery}
               {typeof displayBattery === "number" && (
                 <span className="ml-1 text-xl text-muted-foreground">%</span>
               )}
-            </div>
+            </motion.div>
             {state?.batteryRangeKm != null && (
-              <div className="text-lg font-light text-muted-foreground">
+              <div className="text-lg font-light tabular-nums text-muted-foreground">
                 {Math.round(state.batteryRangeKm)} km
               </div>
             )}
@@ -117,30 +125,30 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
         )}
       </div>
 
-      {/* SOC progress bar */}
-      <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-white/10 md:mt-6">
+      {/* SOC progress bar — slim 2px rail */}
+      <div className="relative mt-4 h-0.5 overflow-hidden rounded-full bg-muted md:mt-6">
         <motion.div
-          className={`h-full rounded-full ${isLoading ? "bg-white/20" : getSocColor(soc)}`}
+          className={`h-full rounded-full ${isLoading ? "bg-muted-foreground/30" : charging ? "bg-chart-2" : getSocColor(soc)}`}
           initial={{ width: 0 }}
           animate={{ width: isLoading ? "30%" : `${soc}%` }}
           transition={{ duration: 1, ease: "easeOut" }}
         />
         {state?.chargeLimit != null && (
           <div
-            className="absolute inset-y-0 w-px bg-white/40"
+            className="absolute inset-y-0 w-px bg-foreground/40"
             style={{ left: `${state.chargeLimit}%` }}
           />
         )}
       </div>
 
       {/* Charging state label */}
-      {state?.chargingState === "charging" && (
+      {charging && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-1.5 text-center text-xs font-medium uppercase tracking-wider text-emerald-400"
+          className="mt-1.5 text-center text-xs font-medium uppercase tracking-wider text-chart-2"
         >
-          {td("charging_active")} · {state.chargingRateKw?.toFixed(1) ?? "—"} kW
+          {td("charging_active")} · {state?.chargingRateKw?.toFixed(1) ?? "—"} kW
         </motion.div>
       )}
     </div>
@@ -148,13 +156,13 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
 }
 
 function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: boolean; label: string }) {
-  const dotColor = isFetching ? "bg-blue-400" : fresh ? "bg-emerald-400" : "bg-muted-foreground";
+  const dotColor = isFetching ? "bg-primary" : fresh ? "bg-chart-2" : "bg-muted-foreground";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
         fresh
-          ? "bg-emerald-500/15 text-emerald-400"
-          : "bg-white/8 text-muted-foreground"
+          ? "bg-chart-2/15 text-chart-2"
+          : "bg-muted text-muted-foreground"
       }`}
     >
       {isFetching ? (
@@ -165,7 +173,7 @@ function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: 
         />
       ) : (
         <span
-          className={`size-1.5 rounded-full transition-colors ${fresh ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"}`}
+          className={`size-1.5 rounded-full transition-colors ${fresh ? "animate-pulse bg-chart-2" : "bg-muted-foreground"}`}
         />
       )}
       {label}
@@ -174,7 +182,7 @@ function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: 
 }
 
 // --------------------------------------------------------------------------
-// Stat chips row
+// Stat chips row — compact info tiles
 // --------------------------------------------------------------------------
 interface ChipData {
   key: string;
@@ -214,10 +222,10 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
             <Thermometer
               className={`size-4 ${
                 state.exteriorTempC < 5
-                  ? "text-blue-400"
+                  ? "text-primary"
                   : state.exteriorTempC <= 20
                     ? "text-muted-foreground"
-                    : "text-amber-400"
+                    : "text-chart-3"
               }`}
             />
           ),
@@ -228,7 +236,7 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
     state.odometerKm != null
       ? {
           key: "odometer",
-          icon: <Zap className="size-4 text-blue-400" />,
+          icon: <Zap className="size-4 text-primary" />,
           value:
             state.odometerKm > 0
               ? `${state.odometerKm.toFixed(1)} km`
@@ -247,7 +255,7 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
     lastCharge
       ? {
           key: "lastcharge",
-          icon: <History className="size-4 text-emerald-400" />,
+          icon: <History className="size-4 text-chart-2" />,
           value: lastCharge.energyKwh != null
             ? `+${lastCharge.energyKwh.toFixed(1)} kWh`
             : formatRelativeTime(lastCharge.endedAt, td),
@@ -267,13 +275,13 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
     >
       {chips.map((chip) => (
         <motion.div key={chip.key} variants={cardVariants} className="snap-center">
-          <div className="flex w-[96px] shrink-0 flex-col items-center gap-1 rounded-2xl bg-white/[0.04] border border-white/6 p-2.5">
+          <Card variant="muted" className="flex w-[96px] shrink-0 flex-col items-center gap-1 p-3">
             {chip.icon}
             <div className="w-full text-center text-sm font-semibold tabular-nums leading-tight truncate">
               {chip.value}
             </div>
-            <div className="text-center text-xs text-muted-foreground">{chip.label}</div>
-          </div>
+            <div className="text-center text-2xs uppercase tracking-wide text-muted-foreground">{chip.label}</div>
+          </Card>
         </motion.div>
       ))}
     </motion.div>
@@ -294,7 +302,7 @@ function formatRelativeTime(
 }
 
 // --------------------------------------------------------------------------
-// Quick actions — circular icon-only buttons
+// Quick actions — tidy horizontal row of chip/icon buttons
 // --------------------------------------------------------------------------
 function QuickActions({
   vehicleId,
@@ -373,7 +381,8 @@ function QuickActions({
       {actions.map((action) => (
         <motion.button
           key={action.key}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
+          transition={TAP}
           disabled={action.disabled}
           title={action.label}
           aria-label={action.label}
@@ -384,10 +393,10 @@ function QuickActions({
             }
             if (action.cmd) send(action.cmd);
           }}
-          className={`size-11 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50 flex items-center justify-center ${
+          className={`flex size-12 items-center justify-center rounded-full border transition-colors disabled:opacity-50 ${
             action.active
-              ? "bg-primary/20 text-primary"
-              : "bg-white/8 text-foreground hover:bg-white/[0.14]"
+              ? "border-primary/50 bg-primary/15 text-primary"
+              : "border-border bg-card text-foreground hover:bg-muted"
           }`}
         >
           {action.inFlight ? (
@@ -402,7 +411,39 @@ function QuickActions({
 }
 
 // --------------------------------------------------------------------------
-// Charging overlay card
+// Recent charge card — start/end SOC + duration
+// --------------------------------------------------------------------------
+function RecentChargeCard({ lastCharge }: { lastCharge: LastCharge }) {
+  const td = useTranslations("dashboard");
+  const fmtSoc = (v: number | null) => (typeof v === "number" ? `${Math.round(v)}%` : "—");
+
+  return (
+    <div className="space-y-2">
+      <SectionHeader title={td("chip_last_charge")} icon={History} />
+      <Card variant="surface" className="p-3">
+        <div className="grid grid-cols-3 gap-2">
+          <StatTile value={fmtSoc(lastCharge.startSoc)} label={td("chip_last_charge")} />
+          <StatTile
+            value={fmtSoc(lastCharge.endSoc)}
+            label={td("charging_active")}
+            accent="text-chart-2"
+          />
+          <StatTile
+            value={
+              lastCharge.energyKwh != null
+                ? `${lastCharge.energyKwh.toFixed(1)}`
+                : formatRelativeTime(lastCharge.endedAt, td)
+            }
+            label={td("chip_last_charge")}
+          />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Charging overlay card — clamps/rounds battery to [0,100] (guard preserved)
 // --------------------------------------------------------------------------
 function ChargingOverlayCard({ state }: { state: VehicleState }) {
   const td = useTranslations("dashboard");
@@ -415,31 +456,31 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible">
-      <GlassCard animate={false} className="p-4">
+      <Card variant="surface" className="p-4">
         <div className="flex items-center gap-4">
-          <CircularProgress value={soc} size={72} strokeWidth={6} color="oklch(0.68 0.18 162)">
+          <CircularProgress value={soc} size={72} strokeWidth={6} color="var(--chart-2)">
             <span className="text-sm font-bold tabular-nums">{soc}%</span>
           </CircularProgress>
           <div className="flex-1 space-y-1">
-            <div className="font-semibold text-emerald-400">
+            <div className="font-semibold text-chart-2">
               {td("charging_active")}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm tabular-nums text-muted-foreground">
               {soc}% → {target}%
             </div>
             {state.chargingRateKw != null && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm tabular-nums text-muted-foreground">
                 {state.chargingRateKw.toFixed(1)} kW
               </div>
             )}
             {state.timeToFullMinutes != null && state.timeToFullMinutes > 0 && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm tabular-nums text-muted-foreground">
                 {formatMinutes(state.timeToFullMinutes)} {td("charging_remaining")}
               </div>
             )}
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </motion.div>
   );
 }
@@ -479,8 +520,10 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
     };
   }, [data]);
 
+  const showLocation = data?.latitude != null && data?.longitude != null;
+
   return (
-    <PageWrapper className="relative mx-auto max-w-xl gap-4 px-0">
+    <PageWrapper className="relative mx-auto max-w-xl gap-2.5 px-0">
       <OnboardingOverlay />
 
       <AnimatePresence>
@@ -503,10 +546,8 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
 
       <HeroCard state={data} isLoading={isLoading} isFetching={isFetching} vehicleName={vehicleName} />
 
-      <StatChips state={data} isLoading={isLoading} lastCharge={lastCharge} />
-
       {isError ? (
-        <GlassCard animate={false} className="flex flex-col items-center gap-3 p-10 text-center">
+        <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
           <AlertTriangle className="size-8 text-destructive" />
           <div>
             <div className="font-medium">{td("error_title")}</div>
@@ -514,18 +555,33 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
           </div>
           <motion.button
             whileTap={{ scale: 0.95 }}
+            transition={TAP}
             onClick={() => refetch()}
             className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
             {td("retry")}
           </motion.button>
-        </GlassCard>
+        </Card>
       ) : (
         <>
           <QuickActions vehicleId={vehicleId} brand={brand} state={data} />
 
           {data?.chargingState === "charging" && (
             <ChargingOverlayCard state={data} />
+          )}
+
+          <StatChips state={data} isLoading={isLoading} lastCharge={lastCharge} />
+
+          {lastCharge && data?.chargingState !== "charging" && (
+            <RecentChargeCard lastCharge={lastCharge} />
+          )}
+
+          {showLocation && data && (
+            <ListRow
+              leading={<MapPin className="size-4 text-primary" />}
+              title={mockLocationLabel(data.latitude!, data.longitude!)}
+              meta={td("chip_location")}
+            />
           )}
         </>
       )}
