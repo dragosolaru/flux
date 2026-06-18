@@ -406,8 +406,12 @@ function QuickActions({
 // --------------------------------------------------------------------------
 function ChargingOverlayCard({ state }: { state: VehicleState }) {
   const td = useTranslations("dashboard");
-  const soc = state.batteryLevel ?? 0;
-  const target = state.chargeLimit ?? 100;
+  // Clamp + round defensively — a corrupted JSONB battery value (e.g. a
+  // stringified concatenation) must never render raw into the UI.
+  const clampSoc = (v: number | null | undefined): number =>
+    typeof v === "number" && Number.isFinite(v) ? Math.min(100, Math.max(0, Math.round(v))) : 0;
+  const soc = clampSoc(state.batteryLevel);
+  const target = clampSoc(state.chargeLimit ?? 100);
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible">
