@@ -1917,3 +1917,21 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **i18n:** added `trip.stat_time`, `trip.stat_distance`, `trip.stat_stops`, `trip.stat_cost` to all 5 locales. Title reuses existing `trip.title`. `CostSummary` is no longer rendered on `/trip` (still used elsewhere).
 
 **Dependencies:** none new — same `POST /api/trip-plan` and `GET /api/chargers`.
+
+---
+
+## 25. Map Mobile — Scroll Fix & Sheet Redesign
+
+**What:** Fixes the Explore bottom-sheet on mobile and modernizes it.
+
+- **Scroll/dead-space bug:** the sheet height derived from `window.innerHeight` (which on iOS Safari includes the area behind the toolbar) and a hand-tuned `peekH` constant, so the expanded station list couldn't scroll and left a dead band. Now `visibleViewportHeight()` prefers `window.visualViewport.height` (refreshed on `visualViewport`/window `resize` + `orientationchange`), and the peek height is **measured** via `ResizeObserver` (`peekRef`/`peekH`) so the scroll area = `snapH − measuredPeek`. A rAF-deferred effect re-anchors the sheet when geometry changes. Scroll container uses `overscroll-contain` + `[touch-action:pan-y]` so drag and scroll don't fight.
+- **Collapsed peek** is ~40% shorter: slim grabber + one dense summary line; the Explore/Plan segmented control only renders when expanded.
+- **Station list** modernized with the shared `LIST_ROW`/`SECTION_TITLE` vocabulary: availability dot, name + city, right-aligned power chip, chevron, framer-motion stagger on reveal + `whileTap` on rows. `ExploreContent` is shared by the mobile sheet and the desktop sidebar.
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx`, `src/components/map/map-ui.tsx`.
+
+---
+
+## 26. Dashboard — Charging Card Battery Guard
+
+**What:** `ChargingOverlayCard` rendered `state.batteryLevel` raw, so a corrupted JSONB value could surface as a giant number. Now clamped to `[0,100]` and rounded (matching `HeroCard`). **Key file:** `src/app/(dashboard)/dashboard/dashboard-client.tsx`.

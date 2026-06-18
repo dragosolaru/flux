@@ -11,6 +11,8 @@ import {
   Navigation,
   AlertTriangle,
   ChevronUp,
+  ChevronRight,
+  Zap,
   Send,
   SlidersHorizontal,
 } from "lucide-react";
@@ -21,7 +23,7 @@ import { toast } from "sonner";
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
-import { SegmentedControl, DesktopSidebar } from "@/components/map/map-ui";
+import { SegmentedControl, DesktopSidebar, LIST_ROW, SECTION_TITLE } from "@/components/map/map-ui";
 import { Compass } from "lucide-react";
 import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
@@ -68,27 +70,28 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 // Bottom sheet snap points (px from bottom of screen)
 // ---------------------------------------------------------------------------
 
-// Collapsed peek must be tall enough to show the handle, the summary strip and
-// the Explore/Plan tabs *above* the floating bottom nav — otherwise the tabs
-// spill into the nav's zone and get visually clipped.
-const PEEK = 132;
-// Taller peek used when a computed plan exists: also leaves room for the compact
-// route summary strip while keeping the map (and its polyline) visible.
-const PEEK_SUMMARY = 152;
-// Plan mode before a route is computed has no summary strip — only the handle and
-// the Explore/Plan tabs — so a shorter peek avoids dead space above the nav.
-// Measured: pt-2.5(10) + handle-min-h(44) + mb-2(8) + mt-3(12) + tab-row(36) + pb-3(12) = 122px.
-const PEEK_TABS = 128;
+// Collapsed peek constants are now derived at runtime by measuring the rendered
+// peek (handle + optional summary line) — see `peekRef` / `peekH` in MapClient.
+// These remain only as sensible SSR / first-paint fallbacks.
+const PEEK_FALLBACK = 96;
+
 // Plan mid before route: absolute height so the form (2 inputs + sliders + vehicle
-// picker + button + 90px bottom padding ≈ 360px) fills the panel without dead space.
+// picker + button + bottom padding) fills the panel without dead space.
 const MID_PLAN_H = 460;
+
+// iOS Safari's window.innerHeight counts the area behind the URL/toolbar, so
+// 0.9*innerHeight pushes the sheet bottom below the visible viewport. Always
+// prefer visualViewport.height (the truly visible region) and fall back to
+// innerHeight only when it is unavailable.
+function visibleViewportHeight(): number {
+  if (typeof window === "undefined") return 800;
+  return Math.round(window.visualViewport?.height ?? window.innerHeight);
+}
 function halfHeight() {
-  // Mid: 44vh (Wave 2E spec)
-  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.44) : 380;
+  return Math.round(visibleViewportHeight() * 0.44);
 }
 function fullHeight() {
-  // Full: 90dvh (Wave 2E spec) — use innerHeight as dvh proxy
-  return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 720;
+  return Math.round(visibleViewportHeight() * 0.92);
 }
 
 // Convert snap height → y offset (0 = fully open = sheet bottom at FULL height)
@@ -168,15 +171,23 @@ export function MapClient() {
   );
 
   // ---- Bottom sheet state ----
-  // fullH is initialized lazily from window so it reflects the real viewport
-  // on first render (client-only). The lazy initializer runs once on mount.
-  const [fullH] = useState(() => fullHeight());
+  // fullH tracks the *visible* viewport (visualViewport on iOS) and updates on
+  // resize / browser-chrome show-hide so the expanded sheet never extends below
+  // the visible area or behind the floating nav.
+  const [fullH, setFullH] = useState(() => fullHeight());
+
+  // Actual rendered peek height, measured from the DOM. The peek content varies
+  // (handle only / handle + summary line) and iOS layout differs from our
+  // constants, so we measure rather than guess — this is what kills the dead
+  // space below the list. Starts at a fallback for first paint.
+  const peekRef = useRef<HTMLDivElement>(null);
+  const [peekH, setPeekH] = useState(PEEK_FALLBACK);
 
   // Landing directly in plan mode (e.g. /map?mode=plan) opens at half so the
   // form is immediately usable; explore starts at peek.
   const initialSnapH = initialMode === "plan"
-    ? Math.min(MID_PLAN_H, typeof window !== "undefined" ? Math.round(window.innerHeight * 0.75) : MID_PLAN_H)
-    : PEEK;
+    ? Math.min(MID_PLAN_H, Math.round(visibleViewportHeight() * 0.75))
+    : PEEK_FALLBACK;
 
   // Drag tracking refs (not used in render, safe as refs)
   const dragStartY = useRef(0);
@@ -302,22 +313,16 @@ export function MapClient() {
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
 
-  // Peek height matches the collapsed content for each mode so no dead space
-  // sits above the floating nav: plan+route → summary strip; plan (no route) →
-  // tabs only; explore → summary strip + tabs.
-  const peekH =
-    mode === "plan" ? (plan !== null ? PEEK_SUMMARY : PEEK_TABS) : PEEK;
-
   function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
     if (state === "collapsed") return peekH;
     if (state === "mid") {
-      const h = typeof window !== "undefined" ? window.innerHeight : 850;
+      const h = visibleViewportHeight();
       // Plan mode with no computed route: use a content-sized absolute height so the
       // form fills the sheet without a dark gap. Cap at 75% for very small screens.
       if (mode === "plan" && plan === null) return Math.min(MID_PLAN_H, Math.round(h * 0.75));
       return Math.round(h * 0.44);
     }
-    return typeof window !== "undefined" ? Math.round(window.innerHeight * 0.9) : 700;
+    return fullHeight();
   }
 
   function applySheetState(state: "collapsed" | "mid" | "full") {
@@ -476,6 +481,48 @@ export function MapClient() {
   const originShort = origin?.name.split(",")[0] ?? "";
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
+  // Keep fullH in sync with the *visible* viewport. iOS fires visualViewport
+  // resize/scroll when the toolbar shows/hides; without this the sheet height is
+  // frozen to the first-paint value and the bottom drifts off-screen.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const update = () => setFullH(fullHeight());
+    update();
+    vv?.addEventListener("resize", update);
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      vv?.removeEventListener("resize", update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
+  }, []);
+
+  // Measure the real rendered peek height. The collapsed content differs per
+  // mode/plan and iOS layout never matches a hand-tuned constant, so the scroll
+  // area = sheetHeight − measuredPeek is what removes the dead space.
+  useEffect(() => {
+    const el = peekRef.current;
+    if (!el) return;
+    const measure = () => setPeekH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode, plan, sheetState]);
+
+  // Re-anchor the sheet whenever its target height changes (viewport resize,
+  // peek re-measure) so the collapsed peek and expanded snaps stay glued to the
+  // right offset instead of leaving a gap or overshooting. Deferred to the next
+  // frame so we react to committed layout rather than firing setState mid-effect.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => snapTo(sheetStateToH(sheetState), fullH));
+    return () => cancelAnimationFrame(id);
+  // sheetStateToH/snapTo are recreated each render; we only want to react to the
+  // measured geometry and the active snap state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullH, peekH, sheetState]);
+
   // ---- Mode switch ----
   function switchMode(next: MapMode) {
     setMode(next);
@@ -584,63 +631,37 @@ export function MapClient() {
         }`}
         style={{ height: `${fullH}px` }}
       >
-        {/* Drag handle area */}
+        {/* Peek — measured for exact scroll-area math. Slim: a compact grabber
+            plus a single dense summary line when collapsed; the mode toggle
+            only renders when expanded to keep the collapsed footprint minimal. */}
         <div
-          className="cursor-grab touch-none select-none pt-2"
+          ref={peekRef}
+          className="cursor-grab touch-none select-none"
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
         >
-          {/* Clickable handle pill — cycles collapsed → mid → full */}
+          {/* Grabber — compact tappable strip, cycles collapsed → mid → full */}
           <button
             onClick={cycleSheetState}
-            className="mx-auto mb-1.5 flex min-h-9 w-full cursor-pointer items-center justify-center py-2.5"
+            className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1 pt-2"
             aria-label={tMap("drag_to_expand")}
           >
-            <div className="h-1 w-9 rounded-full bg-white/25 transition-colors active:bg-white/40" />
+            <div className="h-1 w-8 rounded-full bg-white/20 transition-colors active:bg-white/40" />
           </button>
 
-          {/* Collapsed summary strip — explore mode only. In plan mode the
-              compact route summary below already carries the peek content, so
-              showing this too would be redundant and overflow the peek. */}
-          {sheetState === "collapsed" && mode === "explore" && (
-            <button
-              onClick={cycleSheetState}
-              className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between"
-            >
-              <span className="truncate text-sm text-muted-foreground">
-                {stations.length > 0
-                  ? `${stations[0].name ?? tCharging("station_fallback")}${stations[0].maxPowerKw != null ? ` · ${stations[0].maxPowerKw} kW` : ""}`
-                  : tMap("explore_hint")}
-              </span>
-              <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
-            </button>
-          )}
-
-          {/* Mode tabs — segmented control */}
-          <div className="mx-4 mb-1 mt-2">
-            <SegmentedControl<MapMode>
-              layoutId="map-mode-thumb-mobile"
-              value={mode}
-              onChange={switchMode}
-              options={[
-                { value: "explore", label: tMap("tab_explore"), icon: Compass },
-                { value: "plan", label: tMap("tab_plan"), icon: Route },
-              ]}
-            />
-          </div>
-
-          {/* Compact route summary — always visible once a plan exists, so
-              the peek state shows the key numbers while the map shows the route. */}
-          {mode === "plan" && plan && activePlan && (
-            <button
-              onClick={() => applySheetState(sheetState === "collapsed" ? "mid" : "collapsed")}
-              className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-left"
-            >
-              <div className="min-w-0">
-                <p className="truncate">
-                  <span className="text-sm font-medium">{Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min</span>
-                  <span className="text-xs text-muted-foreground">
+          {/* Collapsed: single dense summary line. */}
+          {sheetState === "collapsed" && (
+            mode === "plan" && plan && activePlan ? (
+              <button
+                onClick={() => applySheetState("mid")}
+                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2 text-left active:bg-white/[0.07]"
+              >
+                <p className="min-w-0 truncate">
+                  <span className="text-xs font-semibold tabular-nums">
+                    {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
+                  </span>
+                  <span className="text-2xs text-muted-foreground">
                     {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
                     {activePlan.stops.length === 0
                       ? tTrip("stops_count_zero")
@@ -649,22 +670,61 @@ export function MapClient() {
                         : tTrip("stops_count_other", { count: activePlan.stops.length })}
                   </span>
                 </p>
-              </div>
-              <span className="ml-2 flex shrink-0 items-center gap-1.5">
-                <span className="text-sm font-medium text-green-400">
-                  {fromEUR(activePlan.tripEnergyCostEur)}
+                <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                  <span className="text-xs font-semibold text-green-400 tabular-nums">
+                    {fromEUR(activePlan.tripEnergyCostEur)}
+                  </span>
+                  <ChevronUp className="size-3.5 text-muted-foreground" />
                 </span>
-                <ChevronUp
-                  className={`size-4 text-muted-foreground transition-transform ${sheetState !== "collapsed" ? "rotate-180" : ""}`}
-                />
-              </span>
-            </button>
+              </button>
+            ) : (
+              <button
+                onClick={cycleSheetState}
+                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2 text-left active:bg-white/[0.07]"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  {mode === "explore" && stations.length > 0 && (
+                    <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-2xs font-semibold tabular-nums text-foreground">
+                      {tCharging("stations_count", { count: stations.length })}
+                    </span>
+                  )}
+                  <span className="truncate text-xs text-muted-foreground">
+                    {mode === "explore"
+                      ? stations.length > 0
+                        ? `${stations[0].name ?? tCharging("station_fallback")}${stations[0].maxPowerKw != null ? ` · ${stations[0].maxPowerKw} kW` : ""}`
+                        : tMap("explore_hint")
+                      : tMap("plan_hint")}
+                  </span>
+                </span>
+                <ChevronUp className="ml-2 size-3.5 shrink-0 text-muted-foreground" />
+              </button>
+            )
+          )}
+
+          {/* Mode tabs — only when expanded, so the collapsed peek stays slim. */}
+          {sheetState !== "collapsed" && (
+            <div className="mx-3 mb-2 mt-1">
+              <SegmentedControl<MapMode>
+                layoutId="map-mode-thumb-mobile"
+                value={mode}
+                onChange={switchMode}
+                options={[
+                  { value: "explore", label: tMap("tab_explore"), icon: Compass },
+                  { value: "plan", label: tMap("tab_plan"), icon: Route },
+                ]}
+              />
+            </div>
           )}
         </div>
 
-        {/* Sheet content — only rendered when sheet is at MID or FULL */}
+        {/* Sheet content — only rendered when sheet is at MID or FULL. Height is
+            the visible sheet minus the measured peek; bottom padding clears the
+            floating nav so the final row is reachable. */}
         {sheetState !== "collapsed" && (
-          <div className="overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+90px)]" style={{ height: `${snapH - peekH}px` }}>
+          <div
+            className="overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+90px)] [touch-action:pan-y]"
+            style={{ height: `${snapH - peekH}px` }}
+          >
             {mode === "explore" ? (
               <ExploreContent
                 stations={stations}
@@ -828,53 +888,75 @@ interface ExploreContentProps {
 
 function ExploreContent({ stations, isFetching, snapH, onStationSelect, tCharging, tMap }: ExploreContentProps) {
   const halfH = halfHeight();
+  const showList = snapH >= halfH;
+  const list = stations.slice(0, 50);
 
   return (
-    <div className="space-y-3">
-      {/* Station count badge */}
+    <div className="space-y-2.5 pt-1">
+      {/* Section header */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
+        <span className={SECTION_TITLE}>
           {isFetching
             ? tCharging("updating", { count: stations.length })
             : tCharging("stations_count", { count: stations.length })}
         </span>
       </div>
 
-      {/* Station list — only in FULL snap */}
-      {snapH >= halfH && stations.length === 0 && !isFetching && (
+      {showList && list.length === 0 && !isFetching && (
         <p className="py-6 text-center text-sm text-muted-foreground">{tMap("no_stations")}</p>
       )}
 
-      {snapH >= halfH &&
-        stations.slice(0, 50).map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onStationSelect(s)}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/8 bg-white/5 px-3 py-2.5 text-left transition-colors hover:bg-white/10"
-          >
-            <div
-              className="size-2.5 shrink-0 rounded-full"
-              style={{
-                backgroundColor:
-                  s.availability === "operational"
-                    ? "#22c55e"
-                    : s.availability === "offline"
-                      ? "#f87171"
-                      : "#9ca3af",
-              }}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
-                {s.name ?? s.operator ?? tCharging("station_fallback")}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {s.maxPowerKw != null ? `${s.maxPowerKw} kW` : tCharging("unknown_power")}
-                {s.address.city ? ` · ${s.address.city}` : ""}
-              </p>
-            </div>
-            <ChevronUp className="size-3.5 shrink-0 rotate-90 text-muted-foreground" />
-          </button>
-        ))}
+      {showList && list.length > 0 && (
+        <motion.ul
+          className="space-y-2"
+          initial="hidden"
+          animate="show"
+          variants={{ show: { transition: { staggerChildren: 0.025 } } }}
+        >
+          {list.map((s) => {
+            const dot =
+              s.availability === "operational"
+                ? "#22c55e"
+                : s.availability === "offline"
+                  ? "#f87171"
+                  : "#9ca3af";
+            return (
+              <motion.li
+                key={s.id}
+                variants={{ hidden: { opacity: 0, y: 6 }, show: { opacity: 1, y: 0 } }}
+              >
+                <motion.button
+                  whileTap={{ scale: 0.985 }}
+                  onClick={() => onStationSelect(s)}
+                  className={`${LIST_ROW} w-full`}
+                >
+                  <span className="relative flex size-2.5 shrink-0">
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: dot }}
+                    />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-foreground">
+                      {s.name ?? s.operator ?? tCharging("station_fallback")}
+                    </p>
+                    {s.address.city && (
+                      <p className="truncate text-2xs text-muted-foreground">{s.address.city}</p>
+                    )}
+                  </div>
+                  {s.maxPowerKw != null && (
+                    <span className="flex shrink-0 items-center gap-1 rounded-lg border border-white/8 bg-white/[0.04] px-2 py-1 text-2xs font-semibold tabular-nums text-foreground">
+                      <Zap className="size-3 text-primary" />
+                      {s.maxPowerKw} kW
+                    </span>
+                  )}
+                  <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
+                </motion.button>
+              </motion.li>
+            );
+          })}
+        </motion.ul>
+      )}
     </div>
   );
 }
