@@ -9,6 +9,7 @@ import { isLiveEnabled } from "@/lib/live-integrations";
 import { tick } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
 import { createInitialSnapshot } from "@/lib/mock/seed";
+import { seedMockHistory } from "@/lib/mock/seed-history";
 import { recordBatteryHealth } from "@/lib/battery-health";
 import { fetchVehicleData } from "@/lib/tesla/api";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -88,6 +89,25 @@ export async function GET(
       "commuter",
       vehicle.model ?? null,
     );
+
+    // First-ever access: backfill ~12 months of demo history so Insights and
+    // Costs aren't empty. Start the live odometer from the seeded total.
+    if (prev.vehicleSpec) {
+      try {
+        const seededKm = await seedMockHistory(
+          supabase,
+          vehicleId,
+          session.user.id,
+          prev.vehicleSpec,
+          prev.state.latitude ?? 48,
+          prev.state.longitude ?? 16,
+        );
+        prev.state.odometerKm = seededKm;
+      } catch (err) {
+        console.error("[seedMockHistory]", vehicleId, err);
+      }
+    }
+
     await saveSnapshot(vehicleId, null, prev);
   }
 
