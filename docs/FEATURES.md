@@ -1897,3 +1897,23 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 - **`seasonalTempC(lat, date)`** — deterministic seasonal/diurnal temperature, extracted from `mock-weather.ts` and shared by the simulator so snapshot/trip temperatures stay consistent with the weather provider.
 
 `battery_health_history` was already backfilled by `recordBatteryHealth` (called from the state route), so the SoH chart worked from the start.
+
+---
+
+## 24. Trip Planner — Desktop Sidebar & Mobile Compaction
+
+**What:** The `/trip` screen gains a Google-Maps / ABRP-style left sidebar on desktop (lg+) and a more compact mobile layout, matching the pattern already used on `/map`.
+
+- **Desktop (lg+):** the map is offset by the sidebar (`lg:left-[380px] xl:left-[400px]`), and a `<DesktopSidebar title icon={Route}>` shows the planner form plus the results (when a plan exists) in a single scroll region — results are always visible, not gated by `formCollapsed`.
+- **Mobile:** the top-left search overlay and the bottom slide-up results panel are unchanged in behavior but hidden on desktop (`lg:hidden`) and visually compacted — `rounded-t-[20px]` panel, slimmer handle (`h-1 w-9 bg-white/25 active:bg-white/40`), and a top sheen (`before:…bg-white/10`).
+- The run-on `CostSummary` text-summary block is replaced by the shared `StatStrip` (4 cells: Time / Distance / Stops / Cost, cost accented). Variant chips are a horizontal scroll rail on mobile (`w-[150px]`) and full-width stacked rows on desktop (`lg:w-full lg:flex-row lg:justify-between`).
+
+**How to use:** Visit `/trip`. Resize past the `lg` breakpoint to see the sidebar.
+
+**Key files:**
+- `src/app/(dashboard)/trip/trip-client.tsx` — extracted two local presentational components, `TripPlannerForm` (origin/destination + options + plan button) and `TripResultsBody` (variant chips + `StatStrip` + share + stop list), rendered in both the mobile overlay/panel and the desktop sidebar.
+- `src/components/map/map-ui.tsx` — reused `DesktopSidebar`, `StatStrip` / `Stat`.
+
+**i18n:** added `trip.stat_time`, `trip.stat_distance`, `trip.stat_stops`, `trip.stat_cost` to all 5 locales. Title reuses existing `trip.title`. `CostSummary` is no longer rendered on `/trip` (still used elsewhere).
+
+**Dependencies:** none new — same `POST /api/trip-plan` and `GET /api/chargers`.
