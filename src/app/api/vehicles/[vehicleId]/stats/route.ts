@@ -85,7 +85,7 @@ export async function GET(
   // Snapshots for vampire drain + temp correlation — limit to keep response fast
   let snapsQuery = supabase
     .from("vehicle_snapshots")
-    .select("battery_level, exterior_temp_c, is_charging, recorded_at")
+    .select("battery_level, exterior_temp_c, is_charging, odometer_km, recorded_at")
     .eq("vehicle_id", vehicleId)
     .order("recorded_at", { ascending: true })
     .limit(2000);
@@ -118,6 +118,7 @@ export async function GET(
     battery_level: number | null;
     exterior_temp_c: number | null;
     is_charging: boolean | null;
+    odometer_km: number | null;
     recorded_at: string;
   }[];
 
@@ -198,6 +199,9 @@ export async function GET(
   })).filter((b) => b.count > 0);
 
   // ─── Vampire drain ──────────────────────────────────────────────────────────
+  // Average %/h lost while parked (not driving, not charging). All idle windows
+  // count toward the denominator — including flat ones — so the integer-rounded
+  // battery_level doesn't bias the rate upward by only sampling drops.
 
   let vampireDropSum = 0;
   let vampireHours = 0;
@@ -209,12 +213,21 @@ export async function GET(
     if (prev.is_charging || curr.is_charging) continue;
     if (prev.battery_level == null || curr.battery_level == null) continue;
 
+    // Skip windows where the car moved — that's driving drain, not vampire.
+    if (
+      prev.odometer_km != null &&
+      curr.odometer_km != null &&
+      curr.odometer_km - prev.odometer_km > 0.1
+    ) {
+      continue;
+    }
+
     const h =
       (new Date(curr.recorded_at).getTime() - new Date(prev.recorded_at).getTime()) / 3_600_000;
-    if (h <= 0 || h > 8) continue;
+    if (h <= 0 || h > 12) continue;
 
     const drop = prev.battery_level - curr.battery_level;
-    if (drop <= 0) continue;
+    if (drop < 0) continue; // battery rose → unrecorded charge; skip the pair
 
     vampireDropSum += drop;
     vampireHours += h;

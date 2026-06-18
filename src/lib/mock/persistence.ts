@@ -6,11 +6,31 @@
 // =============================================================================
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { seasonalTempC } from "@/lib/external/weather/providers/mock-weather";
 import type { MockVehicleSnapshot } from "./types";
 import type { VehicleState } from "@/types/vehicle";
 import type { CommandName } from "@/types/history";
 
 type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+// EV energy consumption rises in the cold (battery chemistry + cabin heating)
+// and, more mildly, in extreme heat (AC). Returns a multiplier on the nominal
+// efficiency: 1.0 at the ~15°C sweet spot, up to ~1.6 in deep cold.
+function tempEfficiencyFactor(tempC: number): number {
+  const cold = Math.max(0, 15 - tempC) * 0.012;
+  const heat = Math.max(0, tempC - 25) * 0.006;
+  return Math.min(1.6, Math.max(0.9, 1 + cold + heat));
+}
+
+// One snapshot row per 10-minute wall-clock bucket. Bounds row growth on the
+// hot state endpoint without needing an extra read or a stored timestamp.
+function crossedSnapshotBucket(prevIso: string, nextIso: string): boolean {
+  const BUCKET_MS = 10 * 60_000;
+  return (
+    Math.floor(new Date(prevIso).getTime() / BUCKET_MS) !==
+    Math.floor(new Date(nextIso).getTime() / BUCKET_MS)
+  );
+}
 
 // Coerce a possibly-stringified JSONB numeric back to a finite number.
 // Guards against legacy/corrupted rows where arithmetic produced string
@@ -85,6 +105,7 @@ export async function saveSnapshot(
   if (prev) {
     await maybeCloseChargingSession(supabase, vehicleId, prev, sanitized);
     await maybeCloseTrip(supabase, vehicleId, prev, sanitized);
+    await maybeRecordSnapshot(supabase, vehicleId, prev, sanitized);
   }
 
   // Upsert the snapshot row
@@ -165,6 +186,21 @@ async function maybeCloseTrip(
       ? (distKm / durationSeconds) * 3600
       : null;
 
+  // Energy + efficiency, temperature-adjusted. The cold penalty makes the
+  // efficiency-vs-temperature analysis on the insights page meaningful.
+  const nominalEff = next.vehicleSpec?.efficiencyKwhPer100km ?? null;
+  let energyUsedKwh: number | null = null;
+  let efficiencyKwhPer100km: number | null = null;
+  if (distKm != null && distKm > 0 && nominalEff != null) {
+    const tempC = seasonalTempC(
+      next.state.latitude ?? 48,
+      new Date(next.lastTickAt),
+    );
+    const adjustedEff = nominalEff * tempEfficiencyFactor(tempC);
+    efficiencyKwhPer100km = Math.round(adjustedEff * 100) / 100;
+    energyUsedKwh = Math.round((distKm / 100) * adjustedEff * 100) / 100;
+  }
+
   await supabase.from("trips").insert({
     vehicle_id: vehicleId,
     started_at: prev.activeTripStart,
@@ -178,10 +214,40 @@ async function maybeCloseTrip(
     distance_km: distKm != null ? Math.round(distKm * 10) / 10 : null,
     start_odometer_km: prev.activeTripStartOdometerKm,
     end_odometer_km: next.state.odometerKm,
-    energy_used_kwh: null,
+    energy_used_kwh: energyUsedKwh,
     avg_speed_kmh: avgSpeedKmh != null ? Math.round(avgSpeedKmh * 10) / 10 : null,
     max_speed_kmh: null,
-    efficiency_kwh_per_100km: null,
+    efficiency_kwh_per_100km: efficiencyKwhPer100km,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Snapshot history — powers vampire-drain, SoH and efficiency-vs-temp charts.
+// ---------------------------------------------------------------------------
+
+async function maybeRecordSnapshot(
+  supabase: AdminClient,
+  vehicleId: string,
+  prev: MockVehicleSnapshot,
+  next: MockVehicleSnapshot,
+): Promise<void> {
+  if (!crossedSnapshotBucket(prev.lastTickAt, next.lastTickAt)) return;
+
+  const s = next.state;
+  await supabase.from("vehicle_snapshots").insert({
+    vehicle_id: vehicleId,
+    battery_level: s.batteryLevel != null ? Math.round(s.batteryLevel) : null,
+    battery_range_km: s.batteryRangeKm ?? null,
+    odometer_km: s.odometerKm ?? null,
+    interior_temp_c: s.interiorTempC ?? null,
+    exterior_temp_c:
+      s.latitude != null ? seasonalTempC(s.latitude, new Date(next.lastTickAt)) : null,
+    is_locked: s.isLocked ?? null,
+    is_charging: s.chargingState === "charging",
+    charging_rate_kw: s.chargingRateKw ?? null,
+    latitude: s.latitude ?? null,
+    longitude: s.longitude ?? null,
+    recorded_at: next.lastTickAt,
   });
 }
 

@@ -1,11 +1,12 @@
 import type { WeatherProvider, WeatherSnapshot } from "../types";
 
-// Deterministic mock: varies by lat (climate zone) and hour of day.
-// Central Europe bias (lat 48–52) → mild temperate.
-function getCurrent(lat: number, lng: number): WeatherSnapshot {
-  const hour = new Date().getHours();
+// Deterministic seasonal/diurnal temperature for a location and time.
+// Central Europe bias (lat 48–52) → mild temperate. Exported so the mock
+// simulator can stamp consistent temperatures onto snapshots and trips.
+export function seasonalTempC(lat: number, at: Date = new Date()): number {
+  const hour = at.getHours();
   const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000,
+    (at.getTime() - new Date(at.getFullYear(), 0, 0).getTime()) / 86_400_000,
   );
 
   // Seasonal base temperature: peaks in July (day ~196), troughs in Jan (day ~16)
@@ -15,7 +16,17 @@ function getCurrent(lat: number, lng: number): WeatherSnapshot {
   // Diurnal: +5°C around 14:00, -5°C around 04:00
   const diurnal = 5 * Math.sin(((hour - 4) / 24) * 2 * Math.PI);
 
-  const tempC = Math.round((seasonalBase + latCorrection + diurnal) * 10) / 10;
+  return Math.round((seasonalBase + latCorrection + diurnal) * 10) / 10;
+}
+
+// Deterministic mock: varies by lat (climate zone) and hour of day.
+function getCurrent(lat: number, lng: number): WeatherSnapshot {
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000,
+  );
+
+  const tempC = seasonalTempC(lat, now);
 
   // Wind: higher in winter, varies by longitude pseudo-randomly
   const windBase = 3 + 3 * Math.cos(((dayOfYear - 80) / 365) * 2 * Math.PI);

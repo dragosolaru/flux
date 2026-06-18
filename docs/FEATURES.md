@@ -1888,3 +1888,12 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 - `src/components/layout/Sidebar.tsx` + `SlideUpMenu.tsx` — nav entry added
 
 **Dependencies:** `/api/costs` (savings), `/api/vehicles/[vehicleId]/battery-health` (existing), `/api/vehicles/[vehicleId]/stats` (new), `/api/vehicles/[vehicleId]/state` (projected range). Empty states shown gracefully when tables have no data (new mock users).
+
+**Mock data pipeline (so insights aren't hollow for the default mock user):** The Tier-3 simulator now feeds the analytics tables it previously left empty:
+
+- **`trips.energy_used_kwh` + `efficiency_kwh_per_100km`** — computed on trip close in `src/lib/mock/persistence.ts` from distance × spec efficiency × a temperature factor (`tempEfficiencyFactor`): 1.0 at the ~15°C sweet spot rising to ~1.6 in deep cold. This powers avg Wh/km and the efficiency-vs-temperature chart.
+- **`vehicle_snapshots`** — `maybeRecordSnapshot` writes one row per 10-minute wall-clock bucket (no extra read; bounded growth) capturing battery level, range, odometer, exterior temp, charging flag. Powers vampire drain + temperature correlation + range history.
+- **Phantom (vampire) drain** — `engine.ts` parked physics now applies a small standby draw (~0.6%/day) independent of climate, so vampire drain shows a believable rate. Vampire drain in the stats endpoint averages %/h across **all** idle (non-driving, non-charging) windows — including flat ones — so the integer-rounded `battery_level` column doesn't bias the rate upward.
+- **`seasonalTempC(lat, date)`** — deterministic seasonal/diurnal temperature, extracted from `mock-weather.ts` and shared by the simulator so snapshot/trip temperatures stay consistent with the weather provider.
+
+`battery_health_history` was already backfilled by `recordBatteryHealth` (called from the state route), so the SoH chart worked from the start.

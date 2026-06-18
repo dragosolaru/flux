@@ -121,15 +121,16 @@ function applyChunk(
     }
 
     case "parked": {
-      // Climate drain only
-      if (state.isClimateOn) {
-        const climateKw = 1.5;
-        const drainKwh = climateKw * (chunkSeconds / 3600);
-        const drainPct = (drainKwh / cap) * 100;
-        state.batteryLevel = Math.max(0, battery - drainPct);
-        state.batteryRangeKm =
-          (state.batteryLevel / 100) * ((cap / vehicleSpec.efficiencyKwhPer100km) * 100);
-      }
+      // Phantom (vampire) drain — standby electronics keep sipping power even
+      // when fully idle. ~0.6%/day for a Tesla-class battery. Climate, when on,
+      // adds a much larger draw on top.
+      const phantomKw = 0.02;
+      const climateKw = state.isClimateOn ? 1.5 : 0;
+      const drainKwh = (phantomKw + climateKw) * (chunkSeconds / 3600);
+      const drainPct = (drainKwh / cap) * 100;
+      state.batteryLevel = Math.max(0, battery - drainPct);
+      state.batteryRangeKm =
+        (state.batteryLevel / 100) * ((cap / vehicleSpec.efficiencyKwhPer100km) * 100);
 
       state.chargingState = "disconnected";
       state.chargingRateKw = 0;
