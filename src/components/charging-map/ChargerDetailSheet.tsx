@@ -40,29 +40,25 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
 
   return (
     <>
-      {/* Backdrop — tap to dismiss. Absolute so it only covers <main>, not BottomNav. */}
+      {/* Backdrop — tap to dismiss. A proper scrim so the dimmed map (or the
+          expanded explore sheet behind) reads as intentional, not a void. */}
       <div
-        className="absolute inset-0 z-[1090] bg-black/20 backdrop-blur-[1px]"
+        className="absolute inset-0 z-[1090] bg-black/50 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Bottom sheet — absolute so it stays within <main> above BottomNav.
-          On md+ screens it becomes a side card anchored to the right. */}
+      {/* Floating card — hugs its content and sits clear above the BottomNav, so
+          there's no dead space below it. On md+ it anchors to the right. */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
-        className="absolute bottom-0 left-0 right-0 z-[1100] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
-        style={{ maxHeight: "85dvh" }}
+        className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+90px)] z-[1100] animate-slide-up overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl md:inset-x-auto md:bottom-6 md:right-6 md:max-w-md"
+        style={{ maxHeight: "70dvh" }}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-2.5">
-          <div className="h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-        </div>
-
-        <div className="overflow-y-auto px-5 pb-8 pt-4" style={{ maxHeight: "calc(85dvh - 1.5rem)" }}>
+        <div className="overflow-y-auto px-5 pb-5 pt-4" style={{ maxHeight: "70dvh" }}>
           {/* Header */}
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
@@ -92,7 +88,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
             <button
               onClick={onClose}
               aria-label={t("close")}
-              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
             >
               <X className="size-4" />
             </button>
@@ -101,7 +97,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
           {/* 2-col stats grid */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             {/* Max power */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Zap className="size-3.5" />
                 {t("max_power")}
@@ -112,7 +108,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
             </div>
 
             {/* Connectors count */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {t("connectors_label")}
               </div>
@@ -126,7 +122,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
               {charger.connectors.map((c, i) => (
                 <span
                   key={i}
-                  className="rounded-full border border-white/10 bg-white/60 px-2.5 py-1 text-xs font-medium text-foreground dark:bg-zinc-800/60"
+                  className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground"
                 >
                   {c.type.toUpperCase()} ×{c.count}
                   {c.powerKw != null ? ` · ${c.powerKw} kW` : ""}

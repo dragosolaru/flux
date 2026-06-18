@@ -27,28 +27,23 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
 
   return (
     <>
-      {/* Backdrop — tap to dismiss */}
+      {/* Backdrop — tap to dismiss. Proper scrim so nothing reads as a void. */}
       <div
-        className="fixed inset-0 z-[1090] bg-black/20 backdrop-blur-[1px]"
+        className="fixed inset-0 z-[1090] bg-black/50 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Bottom sheet — on md+ screens becomes a side card anchored to the right. */}
+      {/* Floating card — hugs content, sits clear above the BottomNav. */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={station.name}
-        className="fixed bottom-0 left-0 right-0 z-[1100] animate-slide-up rounded-t-3xl border-t border-white/10 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-xl dark:bg-zinc-900/90 md:bottom-6 md:left-auto md:right-6 md:max-w-md md:rounded-2xl md:border"
-        style={{ maxHeight: "85dvh" }}
+        className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+90px)] z-[1100] animate-slide-up overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl md:inset-x-auto md:bottom-6 md:right-6 md:max-w-md"
+        style={{ maxHeight: "70dvh" }}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-2.5">
-          <div className="h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-        </div>
-
-        <div className="overflow-y-auto px-5 pb-8 pt-4" style={{ maxHeight: "calc(85dvh - 1.5rem)" }}>
+        <div className="overflow-y-auto px-5 pb-5 pt-4" style={{ maxHeight: "70dvh" }}>
           {/* Header */}
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
@@ -68,7 +63,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             <button
               onClick={onClose}
               aria-label={tc("close")}
-              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="-mr-1.5 -mt-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
             >
               <X className="size-4" />
             </button>
@@ -77,7 +72,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
           {/* 2×2 stats grid */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             {/* Power */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3 ">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Zap className="size-3.5" />
                 {t("power")}
@@ -86,7 +81,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             </div>
 
             {/* Charging time */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3 ">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="size-3.5" />
                 {t("charge_time")}
@@ -95,7 +90,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             </div>
 
             {/* Arrive SoC */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3 ">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Battery className="size-3.5" />
                 {t("arrive_soc")}
@@ -104,7 +99,7 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
             </div>
 
             {/* Depart SoC */}
-            <div className="rounded-xl border border-white/10 bg-white/60 p-3 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-border bg-muted/50 p-3 ">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <BatteryFull className="size-3.5" />
                 {t("depart_soc")}
@@ -116,14 +111,14 @@ export function StationDetailSheet({ stop, onClose }: StationDetailSheetProps) {
           {/* Secondary stats row */}
           <div className="mt-3 flex flex-wrap gap-3">
             {/* Energy added */}
-            <div className="flex-1 rounded-xl border border-white/10 bg-white/60 px-3 py-2.5 dark:bg-zinc-800/60">
+            <div className="flex-1 rounded-xl border border-border bg-muted/50 px-3 py-2.5 ">
               <p className="text-xs text-muted-foreground">{t("energy_added")}</p>
               <p className="mt-0.5 text-sm font-semibold text-foreground">{energyAddedKwh.toFixed(1)} kWh</p>
             </div>
 
             {/* Est. cost — only when non-zero */}
             {costEur > 0 && (
-              <div className="flex-1 rounded-xl border border-white/10 bg-white/60 px-3 py-2.5 dark:bg-zinc-800/60">
+              <div className="flex-1 rounded-xl border border-border bg-muted/50 px-3 py-2.5 ">
                 <p className="text-xs text-muted-foreground">{t("cost")}</p>
                 <p className="mt-0.5 text-sm font-semibold text-green-400">{fromEUR(costEur)}</p>
               </div>
