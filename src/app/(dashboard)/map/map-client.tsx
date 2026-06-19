@@ -273,9 +273,9 @@ export function MapClient() {
   // Plan-mode form collapse: true = full form, false = compact "A → B" summary
   // bar (set after a plan is computed so the map and routes stay visible).
   const [editingRoute, setEditingRoute] = useState(true);
-  // Which route variant's details are expanded in the top-card accordion
-  // (null = all collapsed, so the route list stays compact and the map shows).
-  const [expandedVariant, setExpandedVariant] = useState<number | null>(null);
+  // Whether all route variant cards are expanded simultaneously for comparison.
+  // Collapsed by default so the map stays visible; one chevron tap opens all.
+  const [variantsExpanded, setVariantsExpanded] = useState(false);
 
   const canPlan = origin !== null && destination !== null;
 
@@ -328,7 +328,7 @@ export function MapClient() {
       setSheetState("mid");
       // Collapse the form to a slim "A → B" bar so the route is visible.
       setEditingRoute(false);
-      setExpandedVariant(null);
+      setVariantsExpanded(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
@@ -551,8 +551,8 @@ export function MapClient() {
                 variants={variants}
                 activeVariant={activeVariant}
                 setActiveVariant={setActiveVariant}
-                expandedVariant={expandedVariant}
-                setExpandedVariant={setExpandedVariant}
+                variantsExpanded={variantsExpanded}
+                setVariantsExpanded={setVariantsExpanded}
                 canShare={canShare}
                 sharing={sharing}
                 sharedRoute={sharedRoute}
@@ -954,8 +954,8 @@ interface RouteAccordionProps {
   variants: TripVariant[];
   activeVariant: number;
   setActiveVariant: (i: number) => void;
-  expandedVariant: number | null;
-  setExpandedVariant: (i: number | null) => void;
+  variantsExpanded: boolean;
+  setVariantsExpanded: (v: boolean) => void;
   canShare: boolean;
   sharing: boolean;
   sharedRoute: boolean;
@@ -979,8 +979,8 @@ function RouteAccordion({
   variants,
   activeVariant,
   setActiveVariant,
-  expandedVariant,
-  setExpandedVariant,
+  variantsExpanded,
+  setVariantsExpanded,
   canShare,
   sharing,
   sharedRoute,
@@ -994,14 +994,13 @@ function RouteAccordion({
 
   return (
     <div>
-      {/* Horizontal scroll strip — swipe to browse variants, tap chevron to expand */}
+      {/* Horizontal scroll strip — swipe to browse, tap any chevron to expand ALL for comparison */}
       <div className="overflow-x-auto overscroll-contain scrollbar-none">
-        <div className="flex gap-2 px-2 pb-2 pt-1">
+        <div className="flex gap-1.5 px-2 pb-2 pt-1">
           {variants.map((v, i) => {
             const vp = v.plan;
             const label = getVariantLabel(v, variants);
             const active = i === activeVariant;
-            const expanded = i === expandedVariant;
             const h = Math.floor(vp.totalMinutes / 60);
             const m = vp.totalMinutes % 60;
             const title = label
@@ -1019,62 +1018,59 @@ function RouteAccordion({
             return (
               <div
                 key={v.id}
-                className={`flex w-[min(72vw,260px)] shrink-0 flex-col rounded-xl border transition-colors ${
+                className={`flex w-[min(68vw,240px)] shrink-0 flex-col rounded-xl border transition-colors ${
                   active ? "border-primary/50 bg-primary/5" : "border-border"
                 }`}
               >
-                {/* Header — tap body = select route on map, tap chevron = expand details */}
-                <div className="flex items-start gap-1 px-3 py-2">
+                {/* Header — tap body = select route on map, tap chevron = expand/collapse ALL */}
+                <div className="flex items-start gap-0.5 px-2.5 py-1.5">
                   <button
                     onClick={() => {
                       setActiveVariant(i);
-                      if (single) setExpandedVariant(expanded ? null : i);
+                      if (single) setVariantsExpanded(!variantsExpanded);
                     }}
-                    className="flex min-w-0 flex-1 flex-col gap-0.5 text-left"
+                    className="flex min-w-0 flex-1 flex-col gap-0 text-left"
                   >
                     {!single && (
-                      <p className={`truncate text-xs font-semibold ${titleColor}`}>{title}</p>
+                      <p className={`truncate text-2xs font-semibold uppercase tracking-wide ${titleColor}`}>
+                        {title}
+                      </p>
                     )}
-                    <p className="text-2xs text-muted-foreground">
-                      <span className="font-medium text-foreground tabular-nums">
-                        {h}h {m}min
-                      </span>{" "}
-                      · {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}
+                    <p className="text-xs font-semibold tabular-nums text-foreground">
+                      {h}h {m}m
                     </p>
-                    <span className="text-xs font-semibold text-green-400 tabular-nums">
-                      {fromEUR(vp.tripEnergyCostEur)}
-                    </span>
+                    <p className="text-2xs text-muted-foreground">
+                      {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}{" "}
+                      · <span className="font-semibold text-green-400 tabular-nums">{fromEUR(vp.tripEnergyCostEur)}</span>
+                    </p>
                   </button>
                   <button
-                    onClick={() => {
-                      setActiveVariant(i);
-                      setExpandedVariant(expanded ? null : i);
-                    }}
-                    aria-expanded={expanded}
+                    onClick={() => setVariantsExpanded(!variantsExpanded)}
+                    aria-expanded={variantsExpanded}
                     aria-label={title}
-                    className="-mr-1 mt-0.5 shrink-0 p-1.5 text-muted-foreground active:text-foreground"
+                    className="-mr-0.5 mt-0.5 shrink-0 p-1 text-muted-foreground active:text-foreground"
                   >
                     <ChevronDown
-                      className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+                      className={`size-3.5 transition-transform ${variantsExpanded ? "rotate-180" : ""}`}
                     />
                   </button>
                 </div>
 
-                {/* Expanded details — vertically scrollable within the card */}
-                {expanded && (
-                  <div className="max-h-[42vh] space-y-2 overflow-y-auto overscroll-contain border-t border-border/40 px-3 pb-3 pt-2 [touch-action:pan-y]">
+                {/* Expanded details — same state for all cards so you can compare while swiping */}
+                {variantsExpanded && (
+                  <div className="max-h-[40vh] space-y-2 overflow-y-auto overscroll-contain border-t border-border/40 px-2.5 pb-2.5 pt-2 [touch-action:pan-y]">
                     {vp.feasible === false ? (
-                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
                         <div className="flex items-start gap-2">
-                          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-amber-400">
+                          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-semibold text-amber-400">
                               {tTrip("infeasible_title")}
                             </p>
                             {vp.warning && (
-                              <p className="text-xs text-amber-400/80">{vp.warning}</p>
+                              <p className="text-2xs text-amber-400/80">{vp.warning}</p>
                             )}
-                            <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
+                            <p className="text-2xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
                           </div>
                         </div>
                       </div>
@@ -1096,26 +1092,26 @@ function RouteAccordion({
                           <button
                             onClick={onShareToTesla}
                             disabled={sharing}
-                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                           >
                             {sharing ? (
-                              <Loader2 className="size-4 animate-spin" />
+                              <Loader2 className="size-3.5 animate-spin" />
                             ) : (
-                              <Send className="size-4" />
+                              <Send className="size-3.5" />
                             )}
                             {tTrip("share_to_tesla")}
                           </button>
                         )}
 
                         {vp.warning && (
-                          <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
-                            <AlertCircle className="size-3.5 shrink-0" />
+                          <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-2xs text-amber-400">
+                            <AlertCircle className="size-3 shrink-0" />
                             {vp.warning}
                           </div>
                         )}
 
                         {vp.stops.length > 0 ? (
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             {vp.stops.map((stop, si) => (
                               <StopCard
                                 key={si}
@@ -1132,7 +1128,7 @@ function RouteAccordion({
                             ))}
                           </div>
                         ) : (
-                          <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
                             {tTrip("no_stops")}
                           </div>
                         )}
@@ -1147,7 +1143,7 @@ function RouteAccordion({
       </div>
 
       {plan.deratingPct < 0 && (
-        <p className="px-3 pb-2 text-xs text-muted-foreground">
+        <p className="px-3 pb-2 text-2xs text-muted-foreground">
           {tTrip("derate_note", { pct: Math.abs(plan.deratingPct) })}
         </p>
       )}

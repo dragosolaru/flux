@@ -402,6 +402,7 @@ interface VariantsInput {
 }
 
 const STRATEGIES: { id: TripStrategy; target: number }[] = [
+  { id: "economy", target: 55 },  // top up minimum — many very short stops
   { id: "fastest", target: 70 },  // top up just enough — shorter, more frequent stops
   { id: "balanced", target: 95 }, // charge higher — fewer stops
 ];
@@ -473,7 +474,7 @@ export async function planTripVariants(input: VariantsInput): Promise<TripVarian
       seen.add(sig);
       return true;
     })
-    .slice(0, 4);
+    .slice(0, 6);
 
   if (distinct.length > 0) return distinct;
 

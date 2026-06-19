@@ -42,7 +42,7 @@ export interface TripPlan {
   trafficDelayMinutes: number;
 }
 
-export type TripStrategy = "fastest" | "balanced";
+export type TripStrategy = "fastest" | "balanced" | "economy";
 
 export interface TripVariant {
   id: string;
