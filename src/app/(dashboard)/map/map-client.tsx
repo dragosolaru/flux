@@ -11,13 +11,13 @@ import {
   Navigation,
   AlertTriangle,
   ChevronUp,
+  ChevronDown,
   ChevronRight,
   Zap,
   Send,
-  SlidersHorizontal,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
@@ -66,17 +66,18 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
   { value: "tesla", label: "Tesla" },
 ];
 
+// Pill style shared across filter chips
+const CHIP_BASE =
+  "h-8 shrink-0 rounded-full border px-3 text-xs transition-colors";
+const CHIP_ON =
+  "border-primary/50 bg-primary/15 font-semibold text-foreground";
+const CHIP_OFF =
+  "border-border bg-transparent text-muted-foreground";
+
 // ---------------------------------------------------------------------------
 // Bottom sheet geometry
 // ---------------------------------------------------------------------------
 
-// Collapsed height is measured from the rendered peek (grabber + summary line);
-// this fallback only covers SSR / first paint before the ResizeObserver fires.
-const PEEK_FALLBACK = 88;
-
-// iOS Safari's window.innerHeight counts the area behind the URL/toolbar, so we
-// prefer visualViewport.height (the truly visible region) and fall back to
-// innerHeight only when it is unavailable.
 function visibleViewportHeight(): number {
   if (typeof window === "undefined") return 800;
   return Math.round(window.visualViewport?.height ?? window.innerHeight);
@@ -118,8 +119,6 @@ function getVariantLabel(variant: TripVariant, allVariants: TripVariant[]): Vari
 // Explore-mode station state
 // ---------------------------------------------------------------------------
 
-// Central Europe — neutral default before geolocation resolves.
-// The map requests geolocation on mount and updates this immediately.
 const DEFAULT_LAT = 48.0;
 const DEFAULT_LNG = 14.0;
 const DEFAULT_BBOX: ViewportBBox = {
@@ -147,45 +146,24 @@ export function MapClient() {
   const initialMode: MapMode = searchParams.get("mode") === "plan" ? "plan" : "explore";
   const [mode, setMode] = useState<MapMode>(initialMode);
 
-  // ---- 3-state bottom sheet (height-driven) ----
-  // The sheet is a flex column whose *height* is the single source of truth:
-  // collapsed hugs the measured peek, mid/full are fractions of the visible
-  // viewport. The scroll area is `flex-1`, so content can never leave a dead
-  // gap — the panel is always exactly as tall as its current snap.
-  type SheetState = "collapsed" | "mid" | "full";
-  const [sheetState, setSheetState] = useState<SheetState>(
-    initialMode === "plan" ? "mid" : "collapsed",
-  );
+  // ---- 2-state bottom results sheet (height-driven) ----
+  // The sheet only appears when there are results (stations or a trip plan).
+  // It snaps between mid (~45 vh) and full (~88 vh).
+  type SheetState = "mid" | "full";
+  const [sheetState, setSheetState] = useState<SheetState>("mid");
 
-  // Visible viewport height (tracks iOS toolbar show/hide via visualViewport).
   const [vh, setVh] = useState(() => visibleViewportHeight());
-  const midH = Math.round(vh * 0.5);
-  const fullH = Math.round(vh * 0.9);
-
-  // Collapsed height = the real rendered peek, measured from the DOM so the
-  // panel hugs it exactly (no hand-tuned constant, no dead space).
-  const peekRef = useRef<HTMLDivElement>(null);
-  const [collapsedH, setCollapsedH] = useState(PEEK_FALLBACK);
+  const midH = Math.round(vh * 0.45);
+  const fullH = Math.round(vh * 0.88);
 
   const heightFor = useCallback(
-    (s: SheetState) => (s === "collapsed" ? collapsedH : s === "mid" ? midH : fullH),
-    [collapsedH, midH, fullH],
+    (s: SheetState) => (s === "mid" ? midH : fullH),
+    [midH, fullH],
   );
 
-  // Live height while dragging (null = settled on a snap).
   const [dragH, setDragH] = useState<number | null>(null);
   const dragStartY = useRef(0);
   const dragStartH = useRef(0);
-
-  function applySheetState(state: SheetState) {
-    setSheetState(state);
-  }
-
-  function cycleSheetState() {
-    applySheetState(
-      sheetState === "collapsed" ? "mid" : sheetState === "mid" ? "full" : "collapsed",
-    );
-  }
 
   function onDragStart(e: React.PointerEvent<HTMLDivElement>) {
     dragStartY.current = e.clientY;
@@ -196,22 +174,13 @@ export function MapClient() {
 
   function onDragMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!(e.buttons & 1)) return;
-    // Drag up (smaller clientY) grows the sheet.
     const next = dragStartH.current + (dragStartY.current - e.clientY);
-    setDragH(Math.max(collapsedH, Math.min(next, fullH)));
+    setDragH(Math.max(midH, Math.min(next, fullH)));
   }
 
   function onDragEnd() {
     const h = dragH ?? heightFor(sheetState);
-    const snaps: [SheetState, number][] = [
-      ["collapsed", collapsedH],
-      ["mid", midH],
-      ["full", fullH],
-    ];
-    const nearest = snaps.reduce((best, cur) =>
-      Math.abs(cur[1] - h) < Math.abs(best[1] - h) ? cur : best,
-    );
-    setSheetState(nearest[0]);
+    setSheetState(Math.abs(h - midH) <= Math.abs(h - fullH) ? "mid" : "full");
     setDragH(null);
   }
 
@@ -221,10 +190,8 @@ export function MapClient() {
   const [exploreArea, setExploreArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Charger | null>(null);
   const [exploreResetKey, setExploreResetKey] = useState(0);
-  const hasActiveFilter = minKw > 0 || connector !== "all";
 
   const handleExploreLocate = useCallback((lat: number, lng: number) => {
     setExploreCenter({ lat, lng });
@@ -291,12 +258,10 @@ export function MapClient() {
   const [sharing, setSharing] = useState(false);
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const canPlan = origin !== null && destination !== null;
 
-  // Geocode bias: searches rank results near the user first ("Florești" →
-  // the one nearby, not the wrong county). Destination favors the origin so
-  // results lean toward the travel direction.
   const originBias = exploreUserLoc ?? exploreCenter;
   const destinationBias = origin ? { lat: origin.lat, lng: origin.lng } : originBias;
 
@@ -343,9 +308,7 @@ export function MapClient() {
       setPlan(result);
       setActiveVariant(0);
       setSharedRoute(false);
-      // Collapse to summary peek so the route is visible on the map —
-      // details stay one drag away (Google Maps pattern).
-      applySheetState("collapsed");
+      setSheetState("mid");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
@@ -358,9 +321,6 @@ export function MapClient() {
   const variants = useMemo(() => plan?.variants ?? [], [plan?.variants]);
   const activePlan = variants[activeVariant]?.plan ?? plan?.plan ?? null;
 
-  // One line per unique physical road (deduped by roadIndex). The active road
-  // is whichever the selected variant uses. Returns [] for a single road so
-  // TripMap falls back to the plain active-polyline render.
   const activeRoadIndex = variants[activeVariant]?.roadIndex ?? null;
   const routeLines = useMemo<RouteLine[]>(() => {
     const byRoad = new Map<number, TripVariant>();
@@ -437,8 +397,6 @@ export function MapClient() {
   const originShort = origin?.name.split(",")[0] ?? "";
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
-  // Track the visible viewport so mid/full stay correct when the iOS toolbar
-  // shows/hides or on rotation.
   useEffect(() => {
     const vv = window.visualViewport;
     const update = () => setVh(visibleViewportHeight());
@@ -453,34 +411,14 @@ export function MapClient() {
     };
   }, []);
 
-  // Measure the collapsed peek so the panel hugs it exactly. Only measure while
-  // collapsed — when expanded the peek also holds the mode tabs, which we don't
-  // want baked into the collapsed height.
-  useEffect(() => {
-    if (sheetState !== "collapsed") return;
-    const el = peekRef.current;
-    if (!el) return;
-    const measure = () => setCollapsedH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [mode, plan, sheetState]);
-
   // ---- Mode switch ----
   function switchMode(next: MapMode) {
     setMode(next);
-    if (next === "plan") {
-      applySheetState(plan ? "collapsed" : "mid");
-    } else {
-      applySheetState("collapsed");
-    }
+    setSheetState("mid");
   }
 
-  // The sheet shows its scrollable body whenever it's past the collapsed snap —
-  // either settled at mid/full, or dragged up far enough from collapsed.
-  const expanded =
-    sheetState !== "collapsed" || (dragH != null && dragH > collapsedH + 24);
+  // The results sheet shows whenever there's something to display.
+  const showSheet = mode === "explore" ? stations.length > 0 : plan !== null;
 
   // ---- Render ----
   return (
@@ -511,211 +449,276 @@ export function MapClient() {
         )}
       </div>
 
-      {/* LAYER 2: Floating top controls (explore mode filters) — mobile only */}
-      {mode === "explore" && (
-        <div className="absolute left-3 top-3 z-[1000] lg:hidden">
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className={`pill-float flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-              hasActiveFilter
-                ? "!border-primary/40 !bg-primary/15 text-foreground"
-                : "text-muted-foreground"
-            }`}
-          >
-            <SlidersHorizontal className="size-3.5" />
-            {showFilters ? tCharging("hide_filters") : tCharging("show_filters")}
-            {hasActiveFilter && <span className="size-1.5 rounded-full bg-primary" />}
-          </button>
-        </div>
-      )}
-
-      {mode === "explore" && showFilters && (
-        <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5 lg:hidden">
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/90 px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
-            {POWER_OPTIONS.map((opt) => (
-              <button
-                key={String(opt.value)}
-                onClick={() => setMinKw(opt.value)}
-                aria-pressed={minKw === opt.value}
-                className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
-                  minKw === opt.value
-                    ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/90 px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
-            {CONNECTOR_OPTIONS.map((opt) => (
-              <button
-                key={String(opt.value)}
-                onClick={() => setConnector(opt.value)}
-                aria-pressed={connector === opt.value}
-                className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
-                  connector === opt.value
-                    ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* LAYER 3: Bottom sheet */}
-      {/* Collapsed: a floating rounded card just above the nav (Google/Apple Maps
-          pattern) — a clean object over the map, no gradient, no dimmed markers.
-          Mid/full: morphs into a full-width sheet anchored to the bottom edge. */}
-      <motion.div
-        className={`absolute z-[900] flex flex-col overflow-hidden border-border bg-background/95 shadow-2xl backdrop-blur-2xl transition-[border-radius] duration-200 lg:hidden ${
-          sheetState === "collapsed"
-            ? "inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+80px)] rounded-3xl border"
-            : "inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-[20px] border-t"
-        }`}
-        animate={{ height: dragH ?? heightFor(sheetState) }}
-        transition={
-          dragH != null ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 38 }
-        }
+      {/* LAYER 2: Mobile Top Card (Waze/ABRP pattern)
+          Replaces the old floating filter button + pills + collapsed bottom card.
+          Single control surface at the top: mode tabs + mode-specific controls.
+          No overflow-hidden so GeocodingSearch dropdowns extend below the card. */}
+      <div
+        className="absolute inset-x-3 z-[1000] lg:hidden"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
-        {/* Peek — grabber + (collapsed summary line | mode tabs). The whole strip
-            is the drag handle. Measured (collapsed only) so the panel hugs it. */}
-        <div
-          ref={peekRef}
-          className="shrink-0 cursor-grab touch-none select-none"
-          onPointerDown={onDragStart}
-          onPointerMove={onDragMove}
-          onPointerUp={onDragEnd}
-        >
-          {/* Grabber — compact tappable strip, cycles collapsed → mid → full */}
-          <button
-            onClick={cycleSheetState}
-            className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1.5 pt-2.5"
-            aria-label={tMap("drag_to_expand")}
-          >
-            <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
-          </button>
+        <div className="rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl">
+          {/* Mode tabs */}
+          <div className="px-3 pb-2 pt-3">
+            <SegmentedControl<MapMode>
+              layoutId="map-mode-thumb-mobile"
+              value={mode}
+              onChange={switchMode}
+              options={[
+                { value: "explore", label: tMap("tab_explore"), icon: Compass },
+                { value: "plan", label: tMap("tab_plan"), icon: Route },
+              ]}
+            />
+          </div>
 
-          {/* Collapsed: single dense summary line, flat inside the card. */}
-          {!expanded && (
-            mode === "plan" && plan && activePlan ? (
-              <button
-                onClick={() => applySheetState("mid")}
-                className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
-              >
-                <p className="min-w-0 truncate">
-                  <span className="text-sm font-semibold tabular-nums">
-                    {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
-                    {activePlan.stops.length === 0
-                      ? tTrip("stops_count_zero")
-                      : activePlan.stops.length === 1
-                        ? tTrip("stops_count_one")
-                        : tTrip("stops_count_other", { count: activePlan.stops.length })}
-                  </span>
-                </p>
-                <span className="ml-2 flex shrink-0 items-center gap-1.5">
-                  <span className="text-sm font-semibold text-green-400 tabular-nums">
-                    {fromEUR(activePlan.tripEnergyCostEur)}
-                  </span>
-                  <ChevronUp className="size-4 text-muted-foreground" />
-                </span>
-              </button>
-            ) : (
-              <button
-                onClick={cycleSheetState}
-                className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  {mode === "explore" && stations.length > 0 && (
-                    <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-2xs font-semibold tabular-nums text-foreground">
-                      {tCharging("stations_count", { count: stations.length })}
-                    </span>
-                  )}
-                  <span className="truncate text-sm text-muted-foreground">
-                    {mode === "explore"
-                      ? stations.length > 0
-                        ? `${stations[0].name ?? tCharging("station_fallback")}${stations[0].maxPowerKw != null ? ` · ${stations[0].maxPowerKw} kW` : ""}`
-                        : tMap("explore_hint")
-                      : tMap("plan_hint")}
-                  </span>
-                </span>
-                <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
-              </button>
-            )
+          {/* Explore: filter chip rows */}
+          {mode === "explore" && (
+            <div className="space-y-1.5 border-t border-border/40 px-3 py-2">
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                {POWER_OPTIONS.map((opt) => (
+                  <button
+                    key={String(opt.value)}
+                    onClick={() => setMinKw(opt.value)}
+                    aria-pressed={minKw === opt.value}
+                    className={`${CHIP_BASE} ${minKw === opt.value ? CHIP_ON : CHIP_OFF}`}
+                  >
+                    {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                {CONNECTOR_OPTIONS.map((opt) => (
+                  <button
+                    key={String(opt.value)}
+                    onClick={() => setConnector(opt.value)}
+                    aria-pressed={connector === opt.value}
+                    className={`${CHIP_BASE} ${connector === opt.value ? CHIP_ON : CHIP_OFF}`}
+                  >
+                    {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* Mode tabs — only when expanded, so the collapsed peek stays slim. */}
-          {expanded && (
-            <div className="mx-3 mb-2 mt-1">
-              <SegmentedControl<MapMode>
-                layoutId="map-mode-thumb-mobile"
-                value={mode}
-                onChange={switchMode}
-                options={[
-                  { value: "explore", label: tMap("tab_explore"), icon: Compass },
-                  { value: "plan", label: tMap("tab_plan"), icon: Route },
-                ]}
+          {/* Plan: origin + destination + advanced + plan button */}
+          {mode === "plan" && (
+            <div className="space-y-2 border-t border-border/40 px-3 py-2">
+              <GeocodingSearch
+                placeholder={tTrip("origin_placeholder")}
+                value={origin}
+                onChange={setOrigin}
+                icon={<Navigation className="size-4" />}
+                onLocate={handleLocateOrigin}
+                locating={locating}
+                locateTitle={locating ? tTrip("locating") : tTrip("use_my_location")}
+                bias={originBias}
               />
+              <GeocodingSearch
+                placeholder={tTrip("destination_placeholder")}
+                value={destination}
+                onChange={setDestination}
+                bias={destinationBias}
+              />
+
+              {/* Advanced (SOC + vehicle) — collapsible */}
+              <button
+                onClick={() => setShowAdvanced((v) => !v)}
+                className="flex w-full items-center justify-between py-0.5 text-xs text-muted-foreground"
+              >
+                <span>{tTrip("advanced_label")}</span>
+                {showAdvanced ? (
+                  <ChevronUp className="size-3.5" />
+                ) : (
+                  <ChevronDown className="size-3.5" />
+                )}
+              </button>
+
+              {showAdvanced && (
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{tTrip("battery_label")}</span>
+                      <span className="font-medium text-foreground">{startSoc}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={5}
+                      value={startSoc}
+                      onChange={(e) => setStartSoc(Number(e.target.value))}
+                      className="mt-1 h-1 w-full appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{tTrip("arrival_soc")}</span>
+                      <span className="font-medium text-foreground">{arrivalSoc}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={30}
+                      step={5}
+                      value={arrivalSoc}
+                      onChange={(e) => setArrivalSoc(Number(e.target.value))}
+                      className="mt-1 h-1 w-full appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
+                    />
+                  </div>
+                  {(vehicles?.length ?? 0) > 0 && (
+                    <div>
+                      <label className="mb-1 block text-xs text-muted-foreground">
+                        {tTrip("vehicle_label")}
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={vehicleId}
+                          onChange={(e) => setVehicleId(e.target.value)}
+                          className="auth-input w-full appearance-none pr-5"
+                        >
+                          <option value="">{tTrip("vehicle_default")}</option>
+                          {vehicles?.map((v) => (
+                            <option key={v.id} value={v.id}>
+                              {v.nickname ?? v.displayName}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handlePlan}
+                disabled={!canPlan || loading}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    {tTrip("planning")}
+                  </>
+                ) : (
+                  <>
+                    <Route className="size-4" />
+                    {tTrip("plan_btn")}
+                  </>
+                )}
+              </button>
+
+              {planError && (
+                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  <AlertCircle className="size-3.5 shrink-0" />
+                  {planError}
+                </div>
+              )}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Sheet content — fills the remaining height (flex-1) and scrolls, so
-            there's never a dead gap. Bottom padding clears the floating nav. */}
-        {expanded && (
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+96px)] [touch-action:pan-y]">
-            {mode === "explore" ? (
-              <ExploreContent
-                stations={stations}
-                isFetching={isFetching}
-                onStationSelect={setSelectedStation}
-                tCharging={tCharging}
-                tMap={tMap}
-              />
-            ) : (
-              <PlanContent
-                vehicles={vehicles ?? []}
-                vehicleId={vehicleId}
-                setVehicleId={setVehicleId}
-                origin={origin}
-                setOrigin={setOrigin}
-                destination={destination}
-                setDestination={setDestination}
-                originBias={originBias}
-                destinationBias={destinationBias}
-                startSoc={startSoc}
-                setStartSoc={setStartSoc}
-                arrivalSoc={arrivalSoc}
-                setArrivalSoc={setArrivalSoc}
-                plan={plan}
-                activePlan={activePlan}
-                variants={variants}
-                activeVariant={activeVariant}
-                setActiveVariant={setActiveVariant}
-                loading={loading}
-                planError={planError}
-                canPlan={canPlan}
-                canShare={canShare}
-                sharing={sharing}
-                sharedRoute={sharedRoute}
-                onLocateOrigin={handleLocateOrigin}
-                locating={locating}
-                onPlan={handlePlan}
-                onShareToTesla={handleShareToTesla}
-                originShort={originShort}
-                destinationShort={destinationShort}
-                tTrip={tTrip}
-              />
-            )}
-          </div>
+      {/* LAYER 3: Mobile Bottom Results Sheet
+          Appears only when there are results (stations or a trip plan).
+          Snaps between mid and full — no collapsed state (top card handles control). */}
+      <AnimatePresence>
+        {showSheet && (
+          <motion.div
+            key="results-sheet"
+            className="absolute inset-x-0 bottom-0 z-[900] mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[20px] border-t border-border bg-background/95 shadow-2xl backdrop-blur-2xl lg:hidden"
+            initial={{ height: 0 }}
+            animate={{ height: dragH ?? heightFor(sheetState) }}
+            exit={{ height: 0 }}
+            transition={
+              dragH != null ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 38 }
+            }
+          >
+            {/* Grabber + results header — drag handle */}
+            <div
+              className="shrink-0 cursor-grab touch-none select-none"
+              onPointerDown={onDragStart}
+              onPointerMove={onDragMove}
+              onPointerUp={onDragEnd}
+            >
+              <button
+                onClick={() => setSheetState((s) => (s === "mid" ? "full" : "mid"))}
+                className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1.5 pt-2.5"
+                aria-label={tMap("drag_to_expand")}
+              >
+                <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
+              </button>
+
+              {/* Contextual header line */}
+              {mode === "explore" && (
+                <div className="flex items-center gap-2 px-4 pb-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {isFetching
+                      ? tCharging("updating", { count: stations.length })
+                      : tCharging("stations_count", { count: stations.length })}
+                  </span>
+                </div>
+              )}
+              {mode === "plan" && activePlan && (
+                <button
+                  onClick={() => setSheetState((s) => (s === "mid" ? "full" : "mid"))}
+                  className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
+                >
+                  <p className="min-w-0 truncate">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
+                      {activePlan.stops.length === 0
+                        ? tTrip("stops_count_zero")
+                        : activePlan.stops.length === 1
+                          ? tTrip("stops_count_one")
+                          : tTrip("stops_count_other", { count: activePlan.stops.length })}
+                    </span>
+                  </p>
+                  <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                    <span className="text-sm font-semibold text-green-400 tabular-nums">
+                      {fromEUR(activePlan.tripEnergyCostEur)}
+                    </span>
+                    <ChevronUp className="size-4 text-muted-foreground" />
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* Scrollable content */}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+96px)] [touch-action:pan-y]">
+              {mode === "explore" ? (
+                <ExploreContent
+                  stations={stations}
+                  isFetching={isFetching}
+                  onStationSelect={setSelectedStation}
+                  tCharging={tCharging}
+                  tMap={tMap}
+                  hideHeader
+                />
+              ) : plan && activePlan ? (
+                <PlanResults
+                  plan={plan}
+                  activePlan={activePlan}
+                  variants={variants}
+                  activeVariant={activeVariant}
+                  setActiveVariant={setActiveVariant}
+                  canShare={canShare}
+                  sharing={sharing}
+                  sharedRoute={sharedRoute}
+                  onShareToTesla={handleShareToTesla}
+                  originShort={originShort}
+                  destinationShort={destinationShort}
+                  tTrip={tTrip}
+                />
+              ) : null}
+            </div>
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
 
       {/* DESKTOP: left sidebar (lg+) — same content, no drag */}
       <DesktopSidebar title={tMap("title")} icon={Route}>
@@ -732,7 +735,6 @@ export function MapClient() {
           <div className="mt-4 h-px bg-border" />
         </div>
 
-        {/* Explore filters live in the sidebar on desktop */}
         {mode === "explore" && (
           <div className="shrink-0 space-y-1.5 px-5 pt-3">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
@@ -824,21 +826,23 @@ interface ExploreContentProps {
   onStationSelect: (s: Charger) => void;
   tCharging: ReturnType<typeof useTranslations>;
   tMap: ReturnType<typeof useTranslations>;
+  hideHeader?: boolean;
 }
 
-function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap }: ExploreContentProps) {
+function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap, hideHeader }: ExploreContentProps) {
   const list = stations.slice(0, 50);
 
   return (
     <div className="space-y-2.5 pt-1">
-      {/* Section header */}
-      <div className="flex items-center justify-between">
-        <span className={SECTION_TITLE}>
-          {isFetching
-            ? tCharging("updating", { count: stations.length })
-            : tCharging("stations_count", { count: stations.length })}
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <span className={SECTION_TITLE}>
+            {isFetching
+              ? tCharging("updating", { count: stations.length })
+              : tCharging("stations_count", { count: stations.length })}
+          </span>
+        </div>
+      )}
 
       {list.length === 0 && !isFetching && (
         <p className="py-6 text-center text-sm text-muted-foreground">{tMap("no_stations")}</p>
@@ -900,7 +904,170 @@ function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap
 }
 
 // ---------------------------------------------------------------------------
-// PlanContent
+// PlanResults — results-only section (used in mobile bottom sheet)
+// ---------------------------------------------------------------------------
+
+interface PlanResultsProps {
+  plan: {
+    deratingPct: number;
+  };
+  activePlan: TripPlan;
+  variants: TripVariant[];
+  activeVariant: number;
+  setActiveVariant: (i: number) => void;
+  canShare: boolean;
+  sharing: boolean;
+  sharedRoute: boolean;
+  onShareToTesla: () => void;
+  originShort: string;
+  destinationShort: string;
+  tTrip: ReturnType<typeof useTranslations>;
+}
+
+function PlanResults({
+  plan,
+  activePlan,
+  variants,
+  activeVariant,
+  setActiveVariant,
+  canShare,
+  sharing,
+  sharedRoute,
+  onShareToTesla,
+  originShort,
+  destinationShort,
+  tTrip,
+}: PlanResultsProps) {
+  return (
+    <div className="space-y-3 pt-1">
+      {variants.length > 1 && (
+        <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1">
+          {variants.map((v, i) => {
+            const h = Math.floor(v.plan.totalMinutes / 60);
+            const m = v.plan.totalMinutes % 60;
+            const active = i === activeVariant;
+            const label = getVariantLabel(v, variants);
+            const chipTitle = label
+              ? tTrip(`variant.${label.key}`)
+              : `${tTrip("route_label")} ${String.fromCharCode(65 + i)}`;
+            return (
+              <button
+                key={v.id}
+                onClick={() => setActiveVariant(i)}
+                aria-pressed={active}
+                className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
+                  active
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-muted/40 hover:bg-muted"
+                }`}
+              >
+                <span
+                  className={`truncate text-xs font-semibold ${
+                    label?.color === "accent"
+                      ? "text-primary"
+                      : label?.color === "green"
+                        ? "text-green-400"
+                        : label?.color === "yellow"
+                          ? "text-yellow-400"
+                          : "text-foreground"
+                  }`}
+                >
+                  {chipTitle}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {h}h {m}min · {Math.round(v.plan.totalDistanceKm)} km ·{" "}
+                  {v.plan.stops.length === 0
+                    ? tTrip("stops_count_zero")
+                    : v.plan.stops.length === 1
+                      ? tTrip("stops_count_one")
+                      : tTrip("stops_count_other", { count: v.plan.stops.length })}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {activePlan.feasible === false ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+            <div className="space-y-1.5">
+              <p className="text-sm font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
+              {activePlan.warning && (
+                <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
+              )}
+              <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <CostSummary
+            origin={originShort}
+            destination={destinationShort}
+            totalDistanceKm={activePlan.totalDistanceKm}
+            drivingMinutes={activePlan.drivingMinutes}
+            chargingMinutes={activePlan.chargingMinutes}
+            tripEnergyKwh={activePlan.tripEnergyKwh}
+            tripEnergyCostEur={activePlan.tripEnergyCostEur}
+            stopsCount={activePlan.stops.length}
+            approxRoute={activePlan.approxRoute}
+          />
+
+          {canShare && (
+            <button
+              onClick={onShareToTesla}
+              disabled={sharing}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {sharing ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {tTrip("share_to_tesla")}
+            </button>
+          )}
+
+          {activePlan.warning && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+              <AlertCircle className="size-3.5 shrink-0" />
+              {activePlan.warning}
+            </div>
+          )}
+
+          {activePlan.stops.length > 0 ? (
+            <div className="space-y-1.5">
+              {activePlan.stops.map((stop, i) => (
+                <StopCard
+                  key={i}
+                  stop={stop}
+                  index={i}
+                  preconditioned={
+                    sharedRoute &&
+                    i === 0 &&
+                    needsPreconditioning(stop.station.maxKw) &&
+                    !isSuperchargerNetwork(stop.station.networkId)
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+              {tTrip("no_stops")}
+            </div>
+          )}
+        </>
+      )}
+
+      {plan.deratingPct < 0 && (
+        <p className="text-xs text-muted-foreground">
+          {tTrip("derate_note", { pct: Math.abs(plan.deratingPct) })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PlanContent — full form + results (desktop sidebar only)
 // ---------------------------------------------------------------------------
 
 interface Vehicle {
@@ -978,7 +1145,6 @@ function PlanContent({
 }: PlanContentProps) {
   return (
     <div className="space-y-3">
-      {/* Origin */}
       <GeocodingSearch
         placeholder={tTrip("origin_placeholder")}
         value={origin}
@@ -990,7 +1156,6 @@ function PlanContent({
         bias={originBias}
       />
 
-      {/* Destination */}
       <GeocodingSearch
         placeholder={tTrip("destination_placeholder")}
         value={destination}
@@ -998,7 +1163,6 @@ function PlanContent({
         bias={destinationBias}
       />
 
-      {/* SOC sliders */}
       <div className="space-y-2">
         <div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -1012,7 +1176,7 @@ function PlanContent({
             step={5}
             value={startSoc}
             onChange={(e) => setStartSoc(Number(e.target.value))}
-            className="mt-1 w-full h-1 appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
+            className="mt-1 h-1 w-full appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
           />
         </div>
         <div>
@@ -1027,12 +1191,11 @@ function PlanContent({
             step={5}
             value={arrivalSoc}
             onChange={(e) => setArrivalSoc(Number(e.target.value))}
-            className="mt-1 w-full h-1 appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
+            className="mt-1 h-1 w-full appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
           />
         </div>
       </div>
 
-      {/* Vehicle picker */}
       {vehicles.length > 0 && (
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">{tTrip("vehicle_label")}</label>
@@ -1049,12 +1212,11 @@ function PlanContent({
                 </option>
               ))}
             </select>
-            <ChevronUp className="pointer-events-none absolute right-0 top-1/2 size-3.5 -translate-y-1/2 rotate-180 text-muted-foreground/60" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
           </div>
         </div>
       )}
 
-      {/* Plan button */}
       <button
         onClick={onPlan}
         disabled={!canPlan || loading}
@@ -1080,131 +1242,22 @@ function PlanContent({
         </div>
       )}
 
-      {/* Trip results */}
       {plan && activePlan && (
         <div className="space-y-3 border-t border-border pt-3">
-          {variants.length > 1 && (
-            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-              {variants.map((v, i) => {
-                const h = Math.floor(v.plan.totalMinutes / 60);
-                const m = v.plan.totalMinutes % 60;
-                const active = i === activeVariant;
-                const label = getVariantLabel(v, variants);
-                const chipTitle = label
-                  ? tTrip(`variant.${label.key}`)
-                  : `${tTrip("route_label")} ${String.fromCharCode(65 + i)}`;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => setActiveVariant(i)}
-                    aria-pressed={active}
-                    className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
-                      active
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-muted/40 hover:bg-muted"
-                    }`}
-                  >
-                    <span
-                      className={`truncate text-xs font-semibold ${
-                        label?.color === "accent"
-                          ? "text-primary"
-                          : label?.color === "green"
-                            ? "text-green-400"
-                            : label?.color === "yellow"
-                              ? "text-yellow-400"
-                              : "text-foreground"
-                      }`}
-                    >
-                      {chipTitle}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {h}h {m}min · {Math.round(v.plan.totalDistanceKm)} km ·{" "}
-                      {v.plan.stops.length === 0
-                        ? tTrip("stops_count_zero")
-                        : v.plan.stops.length === 1
-                          ? tTrip("stops_count_one")
-                          : tTrip("stops_count_other", { count: v.plan.stops.length })}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {activePlan.feasible === false ? (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
-                  {activePlan.warning && (
-                    <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
-                  )}
-                  <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <CostSummary
-                origin={originShort}
-                destination={destinationShort}
-                totalDistanceKm={activePlan.totalDistanceKm}
-                drivingMinutes={activePlan.drivingMinutes}
-                chargingMinutes={activePlan.chargingMinutes}
-                tripEnergyKwh={activePlan.tripEnergyKwh}
-                tripEnergyCostEur={activePlan.tripEnergyCostEur}
-                stopsCount={activePlan.stops.length}
-                approxRoute={activePlan.approxRoute}
-              />
-
-              {canShare && (
-                <button
-                  onClick={onShareToTesla}
-                  disabled={sharing}
-                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                >
-                  {sharing ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                  {tTrip("share_to_tesla")}
-                </button>
-              )}
-
-              {activePlan.warning && (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
-                  <AlertCircle className="size-3.5 shrink-0" />
-                  {activePlan.warning}
-                </div>
-              )}
-
-              {activePlan.stops.length > 0 ? (
-                <div className="space-y-1.5">
-                  {activePlan.stops.map((stop, i) => (
-                    <StopCard
-                      key={i}
-                      stop={stop}
-                      index={i}
-                      preconditioned={
-                        sharedRoute &&
-                        i === 0 &&
-                        needsPreconditioning(stop.station.maxKw) &&
-                        !isSuperchargerNetwork(stop.station.networkId)
-                      }
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                  {tTrip("no_stops")}
-                </div>
-              )}
-            </>
-          )}
-
-          {plan.deratingPct < 0 && (
-            <p className="text-xs text-muted-foreground">
-              {tTrip("derate_note", { pct: Math.abs(plan.deratingPct) })}
-            </p>
-          )}
+          <PlanResults
+            plan={plan}
+            activePlan={activePlan}
+            variants={variants}
+            activeVariant={activeVariant}
+            setActiveVariant={setActiveVariant}
+            canShare={canShare}
+            sharing={sharing}
+            sharedRoute={sharedRoute}
+            onShareToTesla={onShareToTesla}
+            originShort={originShort}
+            destinationShort={destinationShort}
+            tTrip={tTrip}
+          />
         </div>
       )}
     </div>

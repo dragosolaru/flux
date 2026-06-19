@@ -715,6 +715,7 @@
     "precondition_auto": "Automatikus előkondicionálás",
     "precondition_manual": "Akkumulátor előkondicionálása",
     "arrival_soc": "Megérkezés",
+    "advanced_label": "Speciális beállítások",
     "arrival_soc_pct": "Megérkezés {pct}%",
     "variant": {
       "fastest": "Leggyorsabb",

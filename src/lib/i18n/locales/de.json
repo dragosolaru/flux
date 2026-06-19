@@ -715,6 +715,7 @@
     "precondition_auto": "Auto-Vorkonditionierung",
     "precondition_manual": "Batterie vorkonditionieren",
     "arrival_soc": "Ankommen mit",
+    "advanced_label": "Erweiterte Optionen",
     "arrival_soc_pct": "Ankommen mit {pct}%",
     "variant": {
       "fastest": "Schnellste",

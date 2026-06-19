@@ -715,6 +715,7 @@
     "precondition_auto": "Auto-preconditioning",
     "precondition_manual": "Precondition battery",
     "arrival_soc": "Arrive with",
+    "advanced_label": "Advanced options",
     "arrival_soc_pct": "Arrive with {pct}%",
     "variant": {
       "fastest": "Fastest",

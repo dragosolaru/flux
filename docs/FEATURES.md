@@ -1935,3 +1935,18 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 ## 26. Dashboard — Charging Card Battery Guard
 
 **What:** `ChargingOverlayCard` rendered `state.batteryLevel` raw, so a corrupted JSONB value could surface as a giant number. Now clamped to `[0,100]` and rounded (matching `HeroCard`). **Key file:** `src/app/(dashboard)/dashboard/dashboard-client.tsx`.
+
+---
+
+## 27. Map Mobile — Top Card + Bottom Results Sheet
+
+**What:** Replaces the old floating filter toggle + separate pills row + 3-state collapsed bottom card with a single **top search/filter card** (Waze/ABRP pattern) plus a 2-state bottom **results-only** sheet.
+
+- **Top card** (`absolute inset-x-3 top-[safe-area+12px] z-[1000] lg:hidden`): rounded card anchored to the top. Contains mode tabs (Explore | Plan) + mode-specific controls. In Explore mode: two compact filter chip rows (power + connector type). In Plan mode: origin/destination `GeocodingSearch` fields, collapsible Advanced section (SOC sliders + vehicle), and Plan button.
+- **Bottom results sheet** (mobile only): appears via `AnimatePresence` only when there are results — `stations.length > 0` for Explore, `plan !== null` for Plan. Snaps between mid (~45 vh) and full (~88 vh). No collapsed state (the top card is the control surface). Draggable.
+- **Desktop:** unchanged — left `DesktopSidebar` with `PlanContent` (full form + results).
+- **Eliminated:** dark void below content, "get address" button overlapping card, misaligned colors, gradient that dimmed map markers.
+
+**How to use:** Open `/map` on mobile. In Explore mode: filter chips appear directly in the top card, station list slides up from the bottom when stations load. In Plan mode: enter origin/destination in the top card, tap "Plan route" — results sheet slides up from bottom.
+
+**Key files:** `src/app/(dashboard)/map/map-client.tsx`, `src/lib/i18n/locales/*.json` (new `trip.advanced_label`).

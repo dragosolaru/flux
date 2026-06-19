@@ -715,6 +715,7 @@
     "precondition_auto": "Precondiționare automată",
     "precondition_manual": "Precondiționează bateria",
     "arrival_soc": "Baterie la sosire",
+    "advanced_label": "Opțiuni avansate",
     "arrival_soc_pct": "Sosești cu {pct}%",
     "variant": {
       "fastest": "Cel mai rapid",
