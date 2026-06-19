@@ -7,14 +7,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
 import { FeatureGate } from "@/components/layout/FeatureGate";
-import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PriceCurveChart } from "@/components/energy/PriceCurveChart";
 import { SmartChargeCard } from "@/components/energy/SmartChargeCard";
 import { DepartureCard } from "@/components/vehicle/DepartureCard";
 import { apiFetch } from "@/lib/api-fetch";
-import { cardVariants } from "@/lib/animations/variants";
+import { cardVariants, pageVariants } from "@/lib/animations/variants";
+import { Card, PageHeader } from "@/components/ui-kit";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
 interface TariffResponse extends TariffForecast {
@@ -83,42 +82,42 @@ export function EnergyClient() {
 
   return (
     <FeatureGate capability="TARIFF">
-      <PageWrapper className="mx-auto max-w-2xl">
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+        className="mx-auto max-w-2xl px-4 pb-6 space-y-4"
+      >
         {/* Page header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {t("page_title")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("page_subtitle")}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={fLoading}
-            className="shrink-0"
-          >
-            <RefreshCw
-              className={`size-4 ${fLoading ? "animate-spin" : ""}`}
-            />
-            <span className="sr-only">{t("refresh")}</span>
-          </Button>
-        </div>
+        <PageHeader
+          title={t("page_title")}
+          subtitle={t("page_subtitle")}
+          trailing={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={fLoading}
+            >
+              <RefreshCw
+                className={`size-4 ${fLoading ? "animate-spin" : ""}`}
+              />
+              <span className="sr-only">{t("refresh")}</span>
+            </Button>
+          }
+        />
 
         {/* Smart charge hero card — most prominent element */}
         <SmartChargeCard forecast={forecast ?? null} isLoading={fLoading} />
 
         {/* 24-hour price chart */}
         <motion.div variants={cardVariants}>
-          <GlassCard className="p-5" animate={false}>
+          <Card variant="surface" className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold">
                 {t("price_curve_title")}
                 {forecast && (
-                  <span className="ml-2 font-normal text-muted-foreground/60">
+                  <span className="ml-2 font-normal text-muted-foreground">
                     · {forecast.providerName}
                   </span>
                 )}
@@ -136,7 +135,7 @@ export function EnergyClient() {
             </div>
 
             {fLoading || !forecast ? (
-              <div className="h-40 animate-pulse rounded-xl bg-white/5" />
+              <div className="h-40 animate-pulse rounded-xl bg-muted" />
             ) : (
               <PriceCurveChart
                 prices={forecast.prices}
@@ -145,13 +144,13 @@ export function EnergyClient() {
                 cheapestWindowEnd={forecast.cheapestWindowEnd}
               />
             )}
-          </GlassCard>
+          </Card>
         </motion.div>
 
         {/* Cheapest window summary */}
         {forecast && (
           <motion.div variants={cardVariants}>
-            <GlassCard className="p-4" animate={false}>
+            <Card variant="surface" className="p-4">
               <div className="flex items-center gap-3">
                 <Zap className="size-4 text-muted-foreground shrink-0" />
                 <div>
@@ -175,23 +174,23 @@ export function EnergyClient() {
                   </p>
                 </div>
               </div>
-            </GlassCard>
+            </Card>
           </motion.div>
         )}
 
         {/* Tariff provider selector */}
         <motion.div variants={cardVariants}>
-          <GlassCard className="p-4" animate={false}>
+          <Card variant="surface" className="p-4">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("tariff_provider_label")}
             </p>
             {sLoading ? (
-              <div className="h-9 animate-pulse rounded-xl bg-white/5" />
+              <div className="h-9 animate-pulse rounded-xl bg-muted" />
             ) : (
               <div className="relative">
                 <select
                   aria-label={t("tariff_provider_label")}
-                  className="w-full appearance-none rounded-xl border border-white/8 bg-background px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full appearance-none rounded-xl border border-border bg-background px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   value={settings?.activeProvider ?? ""}
                   onChange={handleProviderChange}
                   disabled={switchMutation.isPending}
@@ -207,12 +206,12 @@ export function EnergyClient() {
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               </div>
             )}
-          </GlassCard>
+          </Card>
         </motion.div>
 
         {/* Departure & Preconditioning — collapsible */}
         <motion.div variants={cardVariants}>
-          <GlassCard className="overflow-hidden" animate={false}>
+          <Card variant="surface" className="overflow-hidden">
             <button
               className="flex w-full items-center justify-between p-4 text-left"
               onClick={() => setDepartureOpen((v) => !v)}
@@ -237,7 +236,7 @@ export function EnergyClient() {
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                   className="overflow-hidden"
                 >
-                  <div className="border-t border-white/8 px-4 pb-4 pt-3">
+                  <div className="border-t border-border px-4 pb-4 pt-3">
                     {firstVehicleId ? (
                       <DepartureCard vehicleId={firstVehicleId} />
                     ) : (
@@ -249,10 +248,9 @@ export function EnergyClient() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </GlassCard>
+          </Card>
         </motion.div>
-
-      </PageWrapper>
+      </motion.div>
     </FeatureGate>
   );
 }
