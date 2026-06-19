@@ -55,7 +55,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Nav */}
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-white/8 bg-background/80 px-4 backdrop-blur-xl md:px-6">
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl md:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-2 font-semibold">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Zap className="size-4" />
@@ -92,7 +92,7 @@ export default async function HomePage() {
         />
 
         {/* Features — animated client component */}
-        <section className="border-t border-white/8 bg-white/[0.02] px-4 py-16 md:px-6 md:py-20">
+        <section className="border-t border-border bg-muted/30 px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-12 text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("features_title")}
@@ -119,7 +119,7 @@ export default async function HomePage() {
               </Link>
               <Link
                 href="/pricing"
-                className="w-full rounded-xl border border-white/10 px-8 py-3 text-center text-sm font-medium transition-colors hover:bg-white/5 sm:w-auto"
+                className="w-full rounded-xl border border-border px-8 py-3 text-center text-sm font-medium transition-colors hover:bg-muted/40 sm:w-auto"
               >
                 {t("pricing_teaser_cta")}
               </Link>
@@ -129,7 +129,7 @@ export default async function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/8 px-4 py-8 md:px-6">
+      <footer className="border-t border-border px-4 py-8 md:px-6">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <div className="flex items-center gap-2">
             <div className="flex size-5 items-center justify-center rounded bg-primary text-primary-foreground">

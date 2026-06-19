@@ -391,7 +391,7 @@ export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClien
       )}
 
       {/* Email recovery banner */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-white/8 bg-white/5 px-4 py-2 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-4 py-2 text-xs">
         <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
           <Inbox className="size-3.5 shrink-0" />
           <span className="min-w-0 truncate">{t("missing_email_docs")}</span>
