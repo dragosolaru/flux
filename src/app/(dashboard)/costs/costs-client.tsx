@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 import {
   Car,
@@ -34,6 +34,11 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
+import {
+  SectionHeader,
+  Card,
+  StatTile,
+} from "@/components/ui-kit";
 import type { CostAggregation, MonthlyBucket, Document } from "@/types/costs";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +63,7 @@ type MoneyFormatter = (amount: number, maxFractionDigits?: number) => string;
 // ─── KPI chip data builder ────────────────────────────────────────────────────
 
 interface KpiItem {
-  icon: React.ReactNode;
+  icon: ComponentType<{ className?: string }>;
   value: string;
   label: string;
   accent?: string;
@@ -73,14 +78,14 @@ function buildKpiItems(
   const hasData = data.totalCostRon > 0;
 
   items.push({
-    icon: <TrendingUp className="size-5" />,
+    icon: TrendingUp,
     value: fromRON(data.totalCostRon),
     label: t("kpi_total_lei"),
     accent: "text-primary",
   });
 
   items.push({
-    icon: <Zap className="size-5" />,
+    icon: Zap,
     value: `${fmt(data.totalKwh, 1)} kWh`,
     label: t("kpi_total_kwh"),
     accent: "text-chart-2",
@@ -89,14 +94,14 @@ function buildKpiItems(
   const splitHomePct =
     data.totalKwh > 0 ? Math.round((data.homeKwh / data.totalKwh) * 100) : null;
   items.push({
-    icon: <Home className="size-5" />,
+    icon: Home,
     value: splitHomePct != null ? `${splitHomePct}%` : "—",
     label: t("kpi_home_pct"),
     accent: "text-chart-2",
   });
 
   items.push({
-    icon: <Car className="size-5" />,
+    icon: Car,
     value:
       data.costPerKmBlended != null
         ? fromRON(data.costPerKmBlended, 3)
@@ -108,7 +113,7 @@ function buildKpiItems(
   });
 
   items.push({
-    icon: <Gauge className="size-5" />,
+    icon: Gauge,
     value: data.whPerKm != null ? `${fmt(data.whPerKm, 0)} Wh/km` : "—",
     label: t("kpi_wh_per_km_label"),
     accent: "text-chart-3",
@@ -116,7 +121,7 @@ function buildKpiItems(
 
   const savingsRon = data.petrolEquivalentCostRon - data.totalCostRon;
   items.push({
-    icon: <Fuel className="size-5" />,
+    icon: Fuel,
     value:
       hasData && data.totalKm > 0 && data.petrolEquivalentCostRon > 0
         ? savingsRon > 0
@@ -152,59 +157,46 @@ function MonthlyBarChart({ months }: { months: MonthlyBucket[] }) {
     : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
-    <motion.div
-      variants={cardVariants}
-      className="glass-card overflow-visible rounded-2xl p-4"
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <TrendingUp className="size-4 text-muted-foreground" />
-        <span className="text-sm font-semibold">{t("chart_monthly_trend")}</span>
-      </div>
+    <motion.div variants={cardVariants}>
+      <Card variant="surface" className="overflow-visible p-4">
+        <SectionHeader title={t("chart_monthly_trend")} icon={TrendingUp} />
 
-      <div className="relative mt-2">
-        <svg width="0" height="0" className="absolute">
-          <defs>
-            <linearGradient id="bar-gradient-costs" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.62 0.19 250)" />
-              <stop offset="100%" stopColor="oklch(0.68 0.18 162)" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <div className="relative mt-3">
+          <div className="flex h-28 items-end gap-1 pb-6">
+            {visible.map((m) => {
+              const monthIdx = parseInt(m.month.slice(5)) - 1;
+              const label = MONTH_NAMES[monthIdx] ?? m.month.slice(5);
+              const heightPct = (m.costRon / maxCost) * 100;
 
-        <div className="flex h-28 items-end gap-1.5 pb-6">
-          {visible.map((m) => {
-            const monthIdx = parseInt(m.month.slice(5)) - 1;
-            const label = MONTH_NAMES[monthIdx] ?? m.month.slice(5);
-            const heightPct = (m.costRon / maxCost) * 100;
-
-            return (
-              <div
-                key={m.month}
-                className="group relative flex flex-1 flex-col items-center justify-end"
-                style={{ height: "100%" }}
-              >
+              return (
                 <div
-                  className="w-full rounded-t transition-all"
-                  style={{
-                    height: `${heightPct}%`,
-                    minHeight: m.costRon > 0 ? 3 : 0,
-                    background:
-                      "linear-gradient(to bottom, oklch(0.62 0.19 250), oklch(0.68 0.18 162))",
-                    opacity: 0.85,
-                  }}
-                />
-                <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground">
-                  {label}
-                </span>
-                <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-xs shadow-lg backdrop-blur-sm group-hover:block">
-                  <span className="font-semibold">{fromRON(m.costRon, 0)}</span>
-                  <span className="ml-1 text-muted-foreground">· {m.kwh.toFixed(1)} kWh</span>
+                  key={m.month}
+                  className="group relative flex flex-1 flex-col items-center justify-end"
+                  style={{ height: "100%" }}
+                >
+                  <div
+                    className="w-full rounded-t transition-all"
+                    style={{
+                      height: `${heightPct}%`,
+                      minHeight: m.costRon > 0 ? 3 : 0,
+                      background:
+                        "linear-gradient(to bottom, var(--chart-1), var(--chart-2))",
+                      opacity: 0.9,
+                    }}
+                  />
+                  <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] tabular-nums text-muted-foreground">
+                    {label}
+                  </span>
+                  <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs shadow-lg group-hover:block">
+                    <span className="font-semibold tabular-nums">{fromRON(m.costRon, 0)}</span>
+                    <span className="ml-1 tabular-nums text-muted-foreground">· {m.kwh.toFixed(1)} kWh</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </Card>
     </motion.div>
   );
 }
@@ -221,19 +213,17 @@ function KpiChipsRow({ data }: { data: CostsResponse }) {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto scrollbar-none pb-1"
     >
       {items.map((item, i) => (
-        <motion.div
-          key={i}
-          variants={fadeInUp}
-          className="glass-card flex min-w-[120px] snap-center flex-col items-center gap-1 rounded-2xl px-4 py-3 text-center"
-        >
-          <span className="mb-0.5 text-muted-foreground">
-            {item.icon}
-          </span>
-          <span className="text-lg font-thin tabular-nums leading-none">{item.value}</span>
-          <span className="text-[11px] text-muted-foreground">{item.label}</span>
+        <motion.div key={i} variants={fadeInUp} className="snap-center">
+          <StatTile
+            icon={item.icon}
+            value={item.value}
+            label={item.label}
+            accent={item.accent}
+            className="min-w-[100px]"
+          />
         </motion.div>
       ))}
     </motion.div>
@@ -242,9 +232,9 @@ function KpiChipsRow({ data }: { data: CostsResponse }) {
 
 function KpiChipsSkeleton() {
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1">
+    <div className="flex gap-2.5 overflow-x-auto scrollbar-none pb-1">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 min-w-[120px] rounded-2xl" />
+        <Skeleton key={i} className="h-[88px] min-w-[100px] rounded-2xl" />
       ))}
     </div>
   );
@@ -278,8 +268,8 @@ function TimelineDocList({ documents, onEdit, onDelete }: TimelineDocListProps) 
   const t = useTranslations("costs");
 
   return (
-    <div className="space-y-1">
-      <h2 className="px-1 text-sm font-semibold">{t("docs_heading")}</h2>
+    <div className="space-y-2.5">
+      <SectionHeader title={t("docs_heading")} icon={Receipt} />
       <motion.div
         variants={staggerContainer}
         initial="hidden"

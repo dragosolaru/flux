@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   User,
@@ -20,10 +21,19 @@ import {
   ChevronDown,
   Trash2,
   Smartphone,
+  Settings2,
+  SlidersHorizontal,
 } from "lucide-react";
 
-import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
+import {
+  Card,
+  EmptyState,
+  ListRow,
+  PageHeader,
+  SectionHeader,
+  TAP,
+} from "@/components/ui-kit";
 import { CurrencyPicker } from "@/components/settings/CurrencyPicker";
 import { HomeLocationPicker } from "@/components/settings/HomeLocationPicker";
 import { LocalePicker } from "@/components/settings/LocalePicker";
@@ -109,9 +119,9 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
   if (isLoading) {
     return (
       <PageWrapper className="mx-auto max-w-2xl pb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <PageHeader title={t("title")} />
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/5" />
+          <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted/40" />
         ))}
       </PageWrapper>
     );
@@ -143,162 +153,152 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
 
   return (
     <PageWrapper className="mx-auto max-w-2xl pb-8">
-      <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+      <PageHeader title={t("title")} />
 
-      {/* Esențial — Preferences */}
-      <section>
-        <SectionHeader label={t("section.preferences")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRowExpanded
-            icon={<Globe className="size-4 text-muted-foreground shrink-0" />}
-            label={t("locale.label")}
-          >
+      {/* Preferences */}
+      <section className="flex flex-col gap-2">
+        <SectionHeader title={t("section.preferences")} icon={SlidersHorizontal} />
+        <Card className="divide-y divide-border">
+          <SettingRow icon={Globe} label={t("locale.label")}>
             <LocalePicker />
-          </SettingsRowExpanded>
-          <SettingsRowExpanded
-            icon={<DollarSign className="size-4 text-muted-foreground shrink-0" />}
-            label={t("currency.label")}
-          >
+          </SettingRow>
+          <SettingRow icon={DollarSign} label={t("currency.label")}>
             <CurrencyPicker />
-          </SettingsRowExpanded>
-          <SettingsRowExpanded
-            icon={<Smartphone className="size-4 text-muted-foreground shrink-0" />}
-            label={t("install_app.label")}
-          >
+          </SettingRow>
+          <SettingRow icon={Smartphone} label={t("install_app.label")}>
             <InstallAppButton />
-          </SettingsRowExpanded>
-        </GlassCard>
+          </SettingRow>
+        </Card>
       </section>
 
       {/* Home location */}
-      <section id="home-location">
-        <SectionHeader label={t("section.location")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRowExpanded
-            icon={<MapPin className="size-4 text-muted-foreground shrink-0" />}
-            label={t("home_location.label")}
-          >
+      <section id="home-location" className="flex flex-col gap-2">
+        <SectionHeader title={t("section.location")} icon={MapPin} />
+        <Card className="divide-y divide-border">
+          <SettingRow icon={MapPin} label={t("home_location.label")}>
             <HomeLocationPicker />
-          </SettingsRowExpanded>
-        </GlassCard>
+          </SettingRow>
+        </Card>
       </section>
 
       {/* Energy tariff */}
-      <section id="tariff">
-        <SectionHeader label={t("section.tariff")} />
-        <GlassCard className="divide-y divide-white/[0.04]">
-          <SettingsRowExpanded
-            icon={<Zap className="size-4 text-muted-foreground shrink-0" />}
-            label={t("tariff.label")}
-          >
+      <section id="tariff" className="flex flex-col gap-2">
+        <SectionHeader title={t("section.tariff")} icon={Zap} />
+        <Card className="divide-y divide-border">
+          <SettingRow icon={Zap} label={t("tariff.label")}>
             <TariffProviderPicker activeProvider={activeProvider} providers={providers} />
-          </SettingsRowExpanded>
-        </GlassCard>
+          </SettingRow>
+        </Card>
       </section>
 
       {/* Vehicles */}
-      <section>
-        <SectionHeader label={t("section.vehicles")} />
+      <section className="flex flex-col gap-2">
+        <SectionHeader title={t("section.vehicles")} icon={Car} />
         <VehicleSectionBoundary
           fallback={
-            <GlassCard className="divide-y divide-white/[0.04]">
-              <Link href="/garage" className="block">
-                <SettingsRow
-                  icon={<ChevronRight className="size-4 text-muted-foreground shrink-0" />}
-                  label={t("vehicles.go_to_garage")}
-                  chevron
-                />
-              </Link>
-            </GlassCard>
+            <Link href="/garage" className="block">
+              <ListRow
+                leading={<Car className="size-4 text-muted-foreground" />}
+                title={t("vehicles.go_to_garage")}
+                trailing={<ChevronRight className="size-4 text-muted-foreground" />}
+              />
+            </Link>
           }
         >
-          <GlassCard className="divide-y divide-white/[0.04]">
+          <div className="flex flex-col gap-2">
             {activeVehicles.length === 0 ? (
-              <SettingsRow
-                icon={<Car className="size-4 text-muted-foreground shrink-0" />}
-                label={t("vehicles.empty")}
-              />
+              <Card>
+                <EmptyState icon={Car} title={t("vehicles.empty")} />
+              </Card>
             ) : (
               activeVehicles.map((v) =>
                 v.dataSource === "mock" ? (
-                  <SettingsRowExpanded
-                    key={v.id}
-                    icon={<Car className="size-4 text-muted-foreground shrink-0" />}
-                    label={v.nickname ?? v.displayName}
-                  >
+                  <Card key={v.id} className="p-4">
+                    <div className="mb-3 flex items-center gap-3">
+                      <Car className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                        {v.nickname ?? v.displayName}
+                      </span>
+                      <DeactivateButton vehicleId={v.id} label={t("deactivate")} />
+                    </div>
                     <div className="flex flex-col gap-2">
-                      <p className="text-xs text-muted-foreground">
-                        {t("scenario.help")}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{t("scenario.help")}</p>
                       <ScenarioPicker
                         vehicleId={v.id}
                         currentScenarioId={scenarioByVehicleId[v.id] ?? null}
                       />
-                      <div className="mt-1">
-                        <DeactivateButton vehicleId={v.id} label={t("deactivate")} />
-                      </div>
                     </div>
-                  </SettingsRowExpanded>
+                  </Card>
                 ) : (
-                  <div key={v.id} className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
-                    <Car className="size-4 text-muted-foreground shrink-0" />
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                      {v.nickname ?? v.displayName}
-                    </span>
-                    <span className="hidden text-sm text-muted-foreground sm:block">
-                      {v.brand}{v.model ? ` · ${v.model}` : ""}
-                    </span>
-                    <DeactivateButton vehicleId={v.id} label={t("deactivate")} />
-                  </div>
+                  <ListRow
+                    key={v.id}
+                    leading={<Car className="size-4 text-muted-foreground" />}
+                    title={v.nickname ?? v.displayName}
+                    meta={`${v.brand}${v.model ? ` · ${v.model}` : ""}${v.year ? ` · ${v.year}` : ""}`}
+                    trailing={<DeactivateButton vehicleId={v.id} label={t("deactivate")} />}
+                  />
                 ),
               )
             )}
             <Link href="/garage" className="block">
-              <SettingsRow
-                icon={<ChevronRight className="size-4 text-muted-foreground shrink-0" />}
-                label={t("vehicles.go_to_garage")}
-                chevron
+              <ListRow
+                leading={<Car className="size-4 text-muted-foreground" />}
+                title={t("vehicles.go_to_garage")}
+                trailing={<ChevronRight className="size-4 text-muted-foreground" />}
               />
             </Link>
-          </GlassCard>
+          </div>
 
           {inactiveVehicles.length > 0 && (
-            <InactiveVehiclesList
-              inactiveVehicles={inactiveForList}
-              hasActiveFreeSlot={hasActiveFreeSlot}
-            />
+            <div className="mt-2 opacity-70">
+              <InactiveVehiclesList
+                inactiveVehicles={inactiveForList}
+                hasActiveFreeSlot={hasActiveFreeSlot}
+              />
+            </div>
           )}
         </VehicleSectionBoundary>
       </section>
 
-      {/* Contul & Billing — collapsible */}
+      {/* Account & Billing — collapsible */}
       <CollapsibleSection
         titleKey="section.account_billing"
+        icon={CreditCard}
         storageKey="settings-billing-open"
         defaultOpen={false}
       >
-        <section>
-          <GlassCard className="divide-y divide-white/[0.04]">
-            <SettingsRow
-              icon={<User className="size-4 text-muted-foreground shrink-0" />}
-              label={t("account.name")}
-              value={userName ?? "—"}
+        <section className="flex flex-col gap-2">
+          <SectionHeader title={t("section.account")} icon={User} />
+          <Card className="divide-y divide-border">
+            <ListRow
+              leading={<User className="size-4 text-muted-foreground" />}
+              title={t("account.name")}
+              trailing={
+                <span className="max-w-[12rem] truncate text-sm text-muted-foreground">
+                  {userName ?? "—"}
+                </span>
+              }
             />
-            <SettingsRow
-              icon={<Mail className="size-4 text-muted-foreground shrink-0" />}
-              label={t("account.email")}
-              value={userEmail ?? "—"}
+            <ListRow
+              leading={<Mail className="size-4 text-muted-foreground" />}
+              title={t("account.email")}
+              trailing={
+                <span className="max-w-[12rem] truncate text-sm text-muted-foreground">
+                  {userEmail ?? "—"}
+                </span>
+              }
             />
-          </GlassCard>
+          </Card>
         </section>
 
-        <section id="billing" className="mt-3">
-          <GlassCard className="divide-y divide-white/[0.04]">
-            <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-              <CreditCard className="size-4 text-muted-foreground shrink-0" />
-              <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-2">
+        <section id="billing" className="mt-3 flex flex-col gap-2">
+          <SectionHeader title={t("section.billing")} icon={CreditCard} />
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <CreditCard className="size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-medium text-foreground">
                     {subscriptionTier === "pro"
                       ? t("billing.plan_pro")
                       : t("billing.plan_free")}
@@ -309,88 +309,74 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
                       : t("billing.plan_free_desc")}
                   </p>
                 </div>
-                <div className="shrink-0">
-                  {subscriptionTier === "pro" ? (
-                    <ManageSubscriptionButton />
-                  ) : (
-                    <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
-                  )}
-                </div>
+              </div>
+              <div className="shrink-0">
+                {subscriptionTier === "pro" ? (
+                  <ManageSubscriptionButton />
+                ) : (
+                  <UpgradeButton size="sm" label={t("billing.upgrade_label")} />
+                )}
               </div>
             </div>
             {subscriptionTier === "free" && (
-              <div className="px-4 py-2.5">
-                <p className="text-xs text-muted-foreground">
-                  {t("billing.pro_unlock_note")}{" "}
-                  <a href="/pricing" className="underline underline-offset-2">
-                    {t("billing.see_all_features")}
-                  </a>
-                </p>
-              </div>
+              <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                {t("billing.pro_unlock_note")}{" "}
+                <a href="/pricing" className="text-primary underline underline-offset-2">
+                  {t("billing.see_all_features")}
+                </a>
+              </p>
             )}
-          </GlassCard>
+          </Card>
         </section>
 
-        <section className="mt-3">
-          <GlassCard>
-            <div className="flex flex-wrap items-center gap-3 px-4 py-4">
-              <Trash2 className="size-4 text-destructive shrink-0" />
+        <section className="mt-3 flex flex-col gap-2">
+          <SectionHeader title={t("section.danger")} icon={Trash2} />
+          <Card className="border-destructive/40 bg-destructive/5 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Trash2 className="size-4 shrink-0 text-destructive" />
               <span className="min-w-0 flex-1 text-sm font-medium text-destructive">
                 {t("danger_zone.delete_button")}
               </span>
               <DangerZone />
             </div>
-          </GlassCard>
+          </Card>
         </section>
       </CollapsibleSection>
 
-      {/* Avansat — collapsible */}
+      {/* Advanced — collapsible */}
       <CollapsibleSection
         titleKey="section.advanced"
+        icon={Settings2}
         storageKey="settings-advanced-open"
         defaultOpen={false}
       >
-        <section id="whatsapp">
-          <GlassCard className="divide-y divide-white/[0.04]">
-            <SettingsRowExpanded
-              icon={<MessageCircle className="size-4 text-muted-foreground shrink-0" />}
-              label="WhatsApp"
-            >
-              <WhatsAppPhonePicker />
-            </SettingsRowExpanded>
-          </GlassCard>
+        <section id="whatsapp" className="flex flex-col gap-2">
+          <SectionHeader title="WhatsApp" icon={MessageCircle} />
+          <Card className="p-4">
+            <WhatsAppPhonePicker />
+          </Card>
         </section>
 
-        <section id="charger-health" className="mt-3">
-          <GlassCard className="divide-y divide-white/[0.04]">
-            <SettingsRowExpanded
-              icon={<Zap className="size-4 text-muted-foreground shrink-0" />}
-              label={t("charger.label")}
-            >
-              <ChargerHealthCard />
-            </SettingsRowExpanded>
-          </GlassCard>
+        <section id="charger-health" className="mt-3 flex flex-col gap-2">
+          <SectionHeader title={t("section.charger")} icon={Zap} />
+          <Card className="p-4">
+            <ChargerHealthCard />
+          </Card>
         </section>
       </CollapsibleSection>
     </PageWrapper>
   );
 }
 
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <p className="text-xs tracking-[0.12em] uppercase text-muted-foreground/60 px-1 mb-1 mt-5 first:mt-0">
-      {label}
-    </p>
-  );
-}
-
 function CollapsibleSection({
   titleKey,
+  icon: Icon,
   children,
   storageKey,
   defaultOpen = false,
 }: {
   titleKey: string;
+  icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   storageKey: string;
   defaultOpen?: boolean;
@@ -411,60 +397,42 @@ function CollapsibleSection({
   };
 
   return (
-    <section>
-      <button
+    <section className="flex flex-col gap-2">
+      <motion.button
+        type="button"
         onClick={toggle}
+        whileTap={{ scale: 0.98 }}
+        transition={TAP}
         aria-expanded={open}
-        className="flex min-h-[44px] w-full items-center justify-between px-1 mb-1 mt-5 first:mt-0"
+        className="flex min-h-[44px] w-full items-center justify-between gap-2 px-1"
       >
-        <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground/60">
+        <span className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <Icon className="size-3.5" />
           {t(titleKey)}
         </span>
         <ChevronDown
-          className={`size-4 text-muted-foreground/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`size-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
-      </button>
-      {open && children}
+      </motion.button>
+      {open && <div className="flex flex-col gap-2">{children}</div>}
     </section>
   );
 }
 
-interface SettingsRowProps {
-  icon: React.ReactNode;
-  iconBg?: string;
-  label: string;
-  value?: string;
-  control?: React.ReactNode;
-  chevron?: boolean;
-}
-
-function SettingsRow({ icon, label, value, control, chevron }: SettingsRowProps) {
-  return (
-    <div className="flex min-h-[44px] items-center gap-3 px-4 py-2.5">
-      {icon}
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
-      {value && <span className="max-w-[40%] truncate text-sm text-muted-foreground">{value}</span>}
-      {control && <div className="shrink-0">{control}</div>}
-      {chevron && <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
-    </div>
-  );
-}
-
-interface SettingsRowExpandedProps {
-  icon: React.ReactNode;
-  iconBg?: string;
+function SettingRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   children: React.ReactNode;
-}
-
-function SettingsRowExpanded({ icon, label, children }: SettingsRowExpandedProps) {
+}) {
   return (
-    <div className="px-4 py-3.5">
-      <div className="mb-3 flex items-center gap-3">
-        {icon}
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      <div className="ml-7">{children}</div>
+    <div className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
+      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="text-sm font-medium text-foreground">{label}</span>
+      <div className="ml-auto min-w-0 shrink-0">{children}</div>
     </div>
   );
 }

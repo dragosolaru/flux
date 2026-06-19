@@ -7,6 +7,14 @@ import { Activity, BatteryFull, Gauge, Leaf } from "lucide-react";
 
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PageHeader,
+  SectionHeader,
+  Card,
+  StatTile,
+  EmptyState,
+  SegmentedControl,
+} from "@/components/ui-kit";
 import { useCosts } from "@/hooks/useCosts";
 import { useStats } from "@/hooks/useStats";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -35,43 +43,7 @@ function periodFrom(p: Period): string | undefined {
   return d.toISOString().slice(0, 10);
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <div className="flex items-center gap-2 px-1">
-      <span className="text-muted-foreground">{icon}</span>
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">
-        {title}
-      </h2>
-    </div>
-  );
-}
-
-function StatChip({
-  value,
-  label,
-  accent,
-}: {
-  value: string;
-  label: string;
-  accent?: string;
-}) {
-  return (
-    <div className="glass-card flex min-w-[100px] flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-3 text-center">
-      <span className={`text-lg font-thin tabular-nums leading-none ${accent ?? ""}`}>
-        {value}
-      </span>
-      <span className="text-[11px] leading-tight text-muted-foreground">{label}</span>
-    </div>
-  );
-}
-
-function EmptyHint({ text }: { text: string }) {
-  return (
-    <p className="py-4 text-center text-xs text-muted-foreground/60">{text}</p>
-  );
-}
+const ROW_SCROLL = "flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 // ─── Savings section ──────────────────────────────────────────────────────────
 
@@ -98,28 +70,33 @@ function SavingsSection({ vehicleId, from }: SavingsSectionProps) {
   const hasData = totalKm > 0;
 
   return (
-    <div className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <StatChip
+    <div className={ROW_SCROLL}>
+      <StatTile
+        className="min-w-[100px] flex-1 snap-start"
         value={hasData ? fromRON(Math.max(0, savedRon), 0) : "—"}
         label={t("saved_ron")}
         accent="text-chart-2"
       />
-      <StatChip
+      <StatTile
+        className="min-w-[100px] flex-1 snap-start"
         value={hasData ? `${fuelSavedL.toFixed(0)} L` : "—"}
         label={t("fuel_saved")}
         accent="text-chart-3"
       />
-      <StatChip
+      <StatTile
+        className="min-w-[100px] flex-1 snap-start"
         value={hasData ? `${co2SavedKg.toFixed(0)} kg` : "—"}
         label={t("co2_avoided")}
         accent="text-chart-2"
       />
-      <StatChip
+      <StatTile
+        className="min-w-[100px] flex-1 snap-start"
         value={hasData ? `${treesEq.toFixed(1)}` : "—"}
         label={t("trees_equivalent")}
         accent="text-chart-2"
       />
-      <StatChip
+      <StatTile
+        className="min-w-[100px] flex-1 snap-start"
         value={totalKm > 0 ? `${Math.round(totalKm).toLocaleString()} km` : "—"}
         label={t("electric_km")}
       />
@@ -140,7 +117,7 @@ function MileageChart({ months }: { months: MileagePeriod[] }) {
   const maxKm = Math.max(...visible.map((m) => m.km), 1);
 
   return (
-    <div className="glass-card rounded-2xl p-4">
+    <Card variant="surface" className="p-3">
       <div className="flex h-24 items-end gap-1.5 pb-5">
         {visible.map((m) => {
           const monthIdx = parseInt(m.period.slice(5)) - 1;
@@ -158,21 +135,21 @@ function MileageChart({ months }: { months: MileagePeriod[] }) {
                 style={{
                   height: `${heightPct}%`,
                   minHeight: m.km > 0 ? 3 : 0,
-                  background: "linear-gradient(to bottom, oklch(0.62 0.19 250), oklch(0.68 0.18 162))",
+                  background: "linear-gradient(to bottom, var(--chart-1), var(--chart-2))",
                   opacity: 0.8,
                 }}
               />
-              <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground">
+              <span className="absolute -bottom-5 left-0 right-0 text-center text-2xs text-muted-foreground tabular-nums">
                 {label}
               </span>
-              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-2.5 py-1.5 text-xs shadow-lg backdrop-blur-sm group-hover:block">
+              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-border bg-background/80 px-2.5 py-1.5 text-2xs tabular-nums shadow-lg backdrop-blur-sm group-hover:block">
                 {Math.round(m.km)} km
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -184,7 +161,7 @@ function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
 
   const hasData = (data?.tripCount ?? 0) > 0 || (data?.chargingSessionCount ?? 0) > 0;
 
-  if (!hasData) return <EmptyHint text={t("no_activity_data")} />;
+  if (!hasData) return <EmptyState icon={Activity} title={t("no_activity_data")} />;
 
   const drivingH = data?.totalDrivingH ?? 0;
   const drivingHLabel = drivingH < 1
@@ -193,21 +170,25 @@ function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <StatChip
+      <div className={ROW_SCROLL}>
+        <StatTile
+          className="min-w-[100px] flex-1 snap-start"
           value={data ? `${Math.round(data.totalDrivingKm).toLocaleString()} km` : "—"}
           label={t("driving_km")}
           accent="text-primary"
         />
-        <StatChip
+        <StatTile
+          className="min-w-[100px] flex-1 snap-start"
           value={data ? drivingHLabel : "—"}
           label={t("driving_hours")}
         />
-        <StatChip
+        <StatTile
+          className="min-w-[100px] flex-1 snap-start"
           value={data ? String(data.tripCount) : "—"}
           label={t("trips")}
         />
-        <StatChip
+        <StatTile
+          className="min-w-[100px] flex-1 snap-start"
           value={data?.totalEnergyAddedKwh ? `${data.totalEnergyAddedKwh.toFixed(1)} kWh` : "—"}
           label={t("energy_charged")}
           accent="text-chart-2"
@@ -244,7 +225,7 @@ function BatteryHealthSparkline({ points }: { points: BatteryHealthPoint[] }) {
       <path
         d={pathD}
         fill="none"
-        stroke="oklch(0.62 0.19 250)"
+        stroke="var(--primary)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -278,8 +259,9 @@ function BatterySection({ vehicleId }: BatterySectionProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2.5">
-        <StatChip
+      <div className="flex gap-2">
+        <StatTile
+          className="flex-1"
           value={currentSoh != null ? `${currentSoh.toFixed(1)}%` : "—"}
           label={t("battery_soh")}
           accent={
@@ -292,17 +274,18 @@ function BatterySection({ vehicleId }: BatterySectionProps) {
                   : "text-destructive"
           }
         />
-        <StatChip
+        <StatTile
+          className="flex-1"
           value={vampire != null ? `${vampire.toFixed(3)}%/h` : "—"}
           label={t("vampire_drain")}
         />
       </div>
       {history && history.length >= 2 ? (
-        <div className="glass-card rounded-2xl px-4 py-3">
+        <Card variant="surface" className="p-3">
           <BatteryHealthSparkline points={history} />
-        </div>
+        </Card>
       ) : (
-        <EmptyHint text={t("no_battery_data")} />
+        <EmptyState icon={BatteryFull} title={t("no_battery_data")} />
       )}
     </div>
   );
@@ -313,7 +296,7 @@ function BatterySection({ vehicleId }: BatterySectionProps) {
 function TempChart({ buckets }: { buckets: TempBucket[] }) {
   const maxWh = Math.max(...buckets.map((b) => b.avgWhPerKm), 1);
   return (
-    <div className="glass-card rounded-2xl p-4">
+    <Card variant="surface" className="p-3">
       <div className="flex h-20 items-end gap-2 pb-5">
         {buckets.map((b) => {
           const heightPct = (b.avgWhPerKm / maxWh) * 100;
@@ -328,21 +311,21 @@ function TempChart({ buckets }: { buckets: TempBucket[] }) {
                 style={{
                   height: `${heightPct}%`,
                   minHeight: 4,
-                  background: "linear-gradient(to bottom, oklch(0.68 0.18 162), oklch(0.55 0.20 250))",
+                  background: "linear-gradient(to bottom, var(--chart-2), var(--primary))",
                   opacity: 0.8,
                 }}
               />
-              <span className="absolute -bottom-5 left-0 right-0 text-center text-[9px] text-muted-foreground whitespace-nowrap">
+              <span className="absolute -bottom-5 left-0 right-0 text-center text-2xs text-muted-foreground whitespace-nowrap">
                 {b.label}
               </span>
-              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/8 bg-background/80 px-2.5 py-1.5 text-xs shadow-lg backdrop-blur-sm group-hover:block">
+              <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-border bg-background/80 px-2.5 py-1.5 text-2xs tabular-nums shadow-lg backdrop-blur-sm group-hover:block">
                 {Math.round(b.avgWhPerKm)} Wh/km
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -363,62 +346,25 @@ function EfficiencySection({ vehicleId, from }: EfficiencySectionProps) {
   const byTemp = stats?.efficiencyByTemp ?? [];
 
   const hasData = avgWh != null || projected != null || byTemp.length > 0;
-  if (!hasData) return <EmptyHint text={t("no_efficiency_data")} />;
+  if (!hasData) return <EmptyState icon={Gauge} title={t("no_efficiency_data")} />;
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2.5">
-        <StatChip
+      <div className="flex gap-2">
+        <StatTile
+          className="flex-1"
           value={avgWh != null ? `${Math.round(avgWh)} Wh/km` : "—"}
           label={t("avg_wh_per_km")}
           accent="text-chart-3"
         />
-        <StatChip
+        <StatTile
+          className="flex-1"
           value={projected != null ? `${Math.round(projected)} km` : "—"}
           label={t("projected_range")}
           accent="text-primary"
         />
       </div>
       {byTemp.length >= 2 && <TempChart buckets={byTemp} />}
-    </div>
-  );
-}
-
-// ─── Period selector ──────────────────────────────────────────────────────────
-
-const PERIODS: Period[] = ["7d", "30d", "1y", "all"];
-
-function PeriodSelector({
-  active,
-  onChange,
-}: {
-  active: Period;
-  onChange: (p: Period) => void;
-}) {
-  const t = useTranslations("insights");
-  const labels: Record<Period, string> = {
-    "7d": t("period_7d"),
-    "30d": t("period_30d"),
-    "1y": t("period_1y"),
-    all: t("period_all"),
-  };
-
-  return (
-    <div className="flex gap-1.5 rounded-xl bg-white/[0.04] p-1">
-      {PERIODS.map((p) => (
-        <button
-          key={p}
-          type="button"
-          onClick={() => onChange(p)}
-          className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
-            active === p
-              ? "bg-white/[0.12] text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {labels[p]}
-        </button>
-      ))}
     </div>
   );
 }
@@ -435,15 +381,23 @@ export function InsightsClient({ vehicleId, vehicleName }: InsightsClientProps) 
   const [period, setPeriod] = useState<Period>("30d");
   const from = useMemo(() => periodFrom(period), [period]);
 
-  return (
-    <PageWrapper className="mx-auto max-w-2xl gap-5 pb-28">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-xs text-muted-foreground">{vehicleName}</p>
-      </div>
+  const periodOptions = [
+    { value: "7d" as const, label: t("period_7d") },
+    { value: "30d" as const, label: t("period_30d") },
+    { value: "1y" as const, label: t("period_1y") },
+    { value: "all" as const, label: t("period_all") },
+  ];
 
-      <PeriodSelector active={period} onChange={setPeriod} />
+  return (
+    <PageWrapper className="mx-auto max-w-2xl gap-3 pb-28">
+      <PageHeader title={t("title")} subtitle={vehicleName} />
+
+      <SegmentedControl
+        options={periodOptions}
+        value={period}
+        onChange={setPeriod}
+        layoutId="insights-period"
+      />
 
       <motion.div
         variants={staggerContainer}
@@ -453,41 +407,28 @@ export function InsightsClient({ vehicleId, vehicleName }: InsightsClientProps) 
       >
         {/* Savings & CO₂ */}
         <motion.div variants={cardVariants} className="space-y-3">
-          <SectionHeader
-            icon={<Leaf className="size-3.5" />}
-            title={t("savings_title")}
-          />
+          <SectionHeader icon={Leaf} title={t("savings_title")} />
           <SavingsSection vehicleId={vehicleId} from={from} />
         </motion.div>
 
         {/* Activity */}
         <motion.div variants={cardVariants} className="space-y-3">
-          <SectionHeader
-            icon={<Activity className="size-3.5" />}
-            title={t("states_title")}
-          />
+          <SectionHeader icon={Activity} title={t("states_title")} />
           <ActivitySection vehicleId={vehicleId} from={from} />
         </motion.div>
 
         {/* Battery health */}
         <motion.div variants={cardVariants} className="space-y-3">
-          <SectionHeader
-            icon={<BatteryFull className="size-3.5" />}
-            title={t("battery_title")}
-          />
+          <SectionHeader icon={BatteryFull} title={t("battery_title")} />
           <BatterySection vehicleId={vehicleId} />
         </motion.div>
 
         {/* Efficiency */}
         <motion.div variants={cardVariants} className="space-y-3">
-          <SectionHeader
-            icon={<Gauge className="size-3.5" />}
-            title={t("efficiency_title")}
-          />
+          <SectionHeader icon={Gauge} title={t("efficiency_title")} />
           <EfficiencySection vehicleId={vehicleId} from={from} />
         </motion.div>
       </motion.div>
     </PageWrapper>
   );
 }
-

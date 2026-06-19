@@ -4,17 +4,22 @@ import { useState, useEffect, useRef, type ChangeEvent } from "react";
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BatteryCharging, RefreshCw, Clock, Zap, Home, MapPin } from "lucide-react";
+import { BatteryCharging, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
-import { GlassCard } from "@/components/ui/glass-card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import {
+  Card,
+  SectionHeader,
+  ListRow,
+  EmptyState,
+} from "@/components/ui-kit";
 import {
   staggerContainer,
   fadeInUp,
@@ -53,10 +58,10 @@ function formatDuration(startedAt: string, endedAt: string | null): string {
 }
 
 function ringColor(chargingState: string | null | undefined): string {
-  if (chargingState === "charging") return "oklch(0.68 0.18 162)";  // green
-  if (chargingState === "complete") return "oklch(0.68 0.18 162)";  // green
-  if (chargingState === "stopped")  return "oklch(0.75 0.18 85)";   // amber
-  return "oklch(0.45 0.01 265)";  // grey
+  if (chargingState === "charging") return "var(--chart-2)";
+  if (chargingState === "complete") return "var(--chart-2)";
+  if (chargingState === "stopped") return "var(--chart-3)";
+  return "var(--muted-foreground)";
 }
 
 export function ChargingClient({
@@ -139,22 +144,32 @@ export function ChargingClient({
 
   function ringStatusLabel(): string {
     const state = data?.chargingState;
-    if (state === "charging")     return tc("ring_status_charging");
-    if (state === "complete")     return tc("ring_status_complete");
-    if (state === "stopped")      return tc("ring_status_stopped");
+    if (state === "charging") return tc("ring_status_charging");
+    if (state === "complete") return tc("ring_status_complete");
+    if (state === "stopped") return tc("ring_status_stopped");
     return tc("ring_status_disconnected");
   }
 
   return (
-    <PageWrapper className="mx-auto max-w-lg gap-5 pb-8">
+    <PageWrapper className="mx-auto max-w-lg gap-3 pb-8">
       {/* Page heading */}
       <motion.div variants={fadeInUp} initial="hidden" animate="visible">
-        <h1 className="text-2xl font-semibold tracking-tight">{tc("page_title")}</h1>
-        <p className="text-sm text-muted-foreground">{vehicleName}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-2xl font-semibold tracking-tight">{tc("page_title")}</h1>
+            <p className="truncate text-sm text-muted-foreground">{vehicleName}</p>
+          </div>
+          {isCharging && (
+            <span className="shrink-0 flex items-center gap-1.5 rounded-full border border-chart-2/40 bg-chart-2/10 px-2.5 py-1 text-2xs font-semibold text-chart-2">
+              <BatteryCharging className="size-3.5" />
+              {tc("ring_status_charging")}
+            </span>
+          )}
+        </div>
       </motion.div>
 
       {/* Active charge ring */}
-      <GlassCard className="p-6 flex flex-col items-center gap-4">
+      <Card variant="surface" className="flex flex-col items-center gap-3 p-4">
         {isLoading ? (
           <div className="flex flex-col items-center gap-3">
             <Skeleton className="size-[180px] rounded-full" />
@@ -223,141 +238,141 @@ export function ChargingClient({
             )}
           </>
         )}
-      </GlassCard>
+      </Card>
 
-      {/* Charge limit slider */}
-      <GlassCard className="p-5 flex flex-col gap-4">
-        <div>
-          <p className="text-sm font-semibold">{tc("limit_title")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{tc("limit_description")}</p>
-        </div>
-        {isLoading ? (
-          <Skeleton className="h-6 w-full" />
-        ) : !data ? (
-          <p className="text-sm text-muted-foreground">{tc("limit_error")}</p>
-        ) : (
-          <>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{tc("limit_label")}</span>
-              <span className="text-base font-semibold tabular-nums">{limit}%</span>
-            </div>
-            <Slider
-              value={[limit]}
-              onValueChange={(v: number[]) => setLimit(v[0] ?? effectiveLimit)}
-              min={Math.min(50, limit)}
-              max={100}
-              step={1}
-              aria-label={tc("limit_label")}
-            />
-            <motion.div {...tapShrink}>
-              <Button
-                onClick={saveChargeLimit}
-                disabled={isPending || limit === data.chargeLimit}
-                className="w-full h-10 rounded-[10px]"
-              >
-                {isPending ? tc("limit_saving") : tc("limit_save")}
-              </Button>
-            </motion.div>
-          </>
-        )}
-      </GlassCard>
-
-      {/* Scheduled charging */}
-      <GlassCard className="p-5 flex flex-col gap-4">
-        <div>
-          <p className="text-sm font-semibold">{tc("scheduled_title")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{tc("scheduled_description")}</p>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm">{tc("scheduled_enabled")}</span>
-          <Switch checked={scheduled} onCheckedChange={setScheduled} aria-label={tc("scheduled_enabled")} />
-        </div>
-        {scheduled && (
-          <div className="flex flex-wrap items-center gap-3">
-            <label htmlFor="charge-time" className="text-sm text-muted-foreground">
-              {tc("scheduled_start_at")}
-            </label>
-            <input
-              id="charge-time"
-              type="time"
-              value={scheduleTime}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setScheduleTime(e.target.value)
-              }
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm h-10 w-full sm:w-auto"
-            />
+      {/* Controls: charge limit + scheduled charging */}
+      <Card variant="surface" className="flex flex-col gap-1.5 p-4">
+        {/* Charge limit */}
+        <div className="flex flex-col gap-2.5 py-3">
+          <div>
+            <p className="text-sm font-semibold">{tc("limit_title")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{tc("limit_description")}</p>
           </div>
-        )}
-        <motion.div {...tapShrink}>
-          <Button
-            onClick={saveSchedule}
-            disabled={isPending}
-            className="w-full h-10 rounded-[10px]"
-          >
-            {isPending ? tc("limit_saving") : tc("scheduled_save")}
-          </Button>
-        </motion.div>
-      </GlassCard>
-
-      {/* Charging history */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">{tc("history_title")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{tc("history_description")}</p>
-          </div>
-          {caps?.hasLiveVehicle && (
-            <motion.div {...tapShrink} className="shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={syncMutation.isPending}
-                onClick={() => {
-                  syncMutation.mutate(undefined, {
-                    onSuccess: (result) => {
-                      toast.success(tc("syncSuccess", { count: result.synced }));
-                      router.refresh();
-                    },
-                    onError: () => {
-                      toast.error(tc("syncError"));
-                    },
-                  });
-                }}
-                className="h-10 rounded-[10px]"
-              >
-                <RefreshCw
-                  className={syncMutation.isPending ? "animate-spin" : ""}
-                  size={14}
-                />
-                <span className="ml-1">
-                  {syncMutation.isPending
-                    ? tc("history_syncing")
-                    : tc("history_sync")}
-                </span>
-              </Button>
-            </motion.div>
+          {isLoading ? (
+            <Skeleton className="h-6 w-full" />
+          ) : !data ? (
+            <p className="text-sm text-muted-foreground">{tc("limit_error")}</p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{tc("limit_label")}</span>
+                <span className="text-base font-semibold tabular-nums">{limit}%</span>
+              </div>
+              <Slider
+                value={[limit]}
+                onValueChange={(v: number[]) => setLimit(v[0] ?? effectiveLimit)}
+                min={Math.min(50, limit)}
+                max={100}
+                step={1}
+                aria-label={tc("limit_label")}
+              />
+              <motion.div {...tapShrink}>
+                <Button
+                  onClick={saveChargeLimit}
+                  disabled={isPending || limit === data.chargeLimit}
+                  className="h-10 w-full rounded-xl"
+                >
+                  {isPending ? tc("limit_saving") : tc("limit_save")}
+                </Button>
+              </motion.div>
+            </>
           )}
         </div>
 
+        <div className="border-t border-border" />
+
+        {/* Scheduled charging */}
+        <div className="flex flex-col gap-2.5 py-3">
+          <div>
+            <p className="text-sm font-semibold">{tc("scheduled_title")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{tc("scheduled_description")}</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">{tc("scheduled_enabled")}</span>
+            <Switch checked={scheduled} onCheckedChange={setScheduled} aria-label={tc("scheduled_enabled")} />
+          </div>
+          {scheduled && (
+            <div className="flex flex-wrap items-center gap-3">
+              <label htmlFor="charge-time" className="text-sm text-muted-foreground">
+                {tc("scheduled_start_at")}
+              </label>
+              <input
+                id="charge-time"
+                type="time"
+                value={scheduleTime}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setScheduleTime(e.target.value)
+                }
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm sm:w-auto"
+              />
+            </div>
+          )}
+          <motion.div {...tapShrink}>
+            <Button
+              onClick={saveSchedule}
+              disabled={isPending}
+              className="h-10 w-full rounded-xl"
+            >
+              {isPending ? tc("limit_saving") : tc("scheduled_save")}
+            </Button>
+          </motion.div>
+        </div>
+      </Card>
+
+      {/* Charging history */}
+      <div className="flex flex-col gap-2.5">
+        <SectionHeader
+          title={tc("history_title")}
+          trailing={
+            caps?.hasLiveVehicle ? (
+              <motion.div {...tapShrink}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={syncMutation.isPending}
+                  onClick={() => {
+                    syncMutation.mutate(undefined, {
+                      onSuccess: (result) => {
+                        toast.success(tc("syncSuccess", { count: result.synced }));
+                        router.refresh();
+                      },
+                      onError: () => {
+                        toast.error(tc("syncError"));
+                      },
+                    });
+                  }}
+                  className="h-8 rounded-xl"
+                >
+                  <RefreshCw
+                    className={syncMutation.isPending ? "animate-spin" : ""}
+                    size={14}
+                  />
+                  <span className="ml-1">
+                    {syncMutation.isPending
+                      ? tc("history_syncing")
+                      : tc("history_sync")}
+                  </span>
+                </Button>
+              </motion.div>
+            ) : undefined
+          }
+        />
+
         {history.length === 0 ? (
-          <GlassCard className="p-8 flex flex-col items-center gap-3 text-center">
-            <BatteryCharging className="size-10 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground">
-              {tc("history_empty_title")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {tc("history_empty_hint")}
-            </p>
-          </GlassCard>
+          <EmptyState
+            icon={BatteryCharging}
+            title={tc("history_empty_title")}
+            hint={tc("history_empty_hint")}
+          />
         ) : (
           <motion.ul
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
           >
             {history.map((row) => (
-              <HistoryCard key={row.id} row={row} tc={tc} />
+              <HistoryRow key={row.id} row={row} tc={tc} />
             ))}
           </motion.ul>
         )}
@@ -366,7 +381,7 @@ export function ChargingClient({
   );
 }
 
-function HistoryCard({
+function HistoryRow({
   row,
   tc,
 }: {
@@ -386,50 +401,37 @@ function HistoryCard({
 
   const duration = formatDuration(row.started_at, row.ended_at);
 
+  const energy =
+    row.energy_added_kwh != null
+      ? `${row.energy_added_kwh.toFixed(1)} kWh`
+      : `— ${tc("history_kwh")}`;
+
+  const cost =
+    row.cost_ron != null
+      ? fromRON(row.cost_ron)
+      : row.cost_eur != null
+        ? fromEUR(row.cost_eur)
+        : "—";
+
+  const title = isHome ? tc("history_home") : (row.location_name ?? tc("history_public"));
+
   return (
     <motion.li variants={fadeInUp}>
-      <GlassCard className="p-4 flex items-start gap-4">
-        {/* Icon */}
-        <div className="mt-1 shrink-0">
-          {isHome
-            ? <Home className="size-4 text-muted-foreground" />
-            : <MapPin className="size-4 text-muted-foreground" />}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Top row: date + duration */}
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-sm font-medium truncate">{date}</span>
-            <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-              <Clock size={12} />
-              {duration}
-            </span>
-          </div>
-          {/* Bottom row: kWh + cost */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Zap size={12} />
-              {row.energy_added_kwh != null
-                ? `${row.energy_added_kwh.toFixed(1)} kWh`
-                : `— ${tc("history_kwh")}`}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {row.cost_ron != null
-                ? fromRON(row.cost_ron)
-                : row.cost_eur != null
-                  ? fromEUR(row.cost_eur)
-                  : "—"}
-            </span>
-          </div>
-          {/* Location label */}
-          <p className="mt-1 text-xs text-muted-foreground/70">
-            {isHome
-              ? tc("history_home")
-              : (row.location_name ?? tc("history_public"))}
-          </p>
-        </div>
-      </GlassCard>
+      <ListRow
+        leading={
+          <span className="flex size-9 items-center justify-center rounded-xl bg-muted/60">
+            <BatteryCharging className="size-4 text-chart-2" />
+          </span>
+        }
+        title={title}
+        meta={`${date} · ${cost}`}
+        trailing={
+          <span className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold tabular-nums text-foreground">{energy}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">{duration}</span>
+          </span>
+        }
+      />
     </motion.li>
   );
 }
