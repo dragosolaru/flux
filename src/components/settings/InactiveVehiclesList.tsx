@@ -98,7 +98,7 @@ export function InactiveVehiclesList({
         >
           <span>
             {t("inactive_vehicles_title")}{" "}
-            <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-xs">
+            <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-xs">
               {inactiveVehicles.length}
             </span>
           </span>
@@ -110,7 +110,7 @@ export function InactiveVehiclesList({
         </button>
 
         {open && (
-          <div className="mt-2 divide-y divide-white/5 rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-2 divide-y divide-border rounded-xl border border-border bg-muted/40">
             {inactiveVehicles.map((v) => {
               const name = v.nickname ?? v.display_name;
               return (

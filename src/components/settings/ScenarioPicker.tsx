@@ -65,7 +65,7 @@ export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: Scena
           disabled={isPending || disabled}
           aria-label={tSettings("scenario.label")}
           className={cn(
-            "appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 pr-7 text-sm",
+            "appearance-none rounded-lg border border-border bg-card px-3 py-1.5 pr-7 text-sm text-foreground",
             "disabled:opacity-50",
           )}
         >
