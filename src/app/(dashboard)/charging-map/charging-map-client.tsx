@@ -211,8 +211,8 @@ export function ChargingMapClient() {
             onClick={() => setShowFilters((v) => !v)}
             className={`pill-float flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
               hasActiveFilter
-                ? "!border-primary/40 !bg-primary/15 text-foreground"
-                : "text-muted-foreground"
+                ? "!border-primary/50 !bg-primary/15 text-foreground font-semibold"
+                : "border-border bg-card text-muted-foreground"
             }`}
           >
             <SlidersHorizontal className="size-3.5" />
@@ -225,7 +225,7 @@ export function ChargingMapClient() {
         <div className="absolute right-3 top-3 z-[1000]">
           <button
             onClick={() => setShowList(true)}
-            className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-full border border-white/10 bg-background/80 px-3 text-xs font-medium text-muted-foreground shadow-xl backdrop-blur-xl transition-colors hover:text-foreground"
+            className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 text-xs font-medium text-muted-foreground shadow-xl backdrop-blur-xl transition-colors hover:text-foreground"
           >
             <List className="size-3.5" />
             {t("list_button")}
@@ -236,7 +236,7 @@ export function ChargingMapClient() {
         {showFilters && (
           <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5">
             {/* Power filter */}
-            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/95 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
               {POWER_OPTIONS.map((opt) => (
                 <button
                   key={String(opt.value)}
@@ -245,7 +245,7 @@ export function ChargingMapClient() {
                   className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                     minKw === opt.value
                       ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                      : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
                   {opt.label === "filter_all" ? t("filter_all") : opt.label}
@@ -254,7 +254,7 @@ export function ChargingMapClient() {
             </div>
 
             {/* Connector filter */}
-            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/95 px-3 py-1.5 shadow-xl backdrop-blur-xl scrollbar-none">
               {CONNECTOR_OPTIONS.map((opt) => (
                 <button
                   key={String(opt.value)}
@@ -263,7 +263,7 @@ export function ChargingMapClient() {
                   className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                     connector === opt.value
                       ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                      : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
                   {opt.label === "filter_all" ? t("filter_all") : opt.label}

@@ -6,12 +6,11 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
 import { FeatureGate } from "@/components/layout/FeatureGate";
-import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useVehicle } from "@/hooks/useVehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
+import { PageHeader, Card, SectionHeader, EmptyState } from "@/components/ui-kit";
 import type { VehicleBrand } from "@/types/vehicle";
 
 interface CommandsClientProps {
@@ -30,22 +29,25 @@ export function CommandsClient({ vehicles }: CommandsClientProps) {
 
   if (vehicles.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <Car className="size-12 text-muted-foreground/30" />
-        <p className="text-sm font-medium text-muted-foreground">
-          {t("no_vehicles_title")}
-        </p>
-        <p className="text-xs text-muted-foreground">{t("no_vehicles_hint")}</p>
-        <Button asChild variant="outline" size="sm" className="mt-1">
-          <Link href="/garage">{tGarage("add_vehicle")}</Link>
-        </Button>
+      <div className="px-4 pb-6">
+        <EmptyState
+          icon={Car}
+          title={t("no_vehicles_title")}
+          hint={t("no_vehicles_hint")}
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/garage">{tGarage("add_vehicle")}</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }
 
   return (
     <FeatureGate capability="COMMANDS">
-      <PageWrapper>
+      <div className="px-4 pb-6 space-y-4">
+        <PageHeader title={t("title")} subtitle={t("subtitle")} />
         <motion.div
           variants={staggerContainer}
           initial="hidden"
@@ -61,7 +63,7 @@ export function CommandsClient({ vehicles }: CommandsClientProps) {
             />
           ))}
         </motion.div>
-      </PageWrapper>
+      </div>
     </FeatureGate>
   );
 }
@@ -79,10 +81,10 @@ function VehicleCommands({
 
   return (
     <motion.div variants={cardVariants}>
-      <GlassCard className="p-5" animate={false}>
-        <p className="mb-4 text-sm font-semibold">{name}</p>
+      <SectionHeader title={name} icon={Car} />
+      <Card variant="surface" className="p-5 mt-2">
         <CommandPanel vehicleId={id} brand={brand} state={data} />
-      </GlassCard>
+      </Card>
     </motion.div>
   );
 }
