@@ -570,6 +570,11 @@ export function MapClient() {
       {/* Collapsed: anchored above the floating BottomNav pill (14px gap +
           ~50px pill + safe area) so the summary strip stays visible/tappable.
           Mid/full: anchored at the screen bottom edge and slides over the nav. */}
+      {/* Frosted dock behind the floating nav — fades the map out at the bottom
+          so station markers never clutter around the pill when collapsed. Sits
+          above the (isolated) map context but below the nav (z-50). */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[45] h-[calc(env(safe-area-inset-bottom)+104px)] bg-gradient-to-t from-background from-55% via-background/80 to-transparent lg:hidden" />
+
       <motion.div
         className={`absolute inset-x-0 z-[900] mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[20px] border-t border-border bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px before:bg-border lg:hidden ${
           sheetState === "collapsed"
