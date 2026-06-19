@@ -17,7 +17,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
@@ -67,36 +67,19 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Bottom sheet snap points (px from bottom of screen)
+// Bottom sheet geometry
 // ---------------------------------------------------------------------------
 
-// Collapsed peek constants are now derived at runtime by measuring the rendered
-// peek (handle + optional summary line) — see `peekRef` / `peekH` in MapClient.
-// These remain only as sensible SSR / first-paint fallbacks.
-const PEEK_FALLBACK = 96;
+// Collapsed height is measured from the rendered peek (grabber + summary line);
+// this fallback only covers SSR / first paint before the ResizeObserver fires.
+const PEEK_FALLBACK = 88;
 
-// Plan mid before route: absolute height so the form (2 inputs + sliders + vehicle
-// picker + button + bottom padding) fills the panel without dead space.
-const MID_PLAN_H = 460;
-
-// iOS Safari's window.innerHeight counts the area behind the URL/toolbar, so
-// 0.9*innerHeight pushes the sheet bottom below the visible viewport. Always
+// iOS Safari's window.innerHeight counts the area behind the URL/toolbar, so we
 // prefer visualViewport.height (the truly visible region) and fall back to
 // innerHeight only when it is unavailable.
 function visibleViewportHeight(): number {
   if (typeof window === "undefined") return 800;
   return Math.round(window.visualViewport?.height ?? window.innerHeight);
-}
-function halfHeight() {
-  return Math.round(visibleViewportHeight() * 0.44);
-}
-function fullHeight() {
-  return Math.round(visibleViewportHeight() * 0.92);
-}
-
-// Convert snap height → y offset (0 = fully open = sheet bottom at FULL height)
-function snapToY(snapH: number, fullH: number): number {
-  return fullH - snapH;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,76 +147,72 @@ export function MapClient() {
   const initialMode: MapMode = searchParams.get("mode") === "plan" ? "plan" : "explore";
   const [mode, setMode] = useState<MapMode>(initialMode);
 
-  // ---- 3-state sheet ----
+  // ---- 3-state bottom sheet (height-driven) ----
+  // The sheet is a flex column whose *height* is the single source of truth:
+  // collapsed hugs the measured peek, mid/full are fractions of the visible
+  // viewport. The scroll area is `flex-1`, so content can never leave a dead
+  // gap — the panel is always exactly as tall as its current snap.
   type SheetState = "collapsed" | "mid" | "full";
   const [sheetState, setSheetState] = useState<SheetState>(
     initialMode === "plan" ? "mid" : "collapsed",
   );
 
-  // ---- Bottom sheet state ----
-  // fullH tracks the *visible* viewport (visualViewport on iOS) and updates on
-  // resize / browser-chrome show-hide so the expanded sheet never extends below
-  // the visible area or behind the floating nav.
-  const [fullH, setFullH] = useState(() => fullHeight());
+  // Visible viewport height (tracks iOS toolbar show/hide via visualViewport).
+  const [vh, setVh] = useState(() => visibleViewportHeight());
+  const midH = Math.round(vh * 0.5);
+  const fullH = Math.round(vh * 0.9);
 
-  // Actual rendered peek height, measured from the DOM. The peek content varies
-  // (handle only / handle + summary line) and iOS layout differs from our
-  // constants, so we measure rather than guess — this is what kills the dead
-  // space below the list. Starts at a fallback for first paint.
+  // Collapsed height = the real rendered peek, measured from the DOM so the
+  // panel hugs it exactly (no hand-tuned constant, no dead space).
   const peekRef = useRef<HTMLDivElement>(null);
-  const [peekH, setPeekH] = useState(PEEK_FALLBACK);
+  const [collapsedH, setCollapsedH] = useState(PEEK_FALLBACK);
 
-  // Landing directly in plan mode (e.g. /map?mode=plan) opens at half so the
-  // form is immediately usable; explore starts at peek.
-  const initialSnapH = initialMode === "plan"
-    ? Math.min(MID_PLAN_H, Math.round(visibleViewportHeight() * 0.75))
-    : PEEK_FALLBACK;
-
-  // Drag tracking refs (not used in render, safe as refs)
-  const dragStartY = useRef(0);
-  const dragStartSheetY = useRef(0);
-  const currentSheetY = useRef(snapToY(initialSnapH, fullHeight()));
-
-  // Track current snap height for content rendering
-  const [snapH, setSnapH] = useState(initialSnapH);
-
-  const controls = useAnimation();
-
-  const snapTo = useCallback(
-    (targetH: number, fh: number) => {
-      const y = snapToY(targetH, fh);
-      currentSheetY.current = y;
-      setSnapH(targetH);
-      void controls.start({ y }, { type: "spring", stiffness: 350, damping: 40 });
-    },
-    [controls],
+  const heightFor = useCallback(
+    (s: SheetState) => (s === "collapsed" ? collapsedH : s === "mid" ? midH : fullH),
+    [collapsedH, midH, fullH],
   );
+
+  // Live height while dragging (null = settled on a snap).
+  const [dragH, setDragH] = useState<number | null>(null);
+  const dragStartY = useRef(0);
+  const dragStartH = useRef(0);
+
+  function applySheetState(state: SheetState) {
+    setSheetState(state);
+  }
+
+  function cycleSheetState() {
+    applySheetState(
+      sheetState === "collapsed" ? "mid" : sheetState === "mid" ? "full" : "collapsed",
+    );
+  }
 
   function onDragStart(e: React.PointerEvent<HTMLDivElement>) {
     dragStartY.current = e.clientY;
-    dragStartSheetY.current = currentSheetY.current;
+    dragStartH.current = heightFor(sheetState);
+    setDragH(dragStartH.current);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   function onDragMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!(e.buttons & 1)) return;
-    const delta = e.clientY - dragStartY.current;
-    const newY = Math.max(0, Math.min(dragStartSheetY.current + delta, snapToY(peekH, fullH)));
-    currentSheetY.current = newY;
-    void controls.set({ y: newY });
+    // Drag up (smaller clientY) grows the sheet.
+    const next = dragStartH.current + (dragStartY.current - e.clientY);
+    setDragH(Math.max(collapsedH, Math.min(next, fullH)));
   }
 
   function onDragEnd() {
-    const currentH = fullH - currentSheetY.current;
-    const halfH = halfHeight();
-    const snaps = [peekH, halfH, fullH];
-    const nearest = snaps.reduce((best, h) =>
-      Math.abs(h - currentH) < Math.abs(best - currentH) ? h : best,
+    const h = dragH ?? heightFor(sheetState);
+    const snaps: [SheetState, number][] = [
+      ["collapsed", collapsedH],
+      ["mid", midH],
+      ["full", fullH],
+    ];
+    const nearest = snaps.reduce((best, cur) =>
+      Math.abs(cur[1] - h) < Math.abs(best[1] - h) ? cur : best,
     );
-    // Keep sheetState in sync so the collapsed bottom offset (clearing the
-    // floating BottomNav) applies after drags, not just after taps.
-    setSheetState(nearest === fullH ? "full" : nearest === halfH ? "mid" : "collapsed");
-    snapTo(nearest, fullH);
+    setSheetState(nearest[0]);
+    setDragH(null);
   }
 
   // ---- Explore mode state ----
@@ -312,29 +291,6 @@ export function MapClient() {
   const [sharing, setSharing] = useState(false);
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
-
-  function sheetStateToH(state: "collapsed" | "mid" | "full"): number {
-    if (state === "collapsed") return peekH;
-    if (state === "mid") {
-      const h = visibleViewportHeight();
-      // Plan mode with no computed route: use a content-sized absolute height so the
-      // form fills the sheet without a dark gap. Cap at 75% for very small screens.
-      if (mode === "plan" && plan === null) return Math.min(MID_PLAN_H, Math.round(h * 0.75));
-      return Math.round(h * 0.44);
-    }
-    return fullHeight();
-  }
-
-  function applySheetState(state: "collapsed" | "mid" | "full") {
-    setSheetState(state);
-    snapTo(sheetStateToH(state), fullH);
-  }
-
-  function cycleSheetState() {
-    applySheetState(
-      sheetState === "collapsed" ? "mid" : sheetState === "mid" ? "full" : "collapsed",
-    );
-  }
 
   const canPlan = origin !== null && destination !== null;
 
@@ -481,12 +437,11 @@ export function MapClient() {
   const originShort = origin?.name.split(",")[0] ?? "";
   const destinationShort = destination?.name.split(",")[0] ?? "";
 
-  // Keep fullH in sync with the *visible* viewport. iOS fires visualViewport
-  // resize/scroll when the toolbar shows/hides; without this the sheet height is
-  // frozen to the first-paint value and the bottom drifts off-screen.
+  // Track the visible viewport so mid/full stay correct when the iOS toolbar
+  // shows/hides or on rotation.
   useEffect(() => {
     const vv = window.visualViewport;
-    const update = () => setFullH(fullHeight());
+    const update = () => setVh(visibleViewportHeight());
     update();
     vv?.addEventListener("resize", update);
     window.addEventListener("resize", update);
@@ -498,30 +453,19 @@ export function MapClient() {
     };
   }, []);
 
-  // Measure the real rendered peek height. The collapsed content differs per
-  // mode/plan and iOS layout never matches a hand-tuned constant, so the scroll
-  // area = sheetHeight − measuredPeek is what removes the dead space.
+  // Measure the collapsed peek so the panel hugs it exactly. Only measure while
+  // collapsed — when expanded the peek also holds the mode tabs, which we don't
+  // want baked into the collapsed height.
   useEffect(() => {
+    if (sheetState !== "collapsed") return;
     const el = peekRef.current;
     if (!el) return;
-    const measure = () => setPeekH(el.offsetHeight);
+    const measure = () => setCollapsedH(el.offsetHeight);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, [mode, plan, sheetState]);
-
-  // Re-anchor the sheet whenever its target height changes (viewport resize,
-  // peek re-measure) so the collapsed peek and expanded snaps stay glued to the
-  // right offset instead of leaving a gap or overshooting. Deferred to the next
-  // frame so we react to committed layout rather than firing setState mid-effect.
-  useEffect(() => {
-    const id = requestAnimationFrame(() => snapTo(sheetStateToH(sheetState), fullH));
-    return () => cancelAnimationFrame(id);
-  // sheetStateToH/snapTo are recreated each render; we only want to react to the
-  // measured geometry and the active snap state.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullH, peekH, sheetState]);
 
   // ---- Mode switch ----
   function switchMode(next: MapMode) {
@@ -532,6 +476,11 @@ export function MapClient() {
       applySheetState("collapsed");
     }
   }
+
+  // The sheet shows its scrollable body whenever it's past the collapsed snap —
+  // either settled at mid/full, or dragged up far enough from collapsed.
+  const expanded =
+    sheetState !== "collapsed" || (dragH != null && dragH > collapsedH + 24);
 
   // ---- Render ----
   return (
@@ -622,21 +571,21 @@ export function MapClient() {
           ~50px pill + safe area) so the summary strip stays visible/tappable.
           Mid/full: anchored at the screen bottom edge and slides over the nav. */}
       <motion.div
-        animate={controls}
-        initial={{ y: snapToY(initialSnapH, fullH) }}
-        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-[20px] border-t border-border bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border lg:hidden ${
+        className={`absolute inset-x-0 z-[900] mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[20px] border-t border-border bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px before:bg-border lg:hidden ${
           sheetState === "collapsed"
             ? "bottom-[calc(env(safe-area-inset-bottom)+78px)]"
             : "bottom-0"
         }`}
-        style={{ height: `${fullH}px` }}
+        animate={{ height: dragH ?? heightFor(sheetState) }}
+        transition={
+          dragH != null ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 38 }
+        }
       >
-        {/* Peek — measured for exact scroll-area math. Slim: a compact grabber
-            plus a single dense summary line when collapsed; the mode toggle
-            only renders when expanded to keep the collapsed footprint minimal. */}
+        {/* Peek — grabber + (collapsed summary line | mode tabs). The whole strip
+            is the drag handle. Measured (collapsed only) so the panel hugs it. */}
         <div
           ref={peekRef}
-          className="cursor-grab touch-none select-none"
+          className="shrink-0 cursor-grab touch-none select-none"
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
@@ -644,14 +593,14 @@ export function MapClient() {
           {/* Grabber — compact tappable strip, cycles collapsed → mid → full */}
           <button
             onClick={cycleSheetState}
-            className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1 pt-2"
+            className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1.5 pt-2.5"
             aria-label={tMap("drag_to_expand")}
           >
-            <div className="h-1 w-8 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
+            <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
           </button>
 
           {/* Collapsed: single dense summary line. */}
-          {sheetState === "collapsed" && (
+          {!expanded && (
             mode === "plan" && plan && activePlan ? (
               <button
                 onClick={() => applySheetState("mid")}
@@ -702,7 +651,7 @@ export function MapClient() {
           )}
 
           {/* Mode tabs — only when expanded, so the collapsed peek stays slim. */}
-          {sheetState !== "collapsed" && (
+          {expanded && (
             <div className="mx-3 mb-2 mt-1">
               <SegmentedControl<MapMode>
                 layoutId="map-mode-thumb-mobile"
@@ -717,19 +666,14 @@ export function MapClient() {
           )}
         </div>
 
-        {/* Sheet content — only rendered when sheet is at MID or FULL. Height is
-            the visible sheet minus the measured peek; bottom padding clears the
-            floating nav so the final row is reachable. */}
-        {sheetState !== "collapsed" && (
-          <div
-            className="overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+90px)] [touch-action:pan-y]"
-            style={{ height: `${snapH - peekH}px` }}
-          >
+        {/* Sheet content — fills the remaining height (flex-1) and scrolls, so
+            there's never a dead gap. Bottom padding clears the floating nav. */}
+        {expanded && (
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+96px)] [touch-action:pan-y]">
             {mode === "explore" ? (
               <ExploreContent
                 stations={stations}
                 isFetching={isFetching}
-                snapH={snapH}
                 onStationSelect={setSelectedStation}
                 tCharging={tCharging}
                 tMap={tMap}
@@ -760,7 +704,6 @@ export function MapClient() {
                 canShare={canShare}
                 sharing={sharing}
                 sharedRoute={sharedRoute}
-                snapH={snapH}
                 onLocateOrigin={handleLocateOrigin}
                 locating={locating}
                 onPlan={handlePlan}
@@ -816,7 +759,6 @@ export function MapClient() {
             <ExploreContent
               stations={stations}
               isFetching={isFetching}
-              snapH={99999}
               onStationSelect={setSelectedStation}
               tCharging={tCharging}
               tMap={tMap}
@@ -847,7 +789,6 @@ export function MapClient() {
               canShare={canShare}
               sharing={sharing}
               sharedRoute={sharedRoute}
-              snapH={99999}
               onLocateOrigin={handleLocateOrigin}
               locating={locating}
               onPlan={handlePlan}
@@ -880,15 +821,12 @@ export function MapClient() {
 interface ExploreContentProps {
   stations: Charger[];
   isFetching: boolean;
-  snapH: number;
   onStationSelect: (s: Charger) => void;
   tCharging: ReturnType<typeof useTranslations>;
   tMap: ReturnType<typeof useTranslations>;
 }
 
-function ExploreContent({ stations, isFetching, snapH, onStationSelect, tCharging, tMap }: ExploreContentProps) {
-  const halfH = halfHeight();
-  const showList = snapH >= halfH;
+function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap }: ExploreContentProps) {
   const list = stations.slice(0, 50);
 
   return (
@@ -902,11 +840,11 @@ function ExploreContent({ stations, isFetching, snapH, onStationSelect, tChargin
         </span>
       </div>
 
-      {showList && list.length === 0 && !isFetching && (
+      {list.length === 0 && !isFetching && (
         <p className="py-6 text-center text-sm text-muted-foreground">{tMap("no_stations")}</p>
       )}
 
-      {showList && list.length > 0 && (
+      {list.length > 0 && (
         <motion.ul
           className="space-y-2"
           initial="hidden"
@@ -996,7 +934,6 @@ interface PlanContentProps {
   canShare: boolean;
   sharing: boolean;
   sharedRoute: boolean;
-  snapH: number;
   onLocateOrigin: () => void;
   locating: boolean;
   onPlan: () => void;
