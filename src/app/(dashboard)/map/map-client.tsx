@@ -273,12 +273,20 @@ export function MapClient() {
   // Plan-mode form collapse: true = full form, false = compact "A → B" summary
   // bar (set after a plan is computed so the map and routes stay visible).
   const [editingRoute, setEditingRoute] = useState(true);
-  // Whether all route variant cards are expanded simultaneously for comparison.
-  // Collapsed by default so the map stays visible; one chevron tap opens all.
-  const [variantsExpanded, setVariantsExpanded] = useState(false);
-  // When true the route strip collapses so the map is fully visible.
-  // Toggled by the ChevronUp button in the tabs row.
-  const [planMinimized, setPlanMinimized] = useState(false);
+  // Single 3-state control for the route strip — one button in the tabs row
+  // cycles: "compact" (summaries) → "expanded" (details) → "minimized" (hidden).
+  type PlanDisplayState = "compact" | "expanded" | "minimized";
+  const [planDisplayState, setPlanDisplayState] = useState<PlanDisplayState>("compact");
+
+  // Derived booleans used by the JSX below.
+  const variantsExpanded = planDisplayState === "expanded";
+  const planMinimized = planDisplayState === "minimized";
+
+  function cyclePlanDisplay() {
+    setPlanDisplayState((s) =>
+      s === "compact" ? "expanded" : s === "expanded" ? "minimized" : "compact"
+    );
+  }
 
   const canPlan = origin !== null && destination !== null;
 
@@ -331,8 +339,7 @@ export function MapClient() {
       setSheetState("mid");
       // Collapse the form to a slim "A → B" bar so the route is visible.
       setEditingRoute(false);
-      setVariantsExpanded(false);
-      setPlanMinimized(false);
+      setPlanDisplayState("compact");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
@@ -442,7 +449,7 @@ export function MapClient() {
     setStationListOpen(false);
     if (next === "plan") {
       setEditingRoute(plan === null);
-      setPlanMinimized(false);
+      setPlanDisplayState("compact");
     }
   }
 
@@ -496,7 +503,8 @@ export function MapClient() {
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
         <div className="rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur-xl">
-          {/* Mode tabs — compact; minimize button appears when a plan is active */}
+          {/* Mode tabs — compact. When a plan is active, ONE button cycles the route strip:
+              compact (summaries) → expanded (details) → minimized (hidden) → compact. */}
           <div className="flex items-center gap-1 p-1">
             <div className="flex-1">
               <SegmentedControl<MapMode>
@@ -512,13 +520,13 @@ export function MapClient() {
             </div>
             {mode === "plan" && plan && !editingRoute && (
               <button
-                onClick={() => setPlanMinimized((v) => !v)}
+                onClick={cyclePlanDisplay}
                 className="shrink-0 rounded-lg p-1.5 text-muted-foreground active:text-foreground"
               >
-                {planMinimized ? (
-                  <ChevronDown className="size-3.5" />
-                ) : (
+                {planDisplayState === "expanded" ? (
                   <ChevronUp className="size-3.5" />
+                ) : (
+                  <ChevronDown className="size-3.5" />
                 )}
               </button>
             )}
@@ -574,7 +582,6 @@ export function MapClient() {
                 activeVariant={activeVariant}
                 setActiveVariant={setActiveVariant}
                 variantsExpanded={variantsExpanded}
-                setVariantsExpanded={setVariantsExpanded}
                 canShare={canShare}
                 sharing={sharing}
                 sharedRoute={sharedRoute}
@@ -977,7 +984,6 @@ interface RouteAccordionProps {
   activeVariant: number;
   setActiveVariant: (i: number) => void;
   variantsExpanded: boolean;
-  setVariantsExpanded: (v: boolean) => void;
   canShare: boolean;
   sharing: boolean;
   sharedRoute: boolean;
@@ -1002,7 +1008,6 @@ function RouteAccordion({
   activeVariant,
   setActiveVariant,
   variantsExpanded,
-  setVariantsExpanded,
   canShare,
   sharing,
   sharedRoute,
@@ -1044,36 +1049,24 @@ function RouteAccordion({
                   active ? "border-primary/50 bg-primary/5" : "border-border"
                 }`}
               >
-                {/* Header — tap body = select route on map, tap chevron = expand/collapse ALL */}
-                <div className="flex items-start gap-0.5 px-2.5 py-1.5">
-                  <button
-                    onClick={() => setActiveVariant(i)}
-                    className="flex min-w-0 flex-1 flex-col gap-0 text-left"
-                  >
-                    {variants.length > 1 && (
-                      <p className={`truncate text-2xs font-semibold uppercase tracking-wide ${titleColor}`}>
-                        {title}
-                      </p>
-                    )}
-                    <p className="text-xs font-semibold tabular-nums text-foreground">
-                      {h}h {m}m
+                {/* Card — tap anywhere to select this route on the map */}
+                <button
+                  onClick={() => setActiveVariant(i)}
+                  className="flex w-full flex-col gap-0 px-2.5 py-1.5 text-left"
+                >
+                  {variants.length > 1 && (
+                    <p className={`truncate text-2xs font-semibold uppercase tracking-wide ${titleColor}`}>
+                      {title}
                     </p>
-                    <p className="text-2xs text-muted-foreground">
-                      {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}{" "}
-                      · <span className="font-semibold text-green-400 tabular-nums">{fromEUR(vp.tripEnergyCostEur)}</span>
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setVariantsExpanded(!variantsExpanded)}
-                    aria-expanded={variantsExpanded}
-                    aria-label={title}
-                    className="-mr-0.5 mt-0.5 shrink-0 p-1 text-muted-foreground active:text-foreground"
-                  >
-                    <ChevronDown
-                      className={`size-3.5 transition-transform ${variantsExpanded ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                </div>
+                  )}
+                  <p className="text-xs font-semibold tabular-nums text-foreground">
+                    {h}h {m}m
+                  </p>
+                  <p className="text-2xs text-muted-foreground">
+                    {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}{" "}
+                    · <span className="font-semibold text-green-400 tabular-nums">{fromEUR(vp.tripEnergyCostEur)}</span>
+                  </p>
+                </button>
 
                 {/* Expanded details — overflow-x-hidden means no horizontal overflow here,
                     so horizontal swipes propagate to the outer scroll automatically. */}
