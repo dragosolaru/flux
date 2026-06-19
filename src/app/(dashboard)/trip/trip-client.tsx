@@ -410,7 +410,7 @@ export function TripClient() {
           /* Compact pill summary */
           <button
             onClick={() => setFormCollapsed(false)}
-            className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] p-3 shadow-2xl backdrop-blur-md"
+            className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card/90 p-3 shadow-2xl backdrop-blur-md"
           >
             <div className="flex min-w-0 items-center gap-2">
               <Route className="size-4 shrink-0 text-primary" />
@@ -422,7 +422,7 @@ export function TripClient() {
           </button>
         ) : (
           /* Full form */
-          <div className="rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] p-3 shadow-2xl backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-2xl backdrop-blur-md">
             <TripPlannerForm {...formProps} />
           </div>
         )}
@@ -436,7 +436,7 @@ export function TripClient() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-[20px] border-t border-white/6 bg-[oklch(0.13_0.015_265/0.97)] shadow-2xl backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/10 lg:hidden"
+          className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-[20px] border-t border-border bg-card/95 shadow-2xl backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border lg:hidden"
         >
           {/* Handle — always visible, outside the collapsible area so scroll
               state never hides it. */}
@@ -449,7 +449,7 @@ export function TripClient() {
             >
               {planExpanded ? (
                 <>
-                  <div className="mx-auto h-1 w-9 rounded-full bg-white/25 transition-colors active:bg-white/40" />
+                  <div className="mx-auto h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
                 </>
               ) : (
@@ -496,7 +496,7 @@ export function TripClient() {
         <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2 space-y-4 scrollbar-none">
           <TripPlannerForm {...formProps} />
           {resultsProps && (
-            <div className="border-t border-white/8 pt-4">
+            <div className="border-t border-border pt-4">
               <TripResultsBody {...resultsProps} />
             </div>
           )}
@@ -710,7 +710,7 @@ function TripPlannerForm({
                 <select
                   value={vehicleId}
                   onChange={(e) => setVehicleId(e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-white/6 bg-white/[0.04] px-3 py-1.5 pr-8 text-sm"
+                  className="w-full appearance-none rounded-lg border border-border bg-card text-foreground px-3 py-1.5 pr-8 text-sm"
                 >
                   <option value="">{t("vehicle_default")}</option>
                   {vehicles.map((v) => (
@@ -827,8 +827,8 @@ function TripResultsBody({
                 aria-pressed={active}
                 className={`flex w-[150px] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors lg:w-full lg:flex-row lg:items-center lg:justify-between ${
                   active
-                    ? "border-primary/50 bg-primary/12"
-                    : "border-white/6 bg-white/[0.04] hover:bg-white/[0.07]"
+                    ? "border-primary/50 bg-primary/15 text-foreground font-semibold"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
                 <span className={`truncate text-xs font-semibold ${
@@ -910,7 +910,7 @@ function TripResultsBody({
                   whileTap={{ scale: 0.97 }}
                   onClick={onShareToTesla}
                   disabled={sharing}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/6 bg-white/[0.04] py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   {sharing ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -919,7 +919,7 @@ function TripResultsBody({
                   )}
                   {sharing ? t("sharing") : t("share_to_tesla")}
                   {!sharing && activePlan.stops.length > 0 && (
-                    <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
                       {activePlan.stops.length} ⚡
                     </span>
                   )}
