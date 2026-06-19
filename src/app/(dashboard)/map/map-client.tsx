@@ -13,6 +13,8 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronRight,
+  ArrowRight,
+  Pencil,
   Zap,
   Send,
 } from "lucide-react";
@@ -68,7 +70,7 @@ const CONNECTOR_OPTIONS: { value: ConnectorType | "all"; label: string }[] = [
 
 // Pill style shared across filter chips
 const CHIP_BASE =
-  "h-8 shrink-0 rounded-full border px-3 text-xs transition-colors";
+  "h-7 shrink-0 rounded-full border px-2.5 text-2xs transition-colors";
 const CHIP_ON =
   "border-primary/50 bg-primary/15 font-semibold text-foreground";
 const CHIP_OFF =
@@ -259,6 +261,9 @@ export function MapClient() {
   const [sharedRoute, setSharedRoute] = useState(false);
   const [selectedStop, setSelectedStop] = useState<ChargingStop | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // Plan-mode form collapse: true = full form, false = compact "A → B" summary
+  // bar (set after a plan is computed so the map and routes stay visible).
+  const [editingRoute, setEditingRoute] = useState(true);
 
   const canPlan = origin !== null && destination !== null;
 
@@ -309,6 +314,8 @@ export function MapClient() {
       setActiveVariant(0);
       setSharedRoute(false);
       setSheetState("mid");
+      // Collapse the form to a slim "A → B" bar so the route is visible.
+      setEditingRoute(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
@@ -415,6 +422,7 @@ export function MapClient() {
   function switchMode(next: MapMode) {
     setMode(next);
     setSheetState("mid");
+    if (next === "plan") setEditingRoute(plan === null);
   }
 
   // The results sheet shows whenever there's something to display.
@@ -457,9 +465,9 @@ export function MapClient() {
         className="absolute inset-x-3 z-[1000] lg:hidden"
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
-        <div className="rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl">
-          {/* Mode tabs */}
-          <div className="px-3 pb-2 pt-3">
+        <div className="rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur-xl">
+          {/* Mode tabs — compact */}
+          <div className="p-1.5">
             <SegmentedControl<MapMode>
               layoutId="map-mode-thumb-mobile"
               value={mode}
@@ -471,10 +479,10 @@ export function MapClient() {
             />
           </div>
 
-          {/* Explore: filter chip rows */}
+          {/* Explore: filter chip rows — compact */}
           {mode === "explore" && (
-            <div className="space-y-1.5 border-t border-border/40 px-3 py-2">
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+            <div className="space-y-1 border-t border-border/40 px-1.5 pb-1.5 pt-1.5">
+              <div className="flex gap-1 overflow-x-auto scrollbar-none">
                 {POWER_OPTIONS.map((opt) => (
                   <button
                     key={String(opt.value)}
@@ -486,7 +494,7 @@ export function MapClient() {
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+              <div className="flex gap-1 overflow-x-auto scrollbar-none">
                 {CONNECTOR_OPTIONS.map((opt) => (
                   <button
                     key={String(opt.value)}
@@ -501,8 +509,55 @@ export function MapClient() {
             </div>
           )}
 
-          {/* Plan: origin + destination + advanced + plan button */}
-          {mode === "plan" && (
+          {/* Plan — collapsed: slim "A → B" bar + route chooser (keeps map visible) */}
+          {mode === "plan" && !editingRoute && plan && activePlan && (
+            <div className="border-t border-border/40">
+              <button
+                onClick={() => setEditingRoute(true)}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+              >
+                <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium text-foreground">
+                  <span className="truncate">{originShort}</span>
+                  <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{destinationShort}</span>
+                </span>
+                <Pencil className="size-3.5 shrink-0 text-muted-foreground" />
+              </button>
+
+              {/* Route chooser — pick between alternative routes from the map view */}
+              {variants.length > 1 && (
+                <div className="flex gap-1.5 overflow-x-auto px-3 pb-2 scrollbar-none">
+                  {variants.map((v, i) => {
+                    const label = getVariantLabel(v, variants);
+                    const active = i === activeVariant;
+                    const h = Math.floor(v.plan.totalMinutes / 60);
+                    const m = v.plan.totalMinutes % 60;
+                    const title = label
+                      ? tTrip(`variant.${label.key}`)
+                      : `${tTrip("route_label")} ${String.fromCharCode(65 + i)}`;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => setActiveVariant(i)}
+                        aria-pressed={active}
+                        className={`shrink-0 rounded-full border px-2.5 py-1 text-2xs transition-colors ${
+                          active
+                            ? "border-primary bg-primary/15 font-semibold text-foreground"
+                            : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        {title} · {h}h{m > 0 ? ` ${m}m` : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Plan — editing: origin + destination + advanced + plan button */}
+          {mode === "plan" && (editingRoute || !plan) && (
             <div className="space-y-2 border-t border-border/40 px-3 py-2">
               <GeocodingSearch
                 placeholder={tTrip("origin_placeholder")}
