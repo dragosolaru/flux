@@ -86,17 +86,17 @@ export function CostSummary({
       {/* Stats chips + fuel toggle on one line */}
       <div className="flex items-center gap-1 text-xs">
         <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
+          <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 font-medium">
             {stopsLabel}
           </span>
-          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
+          <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 font-medium">
             {tripEnergyKwh.toFixed(1)} kWh
           </span>
           <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 font-medium text-green-400">
             {fromEUR(tripEnergyCostEur)}
           </span>
           {chargingMinutes > 0 && (
-            <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-medium">
+            <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 font-medium">
               {t("charging_time_label", { duration: formatDuration(chargingMinutes) })}
             </span>
           )}
@@ -107,7 +107,7 @@ export function CostSummary({
           title={t("fuel_comparison")}
           aria-label={t("fuel_comparison")}
           aria-pressed={showFuel}
-          className={`shrink-0 rounded-full p-2.5 transition-colors ${showFuel ? "bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
+          className={`shrink-0 rounded-full p-2.5 transition-colors ${showFuel ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"}`}
         >
           <Fuel className="size-3.5" />
         </button>
@@ -122,7 +122,7 @@ export function CostSummary({
       )}
 
       {showFuel && (
-        <div className="space-y-1.5 rounded-xl border border-white/8 bg-white/5 p-3 text-sm backdrop-blur-sm">
+        <div className="space-y-1.5 rounded-xl border border-border bg-muted/40 p-3 text-sm backdrop-blur-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("ev_cost_label")}</span>
             <span className="font-medium text-green-400">{fromEUR(tripEnergyCostEur)}</span>
@@ -136,7 +136,7 @@ export function CostSummary({
             </span>
             <span className="font-medium">{fromEUR(petrolCostEur)}</span>
           </div>
-          <div className="h-px bg-white/8" />
+          <div className="h-px bg-border" />
           <div className="flex justify-between font-semibold">
             <span>{savingsEur >= 0 ? t("savings_label") : t("extra_cost_label")}</span>
             <span className={savingsEur >= 0 ? "text-green-400" : "text-orange-400"}>
@@ -144,7 +144,7 @@ export function CostSummary({
             </span>
           </div>
 
-          <div className="h-px bg-white/8" />
+          <div className="h-px bg-border" />
           <p className="text-xs text-muted-foreground">{t("fuel.edit")}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             <label className="flex items-center gap-1.5">
@@ -159,7 +159,7 @@ export function CostSummary({
                   const n = parseFloat(e.target.value);
                   if (Number.isFinite(n) && n > 0) updateFuel({ lPer100km: n });
                 }}
-                className="w-16 rounded border border-white/8 bg-transparent px-2 py-1 text-sm"
+                className="w-16 rounded border border-border bg-transparent px-2 py-1 text-sm text-foreground"
                 aria-label={t("fuel.consumption")}
               />
               <span className="text-muted-foreground">{t("fuel.per_100km")}</span>
@@ -176,7 +176,7 @@ export function CostSummary({
                   const n = parseFloat(e.target.value);
                   if (Number.isFinite(n) && n > 0) updateFuel({ priceEurL: n });
                 }}
-                className="w-16 rounded border border-white/8 bg-transparent px-2 py-1 text-sm"
+                className="w-16 rounded border border-border bg-transparent px-2 py-1 text-sm text-foreground"
                 aria-label={t("fuel.price")}
               />
               <span className="text-muted-foreground">{t("fuel.per_liter")}</span>

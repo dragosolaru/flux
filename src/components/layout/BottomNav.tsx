@@ -77,14 +77,11 @@ export function BottomNav() {
       {/* Floating pill nav */}
       <motion.nav
         aria-label="Primary"
-        className="fixed z-50 md:hidden flex items-center gap-1 rounded-full border border-white/[0.08] p-1 shadow-2xl"
+        className="fixed z-50 md:hidden flex items-center gap-1 rounded-full border border-border p-1 shadow-2xl bg-card/90 backdrop-blur-xl"
         style={{
           bottom: "calc(14px + env(safe-area-inset-bottom))",
           left: "50%",
           translateX: "-50%",
-          background: "oklch(0.13 0.02 265 / 0.88)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
           minWidth: 240,
           maxWidth: 300,
         }}
@@ -99,7 +96,7 @@ export function BottomNav() {
 
           const buttonClass = cn(
             "relative flex flex-1 flex-col items-center justify-center rounded-full py-2 transition-colors",
-            isActive ? "bg-white/[0.08]" : "hover:bg-white/[0.04]",
+            isActive ? "bg-muted" : "hover:bg-muted/50",
           );
 
           const inner = (

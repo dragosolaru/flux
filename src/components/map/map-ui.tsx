@@ -14,12 +14,12 @@ export const SECTION_TITLE =
   "text-2xs font-semibold uppercase tracking-wide text-muted-foreground";
 
 export const LIST_ROW =
-  "group flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2.5 text-left transition-colors hover:bg-white/[0.07] active:bg-white/[0.09]";
+  "group flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-left transition-colors hover:bg-muted active:bg-muted";
 
 export const PILL_BASE = "h-9 shrink-0 rounded-full border px-3 text-xs transition-colors";
 export const PILL_ON = "border-primary/50 bg-primary/15 font-semibold text-foreground";
 export const PILL_OFF =
-  "border-white/6 bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]";
+  "border-border bg-card text-muted-foreground hover:bg-muted";
 
 // ── Segmented control ───────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   return (
     <div
-      className={cn("relative flex rounded-[10px] bg-white/[0.04] p-0.5", className)}
+      className={cn("relative flex rounded-[10px] bg-muted/40 p-0.5", className)}
       role="tablist"
     >
       {options.map((opt) => {
@@ -70,7 +70,7 @@ export function SegmentedControl<T extends string>({
               <motion.span
                 layoutId={layoutId}
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                className="absolute inset-0 -z-10 rounded-lg bg-white/[0.08] shadow-[0_1px_3px_oklch(0_0_0/0.4)] ring-1 ring-white/10"
+                className="absolute inset-0 -z-10 rounded-lg bg-muted shadow-sm ring-1 ring-border"
               />
             )}
             {Icon && <Icon className="size-3.5" />}
@@ -95,7 +95,7 @@ export function StatStrip({ stats, className }: { stats: Stat[]; className?: str
   return (
     <div
       className={cn(
-        "flex items-stretch divide-x divide-white/8 overflow-hidden rounded-xl bg-white/[0.04]",
+        "flex items-stretch divide-x divide-border overflow-hidden rounded-xl bg-muted/40",
         className,
       )}
     >
@@ -134,7 +134,7 @@ export function DesktopSidebar({
   children: ReactNode;
 }) {
   return (
-    <aside className="absolute left-0 top-0 z-[1000] hidden h-full w-[380px] flex-col border-r border-white/6 bg-[var(--sidebar)]/95 shadow-[2px_0_24px_oklch(0_0_0/0.45)] backdrop-blur-2xl lg:flex xl:w-[400px]">
+    <aside className="absolute left-0 top-0 z-[1000] hidden h-full w-[380px] flex-col border-r border-border bg-[var(--sidebar)]/95 shadow-2xl backdrop-blur-2xl lg:flex xl:w-[400px]">
       <div className="shrink-0 px-5 pb-3 pt-5">
         <div className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
           <Icon className="size-4 text-primary" />

@@ -40,7 +40,7 @@ function VehicleSwitcher() {
         onChange={(e: ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
         }}
-        className="h-8 max-w-[140px] cursor-pointer appearance-none rounded-full border-0 bg-white/6 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+        className="h-8 max-w-[140px] cursor-pointer appearance-none rounded-full border-0 bg-muted/40 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
         aria-label={t("select_vehicle")}
         title={label}
       >

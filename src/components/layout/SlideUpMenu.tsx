@@ -75,7 +75,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
             onDragEnd={(_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 400) onClose();
             }}
-            className="fixed inset-x-0 bottom-0 z-[2001] rounded-t-3xl border-t border-white/12 bg-background/85 pb-[max(env(safe-area-inset-bottom),16px)] shadow-[0_-8px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl md:hidden"
+            className="fixed inset-x-0 bottom-0 z-[2001] rounded-t-3xl border-t border-border bg-background/85 pb-[max(env(safe-area-inset-bottom),16px)] shadow-[0_-8px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl md:hidden"
           >
             <div className="flex justify-center pt-3">
               <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
@@ -106,7 +106,7 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
                     <Link
                       href={item.href}
                       onClick={onClose}
-                      className="flex items-center gap-2.5 rounded-[10px] bg-white/[0.05] px-3 py-3"
+                      className="flex items-center gap-2.5 rounded-[10px] bg-muted/40 px-3 py-3"
                     >
                       <Icon className="size-4 shrink-0 text-muted-foreground" />
                       <span className="text-sm font-medium">{t(item.labelKey)}</span>
