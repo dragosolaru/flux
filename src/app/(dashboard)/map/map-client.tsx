@@ -567,19 +567,14 @@ export function MapClient() {
       )}
 
       {/* LAYER 3: Bottom sheet */}
-      {/* Collapsed: anchored above the floating BottomNav pill (14px gap +
-          ~50px pill + safe area) so the summary strip stays visible/tappable.
-          Mid/full: anchored at the screen bottom edge and slides over the nav. */}
-      {/* Frosted dock behind the floating nav — fades the map out at the bottom
-          so station markers never clutter around the pill when collapsed. Sits
-          above the (isolated) map context but below the nav (z-50). */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[45] h-[calc(env(safe-area-inset-bottom)+104px)] bg-gradient-to-t from-background from-55% via-background/80 to-transparent lg:hidden" />
-
+      {/* Collapsed: a floating rounded card just above the nav (Google/Apple Maps
+          pattern) — a clean object over the map, no gradient, no dimmed markers.
+          Mid/full: morphs into a full-width sheet anchored to the bottom edge. */}
       <motion.div
-        className={`absolute inset-x-0 z-[900] mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[20px] border-t border-border bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px before:bg-border lg:hidden ${
+        className={`absolute z-[900] flex flex-col overflow-hidden border-border bg-background/95 shadow-2xl backdrop-blur-2xl transition-[border-radius] duration-200 lg:hidden ${
           sheetState === "collapsed"
-            ? "bottom-[calc(env(safe-area-inset-bottom)+78px)]"
-            : "bottom-0"
+            ? "inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+80px)] rounded-3xl border"
+            : "inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-[20px] border-t"
         }`}
         animate={{ height: dragH ?? heightFor(sheetState) }}
         transition={
@@ -604,18 +599,18 @@ export function MapClient() {
             <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
           </button>
 
-          {/* Collapsed: single dense summary line. */}
+          {/* Collapsed: single dense summary line, flat inside the card. */}
           {!expanded && (
             mode === "plan" && plan && activePlan ? (
               <button
                 onClick={() => applySheetState("mid")}
-                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2 text-left active:bg-muted"
+                className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
               >
                 <p className="min-w-0 truncate">
-                  <span className="text-xs font-semibold tabular-nums">
+                  <span className="text-sm font-semibold tabular-nums">
                     {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
                   </span>
-                  <span className="text-2xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
                     {activePlan.stops.length === 0
                       ? tTrip("stops_count_zero")
@@ -625,16 +620,16 @@ export function MapClient() {
                   </span>
                 </p>
                 <span className="ml-2 flex shrink-0 items-center gap-1.5">
-                  <span className="text-xs font-semibold text-green-400 tabular-nums">
+                  <span className="text-sm font-semibold text-green-400 tabular-nums">
                     {fromEUR(activePlan.tripEnergyCostEur)}
                   </span>
-                  <ChevronUp className="size-3.5 text-muted-foreground" />
+                  <ChevronUp className="size-4 text-muted-foreground" />
                 </span>
               </button>
             ) : (
               <button
                 onClick={cycleSheetState}
-                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2 text-left active:bg-muted"
+                className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   {mode === "explore" && stations.length > 0 && (
@@ -642,7 +637,7 @@ export function MapClient() {
                       {tCharging("stations_count", { count: stations.length })}
                     </span>
                   )}
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate text-sm text-muted-foreground">
                     {mode === "explore"
                       ? stations.length > 0
                         ? `${stations[0].name ?? tCharging("station_fallback")}${stations[0].maxPowerKw != null ? ` · ${stations[0].maxPowerKw} kW` : ""}`
@@ -650,7 +645,7 @@ export function MapClient() {
                       : tMap("plan_hint")}
                   </span>
                 </span>
-                <ChevronUp className="ml-2 size-3.5 shrink-0 text-muted-foreground" />
+                <ChevronUp className="ml-2 size-4 shrink-0 text-muted-foreground" />
               </button>
             )
           )}
