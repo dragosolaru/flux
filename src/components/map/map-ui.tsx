@@ -37,6 +37,8 @@ interface SegmentedControlProps<T extends string> {
    *  mobile sheet and the desktop sidebar. */
   layoutId: string;
   className?: string;
+  /** Slimmer tabs for tight mobile surfaces (h-8 instead of h-9). */
+  dense?: boolean;
 }
 
 export function SegmentedControl<T extends string>({
@@ -45,6 +47,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   layoutId,
   className,
+  dense,
 }: SegmentedControlProps<T>) {
   return (
     <div
@@ -62,7 +65,8 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative z-10 flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition-colors",
+              "relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-lg font-medium transition-colors",
+              dense ? "h-8 text-xs" : "h-9 text-[13px]",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >

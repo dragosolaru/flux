@@ -17,6 +17,7 @@ import {
   Pencil,
   Zap,
   Send,
+  List,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
@@ -177,13 +178,19 @@ export function MapClient() {
   function onDragMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!(e.buttons & 1)) return;
     const next = dragStartH.current + (dragStartY.current - e.clientY);
-    setDragH(Math.max(midH, Math.min(next, fullH)));
+    // Allow dragging below mid so a downward flick can dismiss the sheet.
+    setDragH(Math.max(midH * 0.5, Math.min(next, fullH)));
   }
 
   function onDragEnd() {
     const h = dragH ?? heightFor(sheetState);
-    setSheetState(Math.abs(h - midH) <= Math.abs(h - fullH) ? "mid" : "full");
     setDragH(null);
+    // Dragged well below mid → dismiss the list back to the map.
+    if (h < midH * 0.75) {
+      setStationListOpen(false);
+      return;
+    }
+    setSheetState(Math.abs(h - midH) <= Math.abs(h - fullH) ? "mid" : "full");
   }
 
   // ---- Explore mode state ----
@@ -194,17 +201,21 @@ export function MapClient() {
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
   const [selectedStation, setSelectedStation] = useState<Charger | null>(null);
   const [exploreResetKey, setExploreResetKey] = useState(0);
+  // The station list is opt-in: the map markers are the stations, so the list
+  // stays hidden behind a small pill until the user asks for it.
+  const [stationListOpen, setStationListOpen] = useState(false);
 
-  const handleExploreLocate = useCallback((lat: number, lng: number) => {
+  // Plain functions — React Compiler memoizes them; the setters are stable.
+  function handleExploreLocate(lat: number, lng: number) {
     setExploreCenter({ lat, lng });
     setExploreUserLoc({ lat, lng });
     setExploreArea(toBBox(lat, lng));
     setExploreResetKey((k) => k + 1);
-  }, []);
+  }
 
-  const handleExploreAreaChange = useCallback((bbox: ViewportBBox) => {
+  function handleExploreAreaChange(bbox: ViewportBBox) {
     setExploreArea(bbox);
-  }, []);
+  }
 
   // Silent auto-locate on mount
   useEffect(() => {
@@ -216,8 +227,6 @@ export function MapClient() {
       () => undefined,
       { timeout: 3000 },
     );
-  // handleExploreLocate is stable (useCallback)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { data: stations = [], isFetching } = useQuery({
@@ -426,12 +435,20 @@ export function MapClient() {
   function switchMode(next: MapMode) {
     setMode(next);
     setSheetState("mid");
+    setStationListOpen(false);
     if (next === "plan") setEditingRoute(plan === null);
   }
 
-  // The bottom sheet is explore-only now: plan results live in the top-card
-  // route accordion, leaving the map and route lines fully visible.
-  const showSheet = mode === "explore" && stations.length > 0;
+  function openStationList() {
+    setSheetState("mid");
+    setStationListOpen(true);
+  }
+
+  // The bottom sheet is explore-only and opt-in: plan results live in the
+  // top-card route accordion, and the station list opens only on request so
+  // the map stays uncluttered.
+  const showSheet = mode === "explore" && stationListOpen && stations.length > 0;
+  const showListPill = mode === "explore" && !stationListOpen && stations.length > 0;
 
   // ---- Render ----
   return (
@@ -472,8 +489,9 @@ export function MapClient() {
       >
         <div className="rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur-xl">
           {/* Mode tabs — compact */}
-          <div className="p-1.5">
+          <div className="p-1">
             <SegmentedControl<MapMode>
+              dense
               layoutId="map-mode-thumb-mobile"
               value={mode}
               onChange={switchMode}
@@ -549,7 +567,7 @@ export function MapClient() {
 
           {/* Plan — editing: origin + destination + advanced + plan button */}
           {mode === "plan" && (editingRoute || !plan) && (
-            <div className="space-y-2 border-t border-border/40 px-3 py-2">
+            <div className="space-y-1.5 border-t border-border/40 px-2.5 pb-2 pt-1.5">
               <GeocodingSearch
                 placeholder={tTrip("origin_placeholder")}
                 value={origin}
@@ -640,7 +658,7 @@ export function MapClient() {
               <button
                 onClick={handlePlan}
                 disabled={!canPlan || loading}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
+                className="flex h-9 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -694,12 +712,19 @@ export function MapClient() {
               >
                 <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
               </button>
-              <div className="flex items-center gap-2 px-4 pb-2">
+              <div className="flex items-center justify-between gap-2 px-4 pb-2">
                 <span className="text-xs font-medium text-muted-foreground">
                   {isFetching
                     ? tCharging("updating", { count: stations.length })
                     : tCharging("stations_count", { count: stations.length })}
                 </span>
+                <button
+                  onClick={() => setStationListOpen(false)}
+                  aria-label={tCharging("hide_filters")}
+                  className="-m-1.5 p-1.5 text-muted-foreground active:text-foreground"
+                >
+                  <ChevronDown className="size-4" />
+                </button>
               </div>
             </div>
 
@@ -715,6 +740,24 @@ export function MapClient() {
               />
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating "show list" pill (explore, mobile) — opens the station list on
+          demand so the map stays uncluttered. */}
+      <AnimatePresence>
+        {showListPill && (
+          <motion.button
+            key="list-pill"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            onClick={openStationList}
+            className="absolute bottom-[calc(env(safe-area-inset-bottom)+84px)] left-1/2 z-[900] flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3.5 py-2 text-xs font-semibold text-foreground shadow-xl backdrop-blur-xl lg:hidden"
+          >
+            <List className="size-3.5 text-primary" />
+            {tCharging("stations_count", { count: stations.length })}
+          </motion.button>
         )}
       </AnimatePresence>
 
