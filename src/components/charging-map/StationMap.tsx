@@ -237,7 +237,7 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
         <button
           onClick={handleClick}
           title={t("locate_me")}
-          className="flex items-center justify-center rounded-xl bg-[oklch(0.16_0.015_265/0.92)] border border-white/8 p-2 shadow-lg hover:bg-[oklch(0.19_0.015_265/0.92)] transition-colors backdrop-blur-md"
+          className="flex items-center justify-center rounded-xl bg-card/90 border border-border p-2 shadow-lg hover:bg-card transition-colors backdrop-blur-md"
           style={{ width: "44px", height: "44px" }}
         >
           {locating ? (

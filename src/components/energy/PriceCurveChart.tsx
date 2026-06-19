@@ -35,7 +35,7 @@ function GlassTooltip({
   const entry = payload[0];
   if (!entry) return null;
   return (
-    <div className="rounded-xl border border-white/8 bg-background/80 px-3 py-2 text-xs backdrop-blur-sm">
+    <div className="rounded-xl border border-border bg-background/80 px-3 py-2 text-xs backdrop-blur-sm">
       <p className="font-medium">
         {String(entry.payload.hour).padStart(2, "0")}:00
       </p>

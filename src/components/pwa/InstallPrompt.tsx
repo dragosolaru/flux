@@ -68,7 +68,7 @@ export function InstallPrompt() {
           animate="visible"
           exit="exit"
         >
-          <div className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-zinc-900 px-4 py-4 shadow-2xl shadow-black/60 ring-1 ring-inset ring-white/5">
+          <div className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-card px-4 py-4 shadow-2xl shadow-black/60 ring-1 ring-inset ring-border">
             <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/20">
               <Download className="size-4 text-primary" />
             </div>
@@ -89,7 +89,7 @@ export function InstallPrompt() {
             </div>
             <button
               onClick={dismiss}
-              className="mt-0.5 rounded-lg p-1 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+              className="mt-0.5 rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />
               <span className="sr-only">{t("install_dismiss")}</span>

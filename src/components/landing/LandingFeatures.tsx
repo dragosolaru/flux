@@ -38,7 +38,7 @@ export function LandingFeatures({ features }: LandingFeaturesProps) {
           <motion.div
             key={title}
             variants={fadeInUp}
-            className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/5 p-6 backdrop-blur-sm"
+            className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/40 p-6 backdrop-blur-sm"
           >
             <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Icon className="size-5" />

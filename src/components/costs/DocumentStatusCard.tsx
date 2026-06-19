@@ -120,11 +120,11 @@ export function DocumentStatusCard({ doc, onEdit, onDelete }: DocumentStatusCard
 
   return (
     <div className={cn(
-      "rounded-[14px] bg-white/[0.04] px-4 py-3 transition-colors",
+      "rounded-[14px] bg-muted/40 px-4 py-3 transition-colors",
       doc.status === "needs_review" && !nonElec && "border border-yellow-500/40",
       doc.status === "error" && "border border-destructive/40",
       nonElec && "border border-orange-400/40",
-      !(doc.status === "needs_review" && !nonElec) && doc.status !== "error" && !nonElec && "border border-white/[0.05]",
+      !(doc.status === "needs_review" && !nonElec) && doc.status !== "error" && !nonElec && "border border-border",
     )}>
         <div className="flex items-start gap-3">
           {/* Type icon */}

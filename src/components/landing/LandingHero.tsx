@@ -30,7 +30,7 @@ export function LandingHero({
         className="flex flex-col items-center gap-6"
       >
         <motion.div variants={fadeInUp}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
             <Zap className="size-3 text-primary" />
             {badgeLabel}
           </div>
@@ -62,7 +62,7 @@ export function LandingHero({
           </Link>
           <Link
             href="/pricing"
-            className="w-full rounded-xl border border-white/10 px-8 py-3 text-center text-sm font-medium transition-colors hover:bg-white/5 sm:w-auto"
+            className="w-full rounded-xl border border-border px-8 py-3 text-center text-sm font-medium transition-colors hover:bg-muted/40 sm:w-auto"
           >
             {ctaPricingLabel}
           </Link>

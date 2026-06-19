@@ -200,8 +200,8 @@ export function SmartChargeCard({
         {/* Content */}
         {isLoading ? (
           <div className="space-y-3">
-            <div className="h-10 animate-pulse rounded-xl bg-white/5" />
-            <div className="h-12 animate-pulse rounded-xl bg-white/5" />
+            <div className="h-10 animate-pulse rounded-xl bg-muted/40" />
+            <div className="h-12 animate-pulse rounded-xl bg-muted/40" />
           </div>
         ) : !forecast || !vehicles || vehicles.length === 0 ? (
           <div className="py-4 text-center">
@@ -213,7 +213,7 @@ export function SmartChargeCard({
             </p>
           </div>
         ) : (
-          <div className="space-y-4 divide-y divide-white/5">
+          <div className="space-y-4 divide-y divide-border">
             {vehicles.map((v: VehicleListItem) => (
               <div key={v.id} className="pt-4 first:pt-0">
                 <VehicleRecommendation vehicle={v} forecast={forecast} />

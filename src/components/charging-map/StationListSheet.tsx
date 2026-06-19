@@ -73,12 +73,12 @@ export function StationListSheet({
         role="dialog"
         aria-modal="true"
         aria-label={t("nearby_title")}
-        className="absolute bottom-0 left-0 right-0 z-[1600] flex flex-col rounded-t-3xl border-t border-white/10 bg-white/95 shadow-xl backdrop-blur-xl dark:bg-zinc-900/95"
+        className="absolute bottom-0 left-0 right-0 z-[1600] flex flex-col rounded-t-3xl border-t border-border bg-card/95 shadow-xl backdrop-blur-xl"
         style={{ maxHeight: "75dvh" }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-2.5">
-          <div className="h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+          <div className="h-1 w-10 rounded-full bg-border" />
         </div>
 
         {/* Search row */}
@@ -90,13 +90,13 @@ export function StationListSheet({
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder={t("search_placeholder")}
-              className="w-full rounded-full border border-white/10 bg-white/70 py-2 pl-9 pr-3 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary dark:bg-zinc-800/70"
+              className="w-full rounded-full border border-border bg-muted/70 py-2 pl-9 pr-3 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <button
             onClick={onClose}
             aria-label={t("close")}
-            className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
           >
             <X className="size-5" />
           </button>
@@ -118,7 +118,7 @@ export function StationListSheet({
                 <li key={s.id}>
                   <button
                     onClick={() => onSelect(s)}
-                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-muted"
                   >
                     <span
                       className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"

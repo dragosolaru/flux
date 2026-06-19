@@ -135,13 +135,13 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
               aria-label={label}
               className={[
                 "size-11 rounded-full flex items-center justify-center transition-all",
-                "bg-white/8 backdrop-blur-sm border border-white/8",
+                "bg-muted/60 backdrop-blur-sm border border-border",
                 active
                   ? "border-primary/60 bg-primary/15 shadow-lg shadow-primary/20"
                   : "",
                 isSending
                   ? "pointer-events-none opacity-60"
-                  : "hover:border-white/15 hover:bg-white/15",
+                  : "hover:border-border hover:bg-muted",
                 !state && "cursor-not-allowed opacity-50",
               ]
                 .filter(Boolean)

@@ -58,18 +58,18 @@ export function LoginForm({ mode }: LoginFormProps) {
       <button
         type="button"
         onClick={() => signIn("google", { callbackUrl })}
-        className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-white/6 bg-white/[0.04] h-10 text-sm font-medium transition-colors hover:bg-white/[0.07]"
+        className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-muted/40 h-10 text-sm font-medium transition-colors hover:bg-muted/40"
       >
         <GoogleMark />
         {t("google")}
       </button>
 
       <div className="relative flex items-center">
-        <div className="flex-1 border-t border-white/6" />
+        <div className="flex-1 border-t border-border" />
         <span className="mx-3 text-xs uppercase tracking-wide text-muted-foreground/60">
           {t("or")}
         </span>
-        <div className="flex-1 border-t border-white/6" />
+        <div className="flex-1 border-t border-border" />
       </div>
 
       <form onSubmit={onSubmit} className="space-y-5">

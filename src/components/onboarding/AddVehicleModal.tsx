@@ -175,7 +175,7 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
-          <div ref={dialogRef} className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-white/[0.04] px-5 py-4">
+          <div ref={dialogRef} className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-muted/40 px-5 py-4">
             <div className="relative pb-3">
               <div className="mb-2 flex items-center gap-2">
                 <BrandLogo brand="tesla" className="size-6 text-red-400" />
