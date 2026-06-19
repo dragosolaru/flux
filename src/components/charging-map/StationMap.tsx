@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
@@ -262,6 +262,20 @@ interface StationMapProps {
   userLocation?: { lat: number; lng: number } | null;
   onUserLocate?: (lat: number, lng: number) => void;
   onAreaChange?: (bbox: ViewportBBox) => void;
+  isFetching?: boolean;
+}
+
+// User-location pin: a blue dot with an optional pulsing ring while loading.
+function userLocationIcon(fetching: boolean): L.DivIcon {
+  const ring = fetching
+    ? `<div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid #3b82f6;animation:flux-user-pulse 1.4s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none"></div>`
+    : "";
+  return L.divIcon({
+    className: "",
+    html: `<div style="position:relative;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${ring}<div style="width:14px;height:14px;background:#3b82f6;border:2.5px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45);position:relative;z-index:1"></div></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
 }
 
 export default function StationMap({
@@ -272,8 +286,20 @@ export default function StationMap({
   userLocation,
   onUserLocate,
   onAreaChange,
+  isFetching = false,
 }: StationMapProps) {
   const t = useTranslations("chargingMap");
+
+  // Inject keyframes for the user-location pulse ring once per page.
+  useEffect(() => {
+    const id = "flux-user-pulse";
+    if (document.getElementById(id)) return;
+    const s = document.createElement("style");
+    s.id = id;
+    s.textContent =
+      "@keyframes flux-user-pulse{0%{transform:scale(.8);opacity:.8}70%,100%{transform:scale(2.2);opacity:0}}";
+    document.head.appendChild(s);
+  }, []);
 
   // Memoize markers so the cluster layer only rebuilds when the stations or the
   // selection actually change — not on every parent re-render (pan/fetch/badge),
@@ -321,17 +347,17 @@ export default function StationMap({
         errorMessage={t("location_error")}
       />
 
-      {/* User location dot */}
+      {/* User location dot — pulse ring animates while stations are loading */}
       {userLocation && (
-        <CircleMarker
-          center={[userLocation.lat, userLocation.lng]}
-          radius={8}
-          pathOptions={{ fillColor: "#3b82f6", color: "white", weight: 2.5, fillOpacity: 1, opacity: 1 }}
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={userLocationIcon(isFetching)}
+          zIndexOffset={1000}
         >
           <Popup>
             <div className="text-xs font-medium">{t("locate_me")}</div>
           </Popup>
-        </CircleMarker>
+        </Marker>
       )}
 
       {/* Station markers — clustered so dense/overlapping sites collapse into a

@@ -475,6 +475,7 @@ export function MapClient() {
             userLocation={exploreUserLoc}
             onUserLocate={handleExploreLocate}
             onAreaChange={handleExploreAreaChange}
+            isFetching={isFetching}
           />
         )}
       </div>
@@ -529,22 +530,33 @@ export function MapClient() {
             </div>
           )}
 
-          {/* Plan — planned: slim "A → B" bar + per-variant expandable routes.
-              No bottom sheet; tapping a route reveals its stops inline. */}
+          {/* Plan — planned: slim "A → B" bar + horizontal route strip.
+              Left side of bar = tap to re-edit. Right side = chevron toggle details. */}
           {mode === "plan" && !editingRoute && plan && activePlan && (
             <div className="border-t border-border/40">
-              <button
-                onClick={() => setEditingRoute(true)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left"
-              >
-                <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium text-foreground">
-                  <span className="truncate">{originShort}</span>
-                  <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{destinationShort}</span>
-                </span>
-                <Pencil className="size-3.5 shrink-0 text-muted-foreground" />
-              </button>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setEditingRoute(true)}
+                  className="flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 text-left"
+                >
+                  <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-medium text-foreground">
+                    <span className="truncate">{originShort}</span>
+                    <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{destinationShort}</span>
+                  </span>
+                  <Pencil className="size-3 shrink-0 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => setVariantsExpanded(!variantsExpanded)}
+                  aria-expanded={variantsExpanded}
+                  className="shrink-0 border-l border-border/40 px-3 py-1.5 text-muted-foreground active:text-foreground"
+                >
+                  <ChevronDown
+                    className={`size-4 transition-transform ${variantsExpanded ? "rotate-180" : ""}`}
+                  />
+                </button>
+              </div>
 
               <RouteAccordion
                 plan={plan}
@@ -552,7 +564,6 @@ export function MapClient() {
                 activeVariant={activeVariant}
                 setActiveVariant={setActiveVariant}
                 variantsExpanded={variantsExpanded}
-                setVariantsExpanded={setVariantsExpanded}
                 canShare={canShare}
                 sharing={sharing}
                 sharedRoute={sharedRoute}
@@ -955,7 +966,6 @@ interface RouteAccordionProps {
   activeVariant: number;
   setActiveVariant: (i: number) => void;
   variantsExpanded: boolean;
-  setVariantsExpanded: (v: boolean) => void;
   canShare: boolean;
   sharing: boolean;
   sharedRoute: boolean;
@@ -980,7 +990,6 @@ function RouteAccordion({
   activeVariant,
   setActiveVariant,
   variantsExpanded,
-  setVariantsExpanded,
   canShare,
   sharing,
   sharedRoute,
@@ -990,13 +999,13 @@ function RouteAccordion({
   fromEUR,
   tTrip,
 }: RouteAccordionProps) {
-  const single = variants.length <= 1;
+  const activePlan = variants[activeVariant]?.plan ?? null;
 
   return (
     <div>
-      {/* Horizontal scroll strip — swipe to browse, tap any chevron to expand ALL for comparison */}
+      {/* Compact selector strip — no nested content so the WHOLE strip is swipeable anywhere */}
       <div className="overflow-x-auto overscroll-contain scrollbar-none">
-        <div className="flex gap-1.5 px-2 pb-2 pt-1">
+        <div className="flex gap-1.5 px-2 pb-1.5 pt-1">
           {variants.map((v, i) => {
             const vp = v.plan;
             const label = getVariantLabel(v, variants);
@@ -1016,131 +1025,109 @@ function RouteAccordion({
                     : "text-foreground";
 
             return (
-              <div
+              <button
                 key={v.id}
-                className={`flex w-[min(68vw,240px)] shrink-0 flex-col rounded-xl border transition-colors ${
-                  active ? "border-primary/50 bg-primary/5" : "border-border"
+                onClick={() => setActiveVariant(i)}
+                className={`flex w-[min(44vw,160px)] shrink-0 flex-col gap-0 rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
+                  active ? "border-primary/50 bg-primary/5" : "border-border hover:bg-muted/40"
                 }`}
               >
-                {/* Header — tap body = select route on map, tap chevron = expand/collapse ALL */}
-                <div className="flex items-start gap-0.5 px-2.5 py-1.5">
-                  <button
-                    onClick={() => {
-                      setActiveVariant(i);
-                      if (single) setVariantsExpanded(!variantsExpanded);
-                    }}
-                    className="flex min-w-0 flex-1 flex-col gap-0 text-left"
-                  >
-                    {!single && (
-                      <p className={`truncate text-2xs font-semibold uppercase tracking-wide ${titleColor}`}>
-                        {title}
-                      </p>
-                    )}
-                    <p className="text-xs font-semibold tabular-nums text-foreground">
-                      {h}h {m}m
-                    </p>
-                    <p className="text-2xs text-muted-foreground">
-                      {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}{" "}
-                      · <span className="font-semibold text-green-400 tabular-nums">{fromEUR(vp.tripEnergyCostEur)}</span>
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setVariantsExpanded(!variantsExpanded)}
-                    aria-expanded={variantsExpanded}
-                    aria-label={title}
-                    className="-mr-0.5 mt-0.5 shrink-0 p-1 text-muted-foreground active:text-foreground"
-                  >
-                    <ChevronDown
-                      className={`size-3.5 transition-transform ${variantsExpanded ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                </div>
-
-                {/* Expanded details — same state for all cards so you can compare while swiping */}
-                {variantsExpanded && (
-                  <div className="max-h-[40vh] space-y-2 overflow-y-auto overscroll-contain border-t border-border/40 px-2.5 pb-2.5 pt-2 [touch-action:pan-y]">
-                    {vp.feasible === false ? (
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                          <div className="space-y-0.5">
-                            <p className="text-xs font-semibold text-amber-400">
-                              {tTrip("infeasible_title")}
-                            </p>
-                            {vp.warning && (
-                              <p className="text-2xs text-amber-400/80">{vp.warning}</p>
-                            )}
-                            <p className="text-2xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <CostSummary
-                          origin={originShort}
-                          destination={destinationShort}
-                          totalDistanceKm={vp.totalDistanceKm}
-                          drivingMinutes={vp.drivingMinutes}
-                          chargingMinutes={vp.chargingMinutes}
-                          tripEnergyKwh={vp.tripEnergyKwh}
-                          tripEnergyCostEur={vp.tripEnergyCostEur}
-                          stopsCount={vp.stops.length}
-                          approxRoute={vp.approxRoute}
-                        />
-
-                        {active && canShare && (
-                          <button
-                            onClick={onShareToTesla}
-                            disabled={sharing}
-                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                          >
-                            {sharing ? (
-                              <Loader2 className="size-3.5 animate-spin" />
-                            ) : (
-                              <Send className="size-3.5" />
-                            )}
-                            {tTrip("share_to_tesla")}
-                          </button>
-                        )}
-
-                        {vp.warning && (
-                          <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-2xs text-amber-400">
-                            <AlertCircle className="size-3 shrink-0" />
-                            {vp.warning}
-                          </div>
-                        )}
-
-                        {vp.stops.length > 0 ? (
-                          <div className="space-y-1">
-                            {vp.stops.map((stop, si) => (
-                              <StopCard
-                                key={si}
-                                stop={stop}
-                                index={si}
-                                preconditioned={
-                                  sharedRoute &&
-                                  active &&
-                                  si === 0 &&
-                                  needsPreconditioning(stop.station.maxKw) &&
-                                  !isSuperchargerNetwork(stop.station.networkId)
-                                }
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
-                            {tTrip("no_stops")}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                {variants.length > 1 && (
+                  <p className={`truncate text-2xs font-semibold uppercase tracking-wide ${titleColor}`}>
+                    {title}
+                  </p>
                 )}
-              </div>
+                <p className="text-xs font-semibold tabular-nums text-foreground">
+                  {h}h {m}m
+                </p>
+                <p className="text-2xs text-muted-foreground">
+                  {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}{" "}
+                  · <span className="font-semibold text-green-400 tabular-nums">{fromEUR(vp.tripEnergyCostEur)}</span>
+                </p>
+              </button>
             );
           })}
         </div>
       </div>
+
+      {/* Details for the selected route — lives OUTSIDE the scroll strip so no nesting conflicts.
+          Tap the chevron in the A → B bar above to show/hide. */}
+      {variantsExpanded && activePlan && (
+        <div className="max-h-[42vh] space-y-2 overflow-y-auto overscroll-contain border-t border-border/40 px-2.5 pb-2.5 pt-2 [touch-action:pan-y]">
+          {activePlan.feasible === false ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
+                  {activePlan.warning && (
+                    <p className="text-2xs text-amber-400/80">{activePlan.warning}</p>
+                  )}
+                  <p className="text-2xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <CostSummary
+                origin={originShort}
+                destination={destinationShort}
+                totalDistanceKm={activePlan.totalDistanceKm}
+                drivingMinutes={activePlan.drivingMinutes}
+                chargingMinutes={activePlan.chargingMinutes}
+                tripEnergyKwh={activePlan.tripEnergyKwh}
+                tripEnergyCostEur={activePlan.tripEnergyCostEur}
+                stopsCount={activePlan.stops.length}
+                approxRoute={activePlan.approxRoute}
+              />
+
+              {canShare && (
+                <button
+                  onClick={onShareToTesla}
+                  disabled={sharing}
+                  className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                >
+                  {sharing ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Send className="size-3.5" />
+                  )}
+                  {tTrip("share_to_tesla")}
+                </button>
+              )}
+
+              {activePlan.warning && (
+                <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-2xs text-amber-400">
+                  <AlertCircle className="size-3 shrink-0" />
+                  {activePlan.warning}
+                </div>
+              )}
+
+              {activePlan.stops.length > 0 ? (
+                <div className="space-y-1">
+                  {activePlan.stops.map((stop, si) => (
+                    <StopCard
+                      key={si}
+                      stop={stop}
+                      index={si}
+                      preconditioned={
+                        sharedRoute &&
+                        si === 0 &&
+                        needsPreconditioning(stop.station.maxKw) &&
+                        !isSuperchargerNetwork(stop.station.networkId)
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
+                  {tTrip("no_stops")}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {plan.deratingPct < 0 && (
         <p className="px-3 pb-2 text-2xs text-muted-foreground">
