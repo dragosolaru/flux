@@ -993,12 +993,12 @@ function RouteAccordion({
   const single = variants.length <= 1;
 
   return (
-    <div className="max-h-[46vh] space-y-1.5 overflow-y-auto overscroll-contain px-2 pb-2 [touch-action:pan-y]">
+    <div className="max-h-[38vh] space-y-1 overflow-y-auto overscroll-contain px-2 pb-2 [touch-action:pan-y]">
       {variants.map((v, i) => {
         const vp = v.plan;
         const label = getVariantLabel(v, variants);
         const active = i === activeVariant;
-        const expanded = single || i === expandedVariant;
+        const expanded = i === expandedVariant;
         const h = Math.floor(vp.totalMinutes / 60);
         const m = vp.totalMinutes % 60;
         const title = label
@@ -1017,38 +1017,49 @@ function RouteAccordion({
           <div
             key={v.id}
             className={`rounded-xl border transition-colors ${
-              active && !single ? "border-primary/50 bg-primary/5" : "border-border"
+              active ? "border-primary/50 bg-primary/5" : "border-border"
             }`}
           >
-            <button
-              onClick={() => {
-                setActiveVariant(i);
-                if (!single) setExpandedVariant(expanded ? null : i);
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left"
-            >
-              <div className="min-w-0 flex-1">
-                {!single && (
-                  <p className={`truncate text-xs font-semibold ${titleColor}`}>{title}</p>
-                )}
-                <p className="truncate text-2xs text-muted-foreground">
-                  <span className="font-medium text-foreground tabular-nums">
-                    {h}h {m}min
-                  </span>{" "}
-                  · {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}
-                </p>
-              </div>
-              <span className="shrink-0 text-xs font-semibold text-green-400 tabular-nums">
-                {fromEUR(vp.tripEnergyCostEur)}
-              </span>
-              {!single && (
+            <div className="flex w-full items-center gap-1.5 px-3 py-1.5">
+              {/* Tap the body to select the route (highlights it on the map). */}
+              <button
+                onClick={() => {
+                  setActiveVariant(i);
+                  if (single) setExpandedVariant(expanded ? null : i);
+                }}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  {!single && (
+                    <p className={`truncate text-xs font-semibold ${titleColor}`}>{title}</p>
+                  )}
+                  <p className="truncate text-2xs text-muted-foreground">
+                    <span className="font-medium text-foreground tabular-nums">
+                      {h}h {m}min
+                    </span>{" "}
+                    · {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-green-400 tabular-nums">
+                  {fromEUR(vp.tripEnergyCostEur)}
+                </span>
+              </button>
+
+              {/* Expand selector — details open only here, keeping the list airy. */}
+              <button
+                onClick={() => {
+                  setActiveVariant(i);
+                  setExpandedVariant(expanded ? null : i);
+                }}
+                aria-expanded={expanded}
+                aria-label={title}
+                className="-m-1.5 shrink-0 p-1.5 text-muted-foreground active:text-foreground"
+              >
                 <ChevronDown
-                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${
-                    expanded ? "rotate-180" : ""
-                  }`}
+                  className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`}
                 />
-              )}
-            </button>
+              </button>
+            </div>
 
             {expanded && (
               <div className="space-y-2 px-3 pb-3">
