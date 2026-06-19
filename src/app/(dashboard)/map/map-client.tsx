@@ -264,6 +264,9 @@ export function MapClient() {
   // Plan-mode form collapse: true = full form, false = compact "A → B" summary
   // bar (set after a plan is computed so the map and routes stay visible).
   const [editingRoute, setEditingRoute] = useState(true);
+  // Which route variant's details are expanded in the top-card accordion
+  // (null = all collapsed, so the route list stays compact and the map shows).
+  const [expandedVariant, setExpandedVariant] = useState<number | null>(null);
 
   const canPlan = origin !== null && destination !== null;
 
@@ -316,6 +319,7 @@ export function MapClient() {
       setSheetState("mid");
       // Collapse the form to a slim "A → B" bar so the route is visible.
       setEditingRoute(false);
+      setExpandedVariant(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
@@ -425,8 +429,9 @@ export function MapClient() {
     if (next === "plan") setEditingRoute(plan === null);
   }
 
-  // The results sheet shows whenever there's something to display.
-  const showSheet = mode === "explore" ? stations.length > 0 : plan !== null;
+  // The bottom sheet is explore-only now: plan results live in the top-card
+  // route accordion, leaving the map and route lines fully visible.
+  const showSheet = mode === "explore" && stations.length > 0;
 
   // ---- Render ----
   return (
@@ -479,42 +484,40 @@ export function MapClient() {
             />
           </div>
 
-          {/* Explore: filter chip rows — compact */}
+          {/* Explore: a single compact filter row (power · connector) */}
           {mode === "explore" && (
-            <div className="space-y-1 border-t border-border/40 px-1.5 pb-1.5 pt-1.5">
-              <div className="flex gap-1 overflow-x-auto scrollbar-none">
-                {POWER_OPTIONS.map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    onClick={() => setMinKw(opt.value)}
-                    aria-pressed={minKw === opt.value}
-                    className={`${CHIP_BASE} ${minKw === opt.value ? CHIP_ON : CHIP_OFF}`}
-                  >
-                    {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-1 overflow-x-auto scrollbar-none">
-                {CONNECTOR_OPTIONS.map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    onClick={() => setConnector(opt.value)}
-                    aria-pressed={connector === opt.value}
-                    className={`${CHIP_BASE} ${connector === opt.value ? CHIP_ON : CHIP_OFF}`}
-                  >
-                    {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center gap-1 overflow-x-auto border-t border-border/40 px-1.5 py-1.5 scrollbar-none">
+              {POWER_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setMinKw(opt.value)}
+                  aria-pressed={minKw === opt.value}
+                  className={`${CHIP_BASE} ${minKw === opt.value ? CHIP_ON : CHIP_OFF}`}
+                >
+                  {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
+                </button>
+              ))}
+              <span className="mx-0.5 h-4 w-px shrink-0 bg-border" />
+              {CONNECTOR_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setConnector(opt.value)}
+                  aria-pressed={connector === opt.value}
+                  className={`${CHIP_BASE} ${connector === opt.value ? CHIP_ON : CHIP_OFF}`}
+                >
+                  {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
+                </button>
+              ))}
             </div>
           )}
 
-          {/* Plan — collapsed: slim "A → B" bar + route chooser (keeps map visible) */}
+          {/* Plan — planned: slim "A → B" bar + per-variant expandable routes.
+              No bottom sheet; tapping a route reveals its stops inline. */}
           {mode === "plan" && !editingRoute && plan && activePlan && (
             <div className="border-t border-border/40">
               <button
                 onClick={() => setEditingRoute(true)}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left"
               >
                 <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
                 <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium text-foreground">
@@ -525,34 +528,22 @@ export function MapClient() {
                 <Pencil className="size-3.5 shrink-0 text-muted-foreground" />
               </button>
 
-              {/* Route chooser — pick between alternative routes from the map view */}
-              {variants.length > 1 && (
-                <div className="flex gap-1.5 overflow-x-auto px-3 pb-2 scrollbar-none">
-                  {variants.map((v, i) => {
-                    const label = getVariantLabel(v, variants);
-                    const active = i === activeVariant;
-                    const h = Math.floor(v.plan.totalMinutes / 60);
-                    const m = v.plan.totalMinutes % 60;
-                    const title = label
-                      ? tTrip(`variant.${label.key}`)
-                      : `${tTrip("route_label")} ${String.fromCharCode(65 + i)}`;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => setActiveVariant(i)}
-                        aria-pressed={active}
-                        className={`shrink-0 rounded-full border px-2.5 py-1 text-2xs transition-colors ${
-                          active
-                            ? "border-primary bg-primary/15 font-semibold text-foreground"
-                            : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        {title} · {h}h{m > 0 ? ` ${m}m` : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <RouteAccordion
+                plan={plan}
+                variants={variants}
+                activeVariant={activeVariant}
+                setActiveVariant={setActiveVariant}
+                expandedVariant={expandedVariant}
+                setExpandedVariant={setExpandedVariant}
+                canShare={canShare}
+                sharing={sharing}
+                sharedRoute={sharedRoute}
+                onShareToTesla={handleShareToTesla}
+                originShort={originShort}
+                destinationShort={destinationShort}
+                fromEUR={fromEUR}
+                tTrip={tTrip}
+              />
             </div>
           )}
 
@@ -675,9 +666,8 @@ export function MapClient() {
         </div>
       </div>
 
-      {/* LAYER 3: Mobile Bottom Results Sheet
-          Appears only when there are results (stations or a trip plan).
-          Snaps between mid and full — no collapsed state (top card handles control). */}
+      {/* LAYER 3: Mobile Bottom Station Sheet (explore only) — the station list.
+          Plan results live in the top-card route accordion instead. */}
       <AnimatePresence>
         {showSheet && (
           <motion.div
@@ -690,7 +680,7 @@ export function MapClient() {
               dragH != null ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 38 }
             }
           >
-            {/* Grabber + results header — drag handle */}
+            {/* Grabber + station count — drag handle */}
             <div
               className="shrink-0 cursor-grab touch-none select-none"
               onPointerDown={onDragStart}
@@ -704,72 +694,25 @@ export function MapClient() {
               >
                 <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
               </button>
-
-              {/* Contextual header line */}
-              {mode === "explore" && (
-                <div className="flex items-center gap-2 px-4 pb-2">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {isFetching
-                      ? tCharging("updating", { count: stations.length })
-                      : tCharging("stations_count", { count: stations.length })}
-                  </span>
-                </div>
-              )}
-              {mode === "plan" && activePlan && (
-                <button
-                  onClick={() => setSheetState((s) => (s === "mid" ? "full" : "mid"))}
-                  className="flex w-full items-center justify-between gap-2 px-4 pb-3 pt-0.5 text-left"
-                >
-                  <p className="min-w-0 truncate">
-                    <span className="text-sm font-semibold tabular-nums">
-                      {Math.floor(activePlan.totalMinutes / 60)}h {activePlan.totalMinutes % 60}min
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {" "}· {Math.round(activePlan.totalDistanceKm)} km ·{" "}
-                      {activePlan.stops.length === 0
-                        ? tTrip("stops_count_zero")
-                        : activePlan.stops.length === 1
-                          ? tTrip("stops_count_one")
-                          : tTrip("stops_count_other", { count: activePlan.stops.length })}
-                    </span>
-                  </p>
-                  <span className="ml-2 flex shrink-0 items-center gap-1.5">
-                    <span className="text-sm font-semibold text-green-400 tabular-nums">
-                      {fromEUR(activePlan.tripEnergyCostEur)}
-                    </span>
-                    <ChevronUp className="size-4 text-muted-foreground" />
-                  </span>
-                </button>
-              )}
+              <div className="flex items-center gap-2 px-4 pb-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {isFetching
+                    ? tCharging("updating", { count: stations.length })
+                    : tCharging("stations_count", { count: stations.length })}
+                </span>
+              </div>
             </div>
 
-            {/* Scrollable content */}
+            {/* Scrollable station list */}
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+96px)] [touch-action:pan-y]">
-              {mode === "explore" ? (
-                <ExploreContent
-                  stations={stations}
-                  isFetching={isFetching}
-                  onStationSelect={setSelectedStation}
-                  tCharging={tCharging}
-                  tMap={tMap}
-                  hideHeader
-                />
-              ) : plan && activePlan ? (
-                <PlanResults
-                  plan={plan}
-                  activePlan={activePlan}
-                  variants={variants}
-                  activeVariant={activeVariant}
-                  setActiveVariant={setActiveVariant}
-                  canShare={canShare}
-                  sharing={sharing}
-                  sharedRoute={sharedRoute}
-                  onShareToTesla={handleShareToTesla}
-                  originShort={originShort}
-                  destinationShort={destinationShort}
-                  tTrip={tTrip}
-                />
-              ) : null}
+              <ExploreContent
+                stations={stations}
+                isFetching={isFetching}
+                onStationSelect={setSelectedStation}
+                tCharging={tCharging}
+                tMap={tMap}
+                hideHeader
+              />
             </div>
           </motion.div>
         )}
@@ -959,7 +902,203 @@ function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap
 }
 
 // ---------------------------------------------------------------------------
-// PlanResults — results-only section (used in mobile bottom sheet)
+// RouteAccordion — mobile plan results: each route variant is an expandable
+// row inside the top card. No bottom sheet; the map stays visible.
+// ---------------------------------------------------------------------------
+
+interface RouteAccordionProps {
+  plan: { deratingPct: number };
+  variants: TripVariant[];
+  activeVariant: number;
+  setActiveVariant: (i: number) => void;
+  expandedVariant: number | null;
+  setExpandedVariant: (i: number | null) => void;
+  canShare: boolean;
+  sharing: boolean;
+  sharedRoute: boolean;
+  onShareToTesla: () => void;
+  originShort: string;
+  destinationShort: string;
+  fromEUR: (eur: number) => string;
+  tTrip: ReturnType<typeof useTranslations>;
+}
+
+function stopsLabel(count: number, tTrip: ReturnType<typeof useTranslations>): string {
+  return count === 0
+    ? tTrip("stops_count_zero")
+    : count === 1
+      ? tTrip("stops_count_one")
+      : tTrip("stops_count_other", { count });
+}
+
+function RouteAccordion({
+  plan,
+  variants,
+  activeVariant,
+  setActiveVariant,
+  expandedVariant,
+  setExpandedVariant,
+  canShare,
+  sharing,
+  sharedRoute,
+  onShareToTesla,
+  originShort,
+  destinationShort,
+  fromEUR,
+  tTrip,
+}: RouteAccordionProps) {
+  const single = variants.length <= 1;
+
+  return (
+    <div className="max-h-[46vh] space-y-1.5 overflow-y-auto overscroll-contain px-2 pb-2 [touch-action:pan-y]">
+      {variants.map((v, i) => {
+        const vp = v.plan;
+        const label = getVariantLabel(v, variants);
+        const active = i === activeVariant;
+        const expanded = single || i === expandedVariant;
+        const h = Math.floor(vp.totalMinutes / 60);
+        const m = vp.totalMinutes % 60;
+        const title = label
+          ? tTrip(`variant.${label.key}`)
+          : `${tTrip("route_label")} ${String.fromCharCode(65 + i)}`;
+        const titleColor =
+          label?.color === "accent"
+            ? "text-primary"
+            : label?.color === "green"
+              ? "text-green-400"
+              : label?.color === "yellow"
+                ? "text-yellow-400"
+                : "text-foreground";
+
+        return (
+          <div
+            key={v.id}
+            className={`rounded-xl border transition-colors ${
+              active && !single ? "border-primary/50 bg-primary/5" : "border-border"
+            }`}
+          >
+            <button
+              onClick={() => {
+                setActiveVariant(i);
+                if (!single) setExpandedVariant(expanded ? null : i);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left"
+            >
+              <div className="min-w-0 flex-1">
+                {!single && (
+                  <p className={`truncate text-xs font-semibold ${titleColor}`}>{title}</p>
+                )}
+                <p className="truncate text-2xs text-muted-foreground">
+                  <span className="font-medium text-foreground tabular-nums">
+                    {h}h {m}min
+                  </span>{" "}
+                  · {Math.round(vp.totalDistanceKm)} km · {stopsLabel(vp.stops.length, tTrip)}
+                </p>
+              </div>
+              <span className="shrink-0 text-xs font-semibold text-green-400 tabular-nums">
+                {fromEUR(vp.tripEnergyCostEur)}
+              </span>
+              {!single && (
+                <ChevronDown
+                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+                    expanded ? "rotate-180" : ""
+                  }`}
+                />
+              )}
+            </button>
+
+            {expanded && (
+              <div className="space-y-2 px-3 pb-3">
+                {vp.feasible === false ? (
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-amber-400">
+                          {tTrip("infeasible_title")}
+                        </p>
+                        {vp.warning && <p className="text-xs text-amber-400/80">{vp.warning}</p>}
+                        <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <CostSummary
+                      origin={originShort}
+                      destination={destinationShort}
+                      totalDistanceKm={vp.totalDistanceKm}
+                      drivingMinutes={vp.drivingMinutes}
+                      chargingMinutes={vp.chargingMinutes}
+                      tripEnergyKwh={vp.tripEnergyKwh}
+                      tripEnergyCostEur={vp.tripEnergyCostEur}
+                      stopsCount={vp.stops.length}
+                      approxRoute={vp.approxRoute}
+                    />
+
+                    {active && canShare && (
+                      <button
+                        onClick={onShareToTesla}
+                        disabled={sharing}
+                        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                      >
+                        {sharing ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Send className="size-4" />
+                        )}
+                        {tTrip("share_to_tesla")}
+                      </button>
+                    )}
+
+                    {vp.warning && (
+                      <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+                        <AlertCircle className="size-3.5 shrink-0" />
+                        {vp.warning}
+                      </div>
+                    )}
+
+                    {vp.stops.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {vp.stops.map((stop, si) => (
+                          <StopCard
+                            key={si}
+                            stop={stop}
+                            index={si}
+                            preconditioned={
+                              sharedRoute &&
+                              active &&
+                              si === 0 &&
+                              needsPreconditioning(stop.station.maxKw) &&
+                              !isSuperchargerNetwork(stop.station.networkId)
+                            }
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                        {tTrip("no_stops")}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {plan.deratingPct < 0 && (
+        <p className="px-1 text-xs text-muted-foreground">
+          {tTrip("derate_note", { pct: Math.abs(plan.deratingPct) })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PlanResults — results-only section (used in the desktop sidebar)
 // ---------------------------------------------------------------------------
 
 interface PlanResultsProps {
