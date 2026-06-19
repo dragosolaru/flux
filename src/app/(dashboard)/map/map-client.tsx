@@ -582,7 +582,7 @@ export function MapClient() {
 
       {mode === "explore" && showFilters && (
         <div className="absolute left-3 right-3 top-16 z-[1000] space-y-1.5 lg:hidden">
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/90 px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
             {POWER_OPTIONS.map((opt) => (
               <button
                 key={String(opt.value)}
@@ -591,14 +591,14 @@ export function MapClient() {
                 className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   minKw === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                    : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/6 bg-[oklch(0.16_0.015_265/0.92)] px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card/90 px-3 py-1.5 shadow-xl backdrop-blur-md scrollbar-none">
             {CONNECTOR_OPTIONS.map((opt) => (
               <button
                 key={String(opt.value)}
@@ -607,7 +607,7 @@ export function MapClient() {
                 className={`h-9 shrink-0 rounded-full border px-3 text-xs transition-colors ${
                   connector === opt.value
                     ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                    : "border-white/6 bg-white/4 text-muted-foreground hover:bg-white/8"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
@@ -624,7 +624,7 @@ export function MapClient() {
       <motion.div
         animate={controls}
         initial={{ y: snapToY(initialSnapH, fullH) }}
-        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-[20px] border-t border-white/6 bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/10 lg:hidden ${
+        className={`absolute inset-x-0 z-[900] mx-auto w-full max-w-[480px] rounded-t-[20px] border-t border-border bg-background/92 shadow-2xl backdrop-blur-2xl transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border lg:hidden ${
           sheetState === "collapsed"
             ? "bottom-[calc(env(safe-area-inset-bottom)+78px)]"
             : "bottom-0"
@@ -647,7 +647,7 @@ export function MapClient() {
             className="mx-auto flex w-full cursor-pointer items-center justify-center pb-1 pt-2"
             aria-label={tMap("drag_to_expand")}
           >
-            <div className="h-1 w-8 rounded-full bg-white/20 transition-colors active:bg-white/40" />
+            <div className="h-1 w-8 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
           </button>
 
           {/* Collapsed: single dense summary line. */}
@@ -655,7 +655,7 @@ export function MapClient() {
             mode === "plan" && plan && activePlan ? (
               <button
                 onClick={() => applySheetState("mid")}
-                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2 text-left active:bg-white/[0.07]"
+                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2 text-left active:bg-muted"
               >
                 <p className="min-w-0 truncate">
                   <span className="text-xs font-semibold tabular-nums">
@@ -680,7 +680,7 @@ export function MapClient() {
             ) : (
               <button
                 onClick={cycleSheetState}
-                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2 text-left active:bg-white/[0.07]"
+                className="mx-3 mb-2.5 mt-0.5 flex w-[calc(100%-1.5rem)] items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2 text-left active:bg-muted"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   {mode === "explore" && stations.length > 0 && (
@@ -786,7 +786,7 @@ export function MapClient() {
               { value: "plan", label: tMap("tab_plan"), icon: Route },
             ]}
           />
-          <div className="mt-4 h-px bg-white/6" />
+          <div className="mt-4 h-px bg-border" />
         </div>
 
         {/* Explore filters live in the sidebar on desktop */}
@@ -801,7 +801,7 @@ export function MapClient() {
                   className={`h-8 shrink-0 rounded-full border px-2.5 text-xs transition-colors ${
                     minKw === opt.value
                       ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                      : "border-white/6 bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {opt.label === "filter_all" ? tCharging("filter_all") : opt.label}
@@ -945,7 +945,7 @@ function ExploreContent({ stations, isFetching, snapH, onStationSelect, tChargin
                     )}
                   </div>
                   {s.maxPowerKw != null && (
-                    <span className="flex shrink-0 items-center gap-1 rounded-lg border border-white/8 bg-white/[0.04] px-2 py-1 text-2xs font-semibold tabular-nums text-foreground">
+                    <span className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2 py-1 text-2xs font-semibold tabular-nums text-foreground">
                       <Zap className="size-3 text-primary" />
                       {s.maxPowerKw} kW
                     </span>
@@ -1075,7 +1075,7 @@ function PlanContent({
             step={5}
             value={startSoc}
             onChange={(e) => setStartSoc(Number(e.target.value))}
-            className="mt-1 w-full h-1 appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
+            className="mt-1 w-full h-1 appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
         <div>
@@ -1090,7 +1090,7 @@ function PlanContent({
             step={5}
             value={arrivalSoc}
             onChange={(e) => setArrivalSoc(Number(e.target.value))}
-            className="mt-1 w-full h-1 appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
+            className="mt-1 w-full h-1 appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
       </div>
@@ -1145,7 +1145,7 @@ function PlanContent({
 
       {/* Trip results */}
       {plan && activePlan && (
-        <div className="space-y-3 border-t border-white/8 pt-3">
+        <div className="space-y-3 border-t border-border pt-3">
           {variants.length > 1 && (
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
               {variants.map((v, i) => {
@@ -1164,7 +1164,7 @@ function PlanContent({
                     className={`flex w-[calc(50vw-1.5rem)] max-w-[11rem] shrink-0 flex-col items-start rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
                       active
                         ? "border-primary bg-primary/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                        : "border-border bg-muted/40 hover:bg-muted"
                     }`}
                   >
                     <span
@@ -1225,7 +1225,7 @@ function PlanContent({
                 <button
                   onClick={onShareToTesla}
                   disabled={sharing}
-                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   {sharing ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                   {tTrip("share_to_tesla")}
