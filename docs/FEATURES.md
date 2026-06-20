@@ -1988,3 +1988,31 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 - `src/lib/i18n/locales/*.json` — 34 new `landing` keys per locale (5 locales)
 
 **Dependencies:** Framer Motion, next-intl, lucide-react.
+
+---
+
+## 31. Product Page — Comprehensive Features + Pricing + Roadmap + Feedback
+
+**What:** Complete rebuild of `/pricing` into a full product presentation page. Replaces the bare two-column pricing table with 10 sections:
+
+1. **ProductNav** — sticky header with FluxLogo + "← Back to home" link
+2. **ProductHero** — animated headline: "One app for every electric car."
+3. **AnyEvBar** — brand grid (Tesla, BMW, VW, Hyundai, Renault, Kia) + positioning copy
+4. **FeatureExplainers** — 5 alternating feature blocks: Cost Intelligence, Charging Map, Trip Planner, Smart Charge, Vehicle Commands (Tesla)
+5. **RoadmapSection** — 4 "Coming soon" cards: photo consumption scan, cost-per-trip, battery health, business mileage export
+6. **PricingSection** — monthly/annual toggle (default annual, €3.25/mo vs €4.99/mo), updated Free/Pro tiers: Free→30 days history; Pro→unlimited history + AI insights
+7. **TrustStrip** — 4 security/privacy trust signals
+8. **FaqSection** — 5 accordion items
+9. **FeedbackSection** — form → POST `/api/feedback` → Supabase `feedback` table
+10. **ProductFooter** — minimal footer
+
+**How to use:** Navigate to `/pricing` (nav label reads "Product"). Pricing toggle is client-side only (no page reload).
+
+**Key files:**
+- `src/app/pricing/page.tsx` — server component, fetches auth + subscription tier
+- `src/components/product/` — ProductNav, ProductHero, AnyEvBar, FeatureExplainers, RoadmapSection, PricingSection, TrustStrip, FaqSection, FeedbackSection, ProductFooter
+- `src/app/api/feedback/route.ts` — POST endpoint, no auth required, inserts to `feedback` table
+- `supabase/migrations/023_feedback.sql` — creates `feedback` table with RLS
+- `src/lib/i18n/locales/*.json` — `pricing` namespace completely rewritten (80+ keys, 5 locales)
+
+**Dependencies:** Framer Motion, next-intl, lucide-react, UpgradeButton (billing).
