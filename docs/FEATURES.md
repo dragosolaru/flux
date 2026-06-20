@@ -1952,3 +1952,14 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 **How to use:** Open `/map` on mobile. Explore: one filter row in the top card, station list slides up from the bottom. Plan: enter origin/destination, tap "Plan route" — the form shrinks to an "A → B" bar and each route appears as a tappable expander; tap one to pick it (map highlights it) and reveal its stops.
 
 **Key files:** `src/app/(dashboard)/map/map-client.tsx`, `src/lib/i18n/locales/*.json` (new `trip.advanced_label`).
+
+---
+
+## 28. Charging Map — Estimated Availability Disclaimer
+
+**What:** Station availability (operational / offline / stale / unknown) is produced by a deterministic simulator (`src/lib/external/charging-networks/availability.ts`), not a real-time operator feed. The UI now makes this explicit with two cues in `ChargerDetailSheet`:
+
+1. The status label is prefixed with `~` (e.g. "~Operational") to signal approximation.
+2. A muted footnote at the bottom of the card reads "Availability estimated · not live data" (translated via i18n).
+
+**Key files:** `src/components/charging-map/ChargerDetailSheet.tsx`, `src/lib/i18n/locales/*.json` (new key `chargingMap.availability_estimated`).

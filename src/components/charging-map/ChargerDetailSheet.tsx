@@ -81,7 +81,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
                     className="inline-block h-1.5 w-1.5 rounded-full"
                     style={{ backgroundColor: status.color }}
                   />
-                  {t(status.labelKey)}
+                  ~{t(status.labelKey)}
                 </span>
               </div>
             </div>
@@ -135,6 +135,11 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
           {addressLine && (
             <p className="mt-3 text-xs text-muted-foreground">{addressLine}</p>
           )}
+
+          {/* Estimated availability disclaimer */}
+          <p className="mt-3 border-t border-border/40 pt-2.5 text-[10px] leading-snug text-muted-foreground/60">
+            {t("availability_estimated")}
+          </p>
         </div>
       </div>
     </>

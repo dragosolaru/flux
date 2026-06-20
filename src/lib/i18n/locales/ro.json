@@ -603,6 +603,7 @@
     "out_of_service": "Indisponibilă",
     "status_stale": "Neverificată recent",
     "status_unknown": "Status necunoscut",
+    "availability_estimated": "Disponibilitate estimată · fără date live",
     "close": "Închide",
     "select_hint": "Apasă pe o stație de pe hartă pentru detalii",
     "station_fallback": "Stație încărcare",

@@ -603,6 +603,7 @@
     "out_of_service": "Out of service",
     "status_stale": "Not recently verified",
     "status_unknown": "Status unknown",
+    "availability_estimated": "Availability estimated · not live data",
     "close": "Close",
     "select_hint": "Click a station on the map to see details",
     "station_fallback": "Charging station",
