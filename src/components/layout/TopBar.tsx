@@ -4,12 +4,10 @@ import { useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
-import { Car, ChevronDown, LogOut, Moon, PlusCircle, Settings, Sun, Warehouse } from "lucide-react";
+import { Car, ChevronDown, LogOut, PlusCircle, Settings, Warehouse } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { useVehicles } from "@/hooks/useVehicles";
+import { FluxLogo } from "@/components/ui/FluxLogo";
 
 function VehicleSwitcher() {
   const { data: vehicles } = useVehicles();
@@ -58,7 +57,6 @@ function VehicleSwitcher() {
 
 export function TopBar() {
   const { data: session } = useSession();
-  const { theme, setTheme } = useTheme();
   const t = useTranslations("nav");
   const [addOpen, setAddOpen] = useState(false);
 
@@ -75,23 +73,14 @@ export function TopBar() {
       {/* Fills the Dynamic Island / notch safe area. Zero-height on notchless devices. */}
       <div aria-hidden="true" className="h-[env(safe-area-inset-top)]" />
       <div className="flex h-10 min-w-0 items-center gap-2 md:border-b px-4 md:h-14 md:px-6">
-      <div className="md:hidden flex shrink-0 items-center gap-2 text-sm font-semibold">Flux</div>
+      <div className="md:hidden flex shrink-0 items-center gap-2 text-sm font-semibold">
+        <FluxLogo size={18} />
+        Flux
+      </div>
 
       <div className="min-w-0 flex-1"><VehicleSwitcher /></div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-10"
-          aria-label={t("toggle_theme")}
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <Sun className="size-4 dark:hidden" />
-          <Moon className="size-4 hidden dark:block" />
-        </Button>
-
         {/* Profile dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

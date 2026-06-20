@@ -1,4 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" rx="32" fill="#09090b"/>
-  <polygon points="108,20 60,104 96,104 84,172 132,88 96,88" fill="#a3e635"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="40" fill="#09090b"/>
+  <defs>
+    <linearGradient id="g" x1="40" y1="40" x2="152" y2="152" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <line x1="56" y1="44" x2="56" y2="150" stroke="url(#g)" stroke-width="15" stroke-linecap="round"/>
+  <path d="M 56,44 C 100,38 132,54 144,86" stroke="url(#g)" stroke-width="15" stroke-linecap="round" fill="none"/>
+  <line x1="56" y1="97" x2="108" y2="97" stroke="url(#g)" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="144" cy="86" r="15" fill="#14b8a6"/>
 </svg>

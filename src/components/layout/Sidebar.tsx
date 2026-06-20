@@ -15,6 +15,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
+import { FluxLogo } from "@/components/ui/FluxLogo";
 import { useTranslations } from "next-intl";
 import type { ComponentType } from "react";
 
@@ -125,9 +126,7 @@ export function Sidebar() {
     <TooltipProvider delayDuration={300}>
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex h-14 items-center gap-2 border-b px-5">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </div>
+          <FluxLogo size={20} />
           <div className="font-semibold tracking-tight">Flux</div>
           <div className="ml-auto text-xs uppercase tracking-wider text-muted-foreground">
             DAO Lab

@@ -1963,3 +1963,24 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 2. A muted footnote at the bottom of the card reads "Availability estimated · not live data" (translated via i18n).
 
 **Key files:** `src/components/charging-map/ChargerDetailSheet.tsx`, `src/lib/i18n/locales/*.json` (new key `chargingMap.availability_estimated`).
+
+---
+
+## 29. Dark-only Theme + FluxLogo SVG
+
+**What it does:**
+
+1. **Force dark mode** — Removes the light/dark toggle from the app entirely. `ThemeProvider` in `src/components/providers.tsx` now carries `forcedTheme="dark"` (and `enableSystem` removed), locking the UI to dark mode on every device and browser setting. The Sun/Moon toggle button and all associated `useTheme`/`setTheme` logic are removed from `TopBar.tsx`.
+
+2. **FluxLogo SVG** — Replaces the `<Zap>` icon + `bg-primary rounded-md` wrapper in the sidebar logo area with a custom SVG logo (`FluxLogo`). The logo renders an "F" backbone, a top arc sweeping to a charging node (teal circle), and a midline crossbar, filled with a violet→teal linear gradient (`#7c3aed` → `#14b8a6`). Also shown on the mobile TopBar next to "Flux" text. The PWA favicon (`public/icon.svg`) is updated to use the same shape at 192px with a dark `#09090b` rounded-rect background.
+
+**Why:** Dark-only simplifies theming (no light-mode token maintenance), matches the premium EV-app aesthetic, and eliminates a UI control nobody uses in this context. The custom SVG logo replaces the generic Lucide Zap with branded visual identity.
+
+**Key files:**
+- `src/components/providers.tsx` — `forcedTheme="dark"`, `enableSystem` removed
+- `src/components/layout/TopBar.tsx` — theme toggle removed; `FluxLogo` added to mobile header
+- `src/components/layout/Sidebar.tsx` — `<Zap>` wrapper replaced with `<FluxLogo size={20} />`
+- `src/components/ui/FluxLogo.tsx` — new SVG component
+- `public/icon.svg` — PWA favicon updated with FluxLogo shape
+
+**Dependencies:** None new — pure SVG, no npm packages.
