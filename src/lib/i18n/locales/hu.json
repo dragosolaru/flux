@@ -644,7 +644,8 @@
     "have_account": "Van már fiókod?",
     "sign_in_link": "Bejelentkezés",
     "error_invalid": "Érvénytelen email vagy jelszó",
-    "error_register_failed": "A fiók nem hozható létre. Kérjük, próbálja újra."
+    "error_register_failed": "A fiók nem hozható létre. Kérjük, próbálja újra.",
+    "back_home": "Vissza a főoldalra"
   },
   "landing": {
     "hero_badge": "Egy app. Minden kilométer.",
@@ -656,10 +657,11 @@
     "nav_pricing": "Árak",
     "nav_login": "Bejelentkezés",
     "cta_button": "Kezdés — ingyenes",
-    "social_evs": "követett EV",
-    "social_saved": "megtakarítva energián",
-    "social_trips": "tervezett töltési megálló",
-    "social_countries": "ország",
+    "social_stations": "töltőállomás",
+    "social_languages": "nyelv",
+    "social_free": "a kezdéshez",
+    "social_free_value": "Ingyenes",
+    "social_setup": "beállítási idő",
     "feature_vehicle_title": "Az autód, a kanapédról.",
     "feature_vehicle_body": "Zárd be az ajtókat, indítsd a klímát, ellenőrizd a gumikat — még mielőtt felveszed a cipőd. 30 másodpercenként frissülő élő adatok.",
     "vehicle_bullet_1": "Zárás, nyitás, klíma — bárhonnan",

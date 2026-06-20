@@ -7,10 +7,10 @@ export function LandingSocialProof() {
   const t = useTranslations("landing");
 
   const stats = [
-    { value: "2,847", label: t("social_evs") },
-    { value: "€18,400", label: t("social_saved") },
-    { value: "42K+", label: t("social_trips") },
-    { value: "5", label: t("social_countries") },
+    { value: "150K+", label: t("social_stations") },
+    { value: "5",     label: t("social_languages") },
+    { value: t("social_free_value"), label: t("social_free") },
+    { value: "< 2 min", label: t("social_setup") },
   ];
 
   return (

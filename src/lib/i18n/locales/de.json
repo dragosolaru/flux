@@ -644,7 +644,8 @@
     "have_account": "Hast du schon ein Konto?",
     "sign_in_link": "Anmelden",
     "error_invalid": "Ungültige E-Mail oder Passwort",
-    "error_register_failed": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+    "error_register_failed": "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "back_home": "Zurück zur Startseite"
   },
   "landing": {
     "hero_badge": "Eine App. Jede Meile.",
@@ -656,10 +657,11 @@
     "nav_pricing": "Preise",
     "nav_login": "Anmelden",
     "cta_button": "Jetzt starten — kostenlos",
-    "social_evs": "EVs werden verfolgt",
-    "social_saved": "an Energie gespart",
-    "social_trips": "Ladestopps geplant",
-    "social_countries": "Länder",
+    "social_stations": "Ladestationen",
+    "social_languages": "Sprachen",
+    "social_free": "zum Starten",
+    "social_free_value": "Kostenlos",
+    "social_setup": "Einrichtungszeit",
     "feature_vehicle_title": "Dein Auto, vom Sofa aus.",
     "feature_vehicle_body": "Türen sperren, Klimaanlage starten, Reifendruck prüfen — noch bevor du die Schuhe schnürst. Live-Daten alle 30 Sekunden.",
     "vehicle_bullet_1": "Sperren, entsperren, Klima — von überall",

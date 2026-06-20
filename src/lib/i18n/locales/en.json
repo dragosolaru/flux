@@ -644,7 +644,8 @@
     "have_account": "Already have an account?",
     "sign_in_link": "Sign in",
     "error_invalid": "Invalid email or password",
-    "error_register_failed": "Could not create account. Please try again."
+    "error_register_failed": "Could not create account. Please try again.",
+    "back_home": "Back to home"
   },
   "landing": {
     "hero_badge": "One app. Every mile.",
@@ -656,10 +657,11 @@
     "nav_pricing": "Pricing",
     "nav_login": "Sign in",
     "cta_button": "Get started — it's free",
-    "social_evs": "EVs tracked",
-    "social_saved": "saved in energy",
-    "social_trips": "charging stops planned",
-    "social_countries": "countries",
+    "social_stations": "charging stations",
+    "social_languages": "languages",
+    "social_free": "to get started",
+    "social_free_value": "Free",
+    "social_setup": "setup time",
     "feature_vehicle_title": "Your car, from your couch.",
     "feature_vehicle_body": "Lock the doors, start the climate, check the tyres — all before you put on your shoes. Live data updates every 30 seconds.",
     "vehicle_bullet_1": "Lock, unlock, climate — from anywhere",

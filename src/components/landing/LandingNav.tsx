@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { FluxLogo } from "@/components/ui/FluxLogo";
 
 export function LandingNav() {
   const t = useTranslations("landing");
@@ -10,9 +10,7 @@ export function LandingNav() {
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-violet-600">
-            <Zap className="size-4 text-white" />
-          </div>
+          <FluxLogo size={22} />
           <span className="font-bold text-white">Flux</span>
           <span className="hidden text-xs text-white/40 sm:inline">by DAO Lab</span>
         </Link>

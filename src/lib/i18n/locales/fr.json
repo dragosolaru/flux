@@ -644,7 +644,8 @@
     "have_account": "Vous avez déjà un compte ?",
     "sign_in_link": "Se connecter",
     "error_invalid": "Email ou mot de passe invalide",
-    "error_register_failed": "Impossible de créer le compte. Veuillez réessayer."
+    "error_register_failed": "Impossible de créer le compte. Veuillez réessayer.",
+    "back_home": "Retour à l'accueil"
   },
   "landing": {
     "hero_badge": "Une appli. Chaque kilomètre.",
@@ -656,10 +657,11 @@
     "nav_pricing": "Tarifs",
     "nav_login": "Se connecter",
     "cta_button": "Commencer — c'est gratuit",
-    "social_evs": "VE suivis",
-    "social_saved": "économisés en énergie",
-    "social_trips": "arrêts de charge planifiés",
-    "social_countries": "pays",
+    "social_stations": "bornes de recharge",
+    "social_languages": "langues",
+    "social_free": "pour commencer",
+    "social_free_value": "Gratuit",
+    "social_setup": "temps de configuration",
     "feature_vehicle_title": "Votre voiture, depuis votre canapé.",
     "feature_vehicle_body": "Verrouillez les portes, lancez la climatisation, vérifiez les pneus — avant même d'enfiler vos chaussures. Données en direct toutes les 30 secondes.",
     "vehicle_bullet_1": "Verrouillage, déverrouillage, clima — de partout",

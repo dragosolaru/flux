@@ -644,7 +644,8 @@
     "have_account": "Ai deja un cont?",
     "sign_in_link": "Autentifică-te",
     "error_invalid": "Email sau parolă invalidă",
-    "error_register_failed": "Contul nu a putut fi creat. Încearcă din nou."
+    "error_register_failed": "Contul nu a putut fi creat. Încearcă din nou.",
+    "back_home": "Înapoi la pagina principală"
   },
   "landing": {
     "hero_badge": "O aplicație. Fiecare kilometru.",
@@ -656,10 +657,11 @@
     "nav_pricing": "Prețuri",
     "nav_login": "Intră în cont",
     "cta_button": "Începe acum — e gratuit",
-    "social_evs": "EV-uri monitorizate",
-    "social_saved": "economisiți la energie",
-    "social_trips": "opriri de încărcare planificate",
-    "social_countries": "țări",
+    "social_stations": "stații de încărcare",
+    "social_languages": "limbi",
+    "social_free": "pentru a începe",
+    "social_free_value": "Gratuit",
+    "social_setup": "timp configurare",
     "feature_vehicle_title": "Mașina ta, de pe canapea.",
     "feature_vehicle_body": "Blochează ușile, pornești climatizarea, verifică presiunea — înainte să îți pui pantofii. Date live actualizate la 30 de secunde.",
     "vehicle_bullet_1": "Blocare, deblocare, climă — de oriunde",
