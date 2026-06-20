@@ -1968,19 +1968,23 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 
 ## 29. Dark-only Theme + FluxLogo SVG
 
-**What it does:**
+**What:** Removes the light/dark toggle — app is permanently dark. `ThemeProvider` carries `forcedTheme="dark"`. The Sun/Moon toggle button is removed from `TopBar`. Custom SVG `FluxLogo` (F backbone + arc + teal charging node, violet→teal gradient) replaces the generic Lucide Zap in Sidebar, TopBar, and PWA favicon.
 
-1. **Force dark mode** — Removes the light/dark toggle from the app entirely. `ThemeProvider` in `src/components/providers.tsx` now carries `forcedTheme="dark"` (and `enableSystem` removed), locking the UI to dark mode on every device and browser setting. The Sun/Moon toggle button and all associated `useTheme`/`setTheme` logic are removed from `TopBar.tsx`.
+**Key files:** `src/components/providers.tsx`, `src/components/layout/TopBar.tsx`, `src/components/layout/Sidebar.tsx`, `src/components/ui/FluxLogo.tsx`, `public/icon.svg`.
 
-2. **FluxLogo SVG** — Replaces the `<Zap>` icon + `bg-primary rounded-md` wrapper in the sidebar logo area with a custom SVG logo (`FluxLogo`). The logo renders an "F" backbone, a top arc sweeping to a charging node (teal circle), and a midline crossbar, filled with a violet→teal linear gradient (`#7c3aed` → `#14b8a6`). Also shown on the mobile TopBar next to "Flux" text. The PWA favicon (`public/icon.svg`) is updated to use the same shape at 192px with a dark `#09090b` rounded-rect background.
+---
 
-**Why:** Dark-only simplifies theming (no light-mode token maintenance), matches the premium EV-app aesthetic, and eliminates a UI control nobody uses in this context. The custom SVG logo replaces the generic Lucide Zap with branded visual identity.
+## 30. Landing Page — Cinematic Dark Redesign
+
+**What:** Complete redesign of the public landing page (`/`) with a cinematic dark aesthetic, professional marketing copy in 5 languages, and Framer Motion scroll animations.
+
+**Sections:** Nav · Hero (animated SVG road + glass card) · Social Proof bar · Vehicle feature · Bento grid (6 cells) · Cost Intelligence feature · Trip Planner feature · CTA · Footer.
+
+**How to use:** Navigate to `/` when not logged in. Logged-in users redirect to `/dashboard`.
 
 **Key files:**
-- `src/components/providers.tsx` — `forcedTheme="dark"`, `enableSystem` removed
-- `src/components/layout/TopBar.tsx` — theme toggle removed; `FluxLogo` added to mobile header
-- `src/components/layout/Sidebar.tsx` — `<Zap>` wrapper replaced with `<FluxLogo size={20} />`
-- `src/components/ui/FluxLogo.tsx` — new SVG component
-- `public/icon.svg` — PWA favicon updated with FluxLogo shape
+- `src/app/page.tsx` — server component, composes sections
+- `src/components/landing/` — LandingNav, LandingHero, LandingSocialProof, LandingFeatureVehicle, LandingBento, LandingFeatureCost, LandingFeatureTrip, LandingCta, LandingFooter
+- `src/lib/i18n/locales/*.json` — 34 new `landing` keys per locale (5 locales)
 
-**Dependencies:** None new — pure SVG, no npm packages.
+**Dependencies:** Framer Motion, next-intl, lucide-react.
