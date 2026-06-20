@@ -1,0 +1,93 @@
+# =============================================================================
+# Flux — Production Docker Compose (Hetzner)
+# =============================================================================
+# Traefik handles SSL termination (Let's Encrypt) and reverse proxy.
+# The app container reads secrets from the .env file on the host.
+#
+# Quick start:
+#   cp .env.local.example .env.production
+#   # fill in .env.production
+#   docker compose --env-file .env.production up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Traefik — reverse proxy + automatic Let's Encrypt certificates
+  # ---------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.3
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # Redirect all HTTP → HTTPS
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Let's Encrypt (ACME)
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - web
+
+  # ---------------------------------------------------------------------------
+  # Flux — Next.js app
+  # ---------------------------------------------------------------------------
+  flux:
+    image: flux:latest         # built locally: docker build -t flux:latest .
+    restart: unless-stopped
+    env_file: .env.production  # all secrets live here, never committed
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXTAUTH_URL: https://${DOMAIN}
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.flux.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.flux.entrypoints=websecure
+      - traefik.http.routers.flux.tls.certresolver=le
+      - traefik.http.services.flux.loadbalancer.server.port=3000
+
+  # ---------------------------------------------------------------------------
+  # Tesla VCP Proxy — required for post-2021 Model 3/Y/S/X commands
+  # https://github.com/teslamotors/vehicle-command#http-proxy
+  # ---------------------------------------------------------------------------
+  tesla-proxy:
+    image: ghcr.io/teslamotors/vehicle-command:latest
+    restart: unless-stopped
+    environment:
+      - TLS_CERT=/certs/cert.pem
+      - TLS_KEY=/certs/key.pem
+    volumes:
+      - ./tesla-proxy/certs:/certs:ro   # your Tesla virtual key cert + private key
+    command:
+      - tesla-http-proxy
+      - -port=443
+      - -tls-cert=/certs/cert.pem
+      - -tls-key=/certs/key.pem
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tesla-proxy.rule=Host(`proxy.${DOMAIN}`)
+      - traefik.http.routers.tesla-proxy.entrypoints=websecure
+      - traefik.http.routers.tesla-proxy.tls.certresolver=le
+      - traefik.http.services.tesla-proxy.loadbalancer.server.port=443
+      - traefik.http.services.tesla-proxy.loadbalancer.server.scheme=https
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  letsencrypt:
