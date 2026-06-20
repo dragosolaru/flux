@@ -32,51 +32,46 @@ function getPowerTier(maxPowerKw: number | null | undefined, availability: Charg
 }
 
 // Plain-CSS DivIcon (no SVG — SVG DivIcons render blank on mobile WebKit).
-// A coloured dot plus an AmpWhere-style label pill showing price · power.
-// Cached per color+label+selected so panning doesn't re-allocate icons.
+// Minimalist ABRP/AmpWhere-style marker: a clean tier-coloured chip showing
+// just the kW number (the most useful at-a-glance fact). Price/operator move
+// into the detail sheet on tap so the map stays uncluttered.
+// Cached per color+kw+selected so panning doesn't re-allocate icons.
 const iconCache = new Map<string, L.DivIcon>();
-
-// "1.79 RON · 22 kW" — price only when known, power always when known.
-function pinLabel(maxPowerKw: number | null, pricing: Charger["pricing"]): string {
-  const parts: string[] = [];
-  if (pricing && Number.isFinite(pricing.perKwh)) parts.push(`${pricing.perKwh.toFixed(2)} ${pricing.currency}`);
-  if (maxPowerKw) parts.push(`${Math.round(maxPowerKw)} kW`);
-  return parts.join(" · ");
-}
-
-// First letter of the operator (or ⚡ when unknown) — a lightweight "logo" glyph
-// inside the pin, AmpWhere-style, without shipping per-operator logo assets.
-function pinGlyph(operator: string | null): string {
-  const ch = operator?.trim()?.[0];
-  return ch ? ch.toUpperCase() : "⚡";
-}
 
 function stationIcon(
   color: string,
   selected: boolean,
   maxPowerKw: number | null,
-  pricing: Charger["pricing"],
-  operator: string | null,
 ): L.DivIcon {
-  const label = pinLabel(maxPowerKw, pricing);
-  const glyph = pinGlyph(operator);
-  const key = `${color}:${selected ? 1 : 0}:${label}:${glyph}`;
+  const kw = maxPowerKw ? Math.round(maxPowerKw) : null;
+  const key = `${color}:${selected ? 1 : 0}:${kw ?? "-"}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
-  const size = selected ? 30 : 26;
-  const font = selected ? 14 : 12;
-  const dot = `<div style="width:${size}px;height:${size}px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:${color};color:#fff;font-size:${font}px;font-weight:700;line-height:1;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45)">${glyph}</div>`;
-  const pill = label
-    ? `<span style="background:rgba(17,24,39,.9);color:#fff;font-size:11px;font-weight:600;line-height:1;padding:3px 6px;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap">${label}</span>`
-    : "";
+  const ring = selected ? "border:2.5px solid #fff;box-shadow:0 0 0 2px " + color + ",0 2px 6px rgba(0,0,0,.4)" : "border:1.5px solid rgba(255,255,255,.9);box-shadow:0 1px 3px rgba(0,0,0,.35)";
+
+  let html: string;
+  let size: [number, number];
+  let anchor: [number, number];
+
+  if (kw) {
+    const h = selected ? 22 : 19;
+    const font = selected ? 12 : 11;
+    html = `<div style="display:flex;align-items:center;justify-content:center;height:${h}px;min-width:${h}px;padding:0 6px;background:${color};color:#fff;font-size:${font}px;font-weight:700;line-height:1;border-radius:9999px;${ring}">${kw}</div>`;
+    size = [h, h];
+    anchor = [h / 2, h / 2];
+  } else {
+    const d = selected ? 16 : 13;
+    html = `<div style="width:${d}px;height:${d}px;background:${color};border-radius:9999px;${ring}"></div>`;
+    size = [d, d];
+    anchor = [d / 2, d / 2];
+  }
 
   const icon = L.divIcon({
     className: "",
-    html: `<div style="display:flex;align-items:center;gap:4px;width:max-content">${dot}${pill}</div>`,
-    // Anchor on the dot's centre so the label floats to the right of the point.
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<div style="display:flex;width:max-content">${html}</div>`,
+    iconSize: size,
+    iconAnchor: anchor,
   });
   iconCache.set(key, icon);
   return icon;
@@ -315,7 +310,7 @@ export default function StationMap({
           <Marker
             key={s.id}
             position={[s.lat, s.lng]}
-            icon={stationIcon(color, isSelected, s.maxPowerKw, s.pricing, s.operator)}
+            icon={stationIcon(color, isSelected, s.maxPowerKw)}
             eventHandlers={{ click: () => onSelect(s) }}
           />
         );

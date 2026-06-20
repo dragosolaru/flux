@@ -369,7 +369,11 @@ export function MapClient() {
 
   function handleRouteSelect(roadIndex: number) {
     const idx = variants.findIndex((v) => v.roadIndex === roadIndex);
-    if (idx >= 0) setActiveVariant(idx);
+    if (idx >= 0) {
+      setActiveVariant(idx);
+      // Selecting on the map should reveal the matching card — un-minimize.
+      setPlanDisplayState((s) => (s === "minimized" ? "compact" : s));
+    }
   }
 
   const teslaVehicle = plan?.vehicle?.brand === "tesla" ? plan.vehicle : null;
@@ -1017,13 +1021,21 @@ function RouteAccordion({
   fromEUR,
   tTrip,
 }: RouteAccordionProps) {
+  // When the active route changes (e.g. the user tapped its polyline on the
+  // map), scroll the matching card into view so the selection is visible.
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const card = stripRef.current?.children[activeVariant] as HTMLElement | undefined;
+    card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activeVariant]);
+
   return (
     <div>
       {/* Horizontal strip — each card expands in-place. overflow-x-hidden on the expanded
           section (no touch-action set) lets the browser pass horizontal swipes up to this
           outer scroll container naturally, while vertical swipes scroll the stop list. */}
       <div className="overflow-x-auto overscroll-contain scrollbar-none">
-        <div className="flex gap-1.5 px-2 pb-2 pt-1">
+        <div ref={stripRef} className="flex gap-1.5 px-2 pb-2 pt-1">
           {variants.map((v, i) => {
             const vp = v.plan;
             const label = getVariantLabel(v, variants);
