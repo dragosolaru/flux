@@ -1963,3 +1963,37 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 2. A muted footnote at the bottom of the card reads "Availability estimated · not live data" (translated via i18n).
 
 **Key files:** `src/components/charging-map/ChargerDetailSheet.tsx`, `src/lib/i18n/locales/*.json` (new key `chargingMap.availability_estimated`).
+
+---
+
+## 29. Landing Page — Cinematic Dark Redesign
+
+**What:** Complete redesign of the public landing page (`/`) with a cinematic dark aesthetic. Replaces the previous single-page component with a modular section-based layout.
+
+**Sections:**
+- `LandingNav` — sticky nav with blur backdrop, pricing link, CTA button
+- `LandingHero` — animated road SVG, floating glass battery card, staggered fade-up text
+- `LandingSocialProof` — 4 stats: EVs tracked, savings, trips planned, countries
+- `LandingFeatureVehicle` — animated battery ring SVG, status chips, bullet list
+- `LandingBento` — 6-cell bento grid (live battery, smart charge chart, languages, cost/km, trip route, multi-brand)
+- `LandingFeatureCost` — animated €0.043/km counter, receipt mockup, 3-step OCR flow
+- `LandingFeatureTrip` — animated route SVG with charging stops, route mode chips
+- `LandingCta` — final CTA with violet glow
+- `LandingFooter` — copyright + nav links
+
+**How to use:** Navigate to `/` when not logged in. Logged-in users are redirected to `/dashboard`.
+
+**Key files:**
+- `src/app/page.tsx` — server component, composes sections
+- `src/components/landing/LandingNav.tsx`
+- `src/components/landing/LandingHero.tsx`
+- `src/components/landing/LandingSocialProof.tsx`
+- `src/components/landing/LandingFeatureVehicle.tsx`
+- `src/components/landing/LandingBento.tsx`
+- `src/components/landing/LandingFeatureCost.tsx`
+- `src/components/landing/LandingFeatureTrip.tsx`
+- `src/components/landing/LandingCta.tsx`
+- `src/components/landing/LandingFooter.tsx`
+- `src/lib/i18n/locales/*.json` — new `landing` keys (34 keys per locale, 5 locales)
+
+**Dependencies:** Framer Motion (animations), next-intl (i18n), lucide-react (icons).

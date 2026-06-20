@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Zap } from "lucide-react";
-
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { LandingNav } from "@/components/landing/LandingNav";
 import { LandingHero } from "@/components/landing/LandingHero";
-import { LandingFeatures } from "@/components/landing/LandingFeatures";
+import { LandingSocialProof } from "@/components/landing/LandingSocialProof";
+import { LandingFeatureVehicle } from "@/components/landing/LandingFeatureVehicle";
+import { LandingBento } from "@/components/landing/LandingBento";
+import { LandingFeatureCost } from "@/components/landing/LandingFeatureCost";
+import { LandingFeatureTrip } from "@/components/landing/LandingFeatureTrip";
+import { LandingCta } from "@/components/landing/LandingCta";
+import { LandingFooter } from "@/components/landing/LandingFooter";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
@@ -23,130 +28,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const session = await auth();
   if (session?.user) {
-    const { redirect } = await import("next/navigation");
     redirect("/dashboard");
   }
 
-  const t = await getTranslations("landing");
-
-  const features = [
-    {
-      icon: "ScanLine" as const,
-      title: t("feature_ocr_title"),
-      desc: t("feature_ocr_desc"),
-    },
-    {
-      icon: "BatteryCharging" as const,
-      title: t("feature_tariff_title"),
-      desc: t("feature_tariff_desc"),
-    },
-    {
-      icon: "Gauge" as const,
-      title: t("feature_smart_title"),
-      desc: t("feature_smart_desc"),
-    },
-    {
-      icon: "Globe" as const,
-      title: t("feature_i18n_title"),
-      desc: t("feature_i18n_desc"),
-    },
-  ];
-
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Nav */}
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl md:px-6">
-        <Link href="/" className="flex min-w-0 items-center gap-2 font-semibold">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </div>
-          <span className="truncate">Flux</span>
-          <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
-            by DAO Lab
-          </span>
-        </Link>
-        <nav className="flex shrink-0 items-center gap-2 md:gap-4">
-          <Link
-            href="/pricing"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t("hero_cta_pricing")}
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-md bg-gradient-to-r from-primary to-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 md:px-4"
-          >
-            {t("hero_cta")}
-          </Link>
-        </nav>
-      </header>
-
-      <main className="flex-1">
-        {/* Hero — animated client component */}
-        <LandingHero
-          headline={t("hero_headline")}
-          subheadline={t("hero_subheadline")}
-          ctaLabel={t("hero_cta")}
-          ctaPricingLabel={t("hero_cta_pricing")}
-          badgeLabel={t("hero_badge")}
-        />
-
-        {/* Features — animated client component */}
-        <section className="border-t border-border bg-muted/30 px-4 py-16 md:px-6 md:py-20">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="mb-12 text-center text-2xl font-bold tracking-tight sm:text-3xl">
-              {t("features_title")}
-            </h2>
-            <LandingFeatures features={features} />
-          </div>
-        </section>
-
-        {/* Pricing teaser */}
-        <section className="px-4 py-16 md:px-6 md:py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {t("pricing_teaser_title")}
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              {t("pricing_teaser_desc")}
-            </p>
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/register"
-                className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/90 px-8 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
-              >
-                {t("hero_cta")}
-              </Link>
-              <Link
-                href="/pricing"
-                className="w-full rounded-xl border border-border px-8 py-3 text-center text-sm font-medium transition-colors hover:bg-muted/40 sm:w-auto"
-              >
-                {t("pricing_teaser_cta")}
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border px-4 py-8 md:px-6">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <div className="flex items-center gap-2">
-            <div className="flex size-5 items-center justify-center rounded bg-primary text-primary-foreground">
-              <Zap className="size-3" />
-            </div>
-            <span>© 2026 DAO Lab</span>
-          </div>
-          <div className="flex gap-6">
-            <Link href="/pricing" className="transition-colors hover:text-foreground">
-              {t("hero_cta_pricing")}
-            </Link>
-            <Link href="/login" className="transition-colors hover:text-foreground">
-              {t("hero_cta")}
-            </Link>
-          </div>
-        </div>
-      </footer>
+    <div className="min-h-screen bg-[#09090b] text-white">
+      <LandingNav />
+      <LandingHero />
+      <LandingSocialProof />
+      <LandingFeatureVehicle />
+      <LandingBento />
+      <LandingFeatureCost />
+      <LandingFeatureTrip />
+      <LandingCta />
+      <LandingFooter />
     </div>
   );
 }
