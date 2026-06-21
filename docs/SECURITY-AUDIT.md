@@ -1,3 +1,41 @@
+# Security Audit — 2026-06-21 (third pass, 10-agent parallel review)
+
+> 10 independent expert agents (auth, DB/RLS, input validation, secrets/webhooks,
+> Tesla tokens, XSS/redirects, React/Next best-practice, i18n, docs/KISS, deps/config)
+> audited the whole codebase read-only, then findings were synthesised and fixed.
+> **No exploitable vulnerability was found.** The notable issues were a public
+> unthrottled write endpoint and missing HTTP headers — both fixed below.
+
+### Fixed in this pass
+
+| # | Severity | Area | Fix |
+|---|---|---|---|
+| A | High | `/api/feedback` was a public, unauthenticated, **unthrottled** DB-write with unvalidated `name`/`email`/`category` (spam / storage-exhaustion) | Added IP/user rate limit (5/h, register pattern), zod validation + length caps, `email()` format check, generic errors. `src/app/api/feedback/route.ts` |
+| B | High | **No HTTP security headers** anywhere | Added `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS via `headers()` in `next.config.ts` |
+| C | Medium | `feedback` RLS policy `using (true)` applied to anon/authenticated (contradicts admin-only intent) | Migration `024_feedback_rls_fix.sql` drops the policy → RLS-on, service-role only (like `stripe_events`) |
+| D | Medium | Open redirect on Google sign-in: raw `callbackUrl` passed to `signIn("google", …)` | Validate `startsWith("/")` once at component scope; both paths use the safe value. `LoginForm.tsx` |
+| E | Medium | `/api/internal/{warm,ingest-stats}` compared cron/webhook secrets with `===` (timing side-channel) | Shared `constantTimeEqual` helper (`src/lib/crypto/timing.ts`); both routes use it |
+| F | Medium | `glass-card.tsx` imported framer-motion without `"use client"` (latent server-component crash) | Added `"use client"` |
+| G | KISS | Dead component `LandingFeatures.tsx` (no importers) | Deleted |
+
+### Open recommendations (hardening / quality — none are exploitable today)
+
+- **CSP**: add a nonce-based `Content-Security-Policy` (deferred — needs nonce wiring so framer-motion/inline styles don't break). X-Frame-Options already blocks clickjacking.
+- **i18n**: hardcoded English strings in landing/product visuals (eyebrows `COST INTELLIGENCE`/`TRIP PLANNER`, chips `Fastest/Balanced/Economy`, vehicle chip labels). Mock/demo text (battery %, city names) lower priority. Add keys to all 5 locales + `t()`.
+- **Error leakage**: ~10 routes return raw Supabase/Tesla `error.message` to clients — log server-side, return generic message (follow `billing/checkout`).
+- **Rate limits**: add to `vehicles/[vehicleId]` PATCH/DELETE; guard `tariffs/settings` `req.json()`; clamp numeric params on legacy `charging-stations`/`charging-map`.
+- **Tesla**: single-flight guard on token refresh (race); use `ensureSupabaseUserId` consistently in Tesla routes (currently raw `session.user.id` — fails closed, not an IDOR).
+- **Dashboard**: verify vehicle ownership before the parallel `charging_sessions` fetch (latent; redirect currently discards the result).
+- **Deps/CI**: dev-only CRITICAL/HIGH in vitest/vite — schedule `vitest@4`; add `npm audit --omit=dev --audit-level=high` gate to CI; pin actions to SHAs.
+- **React**: dynamic index-keys in `GeocodingSearch`/`costs-client`; add `aria-label` to `StationListSheet` search input.
+- **KISS**: hoist duplicated framer-motion `EASE`/`fadeUp`/`stagger` (9 files) into the existing `src/lib/animations/variants.ts`.
+
+Note: this file's older entries below had drifted from the implementation (e.g. the
+GDPR-export and webhook findings were already fixed in code). The third-pass agents
+verified against actual source, not the log.
+
+---
+
 # Security Audit — 2026-05-23 / 2026-05-25 (second pass)
 
 > Multi-agent parallel review (3 independent agents + synthesis) before enabling real Tesla key in production.

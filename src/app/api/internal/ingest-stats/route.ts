@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { constantTimeEqual } from "@/lib/crypto/timing";
 
 // M7 observability: recent ingest_runs rows + an aggregate summary so operators
 // can see ingestion health. Same secret-auth shape as the warm route; fails
@@ -31,8 +32,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Ingest-stats not configured" }, { status: 503 });
   }
   const authorized =
-    (!!cronSecret && req.headers.get("authorization") === `Bearer ${cronSecret}`) ||
-    (!!ingestSecret && req.headers.get("x-webhook-secret") === ingestSecret);
+    (!!cronSecret && constantTimeEqual(req.headers.get("authorization") ?? "", `Bearer ${cronSecret}`)) ||
+    (!!ingestSecret && constantTimeEqual(req.headers.get("x-webhook-secret") ?? "", ingestSecret));
   if (!authorized) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

@@ -14,7 +14,9 @@ export function LoginForm({ mode }: LoginFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
+  const rawCallbackUrl = params.get("callbackUrl") ?? "/dashboard";
+  // Only allow same-site relative paths — never an absolute/external URL.
+  const callbackUrl = rawCallbackUrl.startsWith("/") ? rawCallbackUrl : "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
@@ -48,8 +50,7 @@ export function LoginForm({ mode }: LoginFormProps) {
       toast.error(t("error_invalid"));
       return;
     }
-    const safeUrl = callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
-    router.replace(safeUrl);
+    router.replace(callbackUrl);
     router.refresh();
   }
 

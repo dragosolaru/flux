@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { isBulkCountry } from "@/lib/chargers/countries";
 import { bulkImportCountry } from "@/lib/chargers/ingest/bulk";
+import { constantTimeEqual } from "@/lib/crypto/timing";
 
 // Full-country bulk import endpoint, invoked by the per-country Vercel crons.
 // Protected by the x-webhook-secret header; fails closed (503) if unconfigured.
@@ -17,8 +18,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Warm job not configured" }, { status: 503 });
   }
   const authorized =
-    (!!cronSecret && req.headers.get("authorization") === `Bearer ${cronSecret}`) ||
-    (!!ingestSecret && req.headers.get("x-webhook-secret") === ingestSecret);
+    (!!cronSecret && constantTimeEqual(req.headers.get("authorization") ?? "", `Bearer ${cronSecret}`)) ||
+    (!!ingestSecret && constantTimeEqual(req.headers.get("x-webhook-secret") ?? "", ingestSecret));
   if (!authorized) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
