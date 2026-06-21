@@ -10,6 +10,14 @@ import { refreshTeslaTokens } from "./auth";
 const ALGO = "aes-256-gcm";
 const IV_BYTES = 12;
 
+// Single-flight guard: if two requests both see an expiring token, only one
+// refresh races to Tesla. Tesla rotates refresh tokens on use, so the last
+// DB write would desync the stored token otherwise.
+const refreshInFlight = new Map<
+  string,
+  Promise<{ accessToken: string; region: string }>
+>();
+
 function getKey(): Buffer {
   const hex = process.env.TESLA_TOKEN_ENCRYPTION_KEY;
   if (!hex) {
@@ -87,29 +95,41 @@ export async function getValidAccessToken(
   const expiresAt = new Date(tokenRow.expires_at).getTime();
   // Refresh if expiring in the next 60s.
   if (Date.now() >= expiresAt - 60_000) {
-    const refreshToken = decryptToken(tokenRow.refresh_token_enc);
-    const fresh = await refreshTeslaTokens({
-      refreshToken,
-      clientId: process.env.TESLA_CLIENT_ID!,
-    });
+    const existing = refreshInFlight.get(vehicleId);
+    if (existing) return existing;
 
-    const newAccessEnc = encryptToken(fresh.access_token);
-    const newRefreshEnc = encryptToken(fresh.refresh_token);
-    const newExpiresAt = new Date(
-      Date.now() + fresh.expires_in * 1000,
-    ).toISOString();
+    const refreshPromise = (async () => {
+      try {
+        const refreshToken = decryptToken(tokenRow.refresh_token_enc);
+        const fresh = await refreshTeslaTokens({
+          refreshToken,
+          clientId: process.env.TESLA_CLIENT_ID!,
+        });
 
-    await supabase
-      .from("tesla_tokens")
-      .update({
-        access_token_enc: newAccessEnc,
-        refresh_token_enc: newRefreshEnc,
-        expires_at: newExpiresAt,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("vehicle_id", vehicleId);
+        const newAccessEnc = encryptToken(fresh.access_token);
+        const newRefreshEnc = encryptToken(fresh.refresh_token);
+        const newExpiresAt = new Date(
+          Date.now() + fresh.expires_in * 1000,
+        ).toISOString();
 
-    return { accessToken: fresh.access_token, region: vehicle.tesla_region };
+        await supabase
+          .from("tesla_tokens")
+          .update({
+            access_token_enc: newAccessEnc,
+            refresh_token_enc: newRefreshEnc,
+            expires_at: newExpiresAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("vehicle_id", vehicleId);
+
+        return { accessToken: fresh.access_token, region: vehicle.tesla_region };
+      } finally {
+        refreshInFlight.delete(vehicleId);
+      }
+    })();
+
+    refreshInFlight.set(vehicleId, refreshPromise);
+    return refreshPromise;
   }
 
   return {

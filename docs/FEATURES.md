@@ -2041,3 +2041,27 @@ scroll-in (touch-visible motion, not just hover).
 **Design rationale:** logged in `docs/DESIGN-REVIEW.md` (expert panel verdicts + action items).
 
 **Dependencies:** Framer Motion (`useInView`, `animate`, `whileHover`), next-intl.
+
+
+---
+
+## 33. CSP Header + Tesla Token Single-Flight
+
+**What:** Two security hardening items completing the audit:
+
+**Content Security Policy (CSP):** `src/proxy.ts` (Next.js 16 Proxy convention — `middleware.ts` is deprecated) generates a per-request nonce and emits a `Content-Security-Policy` response header:
+- `script-src 'self' 'nonce-{nonce}' 'strict-dynamic'` — nonce-locked scripts; Next.js extracts the nonce from the CSP header and applies it automatically to its generated hydration scripts.
+- `style-src 'self' 'unsafe-inline'` — framer-motion uses dynamic inline styles, so `'unsafe-inline'` is required here.
+- `connect-src 'self' {SUPABASE_URL}` — restricts browser fetch targets to own origin + Supabase.
+- `frame-ancestors 'none'` — blocks framing (duplicates `X-Frame-Options: DENY` for defence-in-depth).
+- `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `upgrade-insecure-requests`.
+
+**Tesla token refresh single-flight:** `src/lib/tesla/tokens.ts` now guards concurrent token refreshes with an in-process `Map<vehicleId, Promise>`. Tesla rotates refresh tokens on use — without this guard, two simultaneous requests both detecting an expiring token would each call Tesla with the same refresh token; the second call would fail (token already consumed). The guard deduplicates them to a single refresh promise per vehicle; the Map entry is cleaned up in a `finally` block.
+
+**How to use:** CSP is automatic on every page request. No code changes needed by feature developers.
+
+**Key files:**
+- `src/proxy.ts` — nonce + CSP proxy
+- `src/lib/tesla/tokens.ts` — `refreshInFlight` Map + single-flight logic in `getValidAccessToken`
+
+**Dependencies:** Web Crypto API (via Node.js `crypto.randomUUID`), Next.js Proxy runtime.

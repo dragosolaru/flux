@@ -26,14 +26,16 @@
 - **React** ✅ — stable list keys in `GeocodingSearch`/`costs-client`; `aria-label` on `StationListSheet` search.
 - **KISS** ✅ — shared framer-motion `LANDING_EASE`/`landingFadeUp`/`landingStagger` in `src/lib/animations/variants.ts`; 9 components de-duplicated.
 
+### Fourth pass — fixed 2026-06-21
+
+- **CSP** ✅ — `src/proxy.ts` (Next.js 16 Proxy convention) generates a per-request nonce and emits `Content-Security-Policy`: `script-src 'self' 'nonce-{nonce}' 'strict-dynamic'` (Next.js auto-applies the nonce to its hydration scripts); `style-src 'self' 'unsafe-inline'` (framer-motion inline styles require this); `connect-src 'self' {SUPABASE_URL}`; `frame-ancestors 'none'`; `object-src 'none'`; `base-uri 'self'`.
+- **Tesla single-flight** ✅ — `refreshInFlight: Map<vehicleId, Promise>` in `src/lib/tesla/tokens.ts`. Concurrent refreshes coalesce to one Tesla call; `finally` clears the entry.
+
 ### Still open (hardening / quality — none are exploitable today)
 
-- **CSP**: add a nonce-based `Content-Security-Policy` (deferred — needs nonce wiring so framer-motion/inline styles don't break). X-Frame-Options already blocks clickjacking.
-- **Tesla**: single-flight guard on token refresh (race); use `ensureSupabaseUserId` consistently in Tesla routes (currently raw `session.user.id` — fails closed, not an IDOR).
+- **Tesla**: use `ensureSupabaseUserId` consistently in Tesla routes (currently raw `session.user.id` — fails closed, not an IDOR, but fragile).
 - **Dashboard**: verify vehicle ownership before the parallel `charging_sessions` fetch (latent; redirect currently discards the result).
 - **Deps/CI**: dev-only CRITICAL/HIGH in vitest/vite — schedule `vitest@4`; add `npm audit --omit=dev --audit-level=high` gate to CI; pin actions to SHAs.
-- **React**: dynamic index-keys in `GeocodingSearch`/`costs-client`; add `aria-label` to `StationListSheet` search input.
-- **KISS**: hoist duplicated framer-motion `EASE`/`fadeUp`/`stagger` (9 files) into the existing `src/lib/animations/variants.ts`.
 
 Note: this file's older entries below had drifted from the implementation (e.g. the
 GDPR-export and webhook findings were already fixed in code). The third-pass agents
