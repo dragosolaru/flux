@@ -13,7 +13,7 @@ export function FaqSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="py-20">
+    <section className="py-12 md:py-20">
       <div className="mx-auto max-w-2xl px-4 md:px-8">
         <h2 className="mb-10 text-center text-3xl font-bold text-white">{t("faq_title")}</h2>
 

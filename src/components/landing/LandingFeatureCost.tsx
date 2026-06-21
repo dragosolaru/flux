@@ -52,7 +52,7 @@ export function LandingFeatureCost() {
 
   return (
     <section
-      className="py-24 md:py-32"
+      className="py-12 md:py-28"
       style={{
         background:
           "linear-gradient(to bottom, transparent, rgba(109,40,217,0.06) 40%, rgba(109,40,217,0.06) 60%, transparent)",
@@ -64,10 +64,14 @@ export function LandingFeatureCost() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
-          className="grid items-center gap-16 md:grid-cols-2"
+          className="grid items-center gap-8 md:grid-cols-2 md:gap-14"
         >
           {/* Visual (left) */}
-          <motion.div variants={fadeUp}>
+          <motion.div
+            variants={fadeUp}
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8">
               <div className="flex flex-col items-center gap-2 text-center">
                 <AnimatedCost />

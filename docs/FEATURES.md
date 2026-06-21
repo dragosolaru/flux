@@ -2016,3 +2016,19 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 - `src/lib/i18n/locales/*.json` — `pricing` namespace completely rewritten (80+ keys, 5 locales)
 
 **Dependencies:** Framer Motion, next-intl, lucide-react, UpgradeButton (billing).
+
+---
+
+## 32. Landing + Product — Motion Polish & Mobile Rhythm
+
+**What:** Tightened the vertical rhythm and added a tasteful motion layer to the public landing (`/`) and product (`/pricing`) pages so they feel fluid and "2026-electric" on mobile.
+
+- **Spacing:** section padding is now mobile-first (`py-12/14` on phones, `md:py-20/28` on desktop) and grid gaps collapse to `gap-8` on mobile — eliminates the dead vertical voids that appeared between stacked sections on phones.
+- **Aurora background** (`src/components/landing/Aurora.tsx`): drifting blurred violet/teal/fuchsia blobs behind the hero and CTA. Decorative, `pointer-events-none`.
+- **CountUp** (`src/components/landing/CountUp.tsx`): social-proof numbers (150K+, 5) animate from 0 when scrolled into view.
+- **Micro-interactions:** feature/bento/roadmap/pricing cards lift on hover (`whileHover` spring or CSS `-translate-y`); CTA button has a continuous pulsing violet glow.
+- **Live indicator:** pulsing teal "Live" badge on the bento dashboard card to signal real-time data.
+
+**Key files:** `src/components/landing/*` (Aurora, CountUp, LandingHero, LandingSocialProof, LandingBento, LandingFeature*, LandingCta), `src/components/product/*` (ProductHero, FeatureExplainers, RoadmapSection, PricingSection, Faq/Feedback spacing).
+
+**Dependencies:** Framer Motion (`useInView`, `animate`, `whileHover`), next-intl.

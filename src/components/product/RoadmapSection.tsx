@@ -23,7 +23,7 @@ export function RoadmapSection() {
   ] as const;
 
   return (
-    <section className="py-20">
+    <section className="py-12 md:py-20">
       <div className="mx-auto max-w-5xl px-4 md:px-8">
         <h2 className="text-center text-3xl font-bold text-white">{t("roadmap_title")}</h2>
         <p className="mt-2 text-center text-white/50">{t("roadmap_subtitle")}</p>
@@ -36,6 +36,7 @@ export function RoadmapSection() {
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}
               variants={cardVariant(i)}
+              whileHover={{ y: -6, borderColor: "rgba(45,212,191,0.3)" }}
               className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6"
             >
               <div className="mb-3 flex items-start justify-between gap-3">

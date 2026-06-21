@@ -51,7 +51,7 @@ export function FeedbackSection() {
     "w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-white placeholder:text-white/30 focus:border-violet-500/50 focus:outline-none";
 
   return (
-    <section className="py-20 text-center">
+    <section className="py-12 text-center md:py-20">
       <div className="mx-auto max-w-xl px-4 md:px-8">
         <h2 className="text-3xl font-bold text-white">{t("feedback_title")}</h2>
         <p className="mt-2 text-white/50">{t("feedback_subtitle")}</p>

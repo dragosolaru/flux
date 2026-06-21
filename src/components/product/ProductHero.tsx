@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { Aurora } from "@/components/landing/Aurora";
 
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
@@ -14,8 +15,9 @@ const fadeUp = (delay = 0) => ({
 export function ProductHero() {
   const t = useTranslations("pricing");
   return (
-    <section className="px-4 py-24 text-center">
-      <div className="mx-auto max-w-3xl">
+    <section className="relative overflow-hidden px-4 py-16 text-center md:py-24">
+      <Aurora />
+      <div className="relative z-10 mx-auto max-w-3xl">
         <motion.div
           initial="hidden"
           animate="visible"

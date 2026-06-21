@@ -30,14 +30,14 @@ export function LandingFeatureVehicle() {
   const offset = CIRCUMFERENCE - (BATTERY / 100) * CIRCUMFERENCE;
 
   return (
-    <section className="py-24 md:py-32">
+    <section className="py-12 md:py-28">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
-          className="grid items-center gap-16 md:grid-cols-2"
+          className="grid items-center gap-8 md:grid-cols-2 md:gap-14"
         >
           {/* Text */}
           <motion.div variants={fadeUp} className="flex flex-col gap-6">
@@ -61,7 +61,11 @@ export function LandingFeatureVehicle() {
           </motion.div>
 
           {/* Visual */}
-          <motion.div variants={fadeUp}>
+          <motion.div
+            variants={fadeUp}
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
             <div
               className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8"
               style={{ boxShadow: "0 0 40px rgba(124,58,237,0.08)" }}

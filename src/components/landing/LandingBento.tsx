@@ -34,7 +34,7 @@ export function LandingBento() {
   const t = useTranslations("landing");
 
   return (
-    <section className="py-16">
+    <section className="py-8 md:py-14">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <motion.div
           variants={container}
@@ -49,6 +49,7 @@ export function LandingBento() {
           {/* A — Dashboard Live (col-span-2, row-span-2) */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 md:col-span-2 md:row-span-2"
             style={{ boxShadow: "0 0 40px rgba(124,58,237,0.08)", minHeight: "200px" }}
           >
@@ -84,7 +85,17 @@ export function LandingBento() {
                 </div>
               </div>
               <div>
-                <p className="font-semibold text-white">{t("bento_battery")}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-white">{t("bento_battery")}</p>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-teal-400">
+                    <motion.span
+                      className="size-1.5 rounded-full bg-teal-400"
+                      animate={{ opacity: [1, 0.3, 1], scale: [1, 0.85, 1] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    Live
+                  </span>
+                </div>
                 <p className="mt-1 text-sm text-white/50">340 km range · Model 3 LR</p>
                 <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-white/40">
                   <span>🔒 Locked</span>
@@ -99,6 +110,7 @@ export function LandingBento() {
           {/* B — Smart Charge */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "160px" }}
           >
@@ -125,6 +137,7 @@ export function LandingBento() {
           {/* C — Languages */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="flex flex-col gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "120px" }}
           >
@@ -144,6 +157,7 @@ export function LandingBento() {
           {/* D — Cost per km */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="flex flex-col justify-between rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "160px" }}
           >
@@ -157,6 +171,7 @@ export function LandingBento() {
           {/* E — Trip Planner */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "160px" }}
           >
@@ -181,6 +196,7 @@ export function LandingBento() {
           {/* F — Multi-brand */}
           <motion.div
             variants={item}
+            whileHover={{ y: -4 }}
             className="flex flex-col justify-between rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "160px" }}
           >

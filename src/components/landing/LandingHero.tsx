@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Aurora } from "./Aurora";
 
 const stagger = {
   hidden: {},
@@ -31,12 +32,9 @@ export function LandingHero() {
 
   return (
     <section
-      className="relative overflow-hidden px-4 py-24 md:py-36"
-      style={{
-        background:
-          "radial-gradient(ellipse at 60% 50%, rgba(124,58,237,0.18) 0%, transparent 70%)",
-      }}
+      className="relative overflow-hidden px-4 py-14 md:py-32"
     >
+      <Aurora />
       {/* Animated road SVG */}
       <svg
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-48 w-full opacity-30"

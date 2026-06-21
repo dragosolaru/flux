@@ -45,7 +45,7 @@ export function PricingSection({ currentTier, isLoggedIn }: PricingSectionProps)
   const price = annual ? ANNUAL_MONTHLY_PRICE : MONTHLY_PRICE;
 
   return (
-    <section id="pricing" className="py-20">
+    <section id="pricing" className="py-12 md:py-20">
       <div className="mx-auto max-w-4xl px-4 md:px-8">
         <h2 className="text-center text-3xl font-bold text-white">{t("pricing_section_title")}</h2>
         <p className="mt-2 text-center text-white/50">{t("pricing_section_subtitle")}</p>
@@ -78,7 +78,7 @@ export function PricingSection({ currentTier, isLoggedIn }: PricingSectionProps)
         {/* Cards */}
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {/* Free */}
-          <div className="flex flex-col rounded-2xl border border-white/[0.1] bg-white/[0.03] p-6">
+          <div className="flex flex-col rounded-2xl border border-white/[0.1] bg-white/[0.03] p-6 transition-transform duration-300 hover:-translate-y-1">
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-white">{t("freeTier")}</h3>
               <p className="mt-1 text-sm text-white/50">{t("freeDesc")}</p>
@@ -113,7 +113,7 @@ export function PricingSection({ currentTier, isLoggedIn }: PricingSectionProps)
 
           {/* Pro */}
           <div
-            className="flex flex-col rounded-2xl border-2 border-violet-500/50 bg-gradient-to-b from-violet-950/30 to-transparent p-6"
+            className="flex flex-col rounded-2xl border-2 border-violet-500/50 bg-gradient-to-b from-violet-950/30 to-transparent p-6 transition-transform duration-300 hover:-translate-y-1"
             style={{ boxShadow: "0 0 40px rgba(124,58,237,0.12)" }}
           >
             <div className="mb-6">
