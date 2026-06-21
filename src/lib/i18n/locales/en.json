@@ -897,7 +897,19 @@
     "trip_fastest": "Fastest",
     "trip_balanced": "Balanced",
     "trip_economy": "Economy",
-    "cost_calc_label": "calculated from your bills"
+    "cost_calc_label": "calculated from your bills",
+    "road_fuel_title": "Hybrid & combustion cars",
+    "road_fuel_body": "Flux won’t stay EV-only. Add your petrol, diesel, hybrid or plug-in hybrid car and track costs, documents and reminders the same way.",
+    "road_insurance_title": "Insurance, sorted",
+    "road_insurance_body": "Keep your RCA and CASCO policies in one place, see expiry at a glance, and renew or compare offers without leaving the app.",
+    "road_vignette_title": "Vignettes & rovinieta",
+    "road_vignette_body": "Buy and verify your Romanian rovinieta — plus vignettes for Hungary, Austria and more — straight from Flux before you cross the border.",
+    "road_tolls_title": "Bridge & road tolls",
+    "road_tolls_body": "Pay the Fetești–Cernavodă and Calafat–Vidin bridge tolls in seconds and keep every receipt in one place.",
+    "road_tax_title": "Car tax & ITP",
+    "road_tax_body": "Estimate your annual car tax, track your ITP (technical inspection) date, and never miss a deadline.",
+    "road_reminders_title": "Smart renewal reminders",
+    "road_reminders_body": "One timeline for every expiry — insurance, rovinieta, ITP, tax and vignettes — with alerts well before each one runs out."
   },
   "aboutData": {
     "live": "Live",

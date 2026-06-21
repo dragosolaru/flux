@@ -897,7 +897,19 @@
     "trip_fastest": "Leggyorsabb",
     "trip_balanced": "Kiegyensúlyozott",
     "trip_economy": "Gazdaságos",
-    "cost_calc_label": "a számláid alapján számítva"
+    "cost_calc_label": "a számláid alapján számítva",
+    "road_fuel_title": "Hibrid és benzines autók",
+    "road_fuel_body": "A Flux nem marad csak elektromos. Add hozzá benzines, dízel, hibrid vagy plug-in hibrid autódat, és ugyanúgy kövesd a költségeket, dokumentumokat és emlékeztetőket.",
+    "road_insurance_title": "Biztosítás, elintézve",
+    "road_insurance_body": "Tárold a kötelező és casco biztosításaidat egy helyen, lásd a lejáratot egy pillantással, és újítsd meg vagy hasonlítsd össze az ajánlatokat az appból kilépés nélkül.",
+    "road_vignette_title": "Matricák és rovinieta",
+    "road_vignette_body": "Vásárold meg és ellenőrizd a román rovinietát — valamint Magyarország, Ausztria és mások matricáit — közvetlenül a Fluxban, mielőtt átléped a határt.",
+    "road_tolls_title": "Híd- és úthasználati díjak",
+    "road_tolls_body": "Fizesd ki a Fetești–Cernavodă és Calafat–Vidin híddíjat másodpercek alatt, és tartsd egy helyen az összes bizonylatot.",
+    "road_tax_title": "Gépjárműadó és műszaki (ITP)",
+    "road_tax_body": "Becsüld meg az éves gépjárműadódat, kövesd az ITP (műszaki vizsga) dátumát, és soha ne maradj le egy határidőről.",
+    "road_reminders_title": "Okos emlékeztetők",
+    "road_reminders_body": "Egyetlen idővonal minden lejárathoz — biztosítás, rovinieta, ITP, adó és matricák — jó előre küldött figyelmeztetésekkel."
   },
   "aboutData": {
     "live": "Élő",

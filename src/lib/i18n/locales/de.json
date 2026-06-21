@@ -897,7 +897,19 @@
     "trip_fastest": "Am schnellsten",
     "trip_balanced": "Ausgewogen",
     "trip_economy": "Sparsam",
-    "cost_calc_label": "berechnet aus Ihren Rechnungen"
+    "cost_calc_label": "berechnet aus Ihren Rechnungen",
+    "road_fuel_title": "Hybride & Verbrenner",
+    "road_fuel_body": "Flux bleibt nicht nur für E-Autos. Füge dein Benzin-, Diesel-, Hybrid- oder Plug-in-Hybrid-Auto hinzu und verfolge Kosten, Dokumente und Erinnerungen genauso.",
+    "road_insurance_title": "Versicherung, geregelt",
+    "road_insurance_body": "Speichere deine Haftpflicht- und Kaskopolicen an einem Ort, sieh den Ablauf auf einen Blick und verlängere oder vergleiche Angebote, ohne die App zu verlassen.",
+    "road_vignette_title": "Vignetten & Rovinieta",
+    "road_vignette_body": "Kaufe und prüfe deine rumänische Rovinieta – plus Vignetten für Ungarn, Österreich und mehr – direkt in Flux, bevor du die Grenze überquerst.",
+    "road_tolls_title": "Brücken- & Straßenmaut",
+    "road_tolls_body": "Bezahle die Maut für die Brücken Fetești–Cernavodă und Calafat–Vidin in Sekunden und behalte jeden Beleg an einem Ort.",
+    "road_tax_title": "Kfz-Steuer & ITP",
+    "road_tax_body": "Schätze deine jährliche Kfz-Steuer, behalte deinen ITP-Termin (technische Prüfung) im Blick und verpasse keine Frist.",
+    "road_reminders_title": "Smarte Erinnerungen",
+    "road_reminders_body": "Eine Übersicht für jeden Ablauf – Versicherung, Rovinieta, ITP, Steuer und Vignetten – mit Hinweisen rechtzeitig vorher."
   },
   "aboutData": {
     "live": "Live",

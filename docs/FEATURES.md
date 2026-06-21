@@ -2067,3 +2067,31 @@ scroll-in (touch-visible motion, not just hover).
 - `src/lib/tesla/tokens.ts` — `refreshInFlight` Map + single-flight logic in `getValidAccessToken`
 
 **Dependencies:** Web Crypto API (via Node.js `crypto.randomUUID`), Next.js Proxy runtime.
+
+---
+
+## 34. Roadmap — Car-Admin Hub (insurance, vignettes, tolls, tax, reminders, non-EV)
+
+**What:** The product roadmap (`/pricing`) now advertises Flux's expansion from
+"EV management" to a full **car-admin hub**, with six new "coming soon" cards:
+hybrid & combustion cars, insurance (RCA/CASCO), vignettes & rovinietă, bridge &
+road tolls, car tax & ITP, and smart renewal reminders.
+
+**How to use:** Visible on the Product page roadmap section. These are roadmap
+signals, not yet implemented features.
+
+**Integration research:** The API landscape, partner/contract options, and a
+build approach for each of these are documented in
+**`docs/INTEGRATIONS-CAR-ADMIN.md`** (researched 2026-06-21). Key conclusions:
+vignettes/tolls have a ready aggregator API path (**Vignette ID**, covers RO);
+insurance is a partnership/regulatory play (**Safety Broker** secondary-intermediary,
+or **Qover** embedded); tax/ITP have **no public API** → compute + manual entry +
+deep-links; non-EV/hybrid needs a paid EU VIN decoder (**vindecoder.eu** /
+**CarDataTrend**) with manual `talon` override.
+
+**Key files:**
+- `src/components/product/RoadmapSection.tsx` — six new roadmap cards
+- `src/lib/i18n/locales/*.json` — `pricing.road_{fuel,insurance,vignette,tolls,tax,reminders}_{title,body}` (5 locales)
+- `docs/INTEGRATIONS-CAR-ADMIN.md` — full integration research & strategy
+
+**Dependencies:** none yet (roadmap copy + docs only).

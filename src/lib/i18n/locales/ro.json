@@ -897,7 +897,19 @@
     "trip_fastest": "Cea mai rapidă",
     "trip_balanced": "Echilibrată",
     "trip_economy": "Economică",
-    "cost_calc_label": "calculat din facturile tale"
+    "cost_calc_label": "calculat din facturile tale",
+    "road_fuel_title": "Mașini hibride și termice",
+    "road_fuel_body": "Flux nu va fi doar pentru electrice. Adaugă mașina pe benzină, diesel, hibrid sau hibrid plug-in și urmărește costuri, documente și reamintiri la fel.",
+    "road_insurance_title": "Asigurări, rezolvate",
+    "road_insurance_body": "Ține polițele RCA și CASCO la un loc, vezi expirarea dintr-o privire și reînnoiește sau compară oferte fără să ieși din aplicație.",
+    "road_vignette_title": "Viniete și rovinietă",
+    "road_vignette_body": "Cumpără și verifică rovinieta — și vinietele pentru Ungaria, Austria și altele — direct din Flux, înainte să treci granița.",
+    "road_tolls_title": "Treceri de poduri și taxe de drum",
+    "road_tolls_body": "Plătește taxele de pod Fetești–Cernavodă și Calafat–Vidin în câteva secunde și păstrează fiecare chitanță la un loc.",
+    "road_tax_title": "Impozit auto și ITP",
+    "road_tax_body": "Estimează impozitul auto anual, urmărește data ITP-ului și nu mai rata niciun termen.",
+    "road_reminders_title": "Reamintiri inteligente",
+    "road_reminders_body": "O singură cronologie pentru fiecare expirare — asigurare, rovinietă, ITP, impozit și viniete — cu alerte din timp, înainte să expire."
   },
   "aboutData": {
     "live": "Live",

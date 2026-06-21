@@ -9,16 +9,20 @@ const cardVariant = (i: number) => ({
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: LANDING_EASE, delay: i * 0.08 } },
 });
 
-const ICONS = ["📸", "🛣️", "🔋", "💼"] as const;
-
 export function RoadmapSection() {
   const t = useTranslations("pricing");
 
   const items = [
-    { icon: ICONS[0], titleKey: "road_photo_title", bodyKey: "road_photo_body" },
-    { icon: ICONS[1], titleKey: "road_trip_cost_title", bodyKey: "road_trip_cost_body" },
-    { icon: ICONS[2], titleKey: "road_battery_title", bodyKey: "road_battery_body" },
-    { icon: ICONS[3], titleKey: "road_mileage_title", bodyKey: "road_mileage_body" },
+    { icon: "📸", titleKey: "road_photo_title", bodyKey: "road_photo_body" },
+    { icon: "🛣️", titleKey: "road_trip_cost_title", bodyKey: "road_trip_cost_body" },
+    { icon: "🔋", titleKey: "road_battery_title", bodyKey: "road_battery_body" },
+    { icon: "💼", titleKey: "road_mileage_title", bodyKey: "road_mileage_body" },
+    { icon: "⛽", titleKey: "road_fuel_title", bodyKey: "road_fuel_body" },
+    { icon: "🛡️", titleKey: "road_insurance_title", bodyKey: "road_insurance_body" },
+    { icon: "🎫", titleKey: "road_vignette_title", bodyKey: "road_vignette_body" },
+    { icon: "🌉", titleKey: "road_tolls_title", bodyKey: "road_tolls_body" },
+    { icon: "🧾", titleKey: "road_tax_title", bodyKey: "road_tax_body" },
+    { icon: "🔔", titleKey: "road_reminders_title", bodyKey: "road_reminders_body" },
   ] as const;
 
   return (
