@@ -621,7 +621,9 @@
     "search_results_title": "Keresési találatok",
     "no_results": "Nincs találat",
     "distance_km": "{km} km-re",
-    "distance_m": "{m} m-re"
+    "distance_m": "{m} m-re",
+    "directions": "Útvonal",
+    "address_unknown": "A cím nem érhető el"
   },
   "auth": {
     "title_login": "Üdv újra",

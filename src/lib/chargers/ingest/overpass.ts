@@ -76,7 +76,10 @@ export function mapOverpassElement(el: OverpassElement): RawCharger | null {
     name: tags["name"] ?? null,
     operator: tags["operator"] ?? tags["network"] ?? null,
     address: {
-      street: tags["addr:street"] ?? null,
+      street:
+        [tags["addr:street"], tags["addr:housenumber"]]
+          .filter(Boolean)
+          .join(" ") || null,
       city: tags["addr:city"] ?? tags["addr:suburb"] ?? null,
       region: tags["addr:state"] ?? null,
       country: tags["addr:country"] ?? null,

@@ -621,7 +621,9 @@
     "search_results_title": "Rezultate căutare",
     "no_results": "Nicio stație găsită",
     "distance_km": "la {km} km",
-    "distance_m": "la {m} m"
+    "distance_m": "la {m} m",
+    "directions": "Direcții",
+    "address_unknown": "Adresă indisponibilă"
   },
   "auth": {
     "title_login": "Bine ai revenit",

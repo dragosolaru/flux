@@ -621,7 +621,9 @@
     "search_results_title": "Résultats de recherche",
     "no_results": "Aucune station trouvée",
     "distance_km": "à {km} km",
-    "distance_m": "à {m} m"
+    "distance_m": "à {m} m",
+    "directions": "Itinéraire",
+    "address_unknown": "Adresse indisponible"
   },
   "auth": {
     "title_login": "Bon retour",

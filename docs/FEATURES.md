@@ -182,7 +182,9 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 9. Charging map
 
-**What:** Full-screen AmpWhere-style station map. The page fills the entire viewport under the top bar with no padding or scrollable page layout. Station pins show power labels (e.g. "50kW", "250kW") directly on the pin as pill-shaped divIcons. Tapping a pin opens a `ChargerDetailSheet` bottom sheet (glassmorphism, `animate-slide-up`) showing power, connector count, connector type chips, and address. A floating filter bar at the top of the map lets users filter by minimum power and connector type. A floating station count is shown at the bottom-left.
+**What:** Full-screen AmpWhere-style station map. The page fills the entire viewport under the top bar with no padding or scrollable page layout. Station pins show power labels (e.g. "50kW", "250kW") directly on the pin as pill-shaped divIcons. Tapping a pin opens a `ChargerDetailSheet` bottom sheet (glassmorphism) showing power (gradient hero stat), connector count, connector type chips, the full address (street + house number, postcode + city, region), and a **Directions** button that opens Google Maps directions to the station. The sheet animates in (slide + fade), staggers its content, shows a top energy-accent bar, and pulses the status dot when the station is operational. A floating filter bar at the top of the map lets users filter by minimum power and connector type. A floating station count is shown at the bottom-left.
+
+Address completeness depends on the source: the OSM connector now joins `addr:street` + `addr:housenumber` (previously the number was dropped); OCM's `AddressLine1` and the BNetzA/Austria connectors already include it. Existing rows show the number after the next ingest pass.
 
 **How to use:** UI `/charging-map`. API: `GET /api/chargers/nearby?lat=&lng=&radius=[&minKw=][&connector=]` returns `Charger[]` from PostGIS.
 

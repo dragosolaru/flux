@@ -56,3 +56,43 @@ Product page "Charging Map" feature block.
   removed.
 - *Animated enough?* Hover was desktop-only; added scroll-triggered motion so
   phones feel alive too.
+
+---
+
+## Review 02 — 2026-06-21 · Charging Map — Station Detail Sheet (mobile)
+
+**Context:** mobile screenshot of a tapped station ("Plugpoint", Florești). Two
+complaints: (1) the address shows the street but **no house number**; (2) the
+sheet looks dull ("anostă") — flat stat boxes, no action, no life.
+
+### Verdict
+- **Mara:** Hierarchy was flat — power (the number that matters) had the same
+  weight as everything else. Make **power the hero stat**; give the card an
+  energy accent instead of a plain border.
+- **Tomas:** Zero motion = not "electric". The card should **arrive** (slide +
+  fade), stats should **stagger in**, and an operational station should **pulse**
+  (alive). A top gradient bar reads as energy.
+- **Devon:** The address bug is upstream — the OSM connector captured
+  `addr:street` but dropped `addr:housenumber`. Fix at ingestion (join them, like
+  the BNetzA/Austria connectors already do). In the UI, render the **full**
+  address (street + number, postcode + city, region), not just street + city.
+- **Sofia:** A detail sheet with no primary action feels unfinished. Add a
+  **Directions** button — the one thing a driver actually wants. Keep it premium:
+  one clear CTA, restrained.
+- **Yuki:** The pulsing "live" dot + the directions CTA make it feel actionable
+  and shareable.
+
+### Action items (this commit)
+1. **Address data:** `overpass.ts` now joins `addr:street` + `addr:housenumber`
+   (was dropping the number) — the root cause of the missing number in Florești.
+2. **Fuller address UI:** sheet renders street, `postcode city`, and region on
+   separate lines with a map-pin; falls back to `address_unknown` when empty.
+3. **Directions CTA:** primary button → Google Maps directions to the station.
+4. **Motion + hierarchy:** card slide-in, staggered children, pulsing
+   operational status dot, gradient power hero, top energy accent bar.
+
+### Note on data limits
+House numbers only appear when the **source** has them. OSM (`addr:housenumber`)
+and BNetzA/Austria carry them; for OSM we now keep it. OCM's `AddressLine1`
+already includes the number when present. TomTom has no number field — those rows
+stay street-only. Existing DB rows show the number after the next ingest pass.

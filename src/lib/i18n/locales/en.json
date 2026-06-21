@@ -621,7 +621,9 @@
     "search_results_title": "Search results",
     "no_results": "No stations found",
     "distance_km": "{km} km away",
-    "distance_m": "{m} m away"
+    "distance_m": "{m} m away",
+    "directions": "Directions",
+    "address_unknown": "Address not available"
   },
   "auth": {
     "title_login": "Welcome back",

@@ -144,6 +144,7 @@ describe("mapOverpassElement", () => {
         "socket:type2_combo": "4",
         "socket:type2_combo:output": "150 kW",
         "addr:street": "Bd. Unirii",
+        "addr:housenumber": "12",
         "addr:city": "Bucuresti",
         "addr:country": "RO",
         "addr:postcode": "030167",
@@ -156,7 +157,8 @@ describe("mapOverpassElement", () => {
     expect(raw!.sourceRef).toBe("node/99");
     expect(raw!.operator).toBe("Fastned");
     expect(raw!.address.city).toBe("Bucuresti");
-    expect(raw!.address.street).toBe("Bd. Unirii");
+    // House number is appended to the street so the address is complete.
+    expect(raw!.address.street).toBe("Bd. Unirii 12");
 
     const byType = Object.fromEntries(raw!.connectors.map((c) => [c.type, c]));
     expect(byType["type2"]).toEqual({ type: "type2", powerKw: 22, count: 2 });
