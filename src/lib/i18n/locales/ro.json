@@ -692,7 +692,16 @@
     "feature_i18n_desc": "Disponibil în engleză, română, germană, franceză și maghiară.",
     "pricing_teaser_title": "Prețuri simple și transparente",
     "pricing_teaser_desc": "Gratuit în beta. Pro deblochează vehicule nelimitate, OCR nelimitat și insights AI.",
-    "pricing_teaser_cta": "Vezi planuri"
+    "pricing_teaser_cta": "Vezi planuri",
+    "eyebrow_vehicle": "Vehicul și comenzi",
+    "eyebrow_cost": "Inteligență a costurilor",
+    "eyebrow_trip": "Planificator de călătorii",
+    "trip_fastest": "Cea mai rapidă",
+    "trip_balanced": "Echilibrată",
+    "trip_economy": "Economică",
+    "cost_step_email": "Trimite factura pe e-mail",
+    "cost_step_ai": "AI o citește",
+    "cost_step_result": "Cost pe km"
   },
   "trip": {
     "title": "Planificator de trasee",
@@ -877,7 +886,16 @@
     "feedback_success": "Mulțumim! Vom analiza mesajul tău.",
     "feedback_error": "Nu s-a putut trimite. Încearcă din nou.",
     "disclaimer": "Prețuri în EUR. Se poate aplica TVA.",
-    "backToApp": "Înapoi la aplicație"
+    "backToApp": "Înapoi la aplicație",
+    "eyebrow_cost": "Inteligență a costurilor",
+    "eyebrow_map": "Hartă de încărcare",
+    "eyebrow_trip": "Planificator de călătorii",
+    "eyebrow_smart": "Încărcare inteligentă",
+    "eyebrow_commands": "Comenzi vehicul · Tesla",
+    "trip_fastest": "Cea mai rapidă",
+    "trip_balanced": "Echilibrată",
+    "trip_economy": "Economică",
+    "cost_calc_label": "calculat din facturile tale"
   },
   "aboutData": {
     "live": "Live",

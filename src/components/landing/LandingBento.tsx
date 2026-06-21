@@ -2,13 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { LANDING_EASE } from "@/lib/animations/variants";
 
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07 } },
 };
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 // Static bar heights for 24h price chart (indices 2-4 are cheap hours)
 const BAR_HEIGHTS: readonly number[] = [
@@ -22,7 +21,7 @@ const item = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.5, ease: EASE },
+    transition: { duration: 0.5, ease: LANDING_EASE },
   },
 };
 

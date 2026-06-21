@@ -3,18 +3,10 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
-};
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
+import {
+  landingFadeUp as fadeUp,
+  landingStagger as stagger,
+} from "@/lib/animations/variants";
 
 export function LandingFeatureVehicle() {
   const t = useTranslations("landing");
@@ -42,7 +34,7 @@ export function LandingFeatureVehicle() {
           {/* Text */}
           <motion.div variants={fadeUp} className="flex flex-col gap-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">
-              Vehicle & Commands
+              {t("eyebrow_vehicle")}
             </p>
             <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
               {t("feature_vehicle_title")}

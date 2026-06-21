@@ -692,7 +692,16 @@
     "feature_i18n_desc": "Disponible en anglais, roumain, allemand, français et hongrois.",
     "pricing_teaser_title": "Tarifs simples et transparents",
     "pricing_teaser_desc": "Gratuit en bêta. Pro débloque les véhicules illimités, l'OCR illimité et les insights IA.",
-    "pricing_teaser_cta": "Voir les plans"
+    "pricing_teaser_cta": "Voir les plans",
+    "eyebrow_vehicle": "Véhicule et commandes",
+    "eyebrow_cost": "Intelligence des coûts",
+    "eyebrow_trip": "Planificateur d'itinéraire",
+    "trip_fastest": "Le plus rapide",
+    "trip_balanced": "Équilibré",
+    "trip_economy": "Économique",
+    "cost_step_email": "Envoyez votre facture par e-mail",
+    "cost_step_ai": "L'IA la lit",
+    "cost_step_result": "Coût par km"
   },
   "trip": {
     "title": "Planificateur de trajets",
@@ -877,7 +886,16 @@
     "feedback_success": "Merci ! Nous examinerons votre message.",
     "feedback_error": "Impossible d'envoyer. Veuillez réessayer.",
     "disclaimer": "Prix en EUR. TVA éventuellement applicable.",
-    "backToApp": "Retour à l'application"
+    "backToApp": "Retour à l'application",
+    "eyebrow_cost": "Intelligence des coûts",
+    "eyebrow_map": "Carte des bornes",
+    "eyebrow_trip": "Planificateur d'itinéraire",
+    "eyebrow_smart": "Recharge intelligente",
+    "eyebrow_commands": "Commandes du véhicule · Tesla",
+    "trip_fastest": "Le plus rapide",
+    "trip_balanced": "Équilibré",
+    "trip_economy": "Économique",
+    "cost_calc_label": "calculé à partir de vos factures"
   },
   "aboutData": {
     "live": "Live",

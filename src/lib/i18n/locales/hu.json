@@ -692,7 +692,16 @@
     "feature_i18n_desc": "Elérhető angolul, románul, németül, franciául és magyarul.",
     "pricing_teaser_title": "Egyszerű, átlátható árazás",
     "pricing_teaser_desc": "Ingyenes a bétában. A Pro korlátlan járművet, OCR-t és AI-betekintést old fel.",
-    "pricing_teaser_cta": "Csomagok megtekintése"
+    "pricing_teaser_cta": "Csomagok megtekintése",
+    "eyebrow_vehicle": "Jármű és parancsok",
+    "eyebrow_cost": "Költséganalitika",
+    "eyebrow_trip": "Útvonaltervező",
+    "trip_fastest": "Leggyorsabb",
+    "trip_balanced": "Kiegyensúlyozott",
+    "trip_economy": "Gazdaságos",
+    "cost_step_email": "Küldje el számláját e-mailben",
+    "cost_step_ai": "Az MI beolvassa",
+    "cost_step_result": "Költség kilométerenként"
   },
   "trip": {
     "title": "Útvonaltervező",
@@ -877,7 +886,16 @@
     "feedback_success": "Köszönjük! Átnézzük az üzenetedet.",
     "feedback_error": "Nem sikerült elküldeni. Kérjük, próbáld újra.",
     "disclaimer": "Az árak EUR-ban. ÁFA felszámítható.",
-    "backToApp": "Vissza az alkalmazáshoz"
+    "backToApp": "Vissza az alkalmazáshoz",
+    "eyebrow_cost": "Költséganalitika",
+    "eyebrow_map": "Töltőtérkép",
+    "eyebrow_trip": "Útvonaltervező",
+    "eyebrow_smart": "Intelligens töltés",
+    "eyebrow_commands": "Járműparancsok · Tesla",
+    "trip_fastest": "Leggyorsabb",
+    "trip_balanced": "Kiegyensúlyozott",
+    "trip_economy": "Gazdaságos",
+    "cost_calc_label": "a számláid alapján számítva"
   },
   "aboutData": {
     "live": "Élő",

@@ -2,12 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
+import { LANDING_EASE } from "@/lib/animations/variants";
 
 const cardVariant = (i: number) => ({
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE, delay: i * 0.08 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: LANDING_EASE, delay: i * 0.08 } },
 });
 
 const ICONS = ["📸", "🛣️", "🔋", "💼"] as const;

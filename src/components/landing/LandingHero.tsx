@@ -5,17 +5,11 @@ import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Aurora } from "./Aurora";
+import { LANDING_EASE, landingFadeUp as fadeUp } from "@/lib/animations/variants";
 
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
-};
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
 };
 
 const cardVariant = {
@@ -23,7 +17,7 @@ const cardVariant = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { delay: 0.8, duration: 0.7, ease: EASE },
+    transition: { delay: 0.8, duration: 0.7, ease: LANDING_EASE },
   },
 };
 

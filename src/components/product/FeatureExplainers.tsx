@@ -3,18 +3,10 @@
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
-};
+import {
+  landingFadeUp as fadeUp,
+  landingStagger as stagger,
+} from "@/lib/animations/variants";
 
 // BAR_HEIGHTS for 24h smart charge chart
 const BAR_HEIGHTS: readonly number[] = [
@@ -50,12 +42,13 @@ function AnimatedCostCounter() {
 }
 
 function CostVisual() {
+  const t = useTranslations("pricing");
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8">
       <div className="flex flex-col items-center gap-2 text-center">
         <AnimatedCostCounter />
         <span className="text-2xl text-white/60">/km</span>
-        <p className="mt-2 text-sm text-white/40">calculated from your bills</p>
+        <p className="mt-2 text-sm text-white/40">{t("cost_calc_label")}</p>
       </div>
       <div className="mt-8 rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
         <div className="flex flex-col gap-2">
@@ -94,6 +87,7 @@ function MapVisual() {
 }
 
 function TripVisual() {
+  const t = useTranslations("pricing");
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8">
       <svg viewBox="0 0 240 100" className="w-full" aria-hidden>
@@ -111,7 +105,7 @@ function TripVisual() {
         <text x="180" y="45" fontSize="9" fill="rgba(255,255,255,0.4)">18 min stop</text>
       </svg>
       <div className="mt-4 flex justify-center gap-2">
-        {["Fastest", "Balanced", "Economy"].map((label) => (
+        {[t("trip_fastest"), t("trip_balanced"), t("trip_economy")].map((label) => (
           <span
             key={label}
             className="rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs text-white/60"
@@ -253,35 +247,35 @@ export function FeatureExplainers() {
   return (
     <>
       <FeatureBlock
-        eyebrow="COST INTELLIGENCE"
+        eyebrow={t("eyebrow_cost")}
         title={t("feat_cost_title")}
         body={t("feat_cost_body")}
         visual={<CostVisual />}
         flip={true}
       />
       <FeatureBlock
-        eyebrow="CHARGING MAP"
+        eyebrow={t("eyebrow_map")}
         title={t("feat_map_title")}
         body={t("feat_map_body")}
         visual={<MapVisual />}
         flip={false}
       />
       <FeatureBlock
-        eyebrow="TRIP PLANNER"
+        eyebrow={t("eyebrow_trip")}
         title={t("feat_trip_title")}
         body={t("feat_trip_body")}
         visual={<TripVisual />}
         flip={true}
       />
       <FeatureBlock
-        eyebrow="SMART CHARGE"
+        eyebrow={t("eyebrow_smart")}
         title={t("feat_smart_title")}
         body={t("feat_smart_body")}
         visual={<SmartChargeVisual />}
         flip={false}
       />
       <FeatureBlock
-        eyebrow="VEHICLE COMMANDS · TESLA"
+        eyebrow={t("eyebrow_commands")}
         title={t("feat_commands_title")}
         body={t("feat_commands_body")}
         subBody={t("feat_commands_note")}

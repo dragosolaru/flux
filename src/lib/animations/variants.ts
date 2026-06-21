@@ -50,3 +50,15 @@ export const floatLoop = {
   animate: { y: [0, -6, 0] },
   transition: { duration: 2.4, repeat: Infinity, ease: "easeInOut" as const },
 };
+
+export const LANDING_EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
+
+export const landingFadeUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: LANDING_EASE } },
+};
+
+export const landingStagger: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};

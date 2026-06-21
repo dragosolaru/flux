@@ -2,23 +2,15 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
-};
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
+import {
+  landingFadeUp as fadeUp,
+  landingStagger as stagger,
+} from "@/lib/animations/variants";
 
 export function LandingFeatureTrip() {
   const t = useTranslations("landing");
 
-  const chips = ["Fastest", "Balanced", "Economy"];
+  const chips = [t("trip_fastest"), t("trip_balanced"), t("trip_economy")];
 
   return (
     <section className="py-12 md:py-28">
@@ -33,7 +25,7 @@ export function LandingFeatureTrip() {
           {/* Text (left) */}
           <motion.div variants={fadeUp} className="flex flex-col gap-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">
-              Trip Planner
+              {t("eyebrow_trip")}
             </p>
             <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
               {t("feature_trip_title")}

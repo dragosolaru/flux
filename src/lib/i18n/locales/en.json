@@ -692,7 +692,16 @@
     "feature_i18n_desc": "Available in English, Romanian, German, French, and Hungarian.",
     "pricing_teaser_title": "Simple, transparent pricing",
     "pricing_teaser_desc": "Free during open beta. Pro unlocks unlimited vehicles, unlimited OCR, and AI insights.",
-    "pricing_teaser_cta": "See plans"
+    "pricing_teaser_cta": "See plans",
+    "eyebrow_vehicle": "Vehicle & Commands",
+    "eyebrow_cost": "Cost Intelligence",
+    "eyebrow_trip": "Trip Planner",
+    "trip_fastest": "Fastest",
+    "trip_balanced": "Balanced",
+    "trip_economy": "Economy",
+    "cost_step_email": "Email your bill",
+    "cost_step_ai": "AI reads it",
+    "cost_step_result": "Cost per km"
   },
   "trip": {
     "title": "Trip Planner",
@@ -877,7 +886,16 @@
     "feedback_success": "Thanks! We'll review your message.",
     "feedback_error": "Could not send. Please try again.",
     "disclaimer": "Prices in EUR. VAT may apply.",
-    "backToApp": "Back to app"
+    "backToApp": "Back to app",
+    "eyebrow_cost": "Cost Intelligence",
+    "eyebrow_map": "Charging Map",
+    "eyebrow_trip": "Trip Planner",
+    "eyebrow_smart": "Smart Charge",
+    "eyebrow_commands": "Vehicle Commands · Tesla",
+    "trip_fastest": "Fastest",
+    "trip_balanced": "Balanced",
+    "trip_economy": "Economy",
+    "cost_calc_label": "calculated from your bills"
   },
   "aboutData": {
     "live": "Live",

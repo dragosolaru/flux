@@ -692,7 +692,16 @@
     "feature_i18n_desc": "Verfügbar auf Englisch, Rumänisch, Deutsch, Französisch und Ungarisch.",
     "pricing_teaser_title": "Einfache, transparente Preise",
     "pricing_teaser_desc": "Kostenlos in der Beta. Pro schaltet unbegrenzte Fahrzeuge, OCR und KI-Einblicke frei.",
-    "pricing_teaser_cta": "Pläne ansehen"
+    "pricing_teaser_cta": "Pläne ansehen",
+    "eyebrow_vehicle": "Fahrzeug & Befehle",
+    "eyebrow_cost": "Kostenintelligenz",
+    "eyebrow_trip": "Routenplaner",
+    "trip_fastest": "Am schnellsten",
+    "trip_balanced": "Ausgewogen",
+    "trip_economy": "Sparsam",
+    "cost_step_email": "Rechnung per E-Mail senden",
+    "cost_step_ai": "KI liest sie",
+    "cost_step_result": "Kosten pro km"
   },
   "trip": {
     "title": "Routenplaner",
@@ -877,7 +886,16 @@
     "feedback_success": "Danke! Wir prüfen deine Nachricht.",
     "feedback_error": "Konnte nicht gesendet werden. Bitte erneut versuchen.",
     "disclaimer": "Preise in EUR. Zzgl. evtl. MwSt.",
-    "backToApp": "Zurück zur App"
+    "backToApp": "Zurück zur App",
+    "eyebrow_cost": "Kostenintelligenz",
+    "eyebrow_map": "Ladekarte",
+    "eyebrow_trip": "Routenplaner",
+    "eyebrow_smart": "Intelligentes Laden",
+    "eyebrow_commands": "Fahrzeugbefehle · Tesla",
+    "trip_fastest": "Am schnellsten",
+    "trip_balanced": "Ausgewogen",
+    "trip_economy": "Sparsam",
+    "cost_calc_label": "berechnet aus Ihren Rechnungen"
   },
   "aboutData": {
     "live": "Live",
