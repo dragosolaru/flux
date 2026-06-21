@@ -216,7 +216,7 @@ export function GeocodingSearch({ placeholder, value, onChange, icon, locating, 
           ) : (
             results.map((r, i) => (
               <button
-                key={i}
+                key={`${r.lat}-${r.lng}-${r.name}`}
                 id={`${listboxId}-opt-${i}`}
                 role="option"
                 aria-selected={i === activeIndex}

@@ -90,6 +90,7 @@ export function StationListSheet({
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder={t("search_placeholder")}
+              aria-label={t("search_placeholder")}
               className="w-full rounded-full border border-border bg-muted/70 py-2 pl-9 pr-3 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
             />
           </div>

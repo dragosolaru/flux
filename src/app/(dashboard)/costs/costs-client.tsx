@@ -215,8 +215,8 @@ function KpiChipsRow({ data }: { data: CostsResponse }) {
       animate="visible"
       className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto scrollbar-none pb-1"
     >
-      {items.map((item, i) => (
-        <motion.div key={i} variants={fadeInUp} className="snap-center">
+      {items.map((item) => (
+        <motion.div key={item.label} variants={fadeInUp} className="snap-center">
           <StatTile
             icon={item.icon}
             value={item.value}
