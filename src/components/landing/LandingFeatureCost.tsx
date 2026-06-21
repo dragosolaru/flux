@@ -66,11 +66,12 @@ export function LandingFeatureCost() {
           viewport={{ once: true, margin: "-80px" }}
           className="grid items-center gap-8 md:grid-cols-2 md:gap-14"
         >
-          {/* Visual (left) */}
+          {/* Visual — left on desktop, second on mobile */}
           <motion.div
             variants={fadeUp}
             whileHover={{ y: -6 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="order-2 md:order-1"
           >
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8">
               <div className="flex flex-col items-center gap-2 text-center">
@@ -95,8 +96,8 @@ export function LandingFeatureCost() {
             </div>
           </motion.div>
 
-          {/* Text (right) */}
-          <motion.div variants={fadeUp} className="flex flex-col gap-6">
+          {/* Text — right on desktop, first on mobile */}
+          <motion.div variants={fadeUp} className="order-1 flex flex-col gap-6 md:order-2">
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">
               Cost Intelligence
             </p>

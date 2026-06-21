@@ -131,14 +131,16 @@ function SmartChargeVisual() {
         {BAR_HEIGHTS.map((h, i) => {
           const isCheap = CHEAP_INDICES.has(i);
           return (
-            <rect
+            <motion.rect
               key={i}
               x={i * 5}
-              y={48 - h}
               width="3.5"
-              height={h}
               rx="1"
               fill={isCheap ? "#14b8a6" : "rgba(255,255,255,0.12)"}
+              initial={{ height: 0, y: 48 }}
+              whileInView={{ height: h, y: 48 - h }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.02, ease: "easeOut" }}
             />
           );
         })}
@@ -210,21 +212,7 @@ interface FeatureBlockProps {
 }
 
 function FeatureBlock({ eyebrow, title, body, subBody, visual, flip = false }: FeatureBlockProps) {
-  const textContent = (
-    <motion.div variants={fadeUp} className="flex flex-col gap-4">
-      <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">{eyebrow}</p>
-      <h2 className="text-3xl font-bold tracking-tight text-white">{title}</h2>
-      <p className="leading-relaxed text-white/60">{body}</p>
-      {subBody && <p className="text-sm text-white/40">{subBody}</p>}
-    </motion.div>
-  );
-
-  const visualContent = (
-    <motion.div variants={fadeUp} whileHover={{ y: -6 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-      {visual}
-    </motion.div>
-  );
-
+  // Title always leads on mobile; the zigzag (flip) applies only at md+.
   return (
     <section className="py-12 md:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -235,17 +223,24 @@ function FeatureBlock({ eyebrow, title, body, subBody, visual, flip = false }: F
           viewport={{ once: true, margin: "-80px" }}
           className="grid items-center gap-8 md:grid-cols-2 md:gap-16"
         >
-          {flip ? (
-            <>
-              {visualContent}
-              {textContent}
-            </>
-          ) : (
-            <>
-              {textContent}
-              {visualContent}
-            </>
-          )}
+          <motion.div
+            variants={fadeUp}
+            className={`flex flex-col gap-4 ${flip ? "md:order-2" : ""}`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">{eyebrow}</p>
+            <h2 className="text-3xl font-bold tracking-tight text-white">{title}</h2>
+            <p className="leading-relaxed text-white/60">{body}</p>
+            {subBody && <p className="text-sm text-white/40">{subBody}</p>}
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className={flip ? "md:order-1" : ""}
+          >
+            {visual}
+          </motion.div>
         </motion.div>
       </div>
     </section>

@@ -2029,6 +2029,15 @@ In plan mode before a route is computed, the mid-state sheet snap was a fixed 44
 - **Micro-interactions:** feature/bento/roadmap/pricing cards lift on hover (`whileHover` spring or CSS `-translate-y`); CTA button has a continuous pulsing violet glow.
 - **Live indicator:** pulsing teal "Live" badge on the bento dashboard card to signal real-time data.
 
+**Mobile ordering (review 01):** feature rows now lead with the **title** on
+mobile; the left/right zigzag (`flip`) applies only at `md+` via CSS `order`.
+Previously flipped rows showed the visual first on phones, which read as a
+missing title. The bento "multi-brand" card was filled with brand chips
+(was a hollow `justify-between` card), and smart-charge bars now grow on
+scroll-in (touch-visible motion, not just hover).
+
 **Key files:** `src/components/landing/*` (Aurora, CountUp, LandingHero, LandingSocialProof, LandingBento, LandingFeature*, LandingCta), `src/components/product/*` (ProductHero, FeatureExplainers, RoadmapSection, PricingSection, Faq/Feedback spacing).
+
+**Design rationale:** logged in `docs/DESIGN-REVIEW.md` (expert panel verdicts + action items).
 
 **Dependencies:** Framer Motion (`useInView`, `animate`, `whileHover`), next-intl.

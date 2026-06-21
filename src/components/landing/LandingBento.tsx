@@ -119,14 +119,16 @@ export function LandingBento() {
               {BAR_HEIGHTS.map((h, i) => {
                 const isCheap = i >= 2 && i <= 4;
                 return (
-                  <rect
+                  <motion.rect
                     key={i}
                     x={i * 5}
-                    y={48 - h}
                     width="3.5"
-                    height={h}
                     rx="1"
                     fill={isCheap ? "#14b8a6" : "rgba(255,255,255,0.12)"}
+                    initial={{ height: 0, y: 48 }}
+                    whileInView={{ height: h, y: 48 - h }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.02, ease: "easeOut" }}
                   />
                 );
               })}
@@ -197,13 +199,19 @@ export function LandingBento() {
           <motion.div
             variants={item}
             whileHover={{ y: -4 }}
-            className="flex flex-col justify-between rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
+            className="flex flex-col gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5"
             style={{ minHeight: "160px" }}
           >
             <p className="text-sm font-semibold text-white">{t("bento_multi_brand")}</p>
-            <div className="text-sm">
-              <span className="font-semibold text-white">Tesla</span>
-              <span className="text-white/30"> · BMW · Polestar</span>
+            <div className="flex flex-wrap gap-2">
+              {["Tesla", "BMW", "VW", "Hyundai", "Renault", "Kia"].map((b) => (
+                <span
+                  key={b}
+                  className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/60"
+                >
+                  {b}
+                </span>
+              ))}
             </div>
           </motion.div>
         </motion.div>
