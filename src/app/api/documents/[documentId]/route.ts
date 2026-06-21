@@ -68,7 +68,7 @@ export async function PATCH(
 
   const body = await request.json() as unknown;
   const parsed = PatchSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ message: parsed.error.message }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ message: "Invalid request" }, { status: 400 });
 
   const supabase = createSupabaseAdminClient();
 
@@ -123,7 +123,10 @@ export async function PATCH(
       .from("energy_costs")
       .update(updates)
       .eq("document_id", documentId);
-    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+    if (error) {
+      console.error("[documents/[documentId]/PATCH]", error.message);
+      return NextResponse.json({ message: "Save failed" }, { status: 500 });
+    }
   } else if ((doc as { vehicle_id: string | null }).vehicle_id && (parsed.data.original_amount || parsed.data.total_kwh)) {
     // Non-electricity doc manually confirmed — create energy_cost record.
     // Re-verify vehicle ownership even though document is already scoped to userId,

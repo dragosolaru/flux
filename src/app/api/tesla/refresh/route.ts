@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Refresh failed";
-    return NextResponse.json({ ok: false, message }, { status: 502 });
+    console.error("[tesla/refresh]", message);
+    return NextResponse.json({ ok: false, message: "Refresh failed" }, { status: 502 });
   }
 }

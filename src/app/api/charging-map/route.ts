@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const network = searchParams.get("network");
-  const minKw = searchParams.get("minKw") ? Number(searchParams.get("minKw")) : null;
+  const minKw = searchParams.get("minKw")
+    ? Math.min(Math.max(Number(searchParams.get("minKw")), 0), 1000)
+    : null;
   const plug = searchParams.get("plug");
 
   let stations = getStations();

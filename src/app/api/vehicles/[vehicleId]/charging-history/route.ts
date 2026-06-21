@@ -83,6 +83,7 @@ export async function POST(
     return NextResponse.json({ synced: inserted, total: sessions.length });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Sync failed";
-    return NextResponse.json({ message: msg }, { status: 502 });
+    console.error("[vehicles/[vehicleId]/charging-history]", msg);
+    return NextResponse.json({ message: "Sync failed" }, { status: 502 });
   }
 }

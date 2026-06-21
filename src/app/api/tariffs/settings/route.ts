@@ -46,7 +46,10 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ message: "Too many requests" }, { status: 429 });
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const providerId = typeof body?.providerId === "string" ? body.providerId : null;
   const validIds = listProviders().map((p) => p.id);
   if (!providerId || !validIds.includes(providerId)) {

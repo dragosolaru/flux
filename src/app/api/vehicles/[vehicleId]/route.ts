@@ -7,6 +7,7 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { listScenarios } from "@/lib/mock/scenarios";
 import { canAddVehicle } from "@/lib/subscription";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { BrandKey } from "@/lib/brands/types";
 
 const uuidSchema = z.string().uuid();
@@ -71,6 +72,13 @@ export async function PATCH(
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
+  if (!await checkRateLimit(userId, "vehicle-mutate", 30)) {
+    return NextResponse.json(
+      { message: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
+
   // Handle is_active update
   if (isActive !== undefined) {
     const { error } = await supabase
@@ -78,7 +86,10 @@ export async function PATCH(
       .update({ is_active: isActive })
       .eq("id", vehicleId)
       .eq("user_id", userId);
-    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+    if (error) {
+      console.error("[vehicles/[vehicleId]/PATCH]", error.message);
+      return NextResponse.json({ message: "Save failed" }, { status: 500 });
+    }
   }
 
   // Handle virtualKeyPaired update
@@ -88,7 +99,10 @@ export async function PATCH(
       .update({ virtual_key_paired: virtualKeyPaired })
       .eq("id", vehicleId)
       .eq("user_id", userId);
-    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+    if (error) {
+      console.error("[vehicles/[vehicleId]/PATCH]", error.message);
+      return NextResponse.json({ message: "Save failed" }, { status: 500 });
+    }
   }
 
   // Handle scenario switch (mock vehicles only)
@@ -140,7 +154,10 @@ export async function PATCH(
       active_trip_start_odometer_km: null,
     });
 
-    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+    if (error) {
+      console.error("[vehicles/[vehicleId]/PATCH]", error.message);
+      return NextResponse.json({ message: "Save failed" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ success: true });
@@ -164,6 +181,13 @@ export async function DELETE(
   if (!uuidSchema.safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
   }
+  if (!await checkRateLimit(userId, "vehicle-mutate", 30)) {
+    return NextResponse.json(
+      { message: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
 
   const { error } = await supabase
@@ -173,7 +197,8 @@ export async function DELETE(
     .eq("user_id", userId);
 
   if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("[vehicles/[vehicleId]/DELETE]", error.message);
+    return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

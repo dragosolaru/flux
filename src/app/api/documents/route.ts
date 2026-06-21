@@ -51,7 +51,10 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error("[documents/GET]", error.message);
+    return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
+  }
 
   // Generate short-lived signed URLs for viewing documents
   const now = Date.now();
@@ -139,7 +142,10 @@ export async function POST(request: Request) {
     .from("documents")
     .upload(storagePath, buffer, { contentType: file.type, upsert: false });
 
-  if (uploadErr) return NextResponse.json({ message: uploadErr.message }, { status: 500 });
+  if (uploadErr) {
+    console.error("[documents/POST]", uploadErr.message);
+    return NextResponse.json({ message: "Save failed" }, { status: 500 });
+  }
 
   const { data: doc, error: insertErr } = await supabase
     .from("documents")
@@ -155,7 +161,10 @@ export async function POST(request: Request) {
     .select("id")
     .single();
 
-  if (insertErr || !doc) return NextResponse.json({ message: insertErr?.message ?? "Insert failed" }, { status: 500 });
+  if (insertErr || !doc) {
+    console.error("[documents/POST]", insertErr?.message ?? "Insert failed");
+    return NextResponse.json({ message: "Save failed" }, { status: 500 });
+  }
 
   after(processDocument(doc.id).catch((err: unknown) => {
     console.error("[processDocument]", doc.id, err);

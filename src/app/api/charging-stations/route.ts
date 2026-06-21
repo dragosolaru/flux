@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "lat and lng must be finite numbers" }, { status: 400 });
   }
 
-  const radius = Number(searchParams.get("radius") ?? "25");
-  const maxResults = Number(searchParams.get("maxResults") ?? "200");
+  const radius = Math.min(Math.max(Number(searchParams.get("radius") ?? "25"), 1), 100);
+  const maxResults = Math.min(Math.max(Number(searchParams.get("maxResults") ?? "200"), 1), 200);
 
   // Query OpenChargeMap and Overpass in parallel, then merge + de-duplicate.
   const live = await fetchLiveStations(latNum, lngNum, radius, maxResults);

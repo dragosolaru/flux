@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: false, result: message }, { status: 502 });
+    console.error("[tesla/command]", message);
+    return NextResponse.json({ success: false, result: "Command failed" }, { status: 502 });
   }
 }

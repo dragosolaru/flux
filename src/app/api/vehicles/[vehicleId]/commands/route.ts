@@ -106,9 +106,13 @@ export async function POST(
       const msg = err instanceof Error ? err.message : "Command failed";
       await recordCommandEvent(vehicleId, command, args, false, msg).catch(() => null);
       if (msg.includes("Vehicle Command Protocol required")) {
-        return NextResponse.json({ success: false, result: msg, code: "VCP_REQUIRED" }, { status: 412 });
+        return NextResponse.json(
+          { success: false, result: "Tesla Vehicle Command Protocol required", code: "VCP_REQUIRED" },
+          { status: 412 },
+        );
       }
-      return NextResponse.json({ success: false, result: msg }, { status: 502 });
+      console.error("[vehicles/[vehicleId]/commands]", msg);
+      return NextResponse.json({ success: false, result: "Command failed" }, { status: 502 });
     }
   }
 

@@ -39,7 +39,10 @@ export async function GET(
     .eq("vehicle_id", vehicleId)
     .order("recorded_date", { ascending: true });
 
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error("[vehicles/[vehicleId]/battery-health]", error.message);
+    return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
+  }
 
   const points: BatteryHealthPoint[] = (data ?? []).map(
     (r: { recorded_date: string; soh_pct: number }) => ({

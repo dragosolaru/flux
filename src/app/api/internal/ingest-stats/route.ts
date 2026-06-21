@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
     .limit(RECENT_LIMIT);
 
   if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("[internal/ingest-stats]", error.message);
+    return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
   }
 
   const runs: IngestRunRow[] = Array.isArray(data) ? (data as IngestRunRow[]) : [];
