@@ -18,12 +18,17 @@
 | F | Medium | `glass-card.tsx` imported framer-motion without `"use client"` (latent server-component crash) | Added `"use client"` |
 | G | KISS | Dead component `LandingFeatures.tsx` (no importers) | Deleted |
 
-### Open recommendations (hardening / quality — none are exploitable today)
+### Follow-up batch — fixed 2026-06-21 (parallel worktree agents A+B + main)
+
+- **Error leakage** ✅ — ~10 routes now log raw Supabase/Tesla `error.message` server-side and return generic client messages (same status). VCP_REQUIRED branch preserved.
+- **Rate limits / input hardening** ✅ — `checkRateLimit` on `vehicles/[vehicleId]` PATCH/DELETE; `req.json()` guard on `tariffs/settings`; numeric clamps on `charging-stations` (radius ≤100, maxResults ≤200) and `charging-map` (minKw ≤1000).
+- **i18n** ✅ — section eyebrows, trip-mode chips, and cost-flow labels extracted to keys in all 5 locales (9 `landing` + 9 `pricing` keys; parity 794 keys each). Mock/demo visual text intentionally left.
+- **React** ✅ — stable list keys in `GeocodingSearch`/`costs-client`; `aria-label` on `StationListSheet` search.
+- **KISS** ✅ — shared framer-motion `LANDING_EASE`/`landingFadeUp`/`landingStagger` in `src/lib/animations/variants.ts`; 9 components de-duplicated.
+
+### Still open (hardening / quality — none are exploitable today)
 
 - **CSP**: add a nonce-based `Content-Security-Policy` (deferred — needs nonce wiring so framer-motion/inline styles don't break). X-Frame-Options already blocks clickjacking.
-- **i18n**: hardcoded English strings in landing/product visuals (eyebrows `COST INTELLIGENCE`/`TRIP PLANNER`, chips `Fastest/Balanced/Economy`, vehicle chip labels). Mock/demo text (battery %, city names) lower priority. Add keys to all 5 locales + `t()`.
-- **Error leakage**: ~10 routes return raw Supabase/Tesla `error.message` to clients — log server-side, return generic message (follow `billing/checkout`).
-- **Rate limits**: add to `vehicles/[vehicleId]` PATCH/DELETE; guard `tariffs/settings` `req.json()`; clamp numeric params on legacy `charging-stations`/`charging-map`.
 - **Tesla**: single-flight guard on token refresh (race); use `ensureSupabaseUserId` consistently in Tesla routes (currently raw `session.user.id` — fails closed, not an IDOR).
 - **Dashboard**: verify vehicle ownership before the parallel `charging_sessions` fetch (latent; redirect currently discards the result).
 - **Deps/CI**: dev-only CRITICAL/HIGH in vitest/vite — schedule `vitest@4`; add `npm audit --omit=dev --audit-level=high` gate to CI; pin actions to SHAs.
