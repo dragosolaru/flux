@@ -303,6 +303,28 @@
       "error": "Fahrzeug konnte nicht getrennt werden",
       "pending": "Wird getrennt…",
       "label": "Trennen"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "channel": {
+        "push": "Push-Benachrichtigungen",
+        "email": "E-Mail",
+        "whatsapp": "WhatsApp"
+      },
+      "email_hint": "An Ihre Konto-E-Mail.",
+      "whatsapp_hint": "Erfordert eine Telefonnummer im Profil.",
+      "push_unsupported": "Auf diesem Browser nicht verfügbar.",
+      "push_denied": "Berechtigung verweigert.",
+      "test": "Test",
+      "test_sent": "Testbenachrichtigung gesendet.",
+      "test_failed": "Test konnte nicht gesendet werden.",
+      "scenarios_label": "Warnungstypen",
+      "scenario": {
+        "rain_windows": "Regen + offene Fenster",
+        "freeze": "Frost / Schnee / Eis",
+        "heat": "Hitzewelle (35°C+)",
+        "hail": "Hagel / starker Wind"
+      }
     }
   },
   "ingest": {
@@ -915,7 +937,9 @@
     "road_tax_title": "Kfz-Steuer & ITP",
     "road_tax_body": "Schätze deine jährliche Kfz-Steuer, behalte deinen ITP-Termin (technische Prüfung) im Blick und verpasse keine Frist.",
     "road_reminders_title": "Smarte Erinnerungen",
-    "road_reminders_body": "Eine Übersicht für jeden Ablauf – Versicherung, Rovinieta, ITP, Steuer und Vignetten – mit Hinweisen rechtzeitig vorher."
+    "road_reminders_body": "Eine Übersicht für jeden Ablauf – Versicherung, Rovinieta, ITP, Steuer und Vignetten – mit Hinweisen rechtzeitig vorher.",
+    "road_weather_title": "Wetterwächter",
+    "road_weather_body": "Werde gewarnt, wenn Regen, Frost, Hitze oder Stürme dein geparktes Auto bedrohen."
   },
   "aboutData": {
     "live": "Live",
@@ -1017,5 +1041,27 @@
     "issuer": "Aussteller",
     "processing": "Wird verarbeitet...",
     "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt."
+  },
+  "notifications": {
+    "rain_windows": {
+      "title": "Regen & offene Fenster",
+      "body": "Es regnet in der Nähe von {name} und die Fenster sind offen."
+    },
+    "freeze": {
+      "title": "Frosttemperaturen",
+      "body": "Minustemperaturen bei {name}. Vorklimatisierung empfohlen."
+    },
+    "heat": {
+      "title": "Hitzewelle",
+      "body": "Hohe Temperaturen bei {name}. Der Innenraum heizt sich auf."
+    },
+    "hail": {
+      "title": "Schweres Unwetter",
+      "body": "Unwetter am Standort von {name}."
+    },
+    "test": {
+      "title": "Flux-Testbenachrichtigung",
+      "body": "Push-Benachrichtigungen funktionieren."
+    }
   }
 }

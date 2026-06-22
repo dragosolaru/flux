@@ -303,6 +303,28 @@
       "error": "Impossible de déconnecter le véhicule",
       "pending": "Déconnexion…",
       "label": "Déconnecter"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "channel": {
+        "push": "Notifications push",
+        "email": "E-mail",
+        "whatsapp": "WhatsApp"
+      },
+      "email_hint": "Envoyé à l'e-mail du compte.",
+      "whatsapp_hint": "Nécessite un numéro dans votre profil.",
+      "push_unsupported": "Non pris en charge par ce navigateur.",
+      "push_denied": "Autorisation refusée.",
+      "test": "Test",
+      "test_sent": "Notification de test envoyée.",
+      "test_failed": "Échec de l'envoi du test.",
+      "scenarios_label": "Types d'alerte",
+      "scenario": {
+        "rain_windows": "Pluie + fenêtres ouvertes",
+        "freeze": "Gel / neige / verglas",
+        "heat": "Canicule (35°C+)",
+        "hail": "Grêle / vent fort"
+      }
     }
   },
   "ingest": {
@@ -915,7 +937,9 @@
     "road_tax_title": "Taxe auto & contrôle technique (ITP)",
     "road_tax_body": "Estimez votre taxe automobile annuelle, suivez la date de votre ITP (contrôle technique) et ne manquez aucune échéance.",
     "road_reminders_title": "Rappels intelligents",
-    "road_reminders_body": "Une seule frise pour chaque échéance — assurance, rovinieta, ITP, taxe et vignettes — avec des alertes bien avant l’expiration."
+    "road_reminders_body": "Une seule frise pour chaque échéance — assurance, rovinieta, ITP, taxe et vignettes — avec des alertes bien avant l’expiration.",
+    "road_weather_title": "Gardien météo",
+    "road_weather_body": "Soyez alerté quand la pluie, le gel, la chaleur ou les tempêtes menacent votre voiture garée."
   },
   "aboutData": {
     "live": "Live",
@@ -1017,5 +1041,27 @@
     "issuer": "Émetteur",
     "processing": "Traitement en cours...",
     "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement."
+  },
+  "notifications": {
+    "rain_windows": {
+      "title": "Pluie & fenêtres ouvertes",
+      "body": "Il pleut près de {name} et les fenêtres sont ouvertes."
+    },
+    "freeze": {
+      "title": "Températures de gel",
+      "body": "Températures négatives à {name}. Pensez au préconditionnement."
+    },
+    "heat": {
+      "title": "Canicule",
+      "body": "Températures élevées à {name}. L'habitacle va chauffer."
+    },
+    "hail": {
+      "title": "Tempête violente",
+      "body": "Intempéries à l'emplacement de {name}."
+    },
+    "test": {
+      "title": "Notification de test Flux",
+      "body": "Les notifications push fonctionnent."
+    }
   }
 }

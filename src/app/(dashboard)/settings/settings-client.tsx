@@ -41,6 +41,8 @@ import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { ScenarioPicker } from "@/components/settings/ScenarioPicker";
 import { ChargerHealthCard } from "@/components/settings/ChargerHealthCard";
 import { WhatsAppPhonePicker } from "@/components/settings/WhatsAppPhonePicker";
+import { NotificationsCard } from "@/components/settings/NotificationsCard";
+import { isNotificationsEnabled } from "@/lib/feature-flags";
 import { InactiveVehiclesList } from "@/components/settings/InactiveVehiclesList";
 import { DeactivateButton } from "@/components/settings/DeactivateButton";
 import { VehicleSectionBoundary } from "@/components/settings/VehicleSectionBoundary";
@@ -191,6 +193,9 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
           </SettingRow>
         </Card>
       </section>
+
+      {/* Notifications (behind feature flag) */}
+      {isNotificationsEnabled() && <NotificationsCard />}
 
       {/* Vehicles */}
       <section className="flex flex-col gap-2">

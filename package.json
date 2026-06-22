@@ -29,6 +29,7 @@
     "@tanstack/react-query": "^5.100.10",
     "@tanstack/react-query-devtools": "^5.100.10",
     "@types/leaflet.markercluster": "^1.5.6",
+    "@types/web-push": "^3.6.4",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "@use-gesture/react": "^10.3.1",
@@ -50,6 +51,7 @@
     "sonner": "^2.0.7",
     "stripe": "^22.1.1",
     "tailwind-merge": "^3.6.0",
+    "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {

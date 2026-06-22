@@ -23,6 +23,7 @@ export function RoadmapSection() {
     { icon: "🌉", titleKey: "road_tolls_title", bodyKey: "road_tolls_body" },
     { icon: "🧾", titleKey: "road_tax_title", bodyKey: "road_tax_body" },
     { icon: "🔔", titleKey: "road_reminders_title", bodyKey: "road_reminders_body" },
+    { icon: "🌦️", titleKey: "road_weather_title", bodyKey: "road_weather_body" },
   ] as const;
 
   return (

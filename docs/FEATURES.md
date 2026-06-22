@@ -2194,3 +2194,59 @@ re-declaring inline queries with duplicate cache keys.
 - `src/app/(dashboard)/map/map-client.tsx` — initializes vehicle dropdown default from context
 
 **Dependencies:** `useVehicles` hook (TanStack Query, `["vehicles"]` key), `localStorage`.
+
+---
+
+## Multi-Channel Notifications (Weather Guardian foundation) — behind feature flag
+
+**What:** Background-aware alerts that reach the user when the app is closed.
+The poll-vehicles cron checks each stationary vehicle every 15 minutes, fetches
+weather at its location, runs a pure alert engine (rain + open windows, freeze /
+snow, heat wave ≥35°C, hail / severe storm), and dispatches matching alerts
+through every channel the user has enabled: **Web Push**, **Email** (Resend),
+and **WhatsApp** (Twilio). A per-(vehicle, alert-type) session key prevents the
+same condition from re-firing within one parking session.
+
+**Status:** Ships dark behind `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`. When the flag
+is unset/false the settings card is hidden, all notification API routes return
+404, and the cron no-ops. Flip to `"true"` (plus the channel env vars) to go
+live. This is Spec 1 of 2 — Spec 2 layers richer weather scenarios on top with
+no structural changes.
+
+**How to use:**
+- **Users:** Settings → *Notificări* card. Toggle channels (push asks for browser
+  permission and registers a subscription; email uses the account address;
+  WhatsApp uses `profiles.whatsapp_phone`), then pick which alert types to
+  receive. A *Test* button sends an instant push.
+- **Ops:** Set `NEXT_PUBLIC_NOTIFICATIONS_ENABLED=true`, `CRON_SECRET`, VAPID
+  keys (`npx web-push generate-vapid-keys`), `RESEND_API_KEY`, and Twilio creds.
+  Vercel cron `POST /api/cron/poll-vehicles` runs `*/15 * * * *` with
+  `Authorization: Bearer <CRON_SECRET>`.
+
+**Known gap:** Live Tesla telemetry returns `windowsOpen = null`, so the
+rain+windows alert only fires for mock vehicles until a follow-up task maps the
+Tesla Fleet `vehicle_state` window fields. All other alerts work live.
+
+**Key files:**
+- `src/lib/feature-flags.ts` — `isNotificationsEnabled()`
+- `src/types/notifications.ts` — `AlertType`, `NotificationPreferences`, `Alert`, `NotificationPayload`
+- `src/lib/notifications/alert-engine.ts` — pure `evaluateAlerts(vehicle, weather, prefs)`
+- `src/lib/notifications/dispatch.ts` — fan-out to enabled channels (`Promise.allSettled`)
+- `src/lib/notifications/email.ts` — Resend via REST; `src/lib/notifications/whatsapp.ts` — Twilio via REST
+- `src/lib/notifications/preferences.ts` — DB row ↔ `NotificationPreferences` mapper
+- `src/lib/push/send.ts` — `sendPushToUser()` (web-push, prunes stale endpoints)
+- `src/lib/i18n/notify.ts` — `translateNotification(locale, key, params)` for cron-context i18n
+- `src/app/api/cron/poll-vehicles/route.ts` — the scheduler/engine driver
+- `src/app/api/push/{subscribe,test,vapid-public-key}/route.ts` — push management
+- `src/app/api/me/notification-preferences/route.ts` — GET/PATCH prefs
+- `src/hooks/usePushNotifications.ts`, `src/hooks/useNotificationPreferences.ts`
+- `src/components/settings/NotificationsCard.tsx` — settings UI
+- `src/components/product/RoadmapSection.tsx` — landing-page "Weather Guardian" entry
+- `public/sw.js` — `push` + `notificationclick` handlers
+- `supabase/migrations/026_push_subscriptions.sql`, `027_notification_preferences.sql`, `028_vehicle_alert_state.sql`
+- `vercel.json` — poll-vehicles cron entry
+- i18n: `notifications` + `settings.notifications` + `pricing.road_weather_*` keys in all 5 locales
+
+**Dependencies:** `web-push` (+ `@types/web-push`), Resend REST API, Twilio REST
+API, Open-Meteo (`getWeatherAsync`), Supabase (admin client), TanStack Query,
+`sonner`. Design doc: `docs/superpowers/specs/2026-06-22-notification-foundation-design.md`.

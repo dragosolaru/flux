@@ -303,6 +303,28 @@
       "error": "Could not disconnect vehicle",
       "pending": "Disconnecting…",
       "label": "Disconnect"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "channel": {
+        "push": "Push notifications",
+        "email": "Email",
+        "whatsapp": "WhatsApp"
+      },
+      "email_hint": "Sent to your account email.",
+      "whatsapp_hint": "Requires a phone number in your profile.",
+      "push_unsupported": "Not supported on this browser.",
+      "push_denied": "Permission denied.",
+      "test": "Test",
+      "test_sent": "Test notification sent.",
+      "test_failed": "Could not send test.",
+      "scenarios_label": "Alert types",
+      "scenario": {
+        "rain_windows": "Rain + open windows",
+        "freeze": "Frost / snow / ice",
+        "heat": "Heat wave (35°C+)",
+        "hail": "Hail / strong wind"
+      }
     }
   },
   "ingest": {
@@ -915,7 +937,9 @@
     "road_tax_title": "Car tax & ITP",
     "road_tax_body": "Estimate your annual car tax, track your ITP (technical inspection) date, and never miss a deadline.",
     "road_reminders_title": "Smart renewal reminders",
-    "road_reminders_body": "One timeline for every expiry — insurance, rovinieta, ITP, tax and vignettes — with alerts well before each one runs out."
+    "road_reminders_body": "One timeline for every expiry — insurance, rovinieta, ITP, tax and vignettes — with alerts well before each one runs out.",
+    "road_weather_title": "Weather Guardian",
+    "road_weather_body": "Get alerted when rain, frost, heat, or storms threaten your parked car."
   },
   "aboutData": {
     "live": "Live",
@@ -1017,5 +1041,27 @@
     "issuer": "Issuer",
     "processing": "Processing...",
     "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically."
+  },
+  "notifications": {
+    "rain_windows": {
+      "title": "Rain & open windows",
+      "body": "It's raining near {name} and the windows are open."
+    },
+    "freeze": {
+      "title": "Freezing temperatures",
+      "body": "Sub-zero temperatures at {name}. Consider preconditioning."
+    },
+    "heat": {
+      "title": "Heat wave",
+      "body": "High temperatures at {name}. The cabin will heat up."
+    },
+    "hail": {
+      "title": "Severe storm",
+      "body": "Severe weather at {name}'s location."
+    },
+    "test": {
+      "title": "Flux test notification",
+      "body": "Push notifications are working."
+    }
   }
 }

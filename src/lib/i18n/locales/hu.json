@@ -303,6 +303,28 @@
       "error": "Nem sikerült leválasztani a járművet",
       "pending": "Leválasztás…",
       "label": "Leválasztás"
+    },
+    "notifications": {
+      "title": "Értesítések",
+      "channel": {
+        "push": "Push értesítések",
+        "email": "E-mail",
+        "whatsapp": "WhatsApp"
+      },
+      "email_hint": "A fiók e-mail-címére küldve.",
+      "whatsapp_hint": "Telefonszám szükséges a profilban.",
+      "push_unsupported": "Ezen a böngészőn nem támogatott.",
+      "push_denied": "Engedély megtagadva.",
+      "test": "Teszt",
+      "test_sent": "Teszt értesítés elküldve.",
+      "test_failed": "A teszt küldése sikertelen.",
+      "scenarios_label": "Riasztástípusok",
+      "scenario": {
+        "rain_windows": "Eső + nyitott ablakok",
+        "freeze": "Fagy / hó / jég",
+        "heat": "Hőhullám (35°C+)",
+        "hail": "Jégeső / erős szél"
+      }
     }
   },
   "ingest": {
@@ -915,7 +937,9 @@
     "road_tax_title": "Gépjárműadó és műszaki (ITP)",
     "road_tax_body": "Becsüld meg az éves gépjárműadódat, kövesd az ITP (műszaki vizsga) dátumát, és soha ne maradj le egy határidőről.",
     "road_reminders_title": "Okos emlékeztetők",
-    "road_reminders_body": "Egyetlen idővonal minden lejárathoz — biztosítás, rovinieta, ITP, adó és matricák — jó előre küldött figyelmeztetésekkel."
+    "road_reminders_body": "Egyetlen idővonal minden lejárathoz — biztosítás, rovinieta, ITP, adó és matricák — jó előre küldött figyelmeztetésekkel.",
+    "road_weather_title": "Időjárás-őr",
+    "road_weather_body": "Riasztást kapsz, ha eső, fagy, hőség vagy vihar fenyegeti a leparkolt autódat."
   },
   "aboutData": {
     "live": "Élő",
@@ -1017,5 +1041,27 @@
     "issuer": "Kibocsátó",
     "processing": "Feldolgozás...",
     "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak."
+  },
+  "notifications": {
+    "rain_windows": {
+      "title": "Eső és nyitott ablakok",
+      "body": "Esik az eső {name} közelében, és nyitva vannak az ablakok."
+    },
+    "freeze": {
+      "title": "Fagypont alatti hőmérséklet",
+      "body": "Fagypont alatti hőmérséklet itt: {name}. Érdemes előfűteni."
+    },
+    "heat": {
+      "title": "Hőhullám",
+      "body": "Magas hőmérséklet itt: {name}. Az utastér felmelegszik."
+    },
+    "hail": {
+      "title": "Heves vihar",
+      "body": "Heves időjárás {name} helyén."
+    },
+    "test": {
+      "title": "Flux teszt értesítés",
+      "body": "A push értesítések működnek."
+    }
   }
 }

@@ -303,6 +303,28 @@
       "error": "Nu s-a putut deconecta vehiculul",
       "pending": "Se deconectează…",
       "label": "Deconectează"
+    },
+    "notifications": {
+      "title": "Notificări",
+      "channel": {
+        "push": "Notificări push",
+        "email": "Email",
+        "whatsapp": "WhatsApp"
+      },
+      "email_hint": "Trimise la emailul contului.",
+      "whatsapp_hint": "Necesită un număr de telefon în profil.",
+      "push_unsupported": "Indisponibil pe acest browser.",
+      "push_denied": "Permisiune refuzată.",
+      "test": "Test",
+      "test_sent": "Notificare de test trimisă.",
+      "test_failed": "Testul nu a putut fi trimis.",
+      "scenarios_label": "Tipuri de alertă",
+      "scenario": {
+        "rain_windows": "Ploaie + geamuri deschise",
+        "freeze": "Îngheț / ninsoare / gheață",
+        "heat": "Val de căldură (35°C+)",
+        "hail": "Grindină / vânt puternic"
+      }
     }
   },
   "ingest": {
@@ -915,7 +937,9 @@
     "road_tax_title": "Impozit auto și ITP",
     "road_tax_body": "Estimează impozitul auto anual, urmărește data ITP-ului și nu mai rata niciun termen.",
     "road_reminders_title": "Reamintiri inteligente",
-    "road_reminders_body": "O singură cronologie pentru fiecare expirare — asigurare, rovinietă, ITP, impozit și viniete — cu alerte din timp, înainte să expire."
+    "road_reminders_body": "O singură cronologie pentru fiecare expirare — asigurare, rovinietă, ITP, impozit și viniete — cu alerte din timp, înainte să expire.",
+    "road_weather_title": "Garda meteo",
+    "road_weather_body": "Primești alerte când ploaia, înghețul, căldura sau furtunile îți amenință mașina parcată."
   },
   "aboutData": {
     "live": "Live",
@@ -1017,5 +1041,27 @@
     "issuer": "Emitent",
     "processing": "Se procesează...",
     "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat."
+  },
+  "notifications": {
+    "rain_windows": {
+      "title": "Ploaie și geamuri deschise",
+      "body": "Plouă lângă {name} și geamurile sunt deschise."
+    },
+    "freeze": {
+      "title": "Temperaturi sub zero",
+      "body": "Temperaturi sub zero la {name}. Consideră precondiționarea."
+    },
+    "heat": {
+      "title": "Val de căldură",
+      "body": "Temperaturi ridicate la {name}. Habitaclul se va încălzi."
+    },
+    "hail": {
+      "title": "Furtună puternică",
+      "body": "Furtună puternică la locația {name}."
+    },
+    "test": {
+      "title": "Notificare de test Flux",
+      "body": "Notificările push funcționează."
+    }
   }
 }
