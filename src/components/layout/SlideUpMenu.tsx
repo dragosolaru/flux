@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, Gamepad2, Info, MapPin, Receipt, Settings, X, Zap } from "lucide-react";
+import { BarChart3, FileText, Gamepad2, Info, MapPin, Receipt, Settings, X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, type ComponentType } from "react";
 
@@ -24,12 +24,13 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { href: "/insights",     labelKey: "nav.insights",     icon: BarChart3, capability: "VEHICLE" },
-  { href: "/costs",        labelKey: "nav.costs",        icon: Receipt,  capability: "VEHICLE" },
-  { href: "/energy",       labelKey: "nav.energy",       icon: Zap,      capability: "TARIFF" },
-  { href: "/charging-map", labelKey: "nav.charging_map", icon: MapPin,   capability: "NONE" },
-  { href: "/commands",     labelKey: "nav.commands",     icon: Gamepad2, capability: "COMMANDS" },
-  { href: "/settings",     labelKey: "nav.settings",     icon: Settings, capability: "NONE" },
-  { href: "/about-data",   labelKey: "nav.about",        icon: Info,     capability: "NONE" },
+  { href: "/documents",    labelKey: "nav.documents",    icon: FileText,  capability: "VEHICLE" },
+  { href: "/costs",        labelKey: "nav.costs",        icon: Receipt,   capability: "VEHICLE" },
+  { href: "/energy",       labelKey: "nav.energy",       icon: Zap,       capability: "TARIFF" },
+  { href: "/charging-map", labelKey: "nav.charging_map", icon: MapPin,    capability: "NONE" },
+  { href: "/commands",     labelKey: "nav.commands",     icon: Gamepad2,  capability: "COMMANDS" },
+  { href: "/settings",     labelKey: "nav.settings",     icon: Settings,  capability: "NONE" },
+  { href: "/about-data",   labelKey: "nav.about",        icon: Info,      capability: "NONE" },
 ];
 
 export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
