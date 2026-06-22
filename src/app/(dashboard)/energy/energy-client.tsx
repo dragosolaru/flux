@@ -12,7 +12,7 @@ import { PriceCurveChart } from "@/components/energy/PriceCurveChart";
 import { SmartChargeCard } from "@/components/energy/SmartChargeCard";
 import { DepartureCard } from "@/components/vehicle/DepartureCard";
 import * as tariffsApi from "@/lib/api/tariffs";
-import * as vehiclesApi from "@/lib/api/vehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, pageVariants } from "@/lib/animations/variants";
 import { Card, PageHeader } from "@/components/ui-kit";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
@@ -27,14 +27,11 @@ interface SettingsResponse {
   providers: { id: string; displayName: string }[];
 }
 
-interface VehicleItem {
-  id: string;
-}
-
 export function EnergyClient() {
   const t = useTranslations("energy");
   const qc = useQueryClient();
   const [departureOpen, setDepartureOpen] = useState(false);
+  const { selectedVehicleId } = useVehicleContext();
 
   const {
     data: forecast,
@@ -68,15 +65,9 @@ export function EnergyClient() {
     [switchMutation],
   );
 
-  const { data: vehicles } = useQuery({
-    queryKey: ["vehicles"],
-    queryFn: () => vehiclesApi.list<VehicleItem>(),
-    staleTime: 60_000,
-  });
-
   const currentHour = new Date().getHours();
   const currentPrice = forecast?.currentPrice;
-  const firstVehicleId = vehicles?.[0]?.id;
+  const firstVehicleId = selectedVehicleId;
 
   return (
     <FeatureGate capability="TARIFF">

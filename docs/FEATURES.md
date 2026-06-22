@@ -2169,3 +2169,28 @@ re-declaring inline queries with duplicate cache keys.
 - `src/lib/i18n/locales/*.json` — `documents` namespace + `nav.documents` in all 5 locales
 
 **Dependencies:** Anthropic Vision (Claude Sonnet), Supabase Storage, TanStack Query, next-intl.
+
+---
+
+## Global Vehicle Context
+
+**What:** A localStorage-persisted React context (`VehicleContext`) that replaces URL-param vehicle switching (`?v=vehicleId`). Single-vehicle users see only the car name (no dropdown). Multi-vehicle users get a compact dropdown in the TopBar, Sidebar, and mobile SlideUpMenu. The selected vehicle persists across page navigations and browser refreshes.
+
+**How to use:** No user action needed — the first active vehicle is automatically selected. Multi-vehicle users can switch via any of the three switchers. Selection persists to `localStorage["flux:selectedVehicleId"]`.
+
+**Key files:**
+- `src/contexts/vehicle.tsx` — `VehicleProvider`, `useVehicleContext()` hook
+- `src/app/(dashboard)/layout.tsx` — `VehicleProvider` wraps `{children}` in the dashboard layout
+- `src/components/layout/TopBar.tsx` — replaced URL-param `VehicleSwitcher` with context-based
+- `src/components/layout/Sidebar.tsx` — added `SidebarVehicleSwitcher` below the logo row
+- `src/components/layout/SlideUpMenu.tsx` — added `MobileVehicleSwitcher` above the menu grid
+- `src/app/(dashboard)/dashboard/dashboard-client.tsx` — reads `selectedVehicleId` from context
+- `src/app/(dashboard)/costs/costs-client.tsx` — reads `selectedVehicleId` from context
+- `src/app/(dashboard)/insights/insights-client.tsx` — reads `selectedVehicleId` from context
+- `src/app/(dashboard)/charging/charging-client.tsx` — reads `selectedVehicleId` from context
+- `src/app/(dashboard)/documents/documents-client.tsx` — reads `selectedVehicleId` from context; removed per-page vehicle pill selector
+- `src/app/(dashboard)/energy/energy-client.tsx` — reads `selectedVehicleId` from context for DepartureCard
+- `src/app/(dashboard)/trip/trip-client.tsx` — initializes vehicle dropdown default from context
+- `src/app/(dashboard)/map/map-client.tsx` — initializes vehicle dropdown default from context
+
+**Dependencies:** `useVehicles` hook (TanStack Query, `["vehicles"]` key), `localStorage`.

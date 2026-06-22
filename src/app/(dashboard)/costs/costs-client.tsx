@@ -32,6 +32,8 @@ import {
 import { useCosts } from "@/hooks/useCosts";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import {
@@ -41,12 +43,9 @@ import {
 } from "@/components/ui-kit";
 import type { CostAggregation, MonthlyBucket, Document } from "@/types/costs";
 import { cn } from "@/lib/utils";
+import { vehicleInboxAddress } from "@/lib/costs/vehicle-email";
 
-interface CostsClientProps {
-  vehicleId: string;
-  vehicleName: string;
-  vehicleEmail: string | null;
-}
+type CostsClientProps = Record<string, never>;
 
 interface CostsResponse extends CostAggregation {
   petrolEquivalentCostRon: number;
@@ -308,7 +307,14 @@ function TimelineDocList({ documents, onEdit, onDelete }: TimelineDocListProps) 
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function CostsClient({ vehicleId, vehicleName, vehicleEmail }: CostsClientProps) {
+export function CostsClient(_: CostsClientProps) {
+  const { selectedVehicleId } = useVehicleContext();
+  const { data: vehicles } = useVehicles();
+  const vehicleId = selectedVehicleId ?? "";
+  const vehicle = vehicles?.find((v) => v.id === vehicleId);
+  const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
+  const vehicleEmail = vehicleId ? vehicleInboxAddress(vehicleId) : null;
+
   const t = useTranslations("costs");
   const qc = useQueryClient();
   const { data: documents, isLoading: docsLoading } = useDocuments(vehicleId);

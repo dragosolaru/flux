@@ -19,6 +19,8 @@ import { useCosts } from "@/hooks/useCosts";
 import { useStats } from "@/hooks/useStats";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BatteryHealthPoint } from "@/app/api/vehicles/[vehicleId]/battery-health/route";
 import { useQuery } from "@tanstack/react-query";
@@ -371,12 +373,13 @@ function EfficiencySection({ vehicleId, from }: EfficiencySectionProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-interface InsightsClientProps {
-  vehicleId: string;
-  vehicleName: string;
-}
+export function InsightsClient() {
+  const { selectedVehicleId } = useVehicleContext();
+  const { data: vehicles } = useVehicles();
+  const vehicleId = selectedVehicleId ?? "";
+  const vehicle = vehicles?.find((v) => v.id === vehicleId);
+  const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
 
-export function InsightsClient({ vehicleId, vehicleName }: InsightsClientProps) {
   const t = useTranslations("insights");
   const [period, setPeriod] = useState<Period>("30d");
   const from = useMemo(() => periodFrom(period), [period]);

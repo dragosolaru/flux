@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -17,37 +16,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { FluxLogo } from "@/components/ui/FluxLogo";
 
 function VehicleSwitcher() {
   const { data: vehicles } = useVehicles();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const t = useTranslations("nav");
-  const currentId = searchParams.get("v");
+  const { selectedVehicleId, setSelectedVehicleId } = useVehicleContext();
 
   if (!vehicles || vehicles.length === 0) return null;
 
-  const current = vehicles.find((v: { id: string; nickname: string | null; displayName: string }) => v.id === currentId);
-  const label = current ? (current.nickname ?? current.displayName) : t("select_vehicle");
+  if (vehicles.length === 1) {
+    const v = vehicles[0];
+    return (
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Car className="size-3.5 shrink-0" />
+        <span className="truncate max-w-[140px] font-medium text-foreground">
+          {v.nickname ?? v.displayName}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex items-center">
       <Car className="pointer-events-none absolute left-2 size-3.5 text-muted-foreground" />
       <select
-        value={current ? currentId! : ""}
-        onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-          if (e.target.value) router.push(`/dashboard?v=${e.target.value}`);
-        }}
+        value={selectedVehicleId ?? ""}
+        onChange={(e) => { if (e.target.value) setSelectedVehicleId(e.target.value); }}
         className="h-8 max-w-[140px] cursor-pointer appearance-none rounded-full border-0 bg-muted/40 pl-7 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
-        aria-label={t("select_vehicle")}
-        title={label}
       >
-        {!current && <option value="">{t("select_vehicle")}</option>}
-        {vehicles.map((v: { id: string; nickname: string | null; displayName: string }) => (
-          <option key={v.id} value={v.id}>
-            {v.nickname ?? v.displayName}
-          </option>
+        {vehicles.map((v) => (
+          <option key={v.id} value={v.id}>{v.nickname ?? v.displayName}</option>
         ))}
       </select>
       <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />

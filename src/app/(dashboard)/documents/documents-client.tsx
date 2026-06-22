@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { useVehicles } from "@/hooks/useVehicles";
 import { useVaultDocuments } from "@/hooks/useVaultDocuments";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { apiFetch } from "@/lib/api-fetch";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -174,10 +174,7 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  const { data: vehicles, isLoading: vehiclesLoading } = useVehicles();
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(undefined);
-
-  const vehicleId = selectedVehicleId ?? vehicles?.[0]?.id;
+  const { selectedVehicleId: vehicleId } = useVehicleContext();
   const { data: docs, isLoading: docsLoading } = useVaultDocuments(vehicleId);
 
   async function handleUpload(file: File) {
@@ -204,8 +201,6 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
   function handleDelete() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
   }
-
-  const showVehicleSelector = (vehicles?.length ?? 0) > 1;
 
   return (
     <PageWrapper className="mx-auto max-w-2xl gap-4 pb-28">
@@ -235,25 +230,6 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
           }}
         />
       </div>
-
-      {showVehicleSelector && !vehiclesLoading && (
-        <div className="flex flex-wrap gap-2">
-          {vehicles?.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setSelectedVehicleId(v.id)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs transition-colors",
-                vehicleId === v.id
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/50",
-              )}
-            >
-              {v.nickname ?? v.displayName}
-            </button>
-          ))}
-        </div>
-      )}
 
       {docsLoading ? (
         <div className="space-y-3">

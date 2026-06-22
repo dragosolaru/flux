@@ -22,41 +22,24 @@ export interface ChargingSessionRow {
   location_name: string | null;
 }
 
-export default async function ChargingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ v?: string }>;
-}) {
+export default async function ChargingPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { v: vehicleId } = await searchParams;
-
   const supabase = createSupabaseAdminClient();
 
-  if (!vehicleId) {
-    const { data: first } = await supabase
-      .from("vehicles")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .eq("is_active", true)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (first) redirect(`/charging?v=${(first as { id: string }).id}`);
-    redirect("/garage");
-  }
-
-  const { data: vehicle } = await supabase
+  const { data: firstVehicle } = await supabase
     .from("vehicles")
     .select("id, display_name, nickname")
-    .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
-  if (!vehicle) redirect("/garage");
+  if (!firstVehicle) redirect("/garage");
+
+  const vehicle = firstVehicle as { id: string; display_name: string; nickname: string | null };
 
   const { data: history } = await supabase
     .from("charging_sessions")
@@ -69,9 +52,7 @@ export default async function ChargingPage({
 
   return (
     <ChargingClient
-      vehicleId={vehicle.id}
-      vehicleName={vehicle.nickname ?? vehicle.display_name}
-      history={(history ?? []) as ChargingSessionRow[]}
+      initialHistory={(history ?? []) as ChargingSessionRow[]}
     />
   );
 }
