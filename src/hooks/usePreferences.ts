@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { apiFetch } from "@/lib/api-fetch";
+import * as meApi from "@/lib/api/me";
 
 export interface UserPreferences {
   locale: string;
@@ -25,7 +25,7 @@ const DEFAULT_PREFS: UserPreferences = {
 export function usePreferences() {
   return useQuery<UserPreferences>({
     queryKey: ["me", "preferences"],
-    queryFn: () => apiFetch<UserPreferences>("/api/me/preferences"),
+    queryFn: () => meApi.preferences(),
     staleTime: 60_000,
     placeholderData: DEFAULT_PREFS,
   });
@@ -35,10 +35,7 @@ export function useUpdatePreferences() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (patch: Partial<UserPreferences>) =>
-      apiFetch<{ ok: true }>("/api/me/preferences", {
-        method: "PATCH",
-        body: JSON.stringify(patch),
-      }),
+      meApi.updatePreferences(patch),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["me", "preferences"] });
     },

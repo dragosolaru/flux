@@ -22,8 +22,8 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BatteryHealthPoint } from "@/app/api/vehicles/[vehicleId]/battery-health/route";
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-fetch";
-import type { MileagePeriod, TempBucket } from "@/app/api/vehicles/[vehicleId]/stats/route";
+import * as vehiclesApi from "@/lib/api/vehicles";
+import type { MileagePeriod, TempBucket } from "@/types/stats";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -243,7 +243,7 @@ function BatterySection({ vehicleId }: BatterySectionProps) {
   const { data: vehicleState } = useVehicle(vehicleId);
   const { data: history, isLoading } = useQuery<BatteryHealthPoint[]>({
     queryKey: ["battery-health", vehicleId],
-    queryFn: () => apiFetch<BatteryHealthPoint[]>(`/api/vehicles/${vehicleId}/battery-health`),
+    queryFn: () => vehiclesApi.getBatteryHealth<BatteryHealthPoint>(vehicleId),
     staleTime: 5 * 60_000,
   });
   const { data: stats } = useStats(vehicleId);

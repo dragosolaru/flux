@@ -12,12 +12,13 @@ import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearc
 import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
 import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { DesktopSidebar, StatStrip, type Stat } from "@/components/map/map-ui";
-import { apiFetch } from "@/lib/api-fetch";
+import * as chargersApi from "@/lib/api/chargers";
+import * as tripApi from "@/lib/api/trip";
+import * as vehiclesApi from "@/lib/api/vehicles";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
-import type { Charger } from "@/lib/chargers/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
@@ -191,15 +192,12 @@ export function TripClient() {
     setLoading(true);
     setError(null);
     try {
-      const result = await apiFetch<TripResponse>("/api/trip-plan", {
-        method: "POST",
-        body: JSON.stringify({
-          ...(vehicleId ? { vehicleId } : {}),
-          origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
-          startSoc,
-          arrivalSocPct: arrivalSoc,
-          destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
-        }),
+      const result = await tripApi.plan<TripResponse>({
+        ...(vehicleId ? { vehicleId } : {}),
+        origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
+        startSoc,
+        arrivalSocPct: arrivalSoc,
+        destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
       });
       addRecentDestination({ lat: destination.lat, lng: destination.lng, label: destination.name });
       setRecents(getRecentDestinations());
@@ -256,10 +254,7 @@ export function TripClient() {
   // All chargers near the corridor — same platform endpoint the station map uses.
   const { data: nearbyStations = [] } = useQuery({
     queryKey: ["trip-corridor-chargers", routeBBox],
-    queryFn: () =>
-      apiFetch<Charger[]>(
-        `/api/chargers?bbox=${routeBBox!.minLng},${routeBBox!.minLat},${routeBBox!.maxLng},${routeBBox!.maxLat}&limit=1000`,
-      ),
+    queryFn: () => chargersApi.inBBox(routeBBox!, { limit: 1000 }),
     enabled: routeBBox !== null && plan !== null,
     staleTime: 300_000,
   });
@@ -288,33 +283,18 @@ export function TripClient() {
         needsPreconditioning(firstStop.station.maxKw) &&
         !isSuperchargerNetwork(firstStop.station.networkId);
 
-      const navCmd = apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-        method: "POST",
-        body: JSON.stringify({
-          command: "share_navigation",
-          args: {
-            stops: activePlan.stops.map((s) => ({
-              lat: s.station.lat,
-              lng: s.station.lng,
-              name: s.station.name,
-            })),
-            destination: {
-              lat: destination.lat,
-              lng: destination.lng,
-              name: destination.name,
-            },
-          },
-        }),
-      });
-
-      const precondCmd = willPrecondition
-        ? apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-            method: "POST",
-            body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
-          })
-        : Promise.resolve();
-
-      await Promise.all([navCmd, precondCmd]);
+      await vehiclesApi.shareNavigation(
+        teslaVehicle.id,
+        {
+          destination: { lat: destination.lat, lng: destination.lng, name: destination.name },
+          stops: activePlan.stops.map((s) => ({
+            lat: s.station.lat,
+            lng: s.station.lng,
+            name: s.station.name,
+          })),
+        },
+        { precondition: willPrecondition },
+      );
       setSharedRoute(true);
       toast.success(willPrecondition ? t("share_success_preconditioned") : t("share_success"));
     } catch {

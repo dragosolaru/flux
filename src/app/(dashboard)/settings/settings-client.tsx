@@ -48,8 +48,9 @@ import { DangerZone } from "./danger-zone";
 import { TariffProviderPicker } from "./tariff-provider-picker";
 import { UpgradeButton } from "@/components/billing/UpgradeButton";
 import { ManageSubscriptionButton } from "@/components/billing/ManageSubscriptionButton";
-import { apiFetch } from "@/lib/api-fetch";
-import type { CapabilityContext } from "@/lib/capabilities";
+import * as vehiclesApi from "@/lib/api/vehicles";
+import * as tariffsApi from "@/lib/api/tariffs";
+import * as meApi from "@/lib/api/me";
 
 interface SettingsClientProps {
   userId: string;
@@ -92,7 +93,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
     isLoading: vehiclesLoading,
   } = useQuery({
     queryKey: ["vehicles", "all"],
-    queryFn: () => apiFetch<VehicleListItemWithActive[]>("/api/vehicles?include_inactive=true"),
+    queryFn: () => vehiclesApi.list<VehicleListItemWithActive>(true),
     staleTime: 60_000,
   });
 
@@ -101,7 +102,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
     isLoading: tariffLoading,
   } = useQuery({
     queryKey: ["tariff-settings"],
-    queryFn: () => apiFetch<TariffSettings>("/api/tariffs/settings"),
+    queryFn: () => tariffsApi.settings<TariffSettings>(),
     staleTime: 60_000,
   });
 
@@ -110,7 +111,7 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
     isLoading: capabilitiesLoading,
   } = useQuery({
     queryKey: ["capabilities"],
-    queryFn: () => apiFetch<CapabilityContext>("/api/me/capabilities"),
+    queryFn: () => meApi.capabilities(),
     staleTime: 60_000,
   });
 

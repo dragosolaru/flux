@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { apiFetch } from "@/lib/api-fetch";
+import * as vehiclesApi from "@/lib/api/vehicles";
 import { cn } from "@/lib/utils";
 
 const SCENARIOS = ["commuter", "weekend-errands", "road-trip", "vacation"] as const;
@@ -42,10 +42,7 @@ export function ScenarioPicker({ vehicleId, currentScenarioId, disabled }: Scena
     setSelected(next);
     startTransition(async () => {
       try {
-        await apiFetch(`/api/vehicles/${vehicleId}`, {
-          method: "PATCH",
-          body: JSON.stringify({ scenarioId: next }),
-        });
+        await vehiclesApi.update(vehicleId, { scenarioId: next });
         // Invalidate vehicle state so dashboard reflects new scenario immediately
         await qc.invalidateQueries({ queryKey: ["vehicle", vehicleId] });
         toast.success(tSettings("scenario.saved"));

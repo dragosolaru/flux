@@ -11,7 +11,8 @@ import { FeatureGate } from "@/components/layout/FeatureGate";
 import { PriceCurveChart } from "@/components/energy/PriceCurveChart";
 import { SmartChargeCard } from "@/components/energy/SmartChargeCard";
 import { DepartureCard } from "@/components/vehicle/DepartureCard";
-import { apiFetch } from "@/lib/api-fetch";
+import * as tariffsApi from "@/lib/api/tariffs";
+import * as vehiclesApi from "@/lib/api/vehicles";
 import { cardVariants, pageVariants } from "@/lib/animations/variants";
 import { Card, PageHeader } from "@/components/ui-kit";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
@@ -41,22 +42,19 @@ export function EnergyClient() {
     refetch,
   } = useQuery({
     queryKey: ["tariff-prices"],
-    queryFn: () => apiFetch<TariffResponse>("/api/tariffs/prices"),
+    queryFn: () => tariffsApi.prices<TariffResponse>(),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: settings, isLoading: sLoading } = useQuery({
     queryKey: ["tariff-settings"],
-    queryFn: () => apiFetch<SettingsResponse>("/api/tariffs/settings"),
+    queryFn: () => tariffsApi.settings<SettingsResponse>(),
     staleTime: 60 * 1000,
   });
 
   const switchMutation = useMutation({
     mutationFn: (providerId: string) =>
-      apiFetch<SettingsResponse>("/api/tariffs/settings", {
-        method: "PUT",
-        body: JSON.stringify({ providerId }),
-      }),
+      tariffsApi.updateSettings<SettingsResponse>(providerId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tariff-settings"] });
       qc.invalidateQueries({ queryKey: ["tariff-prices"] });
@@ -72,7 +70,7 @@ export function EnergyClient() {
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles"],
-    queryFn: () => apiFetch<VehicleItem[]>("/api/vehicles"),
+    queryFn: () => vehiclesApi.list<VehicleItem>(),
     staleTime: 60_000,
   });
 

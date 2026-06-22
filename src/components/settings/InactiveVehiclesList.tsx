@@ -16,7 +16,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api-fetch";
+import * as vehiclesApi from "@/lib/api/vehicles";
 
 interface InactiveVehicle {
   id: string;
@@ -48,10 +48,7 @@ export function InactiveVehiclesList({
   async function handleReactivate(vehicleId: string) {
     setPendingReactivate(vehicleId);
     try {
-      await apiFetch(`/api/vehicles/${vehicleId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_active: true }),
-      });
+      await vehiclesApi.update(vehicleId, { is_active: true });
       router.refresh();
     } catch {
       // Network error — UI unchanged; user can retry
@@ -64,7 +61,7 @@ export function InactiveVehiclesList({
     if (!pendingDelete) return;
     setIsSubmitting(true);
     try {
-      await apiFetch(`/api/vehicles/${pendingDelete}`, { method: "DELETE" });
+      await vehiclesApi.remove(pendingDelete);
       setPendingDelete(null);
       setDeleteChecked(false);
       router.refresh();

@@ -15,7 +15,7 @@ import { VehicleCardMenu } from "@/components/garage/VehicleCardMenu";
 import { Card, EmptyState, PageHeader, TAP } from "@/components/ui-kit";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
-import { apiFetch } from "@/lib/api-fetch";
+import * as tariffsApi from "@/lib/api/tariffs";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
@@ -135,7 +135,7 @@ export function GarageClient({ teslaLive }: { teslaLive: boolean }) {
 
   const { data: tariff } = useQuery({
     queryKey: ["tariff-prices"],
-    queryFn: () => apiFetch<TariffResponse>("/api/tariffs/prices"),
+    queryFn: () => tariffsApi.prices<TariffResponse>(),
     staleTime: 5 * 60 * 1000,
     enabled: Boolean(caps?.hasTariff),
   });

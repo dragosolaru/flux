@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-fetch";
+import * as vehiclesApi from "@/lib/api/vehicles";
 
 export interface VehicleListItem {
   id: string;
@@ -17,7 +17,7 @@ export interface VehicleListItem {
 export function useVehicles() {
   return useQuery({
     queryKey: ["vehicles"],
-    queryFn: () => apiFetch<VehicleListItem[]>("/api/vehicles"),
+    queryFn: () => vehiclesApi.list(),
     staleTime: 60_000,
   });
 }

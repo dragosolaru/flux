@@ -2099,3 +2099,47 @@ deep-links; non-EV/hybrid needs a paid EU VIN decoder (**vindecoder.eu** /
 - `docs/INTEGRATIONS-CAR-ADMIN.md` — full integration research & strategy
 
 **Dependencies:** none yet (roadmap copy + docs only).
+
+---
+
+## 35. Typed API client layer (`src/lib/api/`)
+
+**What:** All client-side HTTP calls are consolidated behind a thin typed API
+layer instead of scattering `apiFetch("/api/...")` strings across hooks and
+components. URL construction and request serialization (`JSON.stringify`) now
+live in one place per resource — changing a route or adding a header is a single
+edit. `apiFetch` (the low-level transport in `src/lib/api-fetch.ts`) is no longer
+imported anywhere outside `src/lib/api/`.
+
+**How to use:** Import the namespace for the resource and call its functions:
+```ts
+import * as vehiclesApi from "@/lib/api/vehicles";
+const vehicles = await vehiclesApi.list();
+await vehiclesApi.update(id, { is_active: false });
+await vehiclesApi.shareNavigation(id, { destination }, { precondition: true });
+```
+Hooks stay thin wrappers (`queryKey` + `staleTime` + `queryFn: () => vehiclesApi.list()`);
+all transport concerns moved into the api layer.
+
+**Send-to-Tesla unified:** The `share_navigation` + optional `precondition_max`
+sequence was duplicated verbatim in three files (charging map sheet, trip planner,
+unified map). It's now a single `vehiclesApi.shareNavigation(vehicleId, { destination, stops? }, { precondition })`
+helper — one place to change the command flow.
+
+**Key files:**
+- `src/lib/api/vehicles.ts` — list, getState, getStats, getBatteryHealth, update, remove, sendCommand, syncChargingHistory, shareNavigation
+- `src/lib/api/chargers.ts` — inBBox, search, stats
+- `src/lib/api/documents.ts` — list, upload (multipart), recover, update, remove
+- `src/lib/api/me.ts` — capabilities, preferences, updatePreferences
+- `src/lib/api/tariffs.ts` — prices, settings, updateSettings
+- `src/lib/api/costs.ts` — get, exchangeRates
+- `src/lib/api/trip.ts` — plan, reverseGeocode
+- `src/types/stats.ts` — `VehicleStatsResponse` (moved out of the stats route so hooks no longer import from a route file)
+
+**Migrated consumers:** all `src/hooks/*` data hooks, settings/garage components,
+`ChargerDetailSheet`, and the `charging-map` / `trip` / `map` / `energy` /
+`settings` / `insights` page clients. `MockGlobalBanner` and `SmartChargeCard`
+now consume the shared `useVehicles()` / `useVehicle()` hooks instead of
+re-declaring inline queries with duplicate cache keys.
+
+**Dependencies:** none new — wraps the existing `apiFetch` and TanStack Query.

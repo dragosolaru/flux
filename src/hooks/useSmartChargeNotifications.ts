@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { apiFetch } from "@/lib/api-fetch";
+import * as tariffsApi from "@/lib/api/tariffs";
 import { useVehicle } from "@/hooks/useVehicle";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 
@@ -18,7 +18,7 @@ export function useSmartChargeNotifications(vehicleId: string) {
 
   const { data: forecast } = useQuery({
     queryKey: ["tariff-prices"],
-    queryFn: () => apiFetch<TariffResponse>("/api/tariffs/prices"),
+    queryFn: () => tariffsApi.prices<TariffResponse>(),
     staleTime: 5 * 60 * 1000,
     // Only fetch when vehicle is plugged and not already at limit
     enabled:

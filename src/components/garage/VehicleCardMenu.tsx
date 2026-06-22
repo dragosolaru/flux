@@ -21,7 +21,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { apiFetch } from "@/lib/api-fetch";
+import * as vehiclesApi from "@/lib/api/vehicles";
 
 interface VehicleCardMenuProps {
   vehicleId: string;
@@ -38,10 +38,7 @@ export function VehicleCardMenu({ vehicleId, vehicleName: _vehicleName, onDeacti
   async function handleDeactivate() {
     setIsPending(true);
     try {
-      await apiFetch(`/api/vehicles/${vehicleId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_active: false }),
-      });
+      await vehiclesApi.update(vehicleId, { is_active: false });
       setConfirmOpen(false);
       onDeactivated();
     } catch {
