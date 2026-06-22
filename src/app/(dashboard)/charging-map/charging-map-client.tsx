@@ -6,7 +6,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { List, SlidersHorizontal } from "lucide-react";
 
-import { apiFetch } from "@/lib/api-fetch";
+import * as chargersApi from "@/lib/api/chargers";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
 import { StationListSheet } from "@/components/charging-map/StationListSheet";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
@@ -130,15 +130,7 @@ export function ChargingMapClient() {
       minKw,
       connector,
     ],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        bbox: `${area.minLng},${area.minLat},${area.maxLng},${area.maxLat}`,
-        limit: "2000",
-      });
-      if (minKw > 0) params.set("minKw", String(minKw));
-      if (connector !== "all") params.set("connector", connector);
-      return apiFetch<Charger[]>(`/api/chargers?${params}`);
-    },
+    queryFn: () => chargersApi.inBBox(area, { minKw, connector }),
     staleTime: 300_000,
     placeholderData: keepPreviousData,
   });
@@ -172,10 +164,7 @@ export function ChargingMapClient() {
   const debouncedSearch = useDebounced(searchInput, 350);
   const { data: searchResults = [], isFetching: searching } = useQuery({
     queryKey: ["chargers-search", debouncedSearch],
-    queryFn: () =>
-      apiFetch<Charger[]>(
-        `/api/chargers/search?q=${encodeURIComponent(debouncedSearch)}&limit=50`,
-      ),
+    queryFn: () => chargersApi.search(debouncedSearch),
     enabled: debouncedSearch.trim().length >= 2,
     staleTime: 300_000,
   });

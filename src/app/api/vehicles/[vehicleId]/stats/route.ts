@@ -2,31 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-
-export interface TempBucket {
-  label: string;
-  avgWhPerKm: number;
-  count: number;
-}
-
-export interface MileagePeriod {
-  period: string;
-  km: number;
-}
-
-export interface VehicleStatsResponse {
-  totalDrivingKm: number;
-  totalDrivingH: number;
-  tripCount: number;
-  avgTripKm: number | null;
-  totalChargingH: number;
-  totalEnergyAddedKwh: number;
-  chargingSessionCount: number;
-  avgWhPerKm: number | null;
-  efficiencyByTemp: TempBucket[];
-  vampireDrainPctPerH: number | null;
-  mileageByMonth: MileagePeriod[];
-}
+import type { TempBucket, MileagePeriod, VehicleStatsResponse } from "@/types/stats";
 
 const TEMP_BUCKETS = [
   { label: "<0°C", min: -Infinity, max: 0 },

@@ -4,13 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 
-import { apiFetch } from "@/lib/api-fetch";
-
-interface ChargerStats {
-  totalChargers: number;
-  fastChargers: number;
-  lastRefresh: string | null;
-}
+import * as chargersApi from "@/lib/api/chargers";
 
 export function ChargerHealthCard() {
   const t = useTranslations("settings.charger");
@@ -18,7 +12,7 @@ export function ChargerHealthCard() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["charger-stats"],
-    queryFn: () => apiFetch<ChargerStats>("/api/chargers/stats"),
+    queryFn: () => chargersApi.stats(),
     staleTime: 300_000,
   });
 

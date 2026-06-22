@@ -30,7 +30,9 @@ import { SegmentedControl, DesktopSidebar, LIST_ROW, SECTION_TITLE } from "@/com
 import { Compass } from "lucide-react";
 import { StationDetailSheet } from "@/components/trip/StationDetailSheet";
 import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet";
-import { apiFetch } from "@/lib/api-fetch";
+import * as chargersApi from "@/lib/api/chargers";
+import * as tripApi from "@/lib/api/trip";
+import * as vehiclesApi from "@/lib/api/vehicles";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
@@ -89,14 +91,6 @@ function visibleViewportHeight(): number {
 // ---------------------------------------------------------------------------
 // Trip helper
 // ---------------------------------------------------------------------------
-
-async function reverseGeocode(lat: number, lon: number): Promise<string> {
-  const res = await apiFetch<{ name: string | null }>(
-    `/api/geocode?reverse=1&lat=${lat}&lon=${lon}`
-  );
-  if (!res.name) throw new Error("reverse geocode failed");
-  return res.name;
-}
 
 interface VariantLabel {
   key: "fastest" | "fewest_stops" | "cheapest";
@@ -240,15 +234,7 @@ export function MapClient() {
       minKw,
       connector,
     ],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        bbox: `${exploreArea.minLng},${exploreArea.minLat},${exploreArea.maxLng},${exploreArea.maxLat}`,
-        limit: "2000",
-      });
-      if (minKw > 0) params.set("minKw", String(minKw));
-      if (connector !== "all") params.set("connector", connector);
-      return apiFetch<Charger[]>(`/api/chargers?${params}`);
-    },
+    queryFn: () => chargersApi.inBBox(exploreArea, { minKw, connector }),
     staleTime: 300_000,
     placeholderData: keepPreviousData,
     enabled: mode === "explore",
@@ -302,7 +288,7 @@ export function MapClient() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const name = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+          const name = await tripApi.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
           setOrigin({ name, lat: pos.coords.latitude, lng: pos.coords.longitude });
         } catch {
           toast.error(tTrip("use_my_location"));
@@ -323,15 +309,12 @@ export function MapClient() {
     setLoading(true);
     setPlanError(null);
     try {
-      const result = await apiFetch<TripResponse>("/api/trip-plan", {
-        method: "POST",
-        body: JSON.stringify({
-          ...(vehicleId ? { vehicleId } : {}),
-          origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
-          startSoc,
-          arrivalSocPct: arrivalSoc,
-          destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
-        }),
+      const result = await tripApi.plan<TripResponse>({
+        ...(vehicleId ? { vehicleId } : {}),
+        origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
+        startSoc,
+        arrivalSocPct: arrivalSoc,
+        destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
       });
       setPlan(result);
       setActiveVariant(0);
@@ -389,28 +372,18 @@ export function MapClient() {
         needsPreconditioning(firstStop.station.maxKw) &&
         !isSuperchargerNetwork(firstStop.station.networkId);
 
-      const navCmd = apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-        method: "POST",
-        body: JSON.stringify({
-          command: "share_navigation",
-          args: {
-            stops: activePlan.stops.map((s) => ({
-              lat: s.station.lat,
-              lng: s.station.lng,
-              name: s.station.name,
-            })),
-            destination: { lat: destination.lat, lng: destination.lng, name: destination.name },
-          },
-        }),
-      });
-      const precondCmd = willPrecondition
-        ? apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-            method: "POST",
-            body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
-          })
-        : Promise.resolve();
-
-      await Promise.all([navCmd, precondCmd]);
+      await vehiclesApi.shareNavigation(
+        teslaVehicle.id,
+        {
+          destination: { lat: destination.lat, lng: destination.lng, name: destination.name },
+          stops: activePlan.stops.map((s) => ({
+            lat: s.station.lat,
+            lng: s.station.lng,
+            name: s.station.name,
+          })),
+        },
+        { precondition: willPrecondition },
+      );
       setSharedRoute(true);
       toast.success(willPrecondition ? tTrip("share_success_preconditioned") : tTrip("share_success"));
     } catch {

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { ChevronDown } from "lucide-react";
-import { apiFetch } from "@/lib/api-fetch";
+import * as tariffsApi from "@/lib/api/tariffs";
 
 interface TariffProviderPickerProps {
   activeProvider: string;
@@ -24,10 +24,7 @@ export function TariffProviderPicker({ activeProvider, providers }: TariffProvid
     const providerId = e.target.value;
     setSelected(providerId);
     try {
-      await apiFetch("/api/tariffs/settings", {
-        method: "PUT",
-        body: JSON.stringify({ providerId }),
-      });
+      await tariffsApi.updateSettings(providerId);
       startTransition(() => router.refresh());
       toast.success(t("updated"));
     } catch {

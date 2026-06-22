@@ -4,11 +4,9 @@ import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { apiFetch } from "@/lib/api-fetch";
-import type { VehicleListItem } from "@/hooks/useVehicles";
+import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 
 const DISMISSED_KEY = "flux:mock-banner-dismissed";
 
@@ -21,11 +19,7 @@ export function MockGlobalBanner() {
     () => typeof window !== "undefined" && sessionStorage.getItem(DISMISSED_KEY) === "1",
   );
 
-  const { data: vehicles } = useQuery({
-    queryKey: ["vehicles"],
-    queryFn: () => apiFetch<VehicleListItem[]>("/api/vehicles"),
-    staleTime: 60_000,
-  });
+  const { data: vehicles } = useVehicles();
 
   const allMock =
     vehicles != null &&

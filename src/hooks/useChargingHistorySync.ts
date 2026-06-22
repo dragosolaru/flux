@@ -1,15 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-fetch";
-
-interface SyncResult { synced: number; total: number }
+import * as vehiclesApi from "@/lib/api/vehicles";
 
 export function useChargingHistorySync(vehicleId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiFetch<SyncResult>(`/api/vehicles/${vehicleId}/charging-history`, {
-        method: "POST",
-      }),
+    mutationFn: () => vehiclesApi.syncChargingHistory(vehicleId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["charging-sessions", vehicleId] });
     },

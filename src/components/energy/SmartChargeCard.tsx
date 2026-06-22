@@ -1,7 +1,6 @@
 "use client";
 
 import { CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
@@ -13,16 +12,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { GlassCard } from "@/components/ui/glass-card";
-import { apiFetch } from "@/lib/api-fetch";
 import { computeSmartCharge } from "@/lib/external/tariffs/recommend";
 import { getModelSpec } from "@/lib/brands/models";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useVehicle } from "@/hooks/useVehicle";
+import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { cardVariants } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
-import type { VehicleListItem } from "@/hooks/useVehicles";
-import type { VehicleState } from "@/types/vehicle";
 import type { BrandKey } from "@/lib/brands/types";
 
 interface SmartChargeCardProps {
@@ -45,11 +43,7 @@ function VehicleRecommendation({
 
   const hasCommandsReady = caps?.hasCommandsReady ?? false;
 
-  const { data: state } = useQuery({
-    queryKey: ["vehicle", vehicle.id],
-    queryFn: () => apiFetch<VehicleState>(`/api/vehicles/${vehicle.id}/state`),
-    staleTime: 30_000,
-  });
+  const { data: state } = useVehicle(vehicle.id);
 
   if (!state) return null;
 
@@ -177,11 +171,7 @@ export function SmartChargeCard({
   isLoading = false,
 }: SmartChargeCardProps) {
   const t = useTranslations("energy");
-  const { data: vehicles } = useQuery({
-    queryKey: ["vehicles"],
-    queryFn: () => apiFetch<VehicleListItem[]>("/api/vehicles"),
-    staleTime: 60_000,
-  });
+  const { data: vehicles } = useVehicles();
 
   return (
     <motion.div variants={cardVariants}>

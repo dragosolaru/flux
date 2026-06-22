@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import type { Charger } from "@/lib/chargers/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useVehicles } from "@/hooks/useVehicles";
-import { apiFetch } from "@/lib/api-fetch";
+import * as vehiclesApi from "@/lib/api/vehicles";
 
 interface ChargerDetailSheetProps {
   charger: Charger;
@@ -79,21 +79,11 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
       const willPrecondition =
         (charger.maxPowerKw ?? 0) >= PRECONDITION_MIN_KW && !isSupercharger;
 
-      const nav = apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-        method: "POST",
-        body: JSON.stringify({
-          command: "share_navigation",
-          args: { destination: { lat: charger.lat, lng: charger.lng, name: displayName } },
-        }),
-      });
-      const precond = willPrecondition
-        ? apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
-            method: "POST",
-            body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
-          })
-        : Promise.resolve();
-
-      await Promise.all([nav, precond]);
+      await vehiclesApi.shareNavigation(
+        teslaVehicle.id,
+        { destination: { lat: charger.lat, lng: charger.lng, name: displayName } },
+        { precondition: willPrecondition },
+      );
       toast.success(
         willPrecondition ? t("send_to_car_preconditioned") : t("send_to_car_success"),
       );

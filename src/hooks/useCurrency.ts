@@ -3,15 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { apiFetch } from "@/lib/api-fetch";
-import { formatMoney, type Currency } from "@/lib/currency/format";
+import * as costsApi from "@/lib/api/costs";
+import { formatMoney } from "@/lib/currency/format";
 import type { Locale } from "@/lib/i18n/config";
-
-interface ExchangeRates {
-  display: Currency;
-  ronPerEur: number;
-  ronPerDisplay: number;
-}
 
 /**
  * Display-layer currency conversion. Amounts stay canonical in storage and
@@ -23,9 +17,9 @@ interface ExchangeRates {
  */
 export function useCurrency() {
   const locale = useLocale() as Locale;
-  const { data } = useQuery<ExchangeRates>({
+  const { data } = useQuery({
     queryKey: ["exchange-rates"],
-    queryFn: () => apiFetch<ExchangeRates>("/api/exchange-rates"),
+    queryFn: () => costsApi.exchangeRates(),
     staleTime: 3_600_000,
     gcTime: 3_600_000,
     retry: 1,
