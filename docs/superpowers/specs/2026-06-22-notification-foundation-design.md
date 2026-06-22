@@ -232,19 +232,30 @@ interface Alert {
 
 function evaluateAlerts(
   vehicle: VehicleState,
-  weather: WeatherData,
+  weather: WeatherSnapshot,
   prefs: NotificationPreferences,
 ): Alert[]
 ```
 
+> **Implementation note:** The project's weather provider returns
+> `WeatherSnapshot` (`@/lib/external/weather/types`) — `tempC`, `windSpeedMs`,
+> `precipMmH`, `conditionLabel`, etc. There are **no WMO codes**, so the
+> evaluators below key off precipitation, temperature, wind speed (m/s), and the
+> condition label string. The engine also only fires when the vehicle is
+> stationary (`motionState` ∈ `parked | charging | plugged-idle`).
+>
+> Alerts return i18n **keys + params** (not literal copy). The cron dispatcher
+> localises them per user via `translateNotification(locale, key, params)`
+> against the `notifications` namespace in each locale file.
+
 **Evaluators:**
 
-| Type | Condition | Message (RO) |
-|------|-----------|-------------|
-| `rain_windows` | WMO codes 51–67 or 80–82 AND any `windowsOpen.*` is `true`. Skipped silently if `windowsOpen === null` (live Tesla today; follow-up task maps live window state). | "Plouă lângă {name} și geamurile sunt deschise." |
-| `freeze` | `exteriorTempC ≤ 0` OR WMO codes 71–77 (snow/freezing) | "Temperaturi sub zero la {name}. Consideră precondiționarea." |
-| `heat` | `exteriorTempC ≥ 35` | "Val de căldură la {name}. Habitaclul se va încălzi." |
-| `hail` | WMO codes 96–99 OR `windSpeedKmh ≥ 80` | "Furtună puternică la locația {name}." |
+| Type | Condition | Copy key |
+|------|-----------|----------|
+| `rain_windows` | `precipMmH > 0.1` AND any `windowsOpen.*` is `true`. Skipped silently if `windowsOpen === null` (live Tesla today; follow-up task maps live window state). | `notifications.rain_windows.*` |
+| `freeze` | `tempC ≤ 0` OR `conditionLabel` contains snow/ice/sleet | `notifications.freeze.*` |
+| `heat` | `tempC ≥ 35` | `notifications.heat.*` |
+| `hail` | `conditionLabel` contains hail/thunder/storm OR `windSpeedMs ≥ 22` (~80 km/h) | `notifications.hail.*` |
 
 Each evaluator only runs if the corresponding `prefs.notify_*` flag is true.
 
@@ -328,11 +339,17 @@ Tipuri de alertă:  [only shown if ≥1 channel enabled]
 
 ## 11. Dependencies
 
-| Package | Purpose | Already installed |
-|---------|---------|------------------|
-| `web-push` | VAPID push notifications | No — add |
-| `resend` | Transactional email | No — add |
-| `twilio` | WhatsApp outbound | Partial (inbound uses REST calls, no SDK) — add SDK or keep REST |
+| Package | Purpose | Status |
+|---------|---------|--------|
+| `web-push` + `@types/web-push` | VAPID push notifications | **Installed** — only new dependency |
+| Resend | Transactional email | No SDK — called via REST (`fetch`) to keep deps minimal |
+| Twilio | WhatsApp outbound | No SDK — called via REST (`fetch`), reuses existing credentials |
+
+**Feature flag:** The entire feature ships behind `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`
+(`src/lib/feature-flags.ts` → `isNotificationsEnabled()`). When unset/false: the
+settings card is hidden, every notification API route returns 404, and the
+poll-vehicles cron no-ops. The landing-page roadmap entry ("Weather Guardian")
+stays visible regardless, as a "coming soon" announcement.
 
 ---
 

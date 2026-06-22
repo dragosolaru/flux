@@ -1,4 +1,4 @@
-export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload";
+export type DocumentSource = "upload" | "email" | "whatsapp";
 export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
