@@ -91,44 +91,43 @@ function clusterIcon(cluster: { getChildCount: () => number }): L.DivIcon {
 
 // ---------------------------------------------------------------------------
 // Auto-fit: when the first batch of stations loads, fit the map bounds so all
-// markers are visible. After that the user controls the viewport freely.
+// markers are visible. Disabled once we have the user's location — fitting to
+// every station in a ~100 km bbox would zoom out and bury the "you are here"
+// dot, which is exactly the disorientation we want to avoid.
 // ---------------------------------------------------------------------------
-function FitStations({ stations }: { stations: Charger[] }) {
+function FitStations({ stations, enabled }: { stations: Charger[]; enabled: boolean }) {
   const map = useMap();
   const prevCount = useRef(0);
 
   useEffect(() => {
     const prev = prevCount.current;
     prevCount.current = stations.length;
+    if (!enabled) return;
     if (prev === 0 && stations.length > 0) {
       const bounds = L.latLngBounds(stations.map((s) => [s.lat, s.lng] as [number, number]));
       if (bounds.isValid()) {
         map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
       }
     }
-  }, [stations, map]);
+  }, [stations, map, enabled]);
 
   return null;
 }
 
 // ---------------------------------------------------------------------------
-// SetView: pan to the user's resolved location ONCE. Does not override user
-// zoom or any subsequent map interactions.
+// CenterOnUser: as soon as the user's location resolves, centre on it ONCE at
+// a city-level zoom that keeps the "you are here" dot in view. Runs once, so it
+// never fights subsequent panning, the locate button, or list selection.
 // ---------------------------------------------------------------------------
-interface CentreProps {
-  centre: { lat: number; lng: number };
-}
-
-function SetView({ centre }: CentreProps) {
+function CenterOnUser({ userLocation }: { userLocation: { lat: number; lng: number } | null }) {
   const map = useMap();
-  const centred = useRef(false);
+  const done = useRef(false);
 
   useEffect(() => {
-    if (centred.current) return;
-    // Pan without changing zoom so FitStations can choose the right zoom.
-    map.panTo([centre.lat, centre.lng]);
-    centred.current = true;
-  }, [centre.lat, centre.lng, map]);
+    if (done.current || !userLocation) return;
+    map.setView([userLocation.lat, userLocation.lng], 12);
+    done.current = true;
+  }, [userLocation, map]);
 
   return null;
 }
@@ -333,8 +332,8 @@ export default function StationMap({
         maxZoom={20}
       />
 
-      <SetView centre={center} />
-      <FitStations stations={stations} />
+      <CenterOnUser userLocation={userLocation ?? null} />
+      <FitStations stations={stations} enabled={!userLocation} />
       {onAreaChange && <MoveWatcher onAreaChange={onAreaChange} />}
 
       <LocationButton

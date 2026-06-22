@@ -623,7 +623,12 @@
     "distance_km": "{km} km-re",
     "distance_m": "{m} m-re",
     "directions": "Útvonal",
-    "address_unknown": "A cím nem érhető el"
+    "address_unknown": "A cím nem érhető el",
+    "send_to_car": "Küldés az autóba",
+    "send_to_car_success": "Elküldve az autóba",
+    "send_to_car_preconditioned": "Elküldve — az autó idenavigál és előfűti az akkumulátort",
+    "send_to_car_error": "Nem sikerült elküldeni az autóba",
+    "sending": "Küldés…"
   },
   "auth": {
     "title_login": "Üdv újra",

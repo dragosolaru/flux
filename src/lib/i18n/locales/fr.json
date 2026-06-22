@@ -623,7 +623,12 @@
     "distance_km": "à {km} km",
     "distance_m": "à {m} m",
     "directions": "Itinéraire",
-    "address_unknown": "Adresse indisponible"
+    "address_unknown": "Adresse indisponible",
+    "send_to_car": "Envoyer à la voiture",
+    "send_to_car_success": "Envoyé à votre voiture",
+    "send_to_car_preconditioned": "Envoyé — votre voiture va y naviguer et préconditionner la batterie",
+    "send_to_car_error": "Impossible d’envoyer à votre voiture",
+    "sending": "Envoi…"
   },
   "auth": {
     "title_login": "Bon retour",
