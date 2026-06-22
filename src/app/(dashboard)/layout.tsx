@@ -35,6 +35,6 @@ export default async function DashboardLayout({
         <BottomNav />
         <InstallPrompt />
       </div>
-    </VehicleProvider>
+    </div>
   );
 }
