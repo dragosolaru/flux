@@ -6,6 +6,7 @@ import {
   BarChart3,
   BatteryCharging,
   Car,
+  ChevronDown,
   FileText,
   Gamepad2,
   Info,
@@ -22,6 +23,8 @@ import type { ComponentType } from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCapabilities } from "@/hooks/useCapabilities";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { checkCapability, type Capability } from "@/lib/capabilities";
 import { cn } from "@/lib/utils";
 
@@ -81,6 +84,40 @@ function tooltipKeyFor(missing: Capability): string {
   }
 }
 
+function SidebarVehicleSwitcher() {
+  const { data: vehicles } = useVehicles();
+  const { selectedVehicleId, setSelectedVehicleId } = useVehicleContext();
+
+  if (!vehicles || vehicles.length === 0) return null;
+
+  if (vehicles.length === 1) {
+    return (
+      <div className="flex items-center gap-2 border-b px-5 py-2.5">
+        <Car className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="truncate text-sm font-medium">{vehicles[0].nickname ?? vehicles[0].displayName}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-b px-3 py-2">
+      <div className="relative">
+        <Car className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <select
+          value={selectedVehicleId ?? ""}
+          onChange={(e) => { if (e.target.value) setSelectedVehicleId(e.target.value); }}
+          className="w-full cursor-pointer appearance-none rounded-lg border-0 bg-muted/40 py-1.5 pl-8 pr-6 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {vehicles.map((v) => (
+            <option key={v.id} value={v.id}>{v.nickname ?? v.displayName}</option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      </div>
+    </div>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const t = useTranslations();
@@ -134,6 +171,8 @@ export function Sidebar() {
             DAO Lab
           </div>
         </div>
+
+        <SidebarVehicleSwitcher />
 
         <nav className="flex-1 space-y-5 overflow-y-auto p-3">
           {SECTIONS.map((section) => (

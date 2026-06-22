@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   BatteryCharging,
   Fan,
-  History,
   Loader2,
   Lock,
   MapPin,
@@ -23,31 +22,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
-import { Card, ListRow, SectionHeader, StatTile, TAP } from "@/components/ui-kit";
+import { Card, ListRow, TAP } from "@/components/ui-kit";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BrandKey } from "@/lib/brands/types";
 import { mockLocationLabel } from "@/lib/mock/location-label";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 
-interface LastCharge {
-  endedAt: string;
-  energyKwh: number | null;
-  startSoc: number | null;
-  endSoc: number | null;
-}
-
 interface DashboardClientProps {
-  vehicleId: string;
-  vehicleName: string;
-  brand: BrandKey;
-  model?: string;
   checklist: ChecklistData;
-  lastCharge?: LastCharge;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -191,7 +180,7 @@ interface ChipData {
   label: string;
 }
 
-function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | undefined; isLoading: boolean; lastCharge?: LastCharge }) {
+function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLoading: boolean }) {
   const td = useTranslations("dashboard");
 
   if (isLoading) {
@@ -250,16 +239,6 @@ function StatChips({ state, isLoading, lastCharge }: { state: VehicleState | und
           icon: <RefreshCw className="size-4 text-muted-foreground" />,
           value: formatRelativeTime(state.lastSeenAt, td),
           label: td("chip_last_seen"),
-        }
-      : null,
-    lastCharge
-      ? {
-          key: "lastcharge",
-          icon: <History className="size-4 text-chart-2" />,
-          value: lastCharge.energyKwh != null
-            ? `+${lastCharge.energyKwh.toFixed(1)} kWh`
-            : formatRelativeTime(lastCharge.endedAt, td),
-          label: td("chip_last_charge"),
         }
       : null,
   ].filter(Boolean) as ChipData[];
@@ -363,7 +342,7 @@ function QuickActions({
       active: state?.chargingState === "charging",
       inFlight: false,
       disabled: false,
-      href: `/charging?v=${vehicleId}`,
+      href: `/charging`,
     },
   ].filter(Boolean) as {
     key: string;
@@ -411,44 +390,10 @@ function QuickActions({
 }
 
 // --------------------------------------------------------------------------
-// Recent charge card — start/end SOC + duration
-// --------------------------------------------------------------------------
-function RecentChargeCard({ lastCharge }: { lastCharge: LastCharge }) {
-  const td = useTranslations("dashboard");
-  const fmtSoc = (v: number | null) => (typeof v === "number" ? `${Math.round(v)}%` : "—");
-
-  return (
-    <div className="space-y-2">
-      <SectionHeader title={td("chip_last_charge")} icon={History} />
-      <Card variant="surface" className="p-3">
-        <div className="grid grid-cols-3 gap-2">
-          <StatTile value={fmtSoc(lastCharge.startSoc)} label={td("chip_last_charge")} />
-          <StatTile
-            value={fmtSoc(lastCharge.endSoc)}
-            label={td("charging_active")}
-            accent="text-chart-2"
-          />
-          <StatTile
-            value={
-              lastCharge.energyKwh != null
-                ? `${lastCharge.energyKwh.toFixed(1)}`
-                : formatRelativeTime(lastCharge.endedAt, td)
-            }
-            label={td("chip_last_charge")}
-          />
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// --------------------------------------------------------------------------
 // Charging overlay card — clamps/rounds battery to [0,100] (guard preserved)
 // --------------------------------------------------------------------------
 function ChargingOverlayCard({ state }: { state: VehicleState }) {
   const td = useTranslations("dashboard");
-  // Clamp + round defensively — a corrupted JSONB battery value (e.g. a
-  // stringified concatenation) must never render raw into the UI.
   const clampSoc = (v: number | null | undefined): number =>
     typeof v === "number" && Number.isFinite(v) ? Math.min(100, Math.max(0, Math.round(v))) : 0;
   const soc = clampSoc(state.batteryLevel);
@@ -488,7 +433,14 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, checklist, lastCharge }: DashboardClientProps) {
+export function DashboardClient({ checklist }: DashboardClientProps) {
+  const { selectedVehicleId } = useVehicleContext();
+  const { data: vehicles } = useVehicles();
+  const vehicle = vehicles?.find((v) => v.id === selectedVehicleId);
+  const vehicleId = selectedVehicleId ?? "";
+  const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
+  const brand = (vehicle?.brand ?? "tesla") as BrandKey;
+
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
   const td = useTranslations("dashboard");
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
@@ -521,6 +473,15 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
   }, [data]);
 
   const showLocation = data?.latitude != null && data?.longitude != null;
+
+  if (!vehicleId) {
+    return (
+      <PageWrapper className="relative mx-auto max-w-xl gap-2.5 px-0">
+        <OnboardingOverlay />
+        <GettingStartedCard data={checklist} />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper className="relative mx-auto max-w-xl gap-2.5 px-0">
@@ -570,11 +531,7 @@ export function DashboardClient({ vehicleId, vehicleName, brand, model: _model, 
             <ChargingOverlayCard state={data} />
           )}
 
-          <StatChips state={data} isLoading={isLoading} lastCharge={lastCharge} />
-
-          {lastCharge && data?.chargingState !== "charging" && (
-            <RecentChargeCard lastCharge={lastCharge} />
-          )}
+          <StatChips state={data} isLoading={isLoading} />
 
           {showLocation && data && (
             <ListRow

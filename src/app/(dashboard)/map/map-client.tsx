@@ -34,6 +34,7 @@ import * as chargersApi from "@/lib/api/chargers";
 import * as tripApi from "@/lib/api/trip";
 import * as vehiclesApi from "@/lib/api/vehicles";
 import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
@@ -242,7 +243,8 @@ export function MapClient() {
 
   // ---- Plan mode state ----
   const { data: vehicles } = useVehicles();
-  const [vehicleId, setVehicleId] = useState("");
+  const { selectedVehicleId } = useVehicleContext();
+  const [vehicleId, setVehicleId] = useState(() => selectedVehicleId ?? "");
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);
   const [startSoc, setStartSoc] = useState(80);

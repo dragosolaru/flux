@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, FileText, Gamepad2, Info, MapPin, Receipt, Settings, X, Zap } from "lucide-react";
+import { BarChart3, Car, ChevronDown, FileText, Gamepad2, Info, MapPin, Receipt, Settings, X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, type ComponentType } from "react";
 
 import { useCapabilities } from "@/hooks/useCapabilities";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { checkCapability, type Capability } from "@/lib/capabilities";
 import { slideUp } from "@/lib/animations/variants";
 
@@ -32,6 +34,36 @@ const MENU_ITEMS: MenuItem[] = [
   { href: "/settings",     labelKey: "nav.settings",     icon: Settings,  capability: "NONE" },
   { href: "/about-data",   labelKey: "nav.about",        icon: Info,      capability: "NONE" },
 ];
+
+function MobileVehicleSwitcher({ onClose }: { onClose: () => void }) {
+  const { data: vehicles } = useVehicles();
+  const { selectedVehicleId, setSelectedVehicleId } = useVehicleContext();
+
+  if (!vehicles || vehicles.length <= 1) return null;
+
+  return (
+    <div className="px-3 pb-3">
+      <div className="relative">
+        <Car className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <select
+          value={selectedVehicleId ?? ""}
+          onChange={(e) => {
+            if (e.target.value) {
+              setSelectedVehicleId(e.target.value);
+              onClose();
+            }
+          }}
+          className="w-full cursor-pointer appearance-none rounded-xl bg-muted/40 py-3 pl-9 pr-8 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {vehicles.map((v) => (
+            <option key={v.id} value={v.id}>{v.nickname ?? v.displayName}</option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      </div>
+    </div>
+  );
+}
 
 export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
   const t = useTranslations();
@@ -92,6 +124,8 @@ export function SlideUpMenu({ open, onClose }: SlideUpMenuProps) {
                 <X className="size-4" />
               </button>
             </div>
+
+            <MobileVehicleSwitcher onClose={onClose} />
 
             <div className="grid grid-cols-2 gap-2 px-3 pb-4">
               {MENU_ITEMS.map((item) => {

@@ -17,6 +17,7 @@ import * as tripApi from "@/lib/api/trip";
 import * as vehiclesApi from "@/lib/api/vehicles";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
+import { useVehicleContext } from "@/contexts/vehicle";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 
@@ -116,7 +117,8 @@ export function TripClient() {
   const tc = useTranslations("common");
   const { fromEUR } = useCurrency();
   const { data: vehicles } = useVehicles();
-  const [vehicleId, setVehicleId] = useState<string>("");
+  const { selectedVehicleId } = useVehicleContext();
+  const [vehicleId, setVehicleId] = useState<string>(() => selectedVehicleId ?? "");
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);
   const [startSoc, setStartSoc] = useState(80);
