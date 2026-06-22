@@ -211,3 +211,32 @@ No cross-tenant data leakage paths identified for the five audited tables. The a
 > Process note: keep this document in lockstep with the code. The second pass marked
 > #19/#20/#22/#23 resolved while the fixes were absent — always re-grep the code before
 > trusting a "resolved" row.
+
+---
+
+## Fifth pass — expert code review (2026-06-22)
+
+Three senior reviewers (architect, senior dev, security) audited the data-fetch
+layer and all 44 API routes alongside the `apiFetch` consolidation. **No
+BLOCKERs found.** Fixed in this pass:
+
+- **`energy_costs` UPDATE scoping (WARN → fixed):** `PATCH /api/documents/[documentId]`
+  updated the `energy_costs` row by `document_id` only. Added `.eq("vehicle_id", doc.vehicle_id)`
+  (the vehicle was already ownership-verified) as defense-in-depth.
+- **Missing rate limits (WARN → fixed):** added `checkRateLimit(userId, "stats", 60)`
+  to `GET /api/vehicles/[vehicleId]/stats` and `…/battery-health` (heavy, un-polled
+  queries), and `checkRateLimit(userId, "documents-read", 600)` to `GET /api/documents`
+  (generous because the client polls it at 3–15s; the limit only bounds abuse).
+- **`documents` GET auth tightened:** now checks `session?.user?.id` (was `session?.user`).
+
+Still open (carried forward, not regressions):
+
+- **`listUsers` linear scans** in Google sign-in (`auth.ts`) and inbound-email
+  user resolution — O(n) per call and `perPage: 1000` truncation can silently
+  drop matches past the first 1000 users. Replace with a DB lookup before scale.
+- **`tariffs/settings` PUT** parses the body without a Zod schema (loose
+  `typeof === "string"` on `providerId`, validated against the provider whitelist).
+- **Token single-flight TOCTOU** in `tokens.ts` — map entry is set after the
+  promise is created; safe under Node's single-threaded model but the idiomatic
+  order is set-then-start.
+- In-memory rate-limit fallback (no Redis) is per-instance — see launch list #1.
