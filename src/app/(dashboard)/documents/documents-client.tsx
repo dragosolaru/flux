@@ -187,6 +187,7 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
       const form = new FormData();
       form.append("file", file);
       form.append("vehicleId", vehicleId);
+      form.append("vault", "1");
       const res = await fetch("/api/documents", { method: "POST", body: form });
       if (!res.ok) {
         const data = await res.json() as { message?: string };

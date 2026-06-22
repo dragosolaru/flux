@@ -7,7 +7,7 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
-import { canUploadDocument } from "@/lib/subscription";
+import { canUploadDocument, canUploadVaultDocument } from "@/lib/subscription";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -109,6 +109,7 @@ export async function POST(request: Request) {
 
   const file = formData.get("file");
   const vehicleId = formData.get("vehicleId");
+  const vault = formData.get("vault") === "1";
 
   if (!(file instanceof File)) return NextResponse.json({ message: "file required" }, { status: 400 });
   if (typeof vehicleId !== "string" || !vehicleId) return NextResponse.json({ message: "vehicleId required" }, { status: 400 });
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
 
   if (!vehicle) return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
 
-  const uploadCheck = await canUploadDocument(userId);
+  const uploadCheck = await (vault ? canUploadVaultDocument(userId) : canUploadDocument(userId));
   if (!uploadCheck.allowed) {
     return NextResponse.json({ message: uploadCheck.message }, { status: 402 });
   }
