@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export interface BatteryHealthPoint {
@@ -20,6 +21,13 @@ export async function GET(
   const { vehicleId } = await params;
   if (!z.string().uuid().safeParse(vehicleId).success) {
     return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
+
+  if (!(await checkRateLimit(session.user.id, "stats", 60))) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Try again later." },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
   }
 
   const supabase = createSupabaseAdminClient();

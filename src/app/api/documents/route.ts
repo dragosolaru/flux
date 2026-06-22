@@ -22,11 +22,20 @@ const GetQuerySchema = z.object({
 
 export async function GET(request: Request) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const parsed = GetQuerySchema.safeParse({ vehicleId: searchParams.get("vehicleId") });
   if (!parsed.success) return NextResponse.json({ message: "vehicleId required" }, { status: 400 });
+
+  // Generous bucket: the client polls this endpoint (3s while processing, 15s
+  // otherwise), so the limit only bounds abuse, not legitimate polling.
+  if (!(await checkRateLimit(session.user.id, "documents-read", 600))) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Try again later." },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
 
   const userId = await ensureSupabaseUserId(session);
   if (!userId) return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });

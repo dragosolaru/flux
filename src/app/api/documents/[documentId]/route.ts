@@ -119,10 +119,13 @@ export async function PATCH(
     .maybeSingle();
 
   if (existing) {
+    // Defense-in-depth: scope the update to the already-ownership-verified
+    // vehicle, not just the document_id.
     const { error } = await supabase
       .from("energy_costs")
       .update(updates)
-      .eq("document_id", documentId);
+      .eq("document_id", documentId)
+      .eq("vehicle_id", doc.vehicle_id);
     if (error) {
       console.error("[documents/[documentId]/PATCH]", error.message);
       return NextResponse.json({ message: "Save failed" }, { status: 500 });
