@@ -65,7 +65,8 @@
     },
     "toggle_theme": "Schimbă tema",
     "open_profile": "Deschide meniu profil",
-    "insights": "Statistici"
+    "insights": "Statistici",
+    "documents": "Documente"
   },
   "insights": {
     "title": "Statistici",
@@ -989,5 +990,32 @@
     "step_trip_cta": "Să mergem",
     "skip": "Sari peste",
     "step_label": "Pasul {n}"
+  },
+  "documents": {
+    "heading": "Documente vehicul",
+    "subtitle": "RCA, ITP, roviniete și alte documente auto",
+    "upload_btn": "Încarcă document",
+    "upload_success": "Document încărcat",
+    "upload_error": "Eroare la încărcare. Încearcă din nou.",
+    "empty_title": "Niciun document încă",
+    "empty_hint": "Încarcă RCA, ITP sau rovinieta, sau trimite-le pe email.",
+    "view_btn": "Vizualizează",
+    "delete_btn": "Șterge",
+    "delete_error": "Eroare la ștergere. Încearcă din nou.",
+    "expiry_label": "Expiră",
+    "expired_label": "Expirat",
+    "days_left": "{days} zile rămase",
+    "expiring_soon": "Expiră curând",
+    "type_rca": "Asigurare auto (RCA)",
+    "type_itp": "Inspecție tehnică (ITP)",
+    "type_rovinieta": "Rovinieta",
+    "type_vignette": "Vigneta",
+    "type_bridge_toll": "Taxă pod",
+    "type_car_tax": "Taxă auto",
+    "type_other": "Altele",
+    "plate": "Număr înmatriculare",
+    "issuer": "Emitent",
+    "processing": "Se procesează...",
+    "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat."
   }
 }

@@ -43,6 +43,21 @@ verified against actual source, not the log.
 
 ---
 
+# Security Audit — Fifth Pass — 2026-06-22
+
+> Expert review of the document vault feature and prior codebase findings. No new exploitable vulnerabilities found.
+
+### Pre-scale tech debt (not exploitable today)
+
+| # | Area | Finding | Classification |
+|---|------|---------|----------------|
+| 1 | Google sign-in + inbound-email routes | `listUsers` performs an O(n) full-user scan to match by email. At thousands of users this becomes slow; there is no exploitable IDOR — the result is filtered server-side. **[TODO - pre-scale]** Add a unique index on `profiles.email` and use `getUserByEmail()` once Supabase Auth exposes it stably. | `[TODO - pre-scale]` |
+| 2 | `tariffs/settings` PUT | Missing Zod schema on the request body. Risk is low: the route is authenticated and TypeScript narrows the relevant fields. **[TODO - hardening]** Add a Zod schema matching the PATCH shape. | `[TODO - hardening]` |
+| 3 | Token single-flight TOCTOU | `refreshInFlight` guards concurrent refreshes in `src/lib/tesla/tokens.ts`. Under Node.js's single-threaded event loop there is no true race between the `get` and `set` calls. The concern is theoretical; the `finally` cleanup is correct. **[OK - documented]** | `[OK - documented]` |
+| 4 | In-memory rate limit buckets | `checkRateLimit` stores counters in module-level `Map` in `src/lib/rate-limit.ts`. If the app is horizontally scaled (multiple Node instances), each instance has its own bucket — a user could distribute requests across instances to bypass per-user caps. Mitigation: move to Redis (e.g., Upstash) before scaling beyond a single Vercel region. **[TODO - pre-scale]** | `[TODO - pre-scale]` |
+
+---
+
 # Security Audit — 2026-05-23 / 2026-05-25 (second pass)
 
 > Multi-agent parallel review (3 independent agents + synthesis) before enabling real Tesla key in production.

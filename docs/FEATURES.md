@@ -2143,3 +2143,29 @@ now consume the shared `useVehicles()` / `useVehicle()` hooks instead of
 re-declaring inline queries with duplicate cache keys.
 
 **Dependencies:** none new — wraps the existing `apiFetch` and TanStack Query.
+
+---
+
+## 36. Per-vehicle Document Vault
+
+**What:** A document vault storing car-specific documents (RCA insurance, ITP technical inspection, rovinieta, European vignettes, bridge tolls, car tax) per vehicle. Claude Vision OCR extracts plate number, validity dates (critical for expiry reminders), issuer, and amount paid. Expiry status is computed per document (days until expiry, expired flag). Documents are uploaded via the same `/api/documents` endpoint — OCR auto-classifies them. A dedicated vault API returns only car-doc types with metadata merged from `vehicle_doc_meta`.
+
+**How to use:**
+- UI: `/documents` — vehicle selector (if multiple), document cards with type badge, expiry status, plate, issuer, view/delete buttons, upload button.
+- API: `GET /api/vehicles/[vehicleId]/vault` — returns `VaultDocument[]` (auth + ownership checked, rate-limited 300/hr per user).
+- Upload: same `POST /api/documents` as the costs page — the OCR pipeline classifies car docs and writes a `vehicle_doc_meta` row.
+
+**Key files:**
+- `src/types/costs.ts` — `DocumentType` extended with car doc types; `VaultDocument` interface; `ParsedDocument` car fields
+- `src/lib/ai/prompts/car-document-extraction.ts` — bilingual (RO/EN) OCR prompt for car documents
+- `src/lib/ai/document-parser.ts` — `parseCarDocument()` function using car prompt
+- `src/lib/costs/processor.ts` — routes car doc types to `vehicle_doc_meta` instead of `energy_costs`
+- `supabase/migrations/025_vehicle_doc_meta.sql` — `vehicle_doc_meta` table (RLS on, service-role only)
+- `src/app/api/vehicles/[vehicleId]/vault/route.ts` — GET vault endpoint
+- `src/lib/api/documents.ts` — `listVault(vehicleId)` API function added
+- `src/hooks/useVaultDocuments.ts` — TanStack Query hook with processing poll
+- `src/app/(dashboard)/documents/page.tsx` + `documents-client.tsx` — vault UI
+- `src/components/layout/Sidebar.tsx` — "Documents" nav item in car section
+- `src/lib/i18n/locales/*.json` — `documents` namespace + `nav.documents` in all 5 locales
+
+**Dependencies:** Anthropic Vision (Claude Sonnet), Supabase Storage, TanStack Query, next-intl.
