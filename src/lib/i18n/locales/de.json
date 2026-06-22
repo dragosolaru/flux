@@ -1016,6 +1016,9 @@
     "plate": "Kennzeichen",
     "issuer": "Aussteller",
     "processing": "Wird verarbeitet...",
-    "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt."
+    "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt.",
+    "scanning": "Dokument wird analysiert…",
+    "valid_period": "Gültigkeitszeitraum",
+    "amount": "Bezahlter Betrag"
   }
 }

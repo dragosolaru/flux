@@ -162,7 +162,7 @@ export async function POST(request: Request) {
     .insert({
       user_id: userId,
       vehicle_id: vehicleId,
-      source: "upload",
+      source: vault ? "vault-upload" : "upload",
       storage_path: storagePath,
       mime_type: file.type,
       original_filename: file.name,

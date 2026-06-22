@@ -1016,6 +1016,9 @@
     "plate": "Număr înmatriculare",
     "issuer": "Emitent",
     "processing": "Se procesează...",
-    "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat."
+    "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat.",
+    "scanning": "Se analizează documentul…",
+    "valid_period": "Perioadă valabilitate",
+    "amount": "Sumă plătită"
   }
 }

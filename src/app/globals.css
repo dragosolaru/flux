@@ -255,6 +255,10 @@ select.auth-input {
   }
 }
 
+@keyframes shimmer {
+  to { transform: translateX(200%); }
+}
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

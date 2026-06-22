@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
+  CalendarDays,
   ExternalLink,
   FileText,
   Loader2,
@@ -13,7 +15,7 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVaultDocuments } from "@/hooks/useVaultDocuments";
 import { useVehicleContext } from "@/contexts/vehicle";
-import { apiFetch } from "@/lib/api-fetch";
+import * as documentsApi from "@/lib/api/documents";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/layout/page-wrapper";
@@ -24,60 +26,62 @@ interface DocumentsClientProps {
   headingText: string;
 }
 
-type DocTypeBadgeColor =
-  | "bg-blue-500/20 text-blue-400 border-blue-500/30"
-  | "bg-green-500/20 text-green-400 border-green-500/30"
-  | "bg-amber-500/20 text-amber-400 border-amber-500/30"
-  | "bg-purple-500/20 text-purple-400 border-purple-500/30"
-  | "bg-orange-500/20 text-orange-400 border-orange-500/30"
-  | "bg-red-500/20 text-red-400 border-red-500/30"
-  | "bg-muted/40 text-muted-foreground border-border";
+const BADGE_COLORS: Record<string, string> = {
+  rca:        "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  itp:        "bg-green-500/20 text-green-400 border-green-500/30",
+  rovinieta:  "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  vignette:   "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  bridge_toll:"bg-orange-500/20 text-orange-400 border-orange-500/30",
+  car_tax:    "bg-red-500/20 text-red-400 border-red-500/30",
+};
 
-function docTypeBadgeColor(type: VaultDocument["document_type"]): DocTypeBadgeColor {
-  switch (type) {
-    case "rca": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-    case "itp": return "bg-green-500/20 text-green-400 border-green-500/30";
-    case "rovinieta": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-    case "vignette": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-    case "bridge_toll": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
-    case "car_tax": return "bg-red-500/20 text-red-400 border-red-500/30";
-    default: return "bg-muted/40 text-muted-foreground border-border";
-  }
+function expiryColors(days: number | null): { text: string; icon: string; border: string } {
+  if (days === null) return { text: "text-muted-foreground", icon: "", border: "border-border" };
+  if (days <= 0)  return { text: "text-destructive font-semibold", icon: "text-destructive", border: "border-destructive/40" };
+  if (days <= 7)  return { text: "text-red-400 font-semibold",    icon: "text-red-400",      border: "border-red-400/30" };
+  if (days <= 30) return { text: "text-amber-400 font-semibold",  icon: "text-amber-400",    border: "border-amber-400/30" };
+  return { text: "text-green-400", icon: "", border: "border-border" };
 }
 
-function expiryClass(days: number | null): string {
-  if (days === null) return "text-muted-foreground";
-  if (days <= 0) return "text-destructive font-semibold";
-  if (days <= 30) return "text-amber-400 font-semibold";
-  return "text-green-400";
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function DocCard({
-  doc,
-  onDelete,
-}: {
-  doc: VaultDocument;
-  onDelete: (id: string) => void;
-}) {
+function ScanningCard({ filename }: { filename: string | null }) {
+  const t = useTranslations("documents");
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card/60 p-4">
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+          <Loader2 className="size-4 animate-spin text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{t("scanning")}</p>
+          {filename && <p className="truncate text-xs text-muted-foreground/60">{filename}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DocCard({ doc, onDelete }: { doc: VaultDocument; onDelete: (id: string) => void }) {
   const t = useTranslations("documents");
   const [deleting, setDeleting] = useState(false);
 
   const typeLabel = (() => {
-    switch (doc.document_type) {
-      case "rca": return t("type_rca");
-      case "itp": return t("type_itp");
-      case "rovinieta": return t("type_rovinieta");
-      case "vignette": return t("type_vignette");
-      case "bridge_toll": return t("type_bridge_toll");
-      case "car_tax": return t("type_car_tax");
-      default: return t("type_other");
-    }
+    const key = `type_${doc.document_type}` as Parameters<typeof t>[0];
+    try { return t(key); } catch { return t("type_other"); }
   })();
 
-  const expiryText = (() => {
-    if (!doc.valid_until) return null;
-    if (doc.days_until_expiry === null) return null;
+  const colors = expiryColors(doc.days_until_expiry);
+  const showWarning = doc.days_until_expiry !== null && doc.days_until_expiry <= 30;
+  const badgeClass = BADGE_COLORS[doc.document_type] ?? "bg-muted/40 text-muted-foreground border-border";
+
+  const expiryLabel = (() => {
+    if (!doc.valid_until || doc.days_until_expiry === null) return null;
     if (doc.days_until_expiry <= 0) return t("expired_label");
+    if (doc.days_until_expiry <= 7) return t("days_left", { days: doc.days_until_expiry });
     if (doc.days_until_expiry <= 30) return t("expiring_soon");
     return t("days_left", { days: doc.days_until_expiry });
   })();
@@ -85,7 +89,7 @@ function DocCard({
   async function handleDelete() {
     setDeleting(true);
     try {
-      await apiFetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+      await documentsApi.remove(doc.id);
       onDelete(doc.id);
     } catch {
       toast.error(t("delete_error"));
@@ -94,76 +98,82 @@ function DocCard({
     }
   }
 
-  const isProcessing = doc.status === "pending" || doc.status === "processing";
-
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm">
-      <div className="mt-0.5 shrink-0">
-        {isProcessing ? (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        ) : (
-          <FileText className="size-4 text-muted-foreground" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1 space-y-1">
+    <div className={cn("rounded-xl border bg-card/60 p-4 backdrop-blur-sm transition-colors", colors.border)}>
+      {/* Header row: badge + warning + actions */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-              docTypeBadgeColor(doc.document_type),
-            )}
-          >
+          <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold", badgeClass)}>
             {typeLabel}
           </span>
-          {isProcessing && (
-            <span className="text-xs text-muted-foreground">{t("processing")}</span>
+          {showWarning && (
+            <span className={cn("flex items-center gap-1 text-xs font-medium", colors.text)}>
+              <AlertTriangle className={cn("size-3.5", colors.icon)} />
+              {expiryLabel}
+            </span>
           )}
         </div>
-
-        {doc.plate_number && (
-          <p className="text-xs text-muted-foreground">
-            {t("plate")}: <span className="font-mono font-medium text-foreground">{doc.plate_number}</span>
-          </p>
-        )}
-
-        {doc.issuer && (
-          <p className="text-xs text-muted-foreground">
-            {t("issuer")}: <span className="text-foreground">{doc.issuer}</span>
-          </p>
-        )}
-
-        {doc.valid_until && (
-          <p className={cn("text-xs", expiryClass(doc.days_until_expiry))}>
-            {t("expiry_label")}: {doc.valid_until}
-            {expiryText && <span className="ml-1">· {expiryText}</span>}
-          </p>
-        )}
-
-        {doc.original_filename && (
-          <p className="truncate text-xs text-muted-foreground/60">{doc.original_filename}</p>
-        )}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-1">
-        {doc.view_url && (
-          <Button variant="ghost" size="icon" className="size-8" asChild>
-            <a href={doc.view_url} target="_blank" rel="noopener noreferrer" aria-label={t("view_btn")}>
-              <ExternalLink className="size-3.5" />
-            </a>
+        <div className="flex shrink-0 items-center gap-1">
+          {doc.view_url && (
+            <Button variant="ghost" size="icon" className="size-7" asChild>
+              <a href={doc.view_url} target="_blank" rel="noopener noreferrer" aria-label={t("view_btn")}>
+                <ExternalLink className="size-3.5" />
+              </a>
+            </Button>
+          )}
+          <Button
+            variant="ghost" size="icon"
+            className="size-7 text-muted-foreground hover:text-destructive"
+            onClick={handleDelete} disabled={deleting}
+            aria-label={t("delete_btn")}
+          >
+            {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground hover:text-destructive"
-          onClick={handleDelete}
-          disabled={deleting}
-          aria-label={t("delete_btn")}
-        >
-          {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-        </Button>
+        </div>
       </div>
+
+      {/* Fields grid */}
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        {doc.plate_number && (
+          <div>
+            <span className="text-muted-foreground">{t("plate")}</span>
+            <p className="font-mono font-semibold text-foreground tracking-wider">{doc.plate_number}</p>
+          </div>
+        )}
+        {doc.issuer && (
+          <div>
+            <span className="text-muted-foreground">{t("issuer")}</span>
+            <p className="font-medium text-foreground">{doc.issuer}</p>
+          </div>
+        )}
+        {(doc.valid_from || doc.valid_until) && (
+          <div className="col-span-2">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <CalendarDays className="size-3" />{t("valid_period")}
+            </span>
+            <p className={cn("font-medium", !showWarning ? "text-foreground" : colors.text)}>
+              {doc.valid_from ? fmtDate(doc.valid_from) : "—"}
+              {" → "}
+              {doc.valid_until ? fmtDate(doc.valid_until) : "—"}
+              {!showWarning && doc.valid_until && doc.days_until_expiry !== null && (
+                <span className="ml-1 text-muted-foreground">
+                  ({t("days_left", { days: doc.days_until_expiry })})
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+        {doc.amount_ron !== null && doc.amount_ron !== undefined && (
+          <div>
+            <span className="text-muted-foreground">{t("amount")}</span>
+            <p className="font-medium text-foreground">{doc.amount_ron.toFixed(2)} RON</p>
+          </div>
+        )}
+      </div>
+
+      {doc.original_filename && (
+        <p className="mt-2 truncate text-[10px] text-muted-foreground/40">{doc.original_filename}</p>
+      )}
     </div>
   );
 }
@@ -246,9 +256,13 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          {docs.map((doc) => (
-            <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />
-          ))}
+          {docs.map((doc) =>
+            doc.status === "pending" || doc.status === "processing" ? (
+              <ScanningCard key={doc.id} filename={doc.original_filename} />
+            ) : (
+              <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />
+            ),
+          )}
         </div>
       )}
 

@@ -1016,6 +1016,9 @@
     "plate": "Immatriculation",
     "issuer": "Émetteur",
     "processing": "Traitement en cours...",
-    "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement."
+    "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement.",
+    "scanning": "Analyse du document…",
+    "valid_period": "Période de validité",
+    "amount": "Montant payé"
   }
 }

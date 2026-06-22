@@ -1016,6 +1016,9 @@
     "plate": "Rendszám",
     "issuer": "Kibocsátó",
     "processing": "Feldolgozás...",
-    "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak."
+    "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak.",
+    "scanning": "Dokumentum elemzése…",
+    "valid_period": "Érvényességi időszak",
+    "amount": "Fizetett összeg"
   }
 }
