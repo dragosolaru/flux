@@ -182,7 +182,11 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 ## 9. Charging map
 
-**What:** Full-screen AmpWhere-style station map. The page fills the entire viewport under the top bar with no padding or scrollable page layout. Station pins show power labels (e.g. "50kW", "250kW") directly on the pin as pill-shaped divIcons. Tapping a pin opens a `ChargerDetailSheet` bottom sheet (glassmorphism) showing power (gradient hero stat), connector count, connector type chips, the full address (street + house number, postcode + city, region), and a **Directions** button that opens Google Maps directions to the station. The sheet animates in (slide + fade), staggers its content, shows a top energy-accent bar, and pulses the status dot when the station is operational. A floating filter bar at the top of the map lets users filter by minimum power and connector type. A floating station count is shown at the bottom-left.
+**What:** Full-screen AmpWhere-style station map. The page fills the entire viewport under the top bar with no padding or scrollable page layout. Station pins show power labels (e.g. "50kW", "250kW") directly on the pin as pill-shaped divIcons. Tapping a pin opens a `ChargerDetailSheet` compact bottom sheet showing power (gradient hero stat), connector count, connector type chips, the full address (street + house number, postcode + city, region), and action buttons. The sheet animates in (slide + fade), staggers its content, and pulses the status dot when the station is operational. A floating filter bar at the top of the map lets users filter by minimum power and connector type. A floating station count is shown at the bottom-left.
+
+**Send to Car (Tesla):** When the user has a Tesla in their garage, the sheet shows a primary **Send to Car** button alongside the Directions button. Tapping it calls `POST /api/vehicles/:id/commands` with `command: "share_navigation"` (destination lat/lng/name) and — for non-Supercharger stations ≥50 kW — also sends `precondition_max` in parallel so the battery reaches fast-charging temperature before arrival (the same pattern Google Maps uses when sharing a destination to a Tesla). The vehicle used is the live-connected Tesla if one exists; falls back to the first Tesla in the garage (demo mode). When no Tesla is in the garage, only the Directions button is shown.
+
+**Map zoom stability:** `FitStations` (auto-zoom to all loaded stations) is disabled when the user's location is already known — this prevents the map from zooming out to a country-level view after auto-locate resolves. Instead, `CenterOnUser` pans to the user's location at zoom 12 exactly once (on first resolve).
 
 Address completeness depends on the source: the OSM connector now joins `addr:street` + `addr:housenumber` (previously the number was dropped); OCM's `AddressLine1` and the BNetzA/Austria connectors already include it. Existing rows show the number after the next ingest pass.
 
@@ -200,7 +204,7 @@ Address completeness depends on the source: the OSM connector now joins `addr:st
 
 **User location:** A `LocateFixed` button floats inside the map (bottom-right, above Leaflet zoom controls). On page load, a silent auto-locate (3s timeout) centres the map on the user without showing an error on denial. Errors shown via `sonner` toast.
 
-**Escape to close:** `ChargerDetailSheet` and `StationDetailSheet` listen for the `Escape` key (via `useEffect` keydown) and call `onClose` when the sheet is open. On desktop the sheets render as side cards (`md:max-w-md md:right-6`) rather than full-width bottom sheets.
+**Escape to close:** `ChargerDetailSheet` and `StationDetailSheet` listen for the `Escape` key (via `useEffect` keydown) and call `onClose` when the sheet is open. On desktop the sheets render as side cards (`md:max-w-sm md:right-6`) rather than full-width bottom sheets.
 
 **Key files:** `src/components/charging-map/StationMap.tsx`, `src/components/charging-map/ChargerDetailSheet.tsx`, `src/components/trip/StationDetailSheet.tsx`, `src/app/(dashboard)/charging-map/charging-map-client.tsx`.
 

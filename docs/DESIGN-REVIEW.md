@@ -96,3 +96,24 @@ House numbers only appear when the **source** has them. OSM (`addr:housenumber`)
 and BNetzA/Austria carry them; for OSM we now keep it. OCM's `AddressLine1`
 already includes the number when present. TomTom has no number field — those rows
 stay street-only. Existing DB rows show the number after the next ingest pass.
+
+---
+
+## Review 03 — Charging map: compact card + zoom fix + send-to-car (2026-06-21)
+
+### Context
+Screenshot of E.ON Drive station card (Florești/Cluj). The card was still too large and heavy despite the first redesign — `rounded-3xl`, `md:max-w-md`, a 2-column stat grid with gradient boxes, a top accent bar. User also reported the map zooming out after stations load (losing the user's GPS position) and requested a "Share with vehicle (Tesla)" button that also triggers battery preconditioning, noting they'd seen Google Maps do this with a Tesla.
+
+### Expert panel findings
+
+- **Sofia:** The card occupied too much vertical space. Remove the 2-column grid boxes and the top accent bar — keep the gradient on the kW number only (the single hero metric), add a thin separator and inline connector count. Result: a truly compact pill-stat row. `md:max-w-sm` (not `md`).
+- **Tomas:** The zoom-out bug was `FitStations` firing after every station batch regardless of whether user location was already resolved. Add an `enabled` prop to `FitStations` — disable it when a user location is known. Replace the old `SetView` (pan only) with `CenterOnUser` (sets view to zoom 12 once, guarded by a `done` ref).
+- **Mara:** Send-to-Car = Google Maps' `navigation_gps_request` + `set_preconditioning_max`. Tesla auto-preconditions only for its own Superchargers — so for any third-party fast charger (≥50 kW, `operatorId !== "tesla"`) Flux must send `precondition_max` explicitly alongside the navigation command.
+- **Devon:** Vehicle selection in a stateless sheet: `useVehicles()` returns all vehicles; prefer live Tesla (`dataSource === "live"`), fall back to first Tesla (demo). No UI selector — the sheet is for action, not configuration.
+- **Yuki:** When no Tesla exists, show only Directions (full-width primary). When Tesla exists, show Send to Car (full-width primary) + icon-only Directions link. This preserves one clear CTA for each user context.
+
+### Action items (this commit)
+1. **Compact card:** `rounded-2xl`, `md:max-w-sm`, inline stat row (power | separator | connectors), no top accent bar. Power stays gradient hero.
+2. **Send to Car:** `share_navigation` + optional `precondition_max` (parallel `Promise.all`). Toast: `send_to_car_success` or `send_to_car_preconditioned` depending on whether preconditioning fired.
+3. **Zoom fix:** `FitStations` gets `enabled` prop (false when `userLocation` is set). `CenterOnUser` replaces `SetView` — calls `map.setView([lat, lng], 12)` once on first location resolve.
+4. **i18n:** 5 new keys (`send_to_car`, `send_to_car_success`, `send_to_car_preconditioned`, `send_to_car_error`, `sending`) added to all 5 locales.

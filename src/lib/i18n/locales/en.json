@@ -623,7 +623,12 @@
     "distance_km": "{km} km away",
     "distance_m": "{m} m away",
     "directions": "Directions",
-    "address_unknown": "Address not available"
+    "address_unknown": "Address not available",
+    "send_to_car": "Send to car",
+    "send_to_car_success": "Sent to your car",
+    "send_to_car_preconditioned": "Sent — your car will navigate here and precondition the battery",
+    "send_to_car_error": "Couldn’t send to your car",
+    "sending": "Sending…"
   },
   "auth": {
     "title_login": "Welcome back",

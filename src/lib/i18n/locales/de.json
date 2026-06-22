@@ -623,7 +623,12 @@
     "distance_km": "{km} km entfernt",
     "distance_m": "{m} m entfernt",
     "directions": "Route",
-    "address_unknown": "Adresse nicht verfügbar"
+    "address_unknown": "Adresse nicht verfügbar",
+    "send_to_car": "Ans Auto senden",
+    "send_to_car_success": "Ans Auto gesendet",
+    "send_to_car_preconditioned": "Gesendet — dein Auto navigiert hierher und temperiert die Batterie vor",
+    "send_to_car_error": "Konnte nicht ans Auto senden",
+    "sending": "Wird gesendet…"
   },
   "auth": {
     "title_login": "Willkommen zurück",

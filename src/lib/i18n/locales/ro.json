@@ -623,7 +623,12 @@
     "distance_km": "la {km} km",
     "distance_m": "la {m} m",
     "directions": "Direcții",
-    "address_unknown": "Adresă indisponibilă"
+    "address_unknown": "Adresă indisponibilă",
+    "send_to_car": "Trimite în mașină",
+    "send_to_car_success": "Trimis în mașină",
+    "send_to_car_preconditioned": "Trimis — mașina va naviga aici și va precondiționa bateria",
+    "send_to_car_error": "Nu am putut trimite în mașină",
+    "sending": "Se trimite…"
   },
   "auth": {
     "title_login": "Bine ai revenit",
