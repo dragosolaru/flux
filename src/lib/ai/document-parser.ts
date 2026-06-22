@@ -5,6 +5,7 @@ import {
   DOCUMENT_EXTRACTION_PROMPT,
   isSupportedMimeType,
 } from "./prompts/document-extraction";
+import { CAR_DOCUMENT_EXTRACTION_PROMPT } from "./prompts/car-document-extraction";
 import type { ParsedDocument } from "@/types/costs";
 import type { Document } from "@/types/costs";
 
@@ -16,28 +17,57 @@ const ConfidenceSchema = z.object({
   cost_total: z.number().min(0).max(1).catch(0),
   period_start: z.number().min(0).max(1).catch(0),
   session_timestamp: z.number().min(0).max(1).catch(0),
+  valid_until: z.number().min(0).max(1).optional(),
 });
 
 const ParsedDocumentSchema = z.object({
-  document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown"]),
+  document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown", "rca", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"]),
   has_non_electricity_items: z.boolean().default(false),
-  provider_name: z.string().nullable(),
-  period_start: z.string().nullable(),
-  period_end: z.string().nullable(),
-  session_timestamp: z.string().nullable(),
-  total_kwh: z.number().nullable(),
-  price_per_kwh: z.number().nullable(),
-  electricity_cost: z.number().nullable(),
-  cost_total: z.number().nullable(),
+  provider_name: z.string().nullable().default(null),
+  period_start: z.string().nullable().default(null),
+  period_end: z.string().nullable().default(null),
+  session_timestamp: z.string().nullable().default(null),
+  total_kwh: z.number().nullable().default(null),
+  price_per_kwh: z.number().nullable().default(null),
+  electricity_cost: z.number().nullable().default(null),
+  cost_total: z.number().nullable().default(null),
   currency: z.string().default("RON"),
-  charger_network: z.string().nullable(),
-  location_name: z.string().nullable(),
+  charger_network: z.string().nullable().default(null),
+  location_name: z.string().nullable().default(null),
+  plate_number: z.string().nullable().optional(),
+  valid_from: z.string().nullable().optional(),
+  valid_until: z.string().nullable().optional(),
+  issuer: z.string().nullable().optional(),
   confidence: ConfidenceSchema,
 });
 
-export async function parseDocument(doc: Document): Promise<ParsedDocument> {
-  const supabase = createSupabaseAdminClient();
+const CarDocConfidenceSchema = z.object({
+  document_type: z.number().min(0).max(1).catch(0),
+  valid_until: z.number().min(0).max(1).catch(0),
+  cost_total: z.number().min(0).max(1).catch(0),
+  plate_number: z.number().min(0).max(1).catch(0),
+});
 
+const CarDocSchema = z.object({
+  document_type: z.enum(["rca", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "other", "unknown"]),
+  plate_number: z.string().nullable().default(null),
+  valid_from: z.string().nullable().default(null),
+  valid_until: z.string().nullable().default(null),
+  issuer: z.string().nullable().default(null),
+  provider_name: z.string().nullable().default(null),
+  cost_total: z.number().nullable().default(null),
+  currency: z.string().default("RON"),
+  confidence: CarDocConfidenceSchema,
+});
+
+type ImageMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+type ContentBlock =
+  | { type: "image"; source: { type: "base64"; media_type: ImageMediaType; data: string } }
+  | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } }
+  | { type: "text"; text: string };
+
+async function downloadDoc(doc: Document): Promise<{ base64: string; mimeType: string }> {
+  const supabase = createSupabaseAdminClient();
   const { data: fileData, error } = await supabase.storage
     .from("documents")
     .download(doc.storage_path);
@@ -47,28 +77,19 @@ export async function parseDocument(doc: Document): Promise<ParsedDocument> {
   }
 
   const buffer = Buffer.from(await fileData.arrayBuffer());
-  const base64 = buffer.toString("base64");
-  const mimeType = doc.mime_type;
+  return { base64: buffer.toString("base64"), mimeType: doc.mime_type };
+}
 
-  if (!isSupportedMimeType(mimeType)) {
-    throw new Error(`Unsupported MIME type: ${mimeType}`);
-  }
-
-  type ImageMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
-  type ContentBlock =
-    | { type: "image"; source: { type: "base64"; media_type: ImageMediaType; data: string } }
-    | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } }
-    | { type: "text"; text: string };
-
-  const contentBlocks: ContentBlock[] = [];
+function buildContentBlocks(base64: string, mimeType: string, prompt: string): ContentBlock[] {
+  const blocks: ContentBlock[] = [];
 
   if (mimeType === "application/pdf") {
-    contentBlocks.push({
+    blocks.push({
       type: "document",
       source: { type: "base64", media_type: "application/pdf", data: base64 },
     });
   } else {
-    contentBlocks.push({
+    blocks.push({
       type: "image",
       source: {
         type: "base64",
@@ -78,8 +99,11 @@ export async function parseDocument(doc: Document): Promise<ParsedDocument> {
     });
   }
 
-  contentBlocks.push({ type: "text", text: DOCUMENT_EXTRACTION_PROMPT });
+  blocks.push({ type: "text", text: prompt });
+  return blocks;
+}
 
+async function callClaude(contentBlocks: ContentBlock[]): Promise<string> {
   let response: Awaited<ReturnType<typeof anthropic.messages.create>>;
   try {
     response = await anthropic.messages.create({
@@ -104,15 +128,71 @@ export async function parseDocument(doc: Document): Promise<ParsedDocument> {
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  // Strip markdown code fences if Claude wraps the JSON
-  const jsonText = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+  return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+}
+
+export async function parseDocument(doc: Document): Promise<ParsedDocument> {
+  const { base64, mimeType } = await downloadDoc(doc);
+
+  if (!isSupportedMimeType(mimeType)) {
+    throw new Error(`Unsupported MIME type: ${mimeType}`);
+  }
+
+  const jsonText = await callClaude(buildContentBlocks(base64, mimeType, DOCUMENT_EXTRACTION_PROMPT));
 
   let raw: unknown;
   try {
     raw = JSON.parse(jsonText);
   } catch {
-    throw new Error(`Claude returned invalid JSON: ${text.slice(0, 200)}`);
+    throw new Error(`Claude returned invalid JSON: ${jsonText.slice(0, 200)}`);
   }
 
   return ParsedDocumentSchema.parse(raw);
+}
+
+export async function parseCarDocument(doc: Document): Promise<ParsedDocument> {
+  const { base64, mimeType } = await downloadDoc(doc);
+
+  if (!isSupportedMimeType(mimeType)) {
+    throw new Error(`Unsupported MIME type: ${mimeType}`);
+  }
+
+  const jsonText = await callClaude(buildContentBlocks(base64, mimeType, CAR_DOCUMENT_EXTRACTION_PROMPT));
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(jsonText);
+  } catch {
+    throw new Error(`Claude returned invalid JSON: ${jsonText.slice(0, 200)}`);
+  }
+
+  const carDoc = CarDocSchema.parse(raw);
+
+  return {
+    document_type: carDoc.document_type,
+    has_non_electricity_items: false,
+    provider_name: carDoc.provider_name,
+    period_start: carDoc.valid_from ?? null,
+    period_end: carDoc.valid_until ?? null,
+    session_timestamp: null,
+    total_kwh: null,
+    price_per_kwh: null,
+    electricity_cost: null,
+    cost_total: carDoc.cost_total,
+    currency: carDoc.currency,
+    charger_network: null,
+    location_name: null,
+    plate_number: carDoc.plate_number,
+    valid_from: carDoc.valid_from,
+    valid_until: carDoc.valid_until,
+    issuer: carDoc.issuer,
+    confidence: {
+      document_type: carDoc.confidence.document_type,
+      total_kwh: 0,
+      cost_total: carDoc.confidence.cost_total,
+      period_start: 0,
+      session_timestamp: 0,
+      valid_until: carDoc.confidence.valid_until,
+    },
+  };
 }

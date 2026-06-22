@@ -1,5 +1,5 @@
 export type DocumentSource = "upload" | "email" | "whatsapp";
-export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown";
+export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
 export interface Document {
@@ -57,13 +57,35 @@ export interface ParsedDocument {
   currency: string;
   charger_network: string | null;
   location_name: string | null;
+  plate_number?: string | null;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  issuer?: string | null;
   confidence: {
     document_type: number;
     total_kwh: number;
     cost_total: number;
     period_start: number;
     session_timestamp: number;
+    valid_until?: number;
   };
+}
+
+export interface VaultDocument {
+  id: string;
+  document_type: DocumentType;
+  original_filename: string | null;
+  mime_type: string;
+  status: DocumentStatus;
+  view_url: string | null;
+  created_at: string;
+  processed_at: string | null;
+  plate_number: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  amount_ron: number | null;
+  issuer: string | null;
+  days_until_expiry: number | null;
 }
 
 export interface CostAggregation {

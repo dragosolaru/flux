@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api-fetch";
-import type { Document } from "@/types/costs";
+import type { Document, VaultDocument } from "@/types/costs";
 
 const BASE = "/api/documents";
 
@@ -39,4 +39,8 @@ export function update(
 
 export function remove(documentId: string): Promise<unknown> {
   return apiFetch(`${BASE}/${documentId}`, { method: "DELETE" });
+}
+
+export function listVault(vehicleId: string): Promise<VaultDocument[]> {
+  return apiFetch<VaultDocument[]>(`/api/vehicles/${vehicleId}/vault`);
 }

@@ -6,6 +6,7 @@ import {
   BarChart3,
   BatteryCharging,
   Car,
+  FileText,
   Gamepad2,
   Info,
   LayoutGrid,
@@ -42,9 +43,10 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/garage",    labelKey: "garage.title",    icon: LayoutGrid, capability: "NONE" },
       { href: "/dashboard", labelKey: "nav.dashboard",   icon: Car,        capability: "VEHICLE" },
-      { href: "/charging",  labelKey: "nav.charging",    icon: BatteryCharging, capability: "VEHICLE" },
-      { href: "/insights",  labelKey: "nav.insights",    icon: BarChart3,  capability: "VEHICLE" },
-      { href: "/commands",  labelKey: "nav.commands",    icon: Gamepad2,   capability: "COMMANDS" },
+      { href: "/charging",   labelKey: "nav.charging",   icon: BatteryCharging, capability: "VEHICLE" },
+      { href: "/insights",   labelKey: "nav.insights",   icon: BarChart3,  capability: "VEHICLE" },
+      { href: "/documents",  labelKey: "nav.documents",  icon: FileText,   capability: "VEHICLE" },
+      { href: "/commands",   labelKey: "nav.commands",   icon: Gamepad2,   capability: "COMMANDS" },
     ],
   },
   {

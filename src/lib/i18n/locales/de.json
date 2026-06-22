@@ -65,7 +65,8 @@
     "map": "Karte",
     "toggle_theme": "Design wechseln",
     "open_profile": "Profilmenü öffnen",
-    "insights": "Statistiken"
+    "insights": "Statistiken",
+    "documents": "Dokumente"
   },
   "insights": {
     "title": "Statistiken",
@@ -989,5 +990,32 @@
     "step_trip_cta": "Los geht's",
     "skip": "Überspringen",
     "step_label": "Schritt {n}"
+  },
+  "documents": {
+    "heading": "Fahrzeugdokumente",
+    "subtitle": "KFZ-Versicherung, HU, Vignetten und andere Fahrzeugdokumente",
+    "upload_btn": "Dokument hochladen",
+    "upload_success": "Dokument hochgeladen",
+    "upload_error": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+    "empty_title": "Noch keine Dokumente",
+    "empty_hint": "Lade deine Versicherung, HU oder Vignette hoch oder leite sie per E-Mail weiter.",
+    "view_btn": "Ansehen",
+    "delete_btn": "Löschen",
+    "delete_error": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+    "expiry_label": "Läuft ab",
+    "expired_label": "Abgelaufen",
+    "days_left": "{days} Tage übrig",
+    "expiring_soon": "Läuft bald ab",
+    "type_rca": "KFZ-Versicherung (RCA)",
+    "type_itp": "Hauptuntersuchung (ITP)",
+    "type_rovinieta": "Rovinieta",
+    "type_vignette": "Vignette",
+    "type_bridge_toll": "Brückenmaut",
+    "type_car_tax": "Kfz-Steuer",
+    "type_other": "Sonstiges",
+    "plate": "Kennzeichen",
+    "issuer": "Aussteller",
+    "processing": "Wird verarbeitet...",
+    "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt."
   }
 }

@@ -65,7 +65,8 @@
     },
     "toggle_theme": "Toggle theme",
     "open_profile": "Open profile menu",
-    "insights": "Insights"
+    "insights": "Insights",
+    "documents": "Documents"
   },
   "insights": {
     "title": "Insights",
@@ -989,5 +990,32 @@
     "step_trip_cta": "Let's go",
     "skip": "Skip",
     "step_label": "Step {n}"
+  },
+  "documents": {
+    "heading": "Vehicle Documents",
+    "subtitle": "RCA, ITP, vignettes and other vehicle documents",
+    "upload_btn": "Upload document",
+    "upload_success": "Document uploaded",
+    "upload_error": "Upload failed. Please try again.",
+    "empty_title": "No documents yet",
+    "empty_hint": "Upload your RCA, ITP, or vignette, or forward them by email.",
+    "view_btn": "View",
+    "delete_btn": "Delete",
+    "delete_error": "Delete failed. Please try again.",
+    "expiry_label": "Expires",
+    "expired_label": "Expired",
+    "days_left": "{days} days left",
+    "expiring_soon": "Expiring soon",
+    "type_rca": "Car Insurance (RCA)",
+    "type_itp": "Technical Inspection (ITP)",
+    "type_rovinieta": "Rovinieta",
+    "type_vignette": "Vignette",
+    "type_bridge_toll": "Bridge Toll",
+    "type_car_tax": "Car Tax",
+    "type_other": "Other",
+    "plate": "Plate",
+    "issuer": "Issuer",
+    "processing": "Processing...",
+    "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically."
   }
 }

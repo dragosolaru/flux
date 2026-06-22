@@ -65,7 +65,8 @@
     "map": "Carte",
     "toggle_theme": "Changer le thème",
     "open_profile": "Ouvrir le menu profil",
-    "insights": "Statistiques"
+    "insights": "Statistiques",
+    "documents": "Documents"
   },
   "insights": {
     "title": "Statistiques",
@@ -989,5 +990,32 @@
     "step_trip_cta": "C'est parti",
     "skip": "Passer",
     "step_label": "Étape {n}"
+  },
+  "documents": {
+    "heading": "Documents du véhicule",
+    "subtitle": "Assurance, contrôle technique, vignettes et autres documents",
+    "upload_btn": "Téléverser un document",
+    "upload_success": "Document téléversé",
+    "upload_error": "Échec du téléversement. Veuillez réessayer.",
+    "empty_title": "Aucun document pour l'instant",
+    "empty_hint": "Téléversez votre assurance, contrôle technique ou vignette, ou envoyez-les par e-mail.",
+    "view_btn": "Voir",
+    "delete_btn": "Supprimer",
+    "delete_error": "Suppression échouée. Veuillez réessayer.",
+    "expiry_label": "Expire le",
+    "expired_label": "Expiré",
+    "days_left": "{days} jours restants",
+    "expiring_soon": "Expire bientôt",
+    "type_rca": "Assurance auto (RCA)",
+    "type_itp": "Contrôle technique (ITP)",
+    "type_rovinieta": "Rovinieta",
+    "type_vignette": "Vignette",
+    "type_bridge_toll": "Péage de pont",
+    "type_car_tax": "Taxe automobile",
+    "type_other": "Autre",
+    "plate": "Immatriculation",
+    "issuer": "Émetteur",
+    "processing": "Traitement en cours...",
+    "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement."
   }
 }
