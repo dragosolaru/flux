@@ -21,20 +21,20 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-dvh flex-col">
-      <ServiceWorkerRegistrar />
-      {/* Horizontal row: sidebar + main content */}
-      <div className="flex min-w-0 flex-1 overflow-hidden">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar />
-          <MockGlobalBanner />
-          <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-[calc(72px+env(safe-area-inset-bottom))] md:px-8 md:py-6 md:pb-6"><VehicleProvider>{children}</VehicleProvider></main>
+    <VehicleProvider>
+      <div className="flex h-dvh flex-col">
+        <ServiceWorkerRegistrar />
+        <div className="flex min-w-0 flex-1 overflow-hidden">
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <TopBar />
+            <MockGlobalBanner />
+            <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-[calc(72px+env(safe-area-inset-bottom))] md:px-8 md:py-6 md:pb-6">{children}</main>
+          </div>
+          <BottomNav />
+          <InstallPrompt />
         </div>
-        {/* Bottom nav sits at the base of the flex column — no position:fixed needed */}
-        <BottomNav />
-        <InstallPrompt />
       </div>
-    </div>
+    </VehicleProvider>
   );
 }
