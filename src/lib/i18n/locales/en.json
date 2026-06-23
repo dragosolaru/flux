@@ -1055,6 +1055,8 @@
     "type_vignette": "Vignette",
     "type_bridge_toll": "Bridge Toll",
     "type_car_tax": "Car Tax",
+    "type_service": "Service Invoice",
+    "type_parking": "Parking",
     "type_other": "Other",
     "plate": "Plate",
     "issuer": "Issuer",

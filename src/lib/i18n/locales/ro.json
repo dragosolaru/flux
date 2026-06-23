@@ -1055,6 +1055,8 @@
     "type_vignette": "Vigneta",
     "type_bridge_toll": "Taxă pod",
     "type_car_tax": "Taxă auto",
+    "type_service": "Factură service",
+    "type_parking": "Parcare",
     "type_other": "Altele",
     "plate": "Număr înmatriculare",
     "issuer": "Emitent",

@@ -62,7 +62,7 @@ function fmt(n: number | null | undefined, decimals = 2) {
 
 type MoneyFormatter = (amount: number, maxFractionDigits?: number) => string;
 
-const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
+const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking"];
 
 // ─── KPI chip data builder ────────────────────────────────────────────────────
 
@@ -631,9 +631,9 @@ export function CostsClient(_: CostsClientProps) {
 
   const costsData = costs as CostsResponse | undefined;
 
-  // Filter energy docs: exclude vault-upload source AND car doc types
+  // Filter energy docs: exclude vault-upload/manual source AND car doc types
   const energyDocs = documents?.filter(
-    (d) => d.source !== "vault-upload" && !CAR_DOC_TYPES.includes(d.document_type ?? ""),
+    (d) => d.source !== "vault-upload" && d.source !== "manual" && !CAR_DOC_TYPES.includes(d.document_type ?? ""),
   );
   const hasEnergyDocs = !docsLoading && energyDocs && energyDocs.length > 0;
   const noEnergyDocs = !docsLoading && (!energyDocs || energyDocs.length === 0);

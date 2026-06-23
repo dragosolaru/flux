@@ -1055,6 +1055,8 @@
     "type_vignette": "Matrica",
     "type_bridge_toll": "Hídpénz",
     "type_car_tax": "Gépjárműadó",
+    "type_service": "Szervizszámla",
+    "type_parking": "Parkolás",
     "type_other": "Egyéb",
     "plate": "Rendszám",
     "issuer": "Kibocsátó",

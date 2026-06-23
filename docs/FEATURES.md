@@ -152,6 +152,18 @@ Auth pages (`/login`, `/register`) live outside the dashboard group.
 
 **Status:** Fully implemented. Confidence below `0.7` flags `needs_review`. Constants `PETROL_PRICE_RON = 7.5`, `PETROL_L_PER_100KM = 7`.
 
+### 6a. Vehicle document types: service & parking
+
+**What:** Two new `DocumentType` values — `"service"` (workshop / maintenance invoices) and `"parking"` (parking receipts) — are now recognised by OCR and can be entered manually. Unlike insurance/ITP/vignette, they have no `valid_until`; the processor uses `valid_from` (or `new Date()`) as the exchange-rate reference date.
+
+**How to use:**
+- OCR auto-classifies service and parking documents when uploaded or emailed (both prompts updated).
+- Manual entry: UI `/costs` → Vehicle tab → **Add manually** button. Renders `ManualEntryForm` (in `costs-client.tsx`), calls `POST /api/vehicles/[vehicleId]/vault` with `source: "manual"`.
+
+**Key files:** `src/types/costs.ts` (type unions), `src/lib/ai/prompts/car-document-extraction.ts`, `src/lib/ai/prompts/document-extraction.ts`, `src/lib/ai/document-parser.ts` (Zod enums), `src/lib/costs/processor.ts` (CAR_DOC_TYPES + fix no-`valid_until` path), `src/app/api/vehicles/[vehicleId]/vault/route.ts` (POST handler), `src/lib/api/documents.ts` (`createManualVaultDoc`), `src/app/(dashboard)/costs/costs-client.tsx` (ManualEntryForm + Auto tab), `src/app/(dashboard)/documents/documents-client.tsx` (badge colours), `supabase/migrations/030_documents_manual_source.sql`.
+
+**Dependencies:** Supabase, BNR exchange-rate (for cost conversion), TanStack Query (cache invalidation after save).
+
 ---
 
 ## 7. Email ingestion (Cloudmailin)

@@ -206,7 +206,7 @@ export async function POST(
     return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 
-  if (amount_ron != null || valid_from || valid_until || issuer || plate_number) {
+  if (amount_ron != null || valid_from != null || valid_until != null || issuer != null || plate_number != null) {
     const { error: metaErr } = await supabase.from("vehicle_doc_meta").insert({
       document_id: doc.id,
       vehicle_id: vehicleId,

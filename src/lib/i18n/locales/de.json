@@ -1055,6 +1055,8 @@
     "type_vignette": "Vignette",
     "type_bridge_toll": "Brückenmaut",
     "type_car_tax": "Kfz-Steuer",
+    "type_service": "Werkstattrechnung",
+    "type_parking": "Parkgebühr",
     "type_other": "Sonstiges",
     "plate": "Kennzeichen",
     "issuer": "Aussteller",
