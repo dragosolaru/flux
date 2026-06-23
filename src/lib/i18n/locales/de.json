@@ -1072,7 +1072,16 @@
     "type_leasing": "Leasingzahlung",
     "type_roadside_assistance": "Pannenhilfe",
     "type_spare_parts": "Ersatzteile",
-    "type_ferry": "Fähre"
+    "type_ferry": "Fähre",
+    "processing_type_placeholder": "Wird erkannt...",
+    "error_processing": "Verarbeitung fehlgeschlagen — erneut versuchen",
+    "needs_review": "Extrahierte Daten prüfen",
+    "total_costs_label": "{count} Dokumente mit Kosten",
+    "expiring_soon_count": "Bald ablaufend: {count}",
+    "group_insurance": "Versicherungen",
+    "group_taxes": "Steuern & Vignetten",
+    "group_service": "Service & Teile",
+    "group_other": "Sonstiges"
   },
   "notifications": {
     "rain_windows": {

@@ -1072,7 +1072,16 @@
     "type_leasing": "Leasing",
     "type_roadside_assistance": "Asistență rutieră",
     "type_spare_parts": "Piese de schimb",
-    "type_ferry": "Feribot"
+    "type_ferry": "Feribot",
+    "processing_type_placeholder": "Se identifică...",
+    "error_processing": "Procesare eșuată — încearcă din nou",
+    "needs_review": "Verifică datele extrase",
+    "total_costs_label": "{count} documente cu costuri",
+    "expiring_soon_count": "Expiră în curând: {count}",
+    "group_insurance": "Asigurări",
+    "group_taxes": "Taxe & vignete",
+    "group_service": "Service & piese",
+    "group_other": "Altele"
   },
   "notifications": {
     "rain_windows": {

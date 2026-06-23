@@ -1072,7 +1072,16 @@
     "type_leasing": "Paiement leasing",
     "type_roadside_assistance": "Assistance routière",
     "type_spare_parts": "Pièces détachées",
-    "type_ferry": "Ferry"
+    "type_ferry": "Ferry",
+    "processing_type_placeholder": "Identification...",
+    "error_processing": "Traitement échoué — réessayer",
+    "needs_review": "Vérifier les données extraites",
+    "total_costs_label": "{count} documents avec coûts",
+    "expiring_soon_count": "Expire bientôt : {count}",
+    "group_insurance": "Assurances",
+    "group_taxes": "Taxes & vignettes",
+    "group_service": "Service & pièces",
+    "group_other": "Autres"
   },
   "notifications": {
     "rain_windows": {

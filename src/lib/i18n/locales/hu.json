@@ -1072,7 +1072,16 @@
     "type_leasing": "Lízingdíj",
     "type_roadside_assistance": "Útisegély",
     "type_spare_parts": "Alkatrészek",
-    "type_ferry": "Komp"
+    "type_ferry": "Komp",
+    "processing_type_placeholder": "Azonosítás...",
+    "error_processing": "Feldolgozás sikertelen — próbáld újra",
+    "needs_review": "Ellenőrizd a kinyert adatokat",
+    "total_costs_label": "{count} dokumentum költségekkel",
+    "expiring_soon_count": "Hamarosan lejár: {count}",
+    "group_insurance": "Biztosítások",
+    "group_taxes": "Adók & matricák",
+    "group_service": "Szerviz & alkatrészek",
+    "group_other": "Egyéb"
   },
   "notifications": {
     "rain_windows": {

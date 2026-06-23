@@ -8,8 +8,10 @@ import {
   Loader2,
   Plus,
   Trash2,
+  AlertCircle,
+  Receipt,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVaultDocuments } from "@/hooks/useVaultDocuments";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -33,7 +35,8 @@ type DocTypeBadgeColor =
   | "bg-red-500/20 text-red-400 border-red-500/30"
   | "bg-muted/40 text-muted-foreground border-border";
 
-function docTypeBadgeColor(type: VaultDocument["document_type"]): DocTypeBadgeColor {
+function docTypeBadgeColor(type: VaultDocument["document_type"], isProcessing: boolean): DocTypeBadgeColor {
+  if (isProcessing || type === null) return "bg-muted/40 text-muted-foreground border-border";
   switch (type) {
     case "rca": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     case "casco": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
@@ -57,24 +60,49 @@ function docTypeBadgeColor(type: VaultDocument["document_type"]): DocTypeBadgeCo
   }
 }
 
-function expiryClass(days: number | null): string {
-  if (days === null) return "text-muted-foreground";
-  if (days <= 0) return "text-destructive font-semibold";
-  if (days <= 30) return "text-amber-400 font-semibold";
-  return "text-green-400";
+function formatRon(amount: number): string {
+  return new Intl.NumberFormat("ro-RO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount) + " RON";
 }
 
-function DocCard({
-  doc,
-  onDelete,
-}: {
-  doc: VaultDocument;
-  onDelete: (id: string) => void;
-}) {
+function formatDate(isoDate: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(isoDate));
+  } catch {
+    return isoDate;
+  }
+}
+
+const INSURANCE_TYPES = new Set(["rca", "casco", "roadside_assistance"]);
+const TAX_TYPES = new Set(["rovinieta", "vignette", "bridge_toll", "car_tax", "highway_toll", "ferry", "parking"]);
+const SERVICE_TYPES = new Set(["service", "tires", "spare_parts", "car_wash", "fuel"]);
+
+function getGroup(doc: VaultDocument): "insurance" | "taxes" | "service" | "other" {
+  const t = doc.document_type;
+  if (!t) return "other";
+  if (INSURANCE_TYPES.has(t)) return "insurance";
+  if (TAX_TYPES.has(t)) return "taxes";
+  if (SERVICE_TYPES.has(t)) return "service";
+  return "other";
+}
+
+function DocCard({ doc, onDelete, locale }: { doc: VaultDocument; onDelete: (id: string) => void; locale: string }) {
   const t = useTranslations("documents");
   const [deleting, setDeleting] = useState(false);
 
+  const isProcessing = doc.status === "pending" || doc.status === "processing";
+  const isError = doc.status === "error";
+  const needsReview = doc.status === "needs_review";
+  const hasData = !!(doc.issuer ?? doc.valid_until ?? doc.plate_number);
+
   const typeLabel = (() => {
+    if (isProcessing || doc.document_type === null) return t("processing_type_placeholder");
     switch (doc.document_type) {
       case "rca": return t("type_rca");
       case "casco": return t("type_casco");
@@ -98,12 +126,18 @@ function DocCard({
     }
   })();
 
+  const days = doc.days_until_expiry;
   const expiryText = (() => {
-    if (!doc.valid_until) return null;
-    if (doc.days_until_expiry === null) return null;
-    if (doc.days_until_expiry <= 0) return t("expired_label");
-    if (doc.days_until_expiry <= 30) return t("expiring_soon");
-    return t("days_left", { days: doc.days_until_expiry });
+    if (!doc.valid_until || days === null) return null;
+    if (days <= 0) return t("expired_label");
+    return t("days_left", { days });
+  })();
+
+  const expiryColorClass = (() => {
+    if (days === null) return "text-muted-foreground";
+    if (days <= 0) return "text-destructive font-semibold";
+    if (days <= 30) return "text-amber-400 font-semibold";
+    return "text-green-400";
   })();
 
   async function handleDelete() {
@@ -118,13 +152,14 @@ function DocCard({
     }
   }
 
-  const isProcessing = doc.status === "pending" || doc.status === "processing";
-
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm">
+    <div className={cn(
+      "flex items-start gap-3 rounded-xl border bg-card/60 p-4 backdrop-blur-sm",
+      isError ? "border-destructive/30" : "border-border",
+    )}>
       <div className="mt-0.5 shrink-0">
-        {isProcessing ? (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        {isError ? (
+          <AlertCircle className="size-4 text-destructive" />
         ) : (
           <FileText className="size-4 text-muted-foreground" />
         )}
@@ -132,18 +167,31 @@ function DocCard({
 
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-              docTypeBadgeColor(doc.document_type),
-            )}
-          >
+          <span className={cn(
+            "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+            docTypeBadgeColor(doc.document_type, isProcessing),
+          )}>
             {typeLabel}
           </span>
           {isProcessing && (
-            <span className="text-xs text-muted-foreground">{t("processing")}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+              <Loader2 className="size-3 animate-spin" />
+              {hasData ? null : t("processing")}
+            </span>
+          )}
+          {doc.amount_ron != null && !isProcessing && (
+            <span className="ml-auto text-sm font-semibold tabular-nums text-foreground">
+              {formatRon(doc.amount_ron)}
+            </span>
           )}
         </div>
+
+        {isError && (
+          <p className="text-xs text-destructive">{t("error_processing")}</p>
+        )}
+        {needsReview && (
+          <p className="text-xs text-amber-400">{t("needs_review")}</p>
+        )}
 
         {doc.plate_number && (
           <p className="text-xs text-muted-foreground">
@@ -158,8 +206,14 @@ function DocCard({
         )}
 
         {doc.valid_until && (
-          <p className={cn("text-xs", expiryClass(doc.days_until_expiry))}>
-            {t("expiry_label")}: {doc.valid_until}
+          <p className={cn("flex items-center gap-1 text-xs", expiryColorClass)}>
+            {days !== null && days > 0 && days <= 7 && (
+              <span className="inline-block size-1.5 animate-pulse rounded-full bg-amber-400" />
+            )}
+            {days !== null && days <= 0 && (
+              <span className="inline-block size-1.5 rounded-full bg-destructive" />
+            )}
+            {t("expiry_label")}: {formatDate(doc.valid_until, locale)}
             {expiryText && <span className="ml-1">· {expiryText}</span>}
           </p>
         )}
@@ -192,8 +246,60 @@ function DocCard({
   );
 }
 
+function CostSummary({ docs }: { docs: VaultDocument[] }) {
+  const t = useTranslations("documents");
+
+  const docsWithCost = docs.filter((d) => d.amount_ron != null && d.status !== "error");
+  if (docsWithCost.length === 0) return null;
+
+  const total = docsWithCost.reduce((sum, d) => sum + (d.amount_ron ?? 0), 0);
+  const expiringSoon = docs.filter((d) => d.days_until_expiry !== null && d.days_until_expiry >= 1 && d.days_until_expiry <= 30).length;
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
+      <Receipt className="size-4 shrink-0 text-muted-foreground" />
+      <div className="flex-1 space-y-0.5">
+        <p className="text-xs text-muted-foreground">{t("total_costs_label", { count: docsWithCost.length })}</p>
+        {expiringSoon > 0 && (
+          <p className="text-xs text-amber-400">{t("expiring_soon_count", { count: expiringSoon })}</p>
+        )}
+      </div>
+      <span className="text-sm font-semibold text-foreground">{formatRon(total)}</span>
+    </div>
+  );
+}
+
+function GroupSection({
+  label,
+  docs,
+  onDelete,
+  locale,
+}: {
+  label: string;
+  docs: VaultDocument[];
+  onDelete: (id: string) => void;
+  locale: string;
+}) {
+  if (docs.length === 0) return null;
+  const sorted = [...docs].sort((a, b) => {
+    if (a.days_until_expiry === null) return 1;
+    if (b.days_until_expiry === null) return -1;
+    return a.days_until_expiry - b.days_until_expiry;
+  });
+
+  return (
+    <div className="space-y-2">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{label}</p>
+      {sorted.map((doc) => (
+        <DocCard key={doc.id} doc={doc} onDelete={onDelete} locale={locale} />
+      ))}
+    </div>
+  );
+}
+
 export function DocumentsClient({ headingText }: DocumentsClientProps) {
   const t = useTranslations("documents");
+  const locale = useLocale();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -226,6 +332,13 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
   function handleDelete() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
   }
+
+  const groups = docs ? {
+    insurance: docs.filter((d) => getGroup(d) === "insurance"),
+    taxes: docs.filter((d) => getGroup(d) === "taxes"),
+    service: docs.filter((d) => getGroup(d) === "service"),
+    other: docs.filter((d) => getGroup(d) === "other"),
+  } : null;
 
   return (
     <PageWrapper className="mx-auto max-w-2xl gap-4 pb-28">
@@ -269,11 +382,15 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
           <p className="max-w-xs text-xs text-muted-foreground/60">{t("empty_hint")}</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {docs.map((doc) => (
-            <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />
-          ))}
-        </div>
+        <>
+          <CostSummary docs={docs} />
+          <div className="space-y-5">
+            <GroupSection label={t("group_insurance")} docs={groups?.insurance ?? []} onDelete={handleDelete} locale={locale} />
+            <GroupSection label={t("group_taxes")} docs={groups?.taxes ?? []} onDelete={handleDelete} locale={locale} />
+            <GroupSection label={t("group_service")} docs={groups?.service ?? []} onDelete={handleDelete} locale={locale} />
+            <GroupSection label={t("group_other")} docs={groups?.other ?? []} onDelete={handleDelete} locale={locale} />
+          </div>
+        </>
       )}
 
       <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
