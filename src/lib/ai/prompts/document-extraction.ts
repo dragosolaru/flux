@@ -14,8 +14,17 @@ TIPURI DE DOCUMENTE:
 - "vignette" — vignietă de autostradă străină (Austria, Elveția, Slovenia, Cehia, Ungaria etc.)
 - "bridge_toll" — taxă pod sau tunel (Pod Cernavodă, Agigea etc.)
 - "car_tax" — impozit anual pe mijloc de transport (DITL, ANAF, primărie)
-- "service" — factură de service auto / reparații (schimb ulei, anvelope, reparații mecanice, caroserie, "factură service", "bon service")
+- "service" — factură de service auto / reparații generale (manoperă: schimb ulei, reparații mecanice, caroserie, "factură service", "bon service")
 - "parking" — bon de parcare (parcare, P+R, tichet parcare, parcare subterană, parcare aeroport)
+- "fuel" — bon stație de carburant / combustibil (benzină, motorină, LPG, CNG, AdBlue — OMV, Rompetrol, MOL, Petrom, Lukoil, Socar)
+- "tires" — factură anvelope / pneuri (cumpărare anvelope, montaj, echilibrare, aliniere geometrie, vulcanizare)
+- "fine" — chitanță amendă rutieră sau contravenție (amendă, contravenție, poliția rutieră, parcometru)
+- "highway_toll" — chitanță taxă autostradă (Beltag, Telepass, CNAIR, taxă tronson autostradă A1/A2/A3 — nu taxă pod specific)
+- "car_wash" — bon spălătorie auto (spălare, spălătorie, curățare interior/exterior, detailing)
+- "leasing" — factură rată leasing auto (leasing, rată lunară, contract leasing, finanțare auto)
+- "roadside_assistance" — poliță sau chitanță asistență rutieră (asistență rutieră, depanare, remorcare, AMR, ACR, RAR membership)
+- "spare_parts" — factură piese auto de schimb (piese, filtre, baterie 12V, geam, parbriz, componente separate — fără manoperă)
+- "ferry" — chitanță trecere feribot (ferry, pod plutitor, traversare fluviu, Calafat, Orșova)
 - "other" — altceva: factură apă, factură telefon, bon alimentar, cafea, țigări, orice altceva
 - "unknown" — documentul nu poate fi identificat
 
@@ -33,7 +42,7 @@ REGULI STRICTE:
 Răspunde EXCLUSIV cu JSON valid, fără text, fără markdown:
 
 {
-  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "other" | "unknown",
+  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry" | "other" | "unknown",
   "has_non_electricity_items": boolean,
   "provider_name": string | null,
   "period_start": "YYYY-MM-DD" | null,

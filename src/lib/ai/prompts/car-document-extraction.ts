@@ -8,8 +8,17 @@ DOCUMENT TYPES:
 - "vignette" — non-Romanian road vignette: Austrian Vignette (Autobahnvignette), Slovenian vinjeta, Swiss Autobahnvignette, Czech dálniční nálepka, Hungarian autópálya matrica, Bulgarian vignette, etc.
 - "bridge_toll" — bridge or tunnel toll receipt: "Taxă pod", "Pod Cernavodă", "Agigea", "Faurei", tolls for specific crossings.
 - "car_tax" — annual vehicle tax: "Impozit pe mijloc de transport", "Taxa auto", "DITL", receipt from local tax authority (ANAF, primărie).
-- "service" — car service / repair / maintenance invoice: workshop invoice, oil change, tire change, mechanical repairs, bodywork, "factură service auto", "bon service", "autorizație reparații". Extract service date as valid_from, no valid_until.
-- "parking" — parking receipt: "bon parcare", "parcare", parking ticket, "P+R", parking machine receipt. Extract date as valid_from, no valid_until, location/operator as issuer.
+- "service" — general car service / labour invoice: oil change, mechanical repairs, bodywork, MOT service, "factură service auto", "bon service". Extract service date as valid_from, no valid_until.
+- "parking" — parking receipt: "bon parcare", "parcare", "P+R", parking machine receipt. Extract date as valid_from, no valid_until, location as issuer.
+- "fuel" — fuel/petrol station receipt: benzină, motorină, LPG, CNG, AdBlue, OMV, Rompetrol, MOL, Petrom, Lukoil, Socar. No valid_until.
+- "tires" — tire purchase or fitting invoice: anvelope, pneuri, montaj anvelope, echilibrare, vulcanizare, aliniere geometrie. No valid_until.
+- "fine" — traffic fine or penalty: amendă, contravenție, poliția rutieră, parcometru penalty. No valid_until.
+- "highway_toll" — general highway toll receipt (NOT a specific bridge): Beltag, Telepass, CNAIR, taxa autostradă, A1/A2/A3 tronson charge. No valid_until.
+- "car_wash" — car wash receipt: spălătorie auto, spălare, curățare interior/exterior, detailing. No valid_until.
+- "leasing" — leasing/finance monthly payment invoice: leasing, rată, contract leasing, finanțare. Has valid_until (contract end date).
+- "roadside_assistance" — roadside assistance policy or receipt: asistență rutieră, depanare, AMR, ACR, RAR membership. Has valid_until.
+- "spare_parts" — spare parts invoice (parts only, no labour): piese auto, filtre, baterie 12V, geam, parbriz, componente. No valid_until.
+- "ferry" — ferry crossing receipt: feribot, pod plutitor, traversare, Calafat, Orșova, ferry. No valid_until.
 - "other" — car-related document that does not fit the above.
 - "unknown" — cannot be determined.
 
@@ -26,7 +35,7 @@ EXTRACTION RULES:
 Respond with ONLY valid JSON, no markdown fences, no extra text:
 
 {
-  "document_type": "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "other" | "unknown",
+  "document_type": "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry" | "other" | "unknown",
   "plate_number": string | null,
   "valid_from": "YYYY-MM-DD" | null,
   "valid_until": "YYYY-MM-DD" | null,

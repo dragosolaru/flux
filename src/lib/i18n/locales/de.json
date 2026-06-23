@@ -1063,7 +1063,16 @@
     "processing": "Wird verarbeitet...",
     "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt.",
     "type_service": "Werkstattrechnung",
-    "type_parking": "Parkgebühr"
+    "type_parking": "Parkgebühr",
+    "type_fuel": "Kraftstoff",
+    "type_tires": "Reifen",
+    "type_fine": "Bußgeld",
+    "type_highway_toll": "Autobahngebühr",
+    "type_car_wash": "Autowäsche",
+    "type_leasing": "Leasingzahlung",
+    "type_roadside_assistance": "Pannenhilfe",
+    "type_spare_parts": "Ersatzteile",
+    "type_ferry": "Fähre"
   },
   "notifications": {
     "rain_windows": {

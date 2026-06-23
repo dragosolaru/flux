@@ -349,6 +349,17 @@ function VaultDocCard({ doc }: { doc: VaultDocument }) {
     vignette: tDocs("type_vignette"),
     bridge_toll: tDocs("type_bridge_toll"),
     car_tax: tDocs("type_car_tax"),
+    service: tDocs("type_service"),
+    parking: tDocs("type_parking"),
+    fuel: tDocs("type_fuel"),
+    tires: tDocs("type_tires"),
+    fine: tDocs("type_fine"),
+    highway_toll: tDocs("type_highway_toll"),
+    car_wash: tDocs("type_car_wash"),
+    leasing: tDocs("type_leasing"),
+    roadside_assistance: tDocs("type_roadside_assistance"),
+    spare_parts: tDocs("type_spare_parts"),
+    ferry: tDocs("type_ferry"),
     other: tDocs("type_other"),
   };
 
@@ -414,8 +425,8 @@ function VaultDocCard({ doc }: { doc: VaultDocument }) {
 
 // ─── Manual entry form ────────────────────────────────────────────────────────
 
-const ALL_CAR_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "other"] as const;
-const TYPES_WITH_EXPIRY = ["rca", "casco", "itp", "rovinieta", "vignette"];
+const ALL_CAR_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "other"] as const;
+const TYPES_WITH_EXPIRY = ["rca", "casco", "itp", "rovinieta", "vignette", "leasing", "roadside_assistance"];
 
 type ManualFormData = {
   document_type: string;
@@ -455,6 +466,15 @@ function ManualEntryForm({
       car_tax: tDocs("type_car_tax"),
       service: tDocs("type_service"),
       parking: tDocs("type_parking"),
+      fuel: tDocs("type_fuel"),
+      tires: tDocs("type_tires"),
+      fine: tDocs("type_fine"),
+      highway_toll: tDocs("type_highway_toll"),
+      car_wash: tDocs("type_car_wash"),
+      leasing: tDocs("type_leasing"),
+      roadside_assistance: tDocs("type_roadside_assistance"),
+      spare_parts: tDocs("type_spare_parts"),
+      ferry: tDocs("type_ferry"),
       other: tDocs("type_other"),
     };
     return map[type] ?? type;

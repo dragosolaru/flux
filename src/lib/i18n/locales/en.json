@@ -1063,7 +1063,16 @@
     "processing": "Processing...",
     "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically.",
     "type_service": "Service Invoice",
-    "type_parking": "Parking"
+    "type_parking": "Parking",
+    "type_fuel": "Fuel",
+    "type_tires": "Tires",
+    "type_fine": "Fine/Penalty",
+    "type_highway_toll": "Highway toll",
+    "type_car_wash": "Car wash",
+    "type_leasing": "Leasing",
+    "type_roadside_assistance": "Roadside assistance",
+    "type_spare_parts": "Spare parts",
+    "type_ferry": "Ferry"
   },
   "notifications": {
     "rain_windows": {

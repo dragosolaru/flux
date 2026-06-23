@@ -21,7 +21,7 @@ const ConfidenceSchema = z.object({
 });
 
 const ParsedDocumentSchema = z.object({
-  document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown", "rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking"]),
+  document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown", "rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry"]),
   has_non_electricity_items: z.boolean().default(false),
   provider_name: z.string().nullable().default(null),
   period_start: z.string().nullable().default(null),
@@ -49,7 +49,7 @@ const CarDocConfidenceSchema = z.object({
 });
 
 const CarDocSchema = z.object({
-  document_type: z.enum(["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "other", "unknown"]),
+  document_type: z.enum(["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "other", "unknown"]),
   plate_number: z.string().nullable().default(null),
   valid_from: z.string().nullable().default(null),
   valid_until: z.string().nullable().default(null),

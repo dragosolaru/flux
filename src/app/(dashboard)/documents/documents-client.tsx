@@ -44,6 +44,15 @@ function docTypeBadgeColor(type: VaultDocument["document_type"]): DocTypeBadgeCo
     case "car_tax": return "bg-red-500/20 text-red-400 border-red-500/30";
     case "service": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
     case "parking": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+    case "fuel": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+    case "tires": return "bg-muted/40 text-muted-foreground border-border";
+    case "fine": return "bg-red-500/20 text-red-400 border-red-500/30";
+    case "highway_toll": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+    case "car_wash": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+    case "leasing": return "bg-green-500/20 text-green-400 border-green-500/30";
+    case "roadside_assistance": return "bg-green-500/20 text-green-400 border-green-500/30";
+    case "spare_parts": return "bg-muted/40 text-muted-foreground border-border";
+    case "ferry": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
     default: return "bg-muted/40 text-muted-foreground border-border";
   }
 }
@@ -76,6 +85,15 @@ function DocCard({
       case "car_tax": return t("type_car_tax");
       case "service": return t("type_service");
       case "parking": return t("type_parking");
+      case "fuel": return t("type_fuel");
+      case "tires": return t("type_tires");
+      case "fine": return t("type_fine");
+      case "highway_toll": return t("type_highway_toll");
+      case "car_wash": return t("type_car_wash");
+      case "leasing": return t("type_leasing");
+      case "roadside_assistance": return t("type_roadside_assistance");
+      case "spare_parts": return t("type_spare_parts");
+      case "ferry": return t("type_ferry");
       default: return t("type_other");
     }
   })();

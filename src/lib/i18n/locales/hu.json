@@ -1063,7 +1063,16 @@
     "processing": "Feldolgozás...",
     "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak.",
     "type_service": "Szervizszámla",
-    "type_parking": "Parkolás"
+    "type_parking": "Parkolás",
+    "type_fuel": "Üzemanyag",
+    "type_tires": "Gumiabroncsok",
+    "type_fine": "Bírság",
+    "type_highway_toll": "Autópályadíj",
+    "type_car_wash": "Autómosó",
+    "type_leasing": "Lízingdíj",
+    "type_roadside_assistance": "Útisegély",
+    "type_spare_parts": "Alkatrészek",
+    "type_ferry": "Komp"
   },
   "notifications": {
     "rain_windows": {

@@ -1063,7 +1063,16 @@
     "processing": "Traitement en cours...",
     "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement.",
     "type_service": "Facture entretien",
-    "type_parking": "Parking"
+    "type_parking": "Parking",
+    "type_fuel": "Carburant",
+    "type_tires": "Pneus",
+    "type_fine": "Amende",
+    "type_highway_toll": "Péage autoroute",
+    "type_car_wash": "Lavage auto",
+    "type_leasing": "Paiement leasing",
+    "type_roadside_assistance": "Assistance routière",
+    "type_spare_parts": "Pièces détachées",
+    "type_ferry": "Ferry"
   },
   "notifications": {
     "rain_windows": {

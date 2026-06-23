@@ -1063,7 +1063,16 @@
     "processing": "Se procesează...",
     "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat.",
     "type_service": "Factură service",
-    "type_parking": "Parcare"
+    "type_parking": "Parcare",
+    "type_fuel": "Combustibil",
+    "type_tires": "Anvelope",
+    "type_fine": "Amendă",
+    "type_highway_toll": "Taxă autostradă",
+    "type_car_wash": "Spălătorie auto",
+    "type_leasing": "Leasing",
+    "type_roadside_assistance": "Asistență rutieră",
+    "type_spare_parts": "Piese de schimb",
+    "type_ferry": "Feribot"
   },
   "notifications": {
     "rain_windows": {
