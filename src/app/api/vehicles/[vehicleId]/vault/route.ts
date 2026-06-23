@@ -112,11 +112,8 @@ export async function GET(
       const pjType = (doc.parsed_json as Record<string, unknown> | null)?.document_type as VaultDocument["document_type"] | undefined;
 
       // Immediate recovery: OCR completed (parsed_json or meta exists) but documents.update failed.
-      // Don't wait for the 5-minute timeout — recover as soon as we detect the inconsistency.
       const canRecover = isProcessingStatus && (meta != null || pjType != null);
-      const recoveredType = canRecover
-        ? (pjType ?? null)
-        : null;
+      const recoveredType = canRecover ? (pjType ?? null) : null;
 
       if (canRecover) {
         void supabase.from("documents").update({
@@ -125,10 +122,16 @@ export async function GET(
         }).eq("id", doc.id).then();
       }
 
-      const finalType = recoveredType ?? (doc.document_type as VaultDocument["document_type"]) ?? null;
+      // Use parsed_json type as fallback for docs processed with old code (column not set)
+      const finalType = recoveredType
+        ?? (doc.document_type as VaultDocument["document_type"])
+        ?? pjType
+        ?? null;
+
       const effectiveStatus = canRecover ? "done" : isStuck ? (meta ? "done" : "error") : (doc.status as VaultDocument["status"]);
       const isDone = effectiveStatus !== "pending" && effectiveStatus !== "processing";
-      const isNonVehicle = isDone && (finalType === null || NON_VEHICLE_TYPES.has(finalType ?? ""));
+      // Only flag non-vehicle when type is explicitly known to be non-auto — never when null/unknown
+      const isNonVehicle = isDone && finalType !== null && NON_VEHICLE_TYPES.has(finalType);
 
       return {
         id: doc.id,
