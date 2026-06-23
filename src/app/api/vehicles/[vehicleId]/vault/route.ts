@@ -47,7 +47,7 @@ export async function GET(
       .select("id, document_type, original_filename, mime_type, status, parsed_json, created_at, processed_at, storage_path")
       .eq("vehicle_id", vehicleId)
       .eq("user_id", session.user.id)
-      .in("document_type", CAR_DOC_TYPES)
+      .or(`document_type.in.(${CAR_DOC_TYPES.join(",")}),status.in.(pending,processing)`)
       .order("created_at", { ascending: false })
       .limit(100),
     supabase
@@ -73,7 +73,7 @@ export async function GET(
 
   type DocRow = {
     id: string;
-    document_type: string;
+    document_type: string | null;
     original_filename: string | null;
     mime_type: string;
     status: string;
@@ -110,7 +110,7 @@ export async function GET(
 
       return {
         id: doc.id,
-        document_type: doc.document_type as VaultDocument["document_type"],
+        document_type: (doc.document_type as VaultDocument["document_type"]) ?? null,
         original_filename: doc.original_filename,
         mime_type: doc.mime_type,
         status: isStuck ? "error" : (doc.status as VaultDocument["status"]),

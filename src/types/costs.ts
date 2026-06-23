@@ -1,4 +1,4 @@
-export type DocumentSource = "upload" | "email" | "whatsapp";
+export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload";
 export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
@@ -73,7 +73,7 @@ export interface ParsedDocument {
 
 export interface VaultDocument {
   id: string;
-  document_type: DocumentType;
+  document_type: DocumentType | null;
   original_filename: string | null;
   mime_type: string;
   status: DocumentStatus;
