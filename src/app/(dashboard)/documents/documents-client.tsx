@@ -516,10 +516,12 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
 
   function handleDelete() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
   }
 
   function handleUpdated() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
   }
 
   const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle) ?? [];

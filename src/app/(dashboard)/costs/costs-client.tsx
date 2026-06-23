@@ -614,12 +614,14 @@ export function CostsClient(_: CostsClientProps) {
   });
 
   const now = new Date();
+  const ENERGY_CAR_DOC_TYPES = new Set(["rca","casco","itp","rovinieta","vignette","bridge_toll","car_tax","service","parking","fuel","tires","fine","highway_toll","car_wash","leasing","roadside_assistance","spare_parts","ferry","talon"]);
   const docsThisMonth =
     documents?.filter((d) => {
       const created = new Date(d.created_at);
       return (
         created.getFullYear() === now.getFullYear() &&
-        created.getMonth() === now.getMonth()
+        created.getMonth() === now.getMonth() &&
+        !ENERGY_CAR_DOC_TYPES.has(d.document_type ?? "")
       );
     }).length ?? 0;
 
