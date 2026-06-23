@@ -64,6 +64,7 @@ export async function processDocument(documentId: string): Promise<void> {
       }
 
       await supabase.from("documents").update({
+        document_type: finalParsed.document_type,
         status: avgConf >= CONFIDENCE_THRESHOLD ? "done" : "needs_review",
         parsed_json: finalParsed,
         confidence: avgConf,
@@ -75,6 +76,7 @@ export async function processDocument(documentId: string): Promise<void> {
     // Gas bills, petrol receipts, and other non-electricity docs don't generate energy_cost records
     if (finalParsed.document_type === "gas_bill" || finalParsed.document_type === "petrol_receipt" || finalParsed.document_type === "other") {
       await supabase.from("documents").update({
+        document_type: finalParsed.document_type,
         status: "needs_review",
         parsed_json: finalParsed,
         confidence: avgConf,
@@ -175,6 +177,7 @@ export async function processDocument(documentId: string): Promise<void> {
     await supabase
       .from("documents")
       .update({
+        document_type: finalParsed.document_type,
         status: finalStatus,
         parsed_json: finalParsed,
         confidence: avgConf,

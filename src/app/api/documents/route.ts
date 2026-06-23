@@ -1,4 +1,6 @@
 import { NextResponse, after } from "next/server";
+
+export const maxDuration = 60;
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
