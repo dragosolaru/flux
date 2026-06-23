@@ -1,11 +1,6 @@
 {
   "crons": [
-    { "path": "/api/internal/warm?country=ro", "schedule": "0 2 * * *" },
-    { "path": "/api/internal/warm?country=hu", "schedule": "30 2 * * *" },
-    { "path": "/api/internal/warm?country=at", "schedule": "0 3 * * *" },
-    { "path": "/api/internal/warm?country=nl", "schedule": "30 3 * * *" },
-    { "path": "/api/internal/warm?country=de", "schedule": "0 4 * * *" },
-    { "path": "/api/internal/warm?country=fr", "schedule": "30 4 * * *" },
-    { "path": "/api/cron/poll-vehicles", "schedule": "*/15 * * * *" }
+    { "path": "/api/internal/warm?country=ro", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/poll-vehicles", "schedule": "0 6 * * *" }
   ]
 }
