@@ -1062,8 +1062,6 @@
     "issuer": "Kibocsátó",
     "processing": "Feldolgozás...",
     "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak.",
-    "type_service": "Szervizszámla",
-    "type_parking": "Parkolás",
     "type_fuel": "Üzemanyag",
     "type_tires": "Gumiabroncsok",
     "type_fine": "Bírság",
@@ -1088,7 +1086,14 @@
     "invalid_cost": "Érvénytelen összeg",
     "non_vehicle_title": "Nem jármű dokumentum",
     "non_vehicle_hint": "Ez a dokumentum nem tűnik jármű-kapcsolatosnak. Törölheted.",
-    "non_vehicle_deleted": "Dokumentum törölve"
+    "non_vehicle_deleted": "Dokumentum törölve",
+    "type_talon": "Forgalmi engedély",
+    "coverage_score_label": "Jármű dokumentáció",
+    "coverage_score_complete": "Minden kötelező dokumentum érvényes",
+    "coverage_score_missing": "{count} hiányzik vagy lejárt",
+    "insolvent_issuer_warning": "Ez a biztosító fizetésképtelen. Lépjen kapcsolatba a BAAR-ral vagy FGA-val.",
+    "renew_rca_link": "Megújítási árak összehasonlítása →",
+    "calendar_export_btn": "Lejáratok hozzáadása naptárhoz"
   },
   "notifications": {
     "rain_windows": {

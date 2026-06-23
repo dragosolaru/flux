@@ -1062,8 +1062,6 @@
     "issuer": "Emitent",
     "processing": "Se procesează...",
     "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat.",
-    "type_service": "Factură service",
-    "type_parking": "Parcare",
     "type_fuel": "Combustibil",
     "type_tires": "Anvelope",
     "type_fine": "Amendă",
@@ -1088,7 +1086,14 @@
     "invalid_cost": "Sumă invalidă",
     "non_vehicle_title": "Document neaferent vehiculului",
     "non_vehicle_hint": "Acest document nu pare să fie legat de vehicul. Îl poți șterge.",
-    "non_vehicle_deleted": "Document șters"
+    "non_vehicle_deleted": "Document șters",
+    "type_talon": "Certificat de Înmatriculare",
+    "coverage_score_label": "Documentație vehicul",
+    "coverage_score_complete": "Toate documentele obligatorii valide",
+    "coverage_score_missing": "{count} lipsesc sau expirate",
+    "insolvent_issuer_warning": "Acest asigurător este insolvent. Polița poate fi invalidă. Contactați BAAR sau FGA.",
+    "renew_rca_link": "Compară prețuri la reînnoire →",
+    "calendar_export_btn": "Adaugă expirările în calendar"
   },
   "notifications": {
     "rain_windows": {

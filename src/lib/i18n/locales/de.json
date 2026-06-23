@@ -1062,8 +1062,6 @@
     "issuer": "Aussteller",
     "processing": "Wird verarbeitet...",
     "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt.",
-    "type_service": "Werkstattrechnung",
-    "type_parking": "Parkgebühr",
     "type_fuel": "Kraftstoff",
     "type_tires": "Reifen",
     "type_fine": "Bußgeld",
@@ -1088,7 +1086,14 @@
     "invalid_cost": "Ungültiger Betrag",
     "non_vehicle_title": "Kein Fahrzeugdokument",
     "non_vehicle_hint": "Dieses Dokument scheint nicht fahrzeugbezogen zu sein. Sie können es löschen.",
-    "non_vehicle_deleted": "Dokument gelöscht"
+    "non_vehicle_deleted": "Dokument gelöscht",
+    "type_talon": "Fahrzeugschein",
+    "coverage_score_label": "Fahrzeugdokumentation",
+    "coverage_score_complete": "Alle Pflichtdokumente gültig",
+    "coverage_score_missing": "{count} fehlen oder abgelaufen",
+    "insolvent_issuer_warning": "Dieser Versicherer ist insolvent. Kontaktieren Sie BAAR oder FGA.",
+    "renew_rca_link": "Verlängerungspreise vergleichen →",
+    "calendar_export_btn": "Ablaufdaten zum Kalender hinzufügen"
   },
   "notifications": {
     "rain_windows": {

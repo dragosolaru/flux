@@ -2267,3 +2267,42 @@ Tesla Fleet `vehicle_state` window fields. All other alerts work live.
 **Dependencies:** `web-push` (+ `@types/web-push`), Resend REST API, Twilio REST
 API, Open-Meteo (`getWeatherAsync`), Supabase (admin client), TanStack Query,
 `sonner`. Design doc: `docs/superpowers/specs/2026-06-22-notification-foundation-design.md`.
+
+---
+
+## Document Vault Enhancements (June 2026)
+
+### OCR improvements
+Improved the two-pass OCR pipeline to better classify Romanian vehicle documents:
+- Added `talon` (registration certificate) as a recognized document type — permanent, no expiry
+- Added more Romanian insurers to detection list: Grawe, Certasig, Axeria
+- Added `seria_polita` (policy series) and `bonus_malus` extraction for RCA/CASCO
+- Added explicit visual cues for Romanian insurance documents (QR codes, color schemes, insurer logos)
+- Added strict exclusion rule: bank transfers ("Confirmare plată", "Ordin de plată") always classify as "other"
+- Updated first-pass energy prompt to list bank transfer confirmations under "other"
+
+**Key files:** `src/lib/ai/prompts/car-document-extraction.ts`, `src/lib/ai/prompts/document-extraction.ts`
+
+### Coverage Shield
+SVG progress ring at the top of the documents page showing what % of mandatory Romanian documents (RCA, ITP, Rovinieta) are present and valid. Green = 100%, amber = partial, red = critical gaps. Lists how many are missing/expired.
+
+**Key files:** `src/app/(dashboard)/documents/documents-client.tsx` (`CoverageShield` component)
+
+### Calendar export (ICS)
+Download all document expiry dates as a `.ics` calendar file compatible with Google Calendar, Apple Calendar, and Outlook. Includes 30-day and 7-day alarms for each expiry event. Button appears in the documents page header when documents exist.
+
+**How to use:** Click the calendar icon in the documents page header → file downloads automatically.
+**API route:** `GET /api/vehicles/[vehicleId]/vault/calendar` → `text/calendar` response
+**Key files:** `src/app/api/vehicles/[vehicleId]/vault/calendar/route.ts`
+
+### Insolvent insurer warning
+When the OCR detects that a document was issued by Euroins România or City Insurance (both insolvent), a red warning banner appears on the document card alerting the user their policy may not be valid.
+
+**Key files:** `src/app/(dashboard)/documents/documents-client.tsx` (`INSOLVENT_INSURERS` constant)
+
+### RCA renewal link
+When an RCA document expires within 45 days, a "Compare renewal prices →" link appears on the card linking to iasig.ro (Romanian insurance aggregator) for price comparison.
+
+**Key files:** `src/app/(dashboard)/documents/documents-client.tsx` (inline in `DocCard`)
+
+**Dependencies:** `talon` added to `DocumentType` union, `CAR_DOC_TYPES` in processor and vault route, `ManualDocSchema` enum in vault POST.

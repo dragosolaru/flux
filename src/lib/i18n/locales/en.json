@@ -1062,8 +1062,6 @@
     "issuer": "Issuer",
     "processing": "Processing...",
     "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically.",
-    "type_service": "Service Invoice",
-    "type_parking": "Parking",
     "type_fuel": "Fuel",
     "type_tires": "Tires",
     "type_fine": "Fine/Penalty",
@@ -1088,7 +1086,14 @@
     "invalid_cost": "Invalid amount",
     "non_vehicle_title": "Not a vehicle document",
     "non_vehicle_hint": "This document doesn't appear to be vehicle-related. You can delete it.",
-    "non_vehicle_deleted": "Document deleted"
+    "non_vehicle_deleted": "Document deleted",
+    "type_talon": "Registration Certificate",
+    "coverage_score_label": "Vehicle documentation",
+    "coverage_score_complete": "All mandatory documents valid",
+    "coverage_score_missing": "{count} missing or expired",
+    "insolvent_issuer_warning": "This insurer is insolvent. Your policy may not be valid. Contact BAAR or FGA.",
+    "renew_rca_link": "Compare renewal prices →",
+    "calendar_export_btn": "Add expiries to calendar"
   },
   "notifications": {
     "rain_windows": {

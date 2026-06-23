@@ -1062,8 +1062,6 @@
     "issuer": "Émetteur",
     "processing": "Traitement en cours...",
     "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement.",
-    "type_service": "Facture entretien",
-    "type_parking": "Parking",
     "type_fuel": "Carburant",
     "type_tires": "Pneus",
     "type_fine": "Amende",
@@ -1088,7 +1086,14 @@
     "invalid_cost": "Montant invalide",
     "non_vehicle_title": "Pas un document véhicule",
     "non_vehicle_hint": "Ce document ne semble pas être lié au véhicule. Vous pouvez le supprimer.",
-    "non_vehicle_deleted": "Document supprimé"
+    "non_vehicle_deleted": "Document supprimé",
+    "type_talon": "Certificat d'immatriculation",
+    "coverage_score_label": "Documentation du véhicule",
+    "coverage_score_complete": "Tous les documents obligatoires valides",
+    "coverage_score_missing": "{count} manquants ou expirés",
+    "insolvent_issuer_warning": "Cet assureur est insolvable. Votre police pourrait ne pas être valide. Contactez BAAR ou FGA.",
+    "renew_rca_link": "Comparer les prix de renouvellement →",
+    "calendar_export_btn": "Ajouter les échéances au calendrier"
   },
   "notifications": {
     "rain_windows": {

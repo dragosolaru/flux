@@ -25,7 +25,7 @@ TIPURI DE DOCUMENTE:
 - "roadside_assistance" — poliță sau chitanță asistență rutieră (asistență rutieră, depanare, remorcare, AMR, ACR, RAR membership)
 - "spare_parts" — factură piese auto de schimb (piese, filtre, baterie 12V, geam, parbriz, componente separate — fără manoperă)
 - "ferry" — chitanță trecere feribot (ferry, pod plutitor, traversare fluviu, Calafat, Orșova)
-- "other" — altceva: factură apă, factură telefon, bon alimentar, cafea, țigări, orice altceva
+- "other" — altceva: confirmare transfer bancar ("Confirmare plată", "Ordin de plată", "OP"), extras de cont bancar, factură apă/gaz/telefon/internet, bon alimentar, cafea, țigări, factură medicală, orice document care NU este legat de vehicule sau energie electrică
 - "unknown" — documentul nu poate fi identificat
 
 REGULI STRICTE:
