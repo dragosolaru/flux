@@ -563,7 +563,13 @@
       "ariaOpen": "Deschide documentul",
       "ariaEdit": "Editează",
       "ariaDelete": "Șterge documentul"
-    }
+    },
+    "tab_energy": "Energie",
+    "tab_auto": "Auto",
+    "auto_total_cost": "Total costuri auto",
+    "auto_empty_title": "Niciun document auto încă.",
+    "auto_empty_hint": "Încarcă RCA, ITP sau rovinieta pe pagina Documente.",
+    "auto_go_to_docs": "Mergi la Documente"
   },
   "departure": {
     "title": "Plecare & Preconditionare",
@@ -1031,6 +1037,7 @@
     "days_left": "{days} zile rămase",
     "expiring_soon": "Expiră curând",
     "type_rca": "Asigurare auto (RCA)",
+    "type_casco": "Asigurare CASCO",
     "type_itp": "Inspecție tehnică (ITP)",
     "type_rovinieta": "Rovinieta",
     "type_vignette": "Vigneta",

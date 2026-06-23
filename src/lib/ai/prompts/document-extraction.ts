@@ -7,6 +7,13 @@ TIPURI DE DOCUMENTE:
 - "public_receipt" — bon de la stație de încărcare EV publică (Renovatio, Ionity, Tesla Supercharger, MOL Plug, OMV EV, Kaufland EV, Lidl EV etc.)
 - "gas_bill" — factură de gaz natural/metan (ENGIE Gaz, E.ON Gaz, Distrigaz etc.) — NU curent electric
 - "petrol_receipt" — bon de la stație de carburant (OMV, Rompetrol, MOL, Petrom, Lukoil etc.) — chiar dacă include și încărcare EV
+- "rca" — asigurare obligatorie auto (RCA, Carte Verde, MTPL, Green Card). Emitent: Generali, Allianz, BCR Asigurări, Groupama, Omniasig, Euroins, Uniqa, NN, Asirom
+- "casco" — asigurare facultativă auto (CASCO, Kasko)
+- "itp" — inspecție tehnică periodică auto (ITP, certificat de conformitate)
+- "rovinieta" — rovinietă rutieră românească (CNAIR, rovinieta.ro)
+- "vignette" — vignietă de autostradă străină (Austria, Elveția, Slovenia, Cehia, Ungaria etc.)
+- "bridge_toll" — taxă pod sau tunel (Pod Cernavodă, Agigea etc.)
+- "car_tax" — impozit anual pe mijloc de transport (DITL, ANAF, primărie)
 - "other" — altceva: factură apă, factură telefon, bon alimentar, cafea, țigări, orice altceva
 - "unknown" — documentul nu poate fi identificat
 
@@ -24,7 +31,7 @@ REGULI STRICTE:
 Răspunde EXCLUSIV cu JSON valid, fără text, fără markdown:
 
 {
-  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown",
+  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "other" | "unknown",
   "has_non_electricity_items": boolean,
   "provider_name": string | null,
   "period_start": "YYYY-MM-DD" | null,

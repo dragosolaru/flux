@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Car,
   Download,
+  ExternalLink,
   Fuel,
   Gauge,
   Home,
@@ -34,6 +35,7 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
+import { useVaultDocuments } from "@/hooks/useVaultDocuments";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import {
@@ -41,7 +43,7 @@ import {
   Card,
   StatTile,
 } from "@/components/ui-kit";
-import type { CostAggregation, MonthlyBucket, Document } from "@/types/costs";
+import type { CostAggregation, MonthlyBucket, Document, VaultDocument } from "@/types/costs";
 import { cn } from "@/lib/utils";
 import { vehicleInboxAddress } from "@/lib/costs/vehicle-email";
 
@@ -58,6 +60,8 @@ function fmt(n: number | null | undefined, decimals = 2) {
 }
 
 type MoneyFormatter = (amount: number, maxFractionDigits?: number) => string;
+
+const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
 
 // ─── KPI chip data builder ────────────────────────────────────────────────────
 
@@ -305,6 +309,108 @@ function TimelineDocList({ documents, onEdit, onDelete }: TimelineDocListProps) 
   );
 }
 
+// ─── Auto total cost stat ─────────────────────────────────────────────────────
+
+function AutoTotalStat({ amountRon }: { amountRon: number }) {
+  const t = useTranslations("costs");
+  const { fromRON } = useCurrency();
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="flex gap-2.5 overflow-x-auto scrollbar-none pb-1"
+    >
+      <motion.div variants={fadeInUp}>
+        <StatTile
+          icon={Car}
+          value={fromRON(amountRon)}
+          label={t("auto_total_cost")}
+          accent="text-primary"
+          className="min-w-[100px]"
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Auto tab vault doc card ──────────────────────────────────────────────────
+
+function VaultDocCard({ doc }: { doc: VaultDocument }) {
+  const tDocs = useTranslations("documents");
+  const { fromRON } = useCurrency();
+
+  const typeLabel: Record<string, string> = {
+    rca: tDocs("type_rca"),
+    casco: tDocs("type_casco"),
+    itp: tDocs("type_itp"),
+    rovinieta: tDocs("type_rovinieta"),
+    vignette: tDocs("type_vignette"),
+    bridge_toll: tDocs("type_bridge_toll"),
+    car_tax: tDocs("type_car_tax"),
+    other: tDocs("type_other"),
+  };
+
+  const label = doc.document_type ? (typeLabel[doc.document_type] ?? doc.document_type) : "—";
+
+  const isExpired = doc.days_until_expiry != null && doc.days_until_expiry < 0;
+  const isExpiringSoon = !isExpired && doc.days_until_expiry != null && doc.days_until_expiry <= 30;
+
+  return (
+    <Card variant="surface" className="p-3.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              {label}
+            </span>
+            {doc.status === "processing" || doc.status === "pending" ? (
+              <span className="text-xs text-muted-foreground">{tDocs("processing")}</span>
+            ) : isExpired ? (
+              <span className="rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                {tDocs("expired_label")}
+              </span>
+            ) : isExpiringSoon ? (
+              <span className="rounded-md bg-chart-3/10 px-2 py-0.5 text-xs font-medium text-chart-3">
+                {tDocs("expiring_soon")}
+              </span>
+            ) : null}
+          </div>
+
+          {doc.plate_number && (
+            <p className="truncate text-xs text-muted-foreground">
+              {tDocs("plate")}: <span className="font-mono font-medium text-foreground">{doc.plate_number}</span>
+            </p>
+          )}
+
+          {doc.issuer && (
+            <p className="truncate text-xs text-muted-foreground">
+              {tDocs("issuer")}: {doc.issuer}
+            </p>
+          )}
+
+          {doc.valid_until && (
+            <p className="text-xs text-muted-foreground">
+              {tDocs("expiry_label")}: {doc.valid_until.slice(0, 10)}
+              {doc.days_until_expiry != null && doc.days_until_expiry >= 0 && (
+                <span className="ml-1 text-muted-foreground">
+                  ({tDocs("days_left", { days: doc.days_until_expiry })})
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+
+        {doc.amount_ron != null && doc.amount_ron > 0 && (
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-semibold tabular-nums">{fromRON(doc.amount_ron, 0)}</p>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function CostsClient(_: CostsClientProps) {
@@ -325,8 +431,10 @@ export function CostsClient(_: CostsClientProps) {
   const { mutate: recover, isPending: recovering, data: recoverResult, reset: resetRecover } =
     useRecoverDocuments(vehicleId);
   const { data: capabilities } = useCapabilities();
+  const { data: vaultDocs } = useVaultDocuments(vehicleId);
 
   const [showIngest, setShowIngest] = useState(false);
+  const [activeTab, setActiveTab] = useState<"energy" | "auto">("energy");
 
   const now = new Date();
   const docsThisMonth =
@@ -365,8 +473,15 @@ export function CostsClient(_: CostsClientProps) {
   }
 
   const costsData = costs as CostsResponse | undefined;
-  const hasDocuments = !docsLoading && documents && documents.length > 0;
-  const noDocuments = !docsLoading && (!documents || documents.length === 0);
+
+  // Filter energy docs: exclude vault-upload source AND car doc types
+  const energyDocs = documents?.filter(
+    (d) => d.source !== "vault-upload" && !CAR_DOC_TYPES.includes(d.document_type ?? ""),
+  );
+  const hasEnergyDocs = !docsLoading && energyDocs && energyDocs.length > 0;
+  const noEnergyDocs = !docsLoading && (!energyDocs || energyDocs.length === 0);
+
+  const autoCostRon = (vaultDocs ?? []).reduce((sum, d) => sum + (d.amount_ron ?? 0), 0);
 
   return (
     <PageWrapper className="relative mx-auto max-w-2xl gap-4 pb-28">
@@ -384,88 +499,158 @@ export function CostsClient(_: CostsClientProps) {
         </Button>
       </div>
 
-      {/* KPI chips row */}
-      {costsLoading ? (
-        <KpiChipsSkeleton />
-      ) : costsData ? (
-        <KpiChipsRow data={costsData} />
-      ) : null}
-
-      {/* Monthly bar chart */}
-      {costsData && costsData.monthlyTrend.length > 0 && (
-        <MonthlyBarChart months={costsData.monthlyTrend} />
-      )}
-
-      {/* Email recovery banner */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-4 py-2 text-xs">
-        <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
-          <Inbox className="size-3.5 shrink-0" />
-          <span className="min-w-0 truncate">{t("missing_email_docs")}</span>
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 shrink-0 text-xs"
-          onClick={() => recover()}
-          disabled={recovering}
+      {/* Tab bar */}
+      <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
+        <button
+          onClick={() => setActiveTab("energy")}
+          className={cn(
+            "flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors",
+            activeTab === "energy"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          {recovering && <Loader2 className="size-3 animate-spin" />}
-          {recoverResult ? t("recovered", { count: recoverResult.recovered }) : t("recover")}
-        </Button>
+          {t("tab_energy")}
+        </button>
+        <button
+          onClick={() => setActiveTab("auto")}
+          className={cn(
+            "flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors",
+            activeTab === "auto"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t("tab_auto")}
+        </button>
       </div>
 
-      {/* Ingest card: shown when FAB toggled or no docs yet */}
-      {(showIngest || noDocuments) && (
-        <motion.div variants={cardVariants} initial="hidden" animate="visible">
-          <IngestCard
-            email={vehicleEmail}
-            onUpload={handleUpload}
-            disabled={uploading}
-            uploading={uploading}
-            hasProSubscription={capabilities?.hasProSubscription}
-            docsThisMonth={docsThisMonth}
-          />
-        </motion.div>
+      {activeTab === "energy" && (
+        <>
+          {/* KPI chips row */}
+          {costsLoading ? (
+            <KpiChipsSkeleton />
+          ) : costsData ? (
+            <KpiChipsRow data={costsData} />
+          ) : null}
+
+          {/* Monthly bar chart */}
+          {costsData && costsData.monthlyTrend.length > 0 && (
+            <MonthlyBarChart months={costsData.monthlyTrend} />
+          )}
+
+          {/* Email recovery banner */}
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-4 py-2 text-xs">
+            <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
+              <Inbox className="size-3.5 shrink-0" />
+              <span className="min-w-0 truncate">{t("missing_email_docs")}</span>
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 shrink-0 text-xs"
+              onClick={() => recover()}
+              disabled={recovering}
+            >
+              {recovering && <Loader2 className="size-3 animate-spin" />}
+              {recoverResult ? t("recovered", { count: recoverResult.recovered }) : t("recover")}
+            </Button>
+          </div>
+
+          {/* Ingest card: shown when FAB toggled or no docs yet */}
+          {(showIngest || noEnergyDocs) && (
+            <motion.div variants={cardVariants} initial="hidden" animate="visible">
+              <IngestCard
+                email={vehicleEmail}
+                onUpload={handleUpload}
+                disabled={uploading}
+                uploading={uploading}
+                hasProSubscription={capabilities?.hasProSubscription}
+                docsThisMonth={docsThisMonth}
+              />
+            </motion.div>
+          )}
+
+          {/* Document timeline */}
+          {hasEnergyDocs ? (
+            <TimelineDocList
+              documents={energyDocs}
+              onEdit={(id, updates) =>
+                editDocument(
+                  { documentId: id, updates },
+                  {
+                    onSuccess: () => toast.success(t("edit_success")),
+                    onError: () => toast.error(t("edit_error")),
+                  },
+                )
+              }
+              onDelete={(id) => {
+                deleteDocument(id, {
+                  onSuccess: () => toast.success(t("delete_success")),
+                  onError: () => toast.error(t("delete_error")),
+                });
+              }}
+            />
+          ) : noEnergyDocs ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+              <Receipt className="size-10 opacity-30" />
+              <p className="text-sm">{t("no_docs_title")}</p>
+              <p className="text-xs">{t("no_docs_hint")}</p>
+            </div>
+          ) : null}
+        </>
       )}
 
-      {/* Document timeline */}
-      {hasDocuments ? (
-        <TimelineDocList
-          documents={documents}
-          onEdit={(id, updates) =>
-            editDocument(
-              { documentId: id, updates },
-              {
-                onSuccess: () => toast.success(t("edit_success")),
-                onError: () => toast.error(t("edit_error")),
-              },
-            )
-          }
-          onDelete={(id) => {
-            deleteDocument(id, {
-              onSuccess: () => toast.success(t("delete_success")),
-              onError: () => toast.error(t("delete_error")),
-            });
-          }}
-        />
-      ) : noDocuments ? (
-        <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
-          <Receipt className="size-10 opacity-30" />
-          <p className="text-sm">{t("no_docs_title")}</p>
-          <p className="text-xs">{t("no_docs_hint")}</p>
-        </div>
-      ) : null}
+      {activeTab === "auto" && (
+        <>
+          {/* Auto total cost chip */}
+          {autoCostRon > 0 && <AutoTotalStat amountRon={autoCostRon} />}
 
-      {/* FAB — floating action button, above bottom nav (64px) */}
-      <motion.button
-        aria-label={t("fab_label")}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowIngest((v) => !v)}
-        className="fixed bottom-24 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Plus className="size-6" />
-      </motion.button>
+          {/* Vault documents list */}
+          {vaultDocs && vaultDocs.length > 0 ? (
+            <div className="space-y-2.5">
+              <SectionHeader title={t("tab_auto")} icon={Car} />
+              <motion.div
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="space-y-2"
+              >
+                {vaultDocs.map((doc) => (
+                  <motion.div key={doc.id} variants={fadeInUp}>
+                    <VaultDocCard doc={doc} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-10 text-center text-muted-foreground">
+              <Car className="size-10 opacity-30" />
+              <p className="text-sm font-medium">{t("auto_empty_title")}</p>
+              <p className="text-xs">{t("auto_empty_hint")}</p>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/documents">
+                  <ExternalLink className="size-3.5" />
+                  {t("auto_go_to_docs")}
+                </a>
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* FAB — only in energy tab, floating above bottom nav (64px) */}
+      {activeTab === "energy" && (
+        <motion.button
+          aria-label={t("fab_label")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowIngest((v) => !v)}
+          className="fixed bottom-24 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Plus className="size-6" />
+        </motion.button>
+      )}
     </PageWrapper>
   );
 }

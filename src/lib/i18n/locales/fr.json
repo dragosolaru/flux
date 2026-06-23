@@ -563,7 +563,13 @@
       "ariaOpen": "Ouvrir le document",
       "ariaEdit": "Modifier",
       "ariaDelete": "Supprimer le document"
-    }
+    },
+    "tab_energy": "Énergie",
+    "tab_auto": "Véhicule",
+    "auto_total_cost": "Total frais auto",
+    "auto_empty_title": "Aucun document véhicule.",
+    "auto_empty_hint": "Importez assurance, CT ou vignette sur la page Documents.",
+    "auto_go_to_docs": "Aller aux Documents"
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",
@@ -1031,6 +1037,7 @@
     "days_left": "{days} jours restants",
     "expiring_soon": "Expire bientôt",
     "type_rca": "Assurance auto (RCA)",
+    "type_casco": "Assurance Tous Risques",
     "type_itp": "Contrôle technique (ITP)",
     "type_rovinieta": "Rovinieta",
     "type_vignette": "Vignette",

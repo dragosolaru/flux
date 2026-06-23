@@ -563,7 +563,13 @@
       "ariaOpen": "Open document",
       "ariaEdit": "Edit",
       "ariaDelete": "Delete document"
-    }
+    },
+    "tab_energy": "Energy",
+    "tab_auto": "Vehicle",
+    "auto_total_cost": "Total auto costs",
+    "auto_empty_title": "No vehicle documents yet.",
+    "auto_empty_hint": "Upload your RCA, ITP or vignette on the Documents page.",
+    "auto_go_to_docs": "Go to Documents"
   },
   "departure": {
     "title": "Departure & Preconditioning",
@@ -1031,6 +1037,7 @@
     "days_left": "{days} days left",
     "expiring_soon": "Expiring soon",
     "type_rca": "Car Insurance (RCA)",
+    "type_casco": "CASCO Insurance",
     "type_itp": "Technical Inspection (ITP)",
     "type_rovinieta": "Rovinieta",
     "type_vignette": "Vignette",

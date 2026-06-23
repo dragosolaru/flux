@@ -8,7 +8,7 @@ import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 
 const CONFIDENCE_THRESHOLD = 0.7;
 
-const CAR_DOC_TYPES: DocumentType[] = ["rca", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
+const CAR_DOC_TYPES: DocumentType[] = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
 
 function averageConfidence(c: ParsedDocument["confidence"]): number {
   const vals = Object.values(c).filter((v) => typeof v === "number");

@@ -34,7 +34,7 @@ export async function canAddVehicle(
   return { allowed: true };
 }
 
-const CAR_DOC_TYPES = ["rca", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
+const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
 
 export async function canUploadDocument(
   userId: string,

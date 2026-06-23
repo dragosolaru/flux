@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { VaultDocument } from "@/types/costs";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 
-const CAR_DOC_TYPES = ["rca", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
+const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
 const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function GET(

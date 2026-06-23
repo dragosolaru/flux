@@ -563,7 +563,13 @@
       "ariaOpen": "Dokument öffnen",
       "ariaEdit": "Bearbeiten",
       "ariaDelete": "Dokument löschen"
-    }
+    },
+    "tab_energy": "Energie",
+    "tab_auto": "Fahrzeug",
+    "auto_total_cost": "Fahrzeugkosten gesamt",
+    "auto_empty_title": "Noch keine Fahrzeugdokumente.",
+    "auto_empty_hint": "Lade KFZ-Versicherung, HU oder Vignette auf der Dokumente-Seite hoch.",
+    "auto_go_to_docs": "Zu Dokumente"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -1031,6 +1037,7 @@
     "days_left": "{days} Tage übrig",
     "expiring_soon": "Läuft bald ab",
     "type_rca": "KFZ-Versicherung (RCA)",
+    "type_casco": "Kaskoversicherung",
     "type_itp": "Hauptuntersuchung (ITP)",
     "type_rovinieta": "Rovinieta",
     "type_vignette": "Vignette",

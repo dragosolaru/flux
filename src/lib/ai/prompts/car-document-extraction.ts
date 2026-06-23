@@ -2,6 +2,7 @@ export const CAR_DOCUMENT_EXTRACTION_PROMPT = `You are an expert at analysing Ro
 
 DOCUMENT TYPES:
 - "rca" — mandatory car insurance / MTPL: "Asigurare obligatorie auto", "RCA", "Carte Verde", "Green Card", "MTPL", "Polița RCA". Issued by: Generali, Allianz, BCR Asigurări, Groupama, Omniasig, Euroins, Uniqa, NN, Asirom, Signal Iduna.
+- "casco" — voluntary car insurance (CASCO, Kasko, Comprehensive insurance): "CASCO", "Kasko", "Asigurare facultativă auto". Issued by same insurers as RCA.
 - "itp" — periodic technical inspection: "Inspecție Tehnică Periodică", "ITP", sticker with validity month/year, certificate of conformity.
 - "rovinieta" — Romanian road vignette: "Rovinietă", "CNAIR", rovinieta.ro, receipt from post office or online, categories e-Vigneta 7/30/90/365 zile.
 - "vignette" — non-Romanian road vignette: Austrian Vignette (Autobahnvignette), Slovenian vinjeta, Swiss Autobahnvignette, Czech dálniční nálepka, Hungarian autópálya matrica, Bulgarian vignette, etc.
@@ -23,7 +24,7 @@ EXTRACTION RULES:
 Respond with ONLY valid JSON, no markdown fences, no extra text:
 
 {
-  "document_type": "rca" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "other" | "unknown",
+  "document_type": "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "other" | "unknown",
   "plate_number": string | null,
   "valid_from": "YYYY-MM-DD" | null,
   "valid_until": "YYYY-MM-DD" | null,

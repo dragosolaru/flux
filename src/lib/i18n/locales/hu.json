@@ -563,7 +563,13 @@
       "ariaOpen": "Dokumentum megnyitása",
       "ariaEdit": "Szerkesztés",
       "ariaDelete": "Dokumentum törlése"
-    }
+    },
+    "tab_energy": "Energia",
+    "tab_auto": "Jármű",
+    "auto_total_cost": "Járműköltség összesen",
+    "auto_empty_title": "Még nincsenek járműdokumentumok.",
+    "auto_empty_hint": "Töltse fel a kötelező biztosítást, műszakit vagy matricát a Dokumentumok oldalon.",
+    "auto_go_to_docs": "Ugrás a Dokumentumokhoz"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -1031,6 +1037,7 @@
     "days_left": "{days} nap van hátra",
     "expiring_soon": "Hamarosan lejár",
     "type_rca": "Gépjármű-felelősségbiztosítás (RCA)",
+    "type_casco": "CASCO biztosítás",
     "type_itp": "Műszaki vizsga (ITP)",
     "type_rovinieta": "Rovinieta",
     "type_vignette": "Matrica",

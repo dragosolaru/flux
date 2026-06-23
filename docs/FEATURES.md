@@ -2148,7 +2148,12 @@ re-declaring inline queries with duplicate cache keys.
 
 ## 36. Per-vehicle Document Vault
 
-**What:** A document vault storing car-specific documents (RCA insurance, ITP technical inspection, rovinieta, European vignettes, bridge tolls, car tax) per vehicle. Claude Vision OCR extracts plate number, validity dates (critical for expiry reminders), issuer, and amount paid. Expiry status is computed per document (days until expiry, expired flag). Documents are uploaded via the same `/api/documents` endpoint — OCR auto-classifies them. A dedicated vault API returns only car-doc types with metadata merged from `vehicle_doc_meta`.
+**What:** A document vault storing car-specific documents (RCA insurance, CASCO insurance, ITP technical inspection, rovinieta, European vignettes, bridge tolls, car tax) per vehicle. Claude Vision OCR extracts plate number, validity dates (critical for expiry reminders), issuer, and amount paid. Expiry status is computed per document (days until expiry, expired flag). Documents are uploaded via the same `/api/documents` endpoint — OCR auto-classifies them. A dedicated vault API returns only car-doc types with metadata merged from `vehicle_doc_meta`.
+
+**Updates (2026-06):**
+- CASCO ("casco") document type added to OCR prompts, Zod schemas, `DocumentType`, and all `CAR_DOC_TYPES` arrays.
+- The energy OCR first-pass prompt (`document-extraction.ts`) now recognises car document types (rca, casco, itp, rovinieta, vignette, bridge_toll, car_tax) so the processor correctly re-routes them to the car parser instead of leaving them as "unknown".
+- Costs page (`/costs`) split into **Energie** and **Auto** tabs. Energy tab shows energy KPIs + monthly chart + document timeline (car docs excluded). Auto tab shows vault documents with a total cost chip and a link to the Documents page for uploads.
 
 **How to use:**
 - UI: `/documents` — vehicle selector (if multiple), document cards with type badge, expiry status, plate, issuer, view/delete buttons, upload button.
