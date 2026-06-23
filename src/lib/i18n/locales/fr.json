@@ -1085,7 +1085,10 @@
     "edit_cost_btn": "Modifier le coût",
     "add_cost_btn": "Ajouter un coût",
     "save_error": "Échec de la sauvegarde. Réessayez.",
-    "invalid_cost": "Montant invalide"
+    "invalid_cost": "Montant invalide",
+    "non_vehicle_title": "Pas un document véhicule",
+    "non_vehicle_hint": "Ce document ne semble pas être lié au véhicule. Vous pouvez le supprimer.",
+    "non_vehicle_deleted": "Document supprimé"
   },
   "notifications": {
     "rain_windows": {

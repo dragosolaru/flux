@@ -1085,7 +1085,10 @@
     "edit_cost_btn": "Költség szerkesztése",
     "add_cost_btn": "Költség hozzáadása",
     "save_error": "Mentés sikertelen. Próbáld újra.",
-    "invalid_cost": "Érvénytelen összeg"
+    "invalid_cost": "Érvénytelen összeg",
+    "non_vehicle_title": "Nem jármű dokumentum",
+    "non_vehicle_hint": "Ez a dokumentum nem tűnik jármű-kapcsolatosnak. Törölheted.",
+    "non_vehicle_deleted": "Dokumentum törölve"
   },
   "notifications": {
     "rain_windows": {

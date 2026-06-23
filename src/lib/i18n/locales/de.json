@@ -1085,7 +1085,10 @@
     "edit_cost_btn": "Kosten bearbeiten",
     "add_cost_btn": "Kosten hinzufügen",
     "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-    "invalid_cost": "Ungültiger Betrag"
+    "invalid_cost": "Ungültiger Betrag",
+    "non_vehicle_title": "Kein Fahrzeugdokument",
+    "non_vehicle_hint": "Dieses Dokument scheint nicht fahrzeugbezogen zu sein. Sie können es löschen.",
+    "non_vehicle_deleted": "Dokument gelöscht"
   },
   "notifications": {
     "rain_windows": {

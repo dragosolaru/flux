@@ -313,6 +313,55 @@ function DocCard({
   );
 }
 
+function NonVehicleCard({ doc, onDelete }: { doc: VaultDocument; onDelete: (id: string) => void }) {
+  const t = useTranslations("documents");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await apiFetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+      onDelete(doc.id);
+      toast.success(t("non_vehicle_deleted"));
+    } catch {
+      toast.error(t("delete_error"));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+      <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-400" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-amber-400">{t("non_vehicle_title")}</p>
+        <p className="text-xs text-muted-foreground">{t("non_vehicle_hint")}</p>
+        {doc.original_filename && (
+          <p className="mt-1 truncate text-xs text-muted-foreground/60">{doc.original_filename}</p>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        {doc.view_url && (
+          <Button variant="ghost" size="icon" className="size-8" asChild>
+            <a href={doc.view_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="size-3.5" />
+            </a>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-amber-400 hover:text-destructive"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CostSummary({ docs }: { docs: VaultDocument[] }) {
   const t = useTranslations("documents");
 
@@ -408,12 +457,15 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
   }
 
-  const groups = docs ? {
-    insurance: docs.filter((d) => getGroup(d) === "insurance"),
-    taxes: docs.filter((d) => getGroup(d) === "taxes"),
-    service: docs.filter((d) => getGroup(d) === "service"),
-    other: docs.filter((d) => getGroup(d) === "other"),
-  } : null;
+  const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle) ?? [];
+  const vehicleDocs = docs?.filter((d) => !d.is_non_vehicle) ?? [];
+
+  const groups = {
+    insurance: vehicleDocs.filter((d) => getGroup(d) === "insurance"),
+    taxes: vehicleDocs.filter((d) => getGroup(d) === "taxes"),
+    service: vehicleDocs.filter((d) => getGroup(d) === "service"),
+    other: vehicleDocs.filter((d) => getGroup(d) === "other"),
+  };
 
   return (
     <PageWrapper className="mx-auto max-w-2xl gap-4 pb-28">
@@ -458,12 +510,19 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
         </div>
       ) : (
         <>
-          <CostSummary docs={docs} />
+          {nonVehicleDocs.length > 0 && (
+            <div className="space-y-2">
+              {nonVehicleDocs.map((doc) => (
+                <NonVehicleCard key={doc.id} doc={doc} onDelete={handleDelete} />
+              ))}
+            </div>
+          )}
+          <CostSummary docs={vehicleDocs} />
           <div className="space-y-5">
-            <GroupSection label={t("group_insurance")} docs={groups?.insurance ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_taxes")} docs={groups?.taxes ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_service")} docs={groups?.service ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_other")} docs={groups?.other ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_insurance")} docs={groups.insurance} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_taxes")} docs={groups.taxes} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_service")} docs={groups.service} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_other")} docs={groups.other} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
           </div>
         </>
       )}

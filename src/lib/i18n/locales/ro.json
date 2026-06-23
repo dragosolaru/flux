@@ -1085,7 +1085,10 @@
     "edit_cost_btn": "Editează costul",
     "add_cost_btn": "Adaugă cost",
     "save_error": "Salvare eșuată. Încearcă din nou.",
-    "invalid_cost": "Sumă invalidă"
+    "invalid_cost": "Sumă invalidă",
+    "non_vehicle_title": "Document neaferent vehiculului",
+    "non_vehicle_hint": "Acest document nu pare să fie legat de vehicul. Îl poți șterge.",
+    "non_vehicle_deleted": "Document șters"
   },
   "notifications": {
     "rain_windows": {

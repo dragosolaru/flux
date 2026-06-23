@@ -77,6 +77,7 @@ export interface VaultDocument {
   original_filename: string | null;
   mime_type: string;
   status: DocumentStatus;
+  is_non_vehicle: boolean;
   view_url: string | null;
   created_at: string;
   processed_at: string | null;

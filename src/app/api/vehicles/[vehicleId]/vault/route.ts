@@ -44,10 +44,10 @@ export async function GET(
   const [{ data: docs }, { data: metas }] = await Promise.all([
     supabase
       .from("documents")
-      .select("id, document_type, original_filename, mime_type, status, parsed_json, created_at, processed_at, storage_path")
+      .select("id, source, document_type, original_filename, mime_type, status, parsed_json, created_at, processed_at, storage_path")
       .eq("vehicle_id", vehicleId)
       .eq("user_id", session.user.id)
-      .or(`document_type.in.(${CAR_DOC_TYPES.join(",")}),status.in.(pending,processing)`)
+      .or(`document_type.in.(${CAR_DOC_TYPES.join(",")}),status.in.(pending,processing),source.in.(vault-upload,manual)`)
       .order("created_at", { ascending: false })
       .limit(100),
     supabase
@@ -71,8 +71,11 @@ export async function GET(
     (metas ?? []).map((m: MetaRow) => [m.document_id, m]),
   );
 
+  const NON_VEHICLE_TYPES = new Set(["other", "unknown", "home_bill", "public_receipt", "gas_bill", "petrol_receipt"]);
+
   type DocRow = {
     id: string;
+    source: string;
     document_type: string | null;
     original_filename: string | null;
     mime_type: string;
@@ -106,26 +109,34 @@ export async function GET(
 
       const isProcessingStatus = doc.status === "processing" || doc.status === "pending";
       const isStuck = isProcessingStatus && now - new Date(doc.created_at).getTime() > PROCESSING_TIMEOUT_MS;
+      const pjType = (doc.parsed_json as Record<string, unknown> | null)?.document_type as VaultDocument["document_type"] | undefined;
 
-      // If processing is stuck but we already have meta data (OCR ran but status never updated),
-      // recover: mark done and use the document_type from parsed_json if available.
-      const recoveredType = isStuck && meta
-        ? ((doc.parsed_json as Record<string, unknown> | null)?.document_type as VaultDocument["document_type"] ?? null)
+      // Immediate recovery: OCR completed (parsed_json or meta exists) but documents.update failed.
+      // Don't wait for the 5-minute timeout — recover as soon as we detect the inconsistency.
+      const canRecover = isProcessingStatus && (meta != null || pjType != null);
+      const recoveredType = canRecover
+        ? (pjType ?? null)
         : null;
 
-      if (isStuck && meta) {
+      if (canRecover) {
         void supabase.from("documents").update({
           status: "done",
           ...(recoveredType ? { document_type: recoveredType } : {}),
         }).eq("id", doc.id).then();
       }
 
+      const finalType = recoveredType ?? (doc.document_type as VaultDocument["document_type"]) ?? null;
+      const effectiveStatus = canRecover ? "done" : isStuck ? (meta ? "done" : "error") : (doc.status as VaultDocument["status"]);
+      const isDone = effectiveStatus !== "pending" && effectiveStatus !== "processing";
+      const isNonVehicle = isDone && (finalType === null || NON_VEHICLE_TYPES.has(finalType ?? ""));
+
       return {
         id: doc.id,
-        document_type: recoveredType ?? (doc.document_type as VaultDocument["document_type"]) ?? null,
+        document_type: finalType,
         original_filename: doc.original_filename,
         mime_type: doc.mime_type,
-        status: isStuck ? (meta ? "done" : "error") : (doc.status as VaultDocument["status"]),
+        status: effectiveStatus,
+        is_non_vehicle: isNonVehicle,
         view_url: signed?.signedUrl ?? null,
         created_at: doc.created_at,
         processed_at: doc.processed_at,

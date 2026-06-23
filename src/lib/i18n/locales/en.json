@@ -1085,7 +1085,10 @@
     "edit_cost_btn": "Edit cost",
     "add_cost_btn": "Add cost",
     "save_error": "Failed to save. Please try again.",
-    "invalid_cost": "Invalid amount"
+    "invalid_cost": "Invalid amount",
+    "non_vehicle_title": "Not a vehicle document",
+    "non_vehicle_hint": "This document doesn't appear to be vehicle-related. You can delete it.",
+    "non_vehicle_deleted": "Document deleted"
   },
   "notifications": {
     "rain_windows": {
