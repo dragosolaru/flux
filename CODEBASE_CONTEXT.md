@@ -194,20 +194,20 @@ if (!profile.capabilities.commands[COMMAND_CAP_MAP[command]]) {
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon key |
 | `EMAIL_WEBHOOK_SECRET` | ✅ | Cloudmailin webhook (fail-closed if absent) |
 | `TIBBER_TOKEN` | optional | Real Tibber GraphQL prices |
-| `ANTHROPIC_API_KEY` | optional | OCR (falls back to OpenAI) |
-| `OPENAI_API_KEY` | optional | Alternative OCR |
+| `ANTHROPIC_API_KEY` | optional | OCR — Anthropic Claude is the only provider (no OpenAI fallback). Without it, document OCR is disabled. |
 | `TESLA_PROXY_BASE_URL` | optional | VCP proxy for post-2021 commands |
 | `NEXT_PUBLIC_CLOUDMAILIN_ADDRESS` | optional | Email ingest address shown in UI |
 
 ---
 
-## Active Blockers (as of 2026-05-25)
+## Active Blockers (as of 2026-06-23)
 
 | # | Blocker | Notes |
 |---|---------|-------|
 | 1 | Tesla VCP proxy | Post-2021 cars: deploy `tesla-http-proxy` Go binary, set `TESLA_PROXY_BASE_URL` |
 | 2 | `virtual_key_paired` flag | Never set to `true` — commands gated even after VCP proxy |
-| 3 | E2E test suite | No Playwright; regressions go undetected |
+
+> E2E coverage exists: Playwright suite in `e2e/` (`npm run test:e2e`).
 
 ---
 
@@ -215,15 +215,23 @@ if (!profile.capabilities.commands[COMMAND_CAP_MAP[command]]) {
 
 | File | What's in it |
 |------|-------------|
-| `docs/USER-JOURNEY.md` | All user journeys, screen reference, feature gates, PWA install flow |
+| `docs/FEATURES.md` | Master feature catalog — what each feature does, entry point, key files, deps |
 | `docs/ARCHITECTURE.md` | Engineering decisions, DB schema rationale, module boundaries |
 | `docs/SYSTEMS.md` | Every third-party service — Supabase, Tesla API, Cloudmailin, Anthropic |
 | `docs/VEHICLE-CONNECTION.md` | Tesla OAuth PKCE flow, token lifecycle, VCP proxy setup |
 | `docs/COST-INTELLIGENCE.md` | OCR pipeline, document attribution, cost aggregation |
 | `docs/SIMULATOR.md` | Mock engine internals — tick logic, scenarios, snapshot schema |
 | `docs/BRANDS.md` | Brand capability model, adding new brands |
-| `docs/LIVE-VS-DEMO.md` | How live vs mock mode is switched, `LIVE_INTEGRATIONS` env var |
-| `docs/SECURITY-AUDIT.md` | Two audit passes, all findings + fixes, launch readiness checklist |
+| `docs/LIVE-VS-DEMO.md` | How live vs mock mode is switched per data type |
+| `docs/SECURITY-AUDIT.md` | Audit findings + fixes, launch readiness checklist |
+| `docs/INTEGRATIONS-CAR-ADMIN.md` | Car-admin integrations (RCA/ITP/rovinietă etc.) |
+| `docs/USER-JOURNEY.md` | All user journeys, screen reference, feature gates, PWA install flow |
+| `docs/DEPLOYMENT.md` | Vercel deployment (primary) |
+| `docs/DEPLOYMENT-HETZNER.md` | Self-host alternative (Docker / standalone on Hetzner) |
+| `docs/DESIGN-REVIEW.md` | Dated UI/UX design review snapshot |
+| `docs/MARKETING.md` | Positioning, messaging, go-to-market |
+| `docs/USER-RESEARCH-2026-06-11.md` | Dated user-research snapshot |
 | `docs/ROADMAP.md` | Product vision, feature pipeline, prioritisation |
-| `docs/TODO.md` | Detailed backlog with effort estimates — updated after each sprint |
-| `docs/CHANGELOG.md` | Version history |
+| `docs/TODO.md` | Detailed backlog with effort estimates |
+| `docs/superpowers/specs/` | Dated design specs (historical record per feature) |
+| `CHANGELOG.md` | Version history (repo root) |
