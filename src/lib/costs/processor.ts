@@ -8,7 +8,7 @@ import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 
 const CONFIDENCE_THRESHOLD = 0.7;
 
-const CAR_DOC_TYPES: DocumentType[] = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax"];
+const CAR_DOC_TYPES: DocumentType[] = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking"];
 
 function averageConfidence(c: ParsedDocument["confidence"]): number {
   const vals = Object.values(c).filter((v) => typeof v === "number");
@@ -42,9 +42,13 @@ export async function processDocument(documentId: string): Promise<void> {
     const avgConf = averageConfidence(finalParsed.confidence);
 
     if (isCarDoc) {
-      if (doc.vehicle_id && finalParsed.valid_until) {
-        const docDate = finalParsed.valid_until ? new Date(finalParsed.valid_until) : new Date();
-        const exchangeRate = await getExchangeRate(finalParsed.currency ?? "RON", docDate);
+      if (doc.vehicle_id) {
+        const refDate = finalParsed.valid_until
+          ? new Date(finalParsed.valid_until)
+          : finalParsed.valid_from
+            ? new Date(finalParsed.valid_from)
+            : new Date();
+        const exchangeRate = await getExchangeRate(finalParsed.currency ?? "RON", refDate);
         const costTotal = finalParsed.cost_total ?? 0;
         const amountRon = costTotal > 0 ? costTotal * exchangeRate : null;
 
@@ -53,7 +57,7 @@ export async function processDocument(documentId: string): Promise<void> {
           vehicle_id: doc.vehicle_id,
           plate_number: finalParsed.plate_number ?? null,
           valid_from: finalParsed.valid_from ?? null,
-          valid_until: finalParsed.valid_until,
+          valid_until: finalParsed.valid_until ?? null,
           issuer: finalParsed.issuer ?? null,
           amount_ron: amountRon,
         });

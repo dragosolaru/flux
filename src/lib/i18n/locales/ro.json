@@ -569,7 +569,19 @@
     "auto_total_cost": "Total costuri auto",
     "auto_empty_title": "Niciun document auto încă.",
     "auto_empty_hint": "Încarcă RCA, ITP sau rovinieta pe pagina Documente.",
-    "auto_go_to_docs": "Mergi la Documente"
+    "auto_go_to_docs": "Mergi la Documente",
+    "auto_add_manual": "Adaugă manual",
+    "manual_form_title": "Adaugă cheltuială",
+    "manual_type_label": "Tip document",
+    "manual_amount_label": "Sumă (RON)",
+    "manual_date_label": "Data",
+    "manual_expiry_label": "Expiră la",
+    "manual_issuer_label": "Emitent / Furnizor",
+    "manual_issuer_placeholder": "Ex: Generali, Service XYZ...",
+    "manual_plate_label": "Număr înmatriculare",
+    "manual_save_btn": "Salvează",
+    "manual_cancel_btn": "Anulează",
+    "manual_save_success": "Cheltuială adăugată"
   },
   "departure": {
     "title": "Plecare & Preconditionare",
@@ -1047,7 +1059,9 @@
     "plate": "Număr înmatriculare",
     "issuer": "Emitent",
     "processing": "Se procesează...",
-    "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat."
+    "email_hint": "Poți trimite documentele și pe docs@flux.ro și vor fi adăugate automat.",
+    "type_service": "Factură service",
+    "type_parking": "Parcare"
   },
   "notifications": {
     "rain_windows": {

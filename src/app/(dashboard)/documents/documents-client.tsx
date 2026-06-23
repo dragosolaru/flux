@@ -36,11 +36,14 @@ type DocTypeBadgeColor =
 function docTypeBadgeColor(type: VaultDocument["document_type"]): DocTypeBadgeColor {
   switch (type) {
     case "rca": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+    case "casco": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     case "itp": return "bg-green-500/20 text-green-400 border-green-500/30";
     case "rovinieta": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     case "vignette": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
     case "bridge_toll": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
     case "car_tax": return "bg-red-500/20 text-red-400 border-red-500/30";
+    case "service": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+    case "parking": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
     default: return "bg-muted/40 text-muted-foreground border-border";
   }
 }
@@ -65,11 +68,14 @@ function DocCard({
   const typeLabel = (() => {
     switch (doc.document_type) {
       case "rca": return t("type_rca");
+      case "casco": return t("type_casco");
       case "itp": return t("type_itp");
       case "rovinieta": return t("type_rovinieta");
       case "vignette": return t("type_vignette");
       case "bridge_toll": return t("type_bridge_toll");
       case "car_tax": return t("type_car_tax");
+      case "service": return t("type_service");
+      case "parking": return t("type_parking");
       default: return t("type_other");
     }
   })();

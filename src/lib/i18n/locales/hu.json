@@ -569,7 +569,19 @@
     "auto_total_cost": "Járműköltség összesen",
     "auto_empty_title": "Még nincsenek járműdokumentumok.",
     "auto_empty_hint": "Töltse fel a kötelező biztosítást, műszakit vagy matricát a Dokumentumok oldalon.",
-    "auto_go_to_docs": "Ugrás a Dokumentumokhoz"
+    "auto_go_to_docs": "Ugrás a Dokumentumokhoz",
+    "auto_add_manual": "Manuális hozzáadás",
+    "manual_form_title": "Kiadás hozzáadása",
+    "manual_type_label": "Dokumentumtípus",
+    "manual_amount_label": "Összeg (RON)",
+    "manual_date_label": "Dátum",
+    "manual_expiry_label": "Lejárat",
+    "manual_issuer_label": "Kibocsátó / Szolgáltató",
+    "manual_issuer_placeholder": "pl. Generali, XYZ Szerviz...",
+    "manual_plate_label": "Rendszám",
+    "manual_save_btn": "Mentés",
+    "manual_cancel_btn": "Mégse",
+    "manual_save_success": "Kiadás hozzáadva"
   },
   "energy": {
     "smart_charge_title": "Okos töltés",
@@ -1047,7 +1059,9 @@
     "plate": "Rendszám",
     "issuer": "Kibocsátó",
     "processing": "Feldolgozás...",
-    "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak."
+    "email_hint": "Dokumentumokat a docs@flux.ro címre is továbbíthatja, és azok automatikusan hozzáadódnak.",
+    "type_service": "Szervizszámla",
+    "type_parking": "Parkolás"
   },
   "notifications": {
     "rain_windows": {

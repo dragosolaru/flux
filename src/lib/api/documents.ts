@@ -44,3 +44,20 @@ export function remove(documentId: string): Promise<unknown> {
 export function listVault(vehicleId: string): Promise<VaultDocument[]> {
   return apiFetch<VaultDocument[]>(`/api/vehicles/${vehicleId}/vault`);
 }
+
+export function createManualVaultDoc(
+  vehicleId: string,
+  data: {
+    document_type: string;
+    amount_ron?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    issuer?: string | null;
+    plate_number?: string | null;
+  },
+): Promise<{ id: string }> {
+  return apiFetch<{ id: string }>(`/api/vehicles/${vehicleId}/vault`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

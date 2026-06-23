@@ -569,7 +569,19 @@
     "auto_total_cost": "Total frais auto",
     "auto_empty_title": "Aucun document véhicule.",
     "auto_empty_hint": "Importez assurance, CT ou vignette sur la page Documents.",
-    "auto_go_to_docs": "Aller aux Documents"
+    "auto_go_to_docs": "Aller aux Documents",
+    "auto_add_manual": "Ajouter manuellement",
+    "manual_form_title": "Ajouter une dépense",
+    "manual_type_label": "Type de document",
+    "manual_amount_label": "Montant (RON)",
+    "manual_date_label": "Date",
+    "manual_expiry_label": "Expire le",
+    "manual_issuer_label": "Émetteur / Prestataire",
+    "manual_issuer_placeholder": "ex: Generali, Garage XYZ...",
+    "manual_plate_label": "Immatriculation",
+    "manual_save_btn": "Enregistrer",
+    "manual_cancel_btn": "Annuler",
+    "manual_save_success": "Dépense ajoutée"
   },
   "energy": {
     "smart_charge_title": "Charge intelligente",
@@ -1047,7 +1059,9 @@
     "plate": "Immatriculation",
     "issuer": "Émetteur",
     "processing": "Traitement en cours...",
-    "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement."
+    "email_hint": "Vous pouvez également transférer vos documents à docs@flux.ro et ils seront ajoutés automatiquement.",
+    "type_service": "Facture entretien",
+    "type_parking": "Parking"
   },
   "notifications": {
     "rain_windows": {

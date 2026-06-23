@@ -569,7 +569,19 @@
     "auto_total_cost": "Total auto costs",
     "auto_empty_title": "No vehicle documents yet.",
     "auto_empty_hint": "Upload your RCA, ITP or vignette on the Documents page.",
-    "auto_go_to_docs": "Go to Documents"
+    "auto_go_to_docs": "Go to Documents",
+    "auto_add_manual": "Add manually",
+    "manual_form_title": "Add expense",
+    "manual_type_label": "Document type",
+    "manual_amount_label": "Amount (RON)",
+    "manual_date_label": "Date",
+    "manual_expiry_label": "Expires",
+    "manual_issuer_label": "Issuer / Provider",
+    "manual_issuer_placeholder": "e.g. Generali, Service XYZ...",
+    "manual_plate_label": "License plate",
+    "manual_save_btn": "Save",
+    "manual_cancel_btn": "Cancel",
+    "manual_save_success": "Expense added"
   },
   "departure": {
     "title": "Departure & Preconditioning",
@@ -1047,7 +1059,9 @@
     "plate": "Plate",
     "issuer": "Issuer",
     "processing": "Processing...",
-    "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically."
+    "email_hint": "You can also forward documents to docs@flux.ro and they will be added automatically.",
+    "type_service": "Service Invoice",
+    "type_parking": "Parking"
   },
   "notifications": {
     "rain_windows": {

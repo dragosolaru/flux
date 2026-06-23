@@ -1,5 +1,5 @@
-export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload";
-export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax";
+export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload" | "manual";
+export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
 export interface Document {

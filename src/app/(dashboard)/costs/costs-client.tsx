@@ -36,7 +36,8 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useVaultDocuments } from "@/hooks/useVaultDocuments";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import * as documentsApi from "@/lib/api/documents";
 import { cardVariants, fadeInUp, staggerContainer } from "@/lib/animations/variants";
 import {
   SectionHeader,
@@ -411,6 +412,156 @@ function VaultDocCard({ doc }: { doc: VaultDocument }) {
   );
 }
 
+// ─── Manual entry form ────────────────────────────────────────────────────────
+
+const ALL_CAR_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "other"] as const;
+const TYPES_WITH_EXPIRY = ["rca", "casco", "itp", "rovinieta", "vignette"];
+
+type ManualFormData = {
+  document_type: string;
+  amount_ron: number | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  issuer: string | null;
+  plate_number: string | null;
+};
+
+function ManualEntryForm({
+  saving,
+  onSave,
+  onCancel,
+}: {
+  saving: boolean;
+  onSave: (data: ManualFormData) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const tDocs = useTranslations("documents");
+  const tCosts = useTranslations("costs");
+  const [docType, setDocType] = useState<string>("rca");
+  const [amountRon, setAmountRon] = useState("");
+  const [validFrom, setValidFrom] = useState("");
+  const [validUntil, setValidUntil] = useState("");
+  const [issuer, setIssuer] = useState("");
+  const [plateNumber, setPlateNumber] = useState("");
+
+  const typeLabel = (type: string): string => {
+    const map: Record<string, string> = {
+      rca: tDocs("type_rca"),
+      casco: tDocs("type_casco"),
+      itp: tDocs("type_itp"),
+      rovinieta: tDocs("type_rovinieta"),
+      vignette: tDocs("type_vignette"),
+      bridge_toll: tDocs("type_bridge_toll"),
+      car_tax: tDocs("type_car_tax"),
+      service: tDocs("type_service"),
+      parking: tDocs("type_parking"),
+      other: tDocs("type_other"),
+    };
+    return map[type] ?? type;
+  };
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await onSave({
+      document_type: docType,
+      amount_ron: amountRon ? parseFloat(amountRon) : null,
+      valid_from: validFrom || null,
+      valid_until: TYPES_WITH_EXPIRY.includes(docType) ? (validUntil || null) : null,
+      issuer: issuer.trim() || null,
+      plate_number: plateNumber.trim() || null,
+    });
+  }
+
+  const hasExpiry = TYPES_WITH_EXPIRY.includes(docType);
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card/60 p-4">
+      <p className="text-sm font-medium">{tCosts("manual_form_title")}</p>
+
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">{tCosts("manual_type_label")}</label>
+        <select
+          value={docType}
+          onChange={(e) => setDocType(e.target.value)}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {ALL_CAR_TYPES.map((t) => (
+            <option key={t} value={t}>{typeLabel(t)}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">{tCosts("manual_amount_label")}</label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={amountRon}
+          onChange={(e) => setAmountRon(e.target.value)}
+          placeholder="0.00"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div className={cn("grid gap-3", hasExpiry ? "grid-cols-2" : "grid-cols-1")}>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">{tCosts("manual_date_label")}</label>
+          <input
+            type="date"
+            value={validFrom}
+            onChange={(e) => setValidFrom(e.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
+        {hasExpiry && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">{tCosts("manual_expiry_label")}</label>
+            <input
+              type="date"
+              value={validUntil}
+              onChange={(e) => setValidUntil(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">{tCosts("manual_issuer_label")}</label>
+        <input
+          type="text"
+          value={issuer}
+          onChange={(e) => setIssuer(e.target.value)}
+          placeholder={tCosts("manual_issuer_placeholder")}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">{tCosts("manual_plate_label")}</label>
+        <input
+          type="text"
+          value={plateNumber}
+          onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+          placeholder="B 123 ABC"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="flex-1" disabled={saving}>
+          {saving && <Loader2 className="mr-1 size-3.5 animate-spin" />}
+          {tCosts("manual_save_btn")}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+          {tCosts("manual_cancel_btn")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function CostsClient(_: CostsClientProps) {
@@ -435,6 +586,12 @@ export function CostsClient(_: CostsClientProps) {
 
   const [showIngest, setShowIngest] = useState(false);
   const [activeTab, setActiveTab] = useState<"energy" | "auto">("energy");
+  const [showManualForm, setShowManualForm] = useState(false);
+
+  const { mutateAsync: createManualDoc, isPending: savingManual } = useMutation({
+    mutationFn: (data: ManualFormData) => documentsApi.createManualVaultDoc(vehicleId, data),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] }),
+  });
 
   const now = new Date();
   const docsThisMonth =
@@ -607,24 +764,23 @@ export function CostsClient(_: CostsClientProps) {
           {autoCostRon > 0 && <AutoTotalStat amountRon={autoCostRon} />}
 
           {/* Vault documents list */}
-          {vaultDocs && vaultDocs.length > 0 ? (
-            <div className="space-y-2.5">
-              <SectionHeader title={t("tab_auto")} icon={Car} />
-              <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-                className="space-y-2"
-              >
-                {vaultDocs.map((doc) => (
-                  <motion.div key={doc.id} variants={fadeInUp}>
-                    <VaultDocCard doc={doc} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-3 py-10 text-center text-muted-foreground">
+          {vaultDocs && vaultDocs.length > 0 && (
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="space-y-2"
+            >
+              {vaultDocs.map((doc) => (
+                <motion.div key={doc.id} variants={fadeInUp}>
+                  <VaultDocCard doc={doc} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {!vaultDocs?.length && !showManualForm && (
+            <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground">
               <Car className="size-10 opacity-30" />
               <p className="text-sm font-medium">{t("auto_empty_title")}</p>
               <p className="text-xs">{t("auto_empty_hint")}</p>
@@ -635,6 +791,28 @@ export function CostsClient(_: CostsClientProps) {
                 </a>
               </Button>
             </div>
+          )}
+
+          {showManualForm ? (
+            <ManualEntryForm
+              saving={savingManual}
+              onSave={async (data) => {
+                await createManualDoc(data);
+                setShowManualForm(false);
+                toast.success(t("manual_save_success"));
+              }}
+              onCancel={() => setShowManualForm(false)}
+            />
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowManualForm(true)}
+            >
+              <Plus className="size-4" />
+              {t("auto_add_manual")}
+            </Button>
           )}
         </>
       )}

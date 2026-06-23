@@ -8,6 +8,8 @@ DOCUMENT TYPES:
 - "vignette" — non-Romanian road vignette: Austrian Vignette (Autobahnvignette), Slovenian vinjeta, Swiss Autobahnvignette, Czech dálniční nálepka, Hungarian autópálya matrica, Bulgarian vignette, etc.
 - "bridge_toll" — bridge or tunnel toll receipt: "Taxă pod", "Pod Cernavodă", "Agigea", "Faurei", tolls for specific crossings.
 - "car_tax" — annual vehicle tax: "Impozit pe mijloc de transport", "Taxa auto", "DITL", receipt from local tax authority (ANAF, primărie).
+- "service" — car service / repair / maintenance invoice: workshop invoice, oil change, tire change, mechanical repairs, bodywork, "factură service auto", "bon service", "autorizație reparații". Extract service date as valid_from, no valid_until.
+- "parking" — parking receipt: "bon parcare", "parcare", parking ticket, "P+R", parking machine receipt. Extract date as valid_from, no valid_until, location/operator as issuer.
 - "other" — car-related document that does not fit the above.
 - "unknown" — cannot be determined.
 
@@ -24,7 +26,7 @@ EXTRACTION RULES:
 Respond with ONLY valid JSON, no markdown fences, no extra text:
 
 {
-  "document_type": "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "other" | "unknown",
+  "document_type": "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "other" | "unknown",
   "plate_number": string | null,
   "valid_from": "YYYY-MM-DD" | null,
   "valid_until": "YYYY-MM-DD" | null,

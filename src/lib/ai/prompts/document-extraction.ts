@@ -14,6 +14,8 @@ TIPURI DE DOCUMENTE:
 - "vignette" — vignietă de autostradă străină (Austria, Elveția, Slovenia, Cehia, Ungaria etc.)
 - "bridge_toll" — taxă pod sau tunel (Pod Cernavodă, Agigea etc.)
 - "car_tax" — impozit anual pe mijloc de transport (DITL, ANAF, primărie)
+- "service" — factură de service auto / reparații (schimb ulei, anvelope, reparații mecanice, caroserie, "factură service", "bon service")
+- "parking" — bon de parcare (parcare, P+R, tichet parcare, parcare subterană, parcare aeroport)
 - "other" — altceva: factură apă, factură telefon, bon alimentar, cafea, țigări, orice altceva
 - "unknown" — documentul nu poate fi identificat
 
@@ -31,7 +33,7 @@ REGULI STRICTE:
 Răspunde EXCLUSIV cu JSON valid, fără text, fără markdown:
 
 {
-  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "other" | "unknown",
+  "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "other" | "unknown",
   "has_non_electricity_items": boolean,
   "provider_name": string | null,
   "period_start": "YYYY-MM-DD" | null,

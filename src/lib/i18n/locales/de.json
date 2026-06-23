@@ -569,7 +569,19 @@
     "auto_total_cost": "Fahrzeugkosten gesamt",
     "auto_empty_title": "Noch keine Fahrzeugdokumente.",
     "auto_empty_hint": "Lade KFZ-Versicherung, HU oder Vignette auf der Dokumente-Seite hoch.",
-    "auto_go_to_docs": "Zu Dokumente"
+    "auto_go_to_docs": "Zu Dokumente",
+    "auto_add_manual": "Manuell hinzufügen",
+    "manual_form_title": "Ausgabe hinzufügen",
+    "manual_type_label": "Dokumenttyp",
+    "manual_amount_label": "Betrag (RON)",
+    "manual_date_label": "Datum",
+    "manual_expiry_label": "Ablaufdatum",
+    "manual_issuer_label": "Aussteller / Anbieter",
+    "manual_issuer_placeholder": "z.B. Generali, Werkstatt XYZ...",
+    "manual_plate_label": "Kennzeichen",
+    "manual_save_btn": "Speichern",
+    "manual_cancel_btn": "Abbrechen",
+    "manual_save_success": "Ausgabe gespeichert"
   },
   "energy": {
     "smart_charge_title": "Intelligentes Laden",
@@ -1047,7 +1059,9 @@
     "plate": "Kennzeichen",
     "issuer": "Aussteller",
     "processing": "Wird verarbeitet...",
-    "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt."
+    "email_hint": "Du kannst Dokumente auch an docs@flux.ro weiterleiten und sie werden automatisch hinzugefügt.",
+    "type_service": "Werkstattrechnung",
+    "type_parking": "Parkgebühr"
   },
   "notifications": {
     "rain_windows": {
