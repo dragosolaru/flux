@@ -1081,7 +1081,11 @@
     "group_insurance": "Versicherungen",
     "group_taxes": "Steuern & Vignetten",
     "group_service": "Service & Teile",
-    "group_other": "Sonstiges"
+    "group_other": "Sonstiges",
+    "edit_cost_btn": "Kosten bearbeiten",
+    "add_cost_btn": "Kosten hinzufügen",
+    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "invalid_cost": "Ungültiger Betrag"
   },
   "notifications": {
     "rain_windows": {

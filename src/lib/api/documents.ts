@@ -45,6 +45,23 @@ export function listVault(vehicleId: string): Promise<VaultDocument[]> {
   return apiFetch<VaultDocument[]>(`/api/vehicles/${vehicleId}/vault`);
 }
 
+export function updateVaultDoc(
+  vehicleId: string,
+  documentId: string,
+  data: {
+    amount_ron?: number | null;
+    valid_until?: string | null;
+    valid_from?: string | null;
+    issuer?: string | null;
+    plate_number?: string | null;
+  },
+): Promise<{ ok: boolean }> {
+  return apiFetch<{ ok: boolean }>(`/api/vehicles/${vehicleId}/vault/${documentId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
 export function createManualVaultDoc(
   vehicleId: string,
   data: {

@@ -104,16 +104,28 @@ export async function GET(
         days_until_expiry = Math.ceil((expiry - now) / 86_400_000);
       }
 
-      const isStuck =
-        (doc.status === "processing" || doc.status === "pending") &&
-        now - new Date(doc.created_at).getTime() > PROCESSING_TIMEOUT_MS;
+      const isProcessingStatus = doc.status === "processing" || doc.status === "pending";
+      const isStuck = isProcessingStatus && now - new Date(doc.created_at).getTime() > PROCESSING_TIMEOUT_MS;
+
+      // If processing is stuck but we already have meta data (OCR ran but status never updated),
+      // recover: mark done and use the document_type from parsed_json if available.
+      const recoveredType = isStuck && meta
+        ? ((doc.parsed_json as Record<string, unknown> | null)?.document_type as VaultDocument["document_type"] ?? null)
+        : null;
+
+      if (isStuck && meta) {
+        void supabase.from("documents").update({
+          status: "done",
+          ...(recoveredType ? { document_type: recoveredType } : {}),
+        }).eq("id", doc.id).then();
+      }
 
       return {
         id: doc.id,
-        document_type: (doc.document_type as VaultDocument["document_type"]) ?? null,
+        document_type: recoveredType ?? (doc.document_type as VaultDocument["document_type"]) ?? null,
         original_filename: doc.original_filename,
         mime_type: doc.mime_type,
-        status: isStuck ? "error" : (doc.status as VaultDocument["status"]),
+        status: isStuck ? (meta ? "done" : "error") : (doc.status as VaultDocument["status"]),
         view_url: signed?.signedUrl ?? null,
         created_at: doc.created_at,
         processed_at: doc.processed_at,

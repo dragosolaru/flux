@@ -1081,7 +1081,11 @@
     "group_insurance": "Insurance",
     "group_taxes": "Taxes & vignettes",
     "group_service": "Service & parts",
-    "group_other": "Other"
+    "group_other": "Other",
+    "edit_cost_btn": "Edit cost",
+    "add_cost_btn": "Add cost",
+    "save_error": "Failed to save. Please try again.",
+    "invalid_cost": "Invalid amount"
   },
   "notifications": {
     "rain_windows": {

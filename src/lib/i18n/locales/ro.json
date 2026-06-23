@@ -1081,7 +1081,11 @@
     "group_insurance": "Asigurări",
     "group_taxes": "Taxe & vignete",
     "group_service": "Service & piese",
-    "group_other": "Altele"
+    "group_other": "Altele",
+    "edit_cost_btn": "Editează costul",
+    "add_cost_btn": "Adaugă cost",
+    "save_error": "Salvare eșuată. Încearcă din nou.",
+    "invalid_cost": "Sumă invalidă"
   },
   "notifications": {
     "rain_windows": {

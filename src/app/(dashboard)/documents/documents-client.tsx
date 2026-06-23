@@ -10,13 +10,18 @@ import {
   Trash2,
   AlertCircle,
   Receipt,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useVaultDocuments } from "@/hooks/useVaultDocuments";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { apiFetch } from "@/lib/api-fetch";
+import * as documentsApi from "@/lib/api/documents";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { cn } from "@/lib/utils";
@@ -92,9 +97,23 @@ function getGroup(doc: VaultDocument): "insurance" | "taxes" | "service" | "othe
   return "other";
 }
 
-function DocCard({ doc, onDelete, locale }: { doc: VaultDocument; onDelete: (id: string) => void; locale: string }) {
+function DocCard({
+  doc,
+  onDelete,
+  onUpdated,
+  locale,
+  vehicleId,
+}: {
+  doc: VaultDocument;
+  onDelete: (id: string) => void;
+  onUpdated: () => void;
+  locale: string;
+  vehicleId: string;
+}) {
   const t = useTranslations("documents");
   const [deleting, setDeleting] = useState(false);
+  const [editingCost, setEditingCost] = useState(false);
+  const [costInput, setCostInput] = useState("");
 
   const isProcessing = doc.status === "pending" || doc.status === "processing";
   const isError = doc.status === "error";
@@ -140,6 +159,28 @@ function DocCard({ doc, onDelete, locale }: { doc: VaultDocument; onDelete: (id:
     return "text-green-400";
   })();
 
+  const saveCostMutation = useMutation({
+    mutationFn: (amount: number | null) =>
+      documentsApi.updateVaultDoc(vehicleId, doc.id, { amount_ron: amount }),
+    onSuccess: () => { setEditingCost(false); onUpdated(); },
+    onError: () => toast.error(t("save_error")),
+  });
+
+  function startEditCost() {
+    setCostInput(doc.amount_ron != null ? String(doc.amount_ron) : "");
+    setEditingCost(true);
+  }
+
+  function submitCost() {
+    const trimmed = costInput.trim();
+    const amount = trimmed === "" ? null : parseFloat(trimmed.replace(",", "."));
+    if (trimmed !== "" && (isNaN(amount!) || amount! <= 0)) {
+      toast.error(t("invalid_cost"));
+      return;
+    }
+    saveCostMutation.mutate(amount);
+  }
+
   async function handleDelete() {
     setDeleting(true);
     try {
@@ -179,10 +220,36 @@ function DocCard({ doc, onDelete, locale }: { doc: VaultDocument; onDelete: (id:
               {hasData ? null : t("processing")}
             </span>
           )}
-          {doc.amount_ron != null && !isProcessing && (
-            <span className="ml-auto text-sm font-semibold tabular-nums text-foreground">
-              {formatRon(doc.amount_ron)}
-            </span>
+          {(doc.amount_ron != null || !isProcessing) && (
+            editingCost ? (
+              <div className="ml-auto flex items-center gap-1">
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={costInput}
+                  onChange={(e) => setCostInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitCost(); if (e.key === "Escape") setEditingCost(false); }}
+                  className="h-6 w-24 px-1.5 text-xs"
+                  placeholder="0.00"
+                  autoFocus
+                />
+                <Button variant="ghost" size="icon" className="size-6" onClick={submitCost} disabled={saveCostMutation.isPending}>
+                  {saveCostMutation.isPending ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3 text-green-400" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="size-6" onClick={() => setEditingCost(false)}>
+                  <X className="size-3" />
+                </Button>
+              </div>
+            ) : (
+              <button
+                onClick={startEditCost}
+                className="group ml-auto flex items-center gap-1 text-sm font-semibold tabular-nums text-foreground"
+                aria-label={t("edit_cost_btn")}
+              >
+                <span>{doc.amount_ron != null ? formatRon(doc.amount_ron) : <span className="text-xs font-normal text-muted-foreground/50">{t("add_cost_btn")}</span>}</span>
+                <Pencil className="size-3 text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
+              </button>
+            )
           )}
         </div>
 
@@ -273,12 +340,16 @@ function GroupSection({
   label,
   docs,
   onDelete,
+  onUpdated,
   locale,
+  vehicleId,
 }: {
   label: string;
   docs: VaultDocument[];
   onDelete: (id: string) => void;
+  onUpdated: () => void;
   locale: string;
+  vehicleId: string;
 }) {
   if (docs.length === 0) return null;
   const sorted = [...docs].sort((a, b) => {
@@ -291,7 +362,7 @@ function GroupSection({
     <div className="space-y-2">
       <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{label}</p>
       {sorted.map((doc) => (
-        <DocCard key={doc.id} doc={doc} onDelete={onDelete} locale={locale} />
+        <DocCard key={doc.id} doc={doc} onDelete={onDelete} onUpdated={onUpdated} locale={locale} vehicleId={vehicleId} />
       ))}
     </div>
   );
@@ -330,6 +401,10 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
   }
 
   function handleDelete() {
+    void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+  }
+
+  function handleUpdated() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
   }
 
@@ -385,10 +460,10 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
         <>
           <CostSummary docs={docs} />
           <div className="space-y-5">
-            <GroupSection label={t("group_insurance")} docs={groups?.insurance ?? []} onDelete={handleDelete} locale={locale} />
-            <GroupSection label={t("group_taxes")} docs={groups?.taxes ?? []} onDelete={handleDelete} locale={locale} />
-            <GroupSection label={t("group_service")} docs={groups?.service ?? []} onDelete={handleDelete} locale={locale} />
-            <GroupSection label={t("group_other")} docs={groups?.other ?? []} onDelete={handleDelete} locale={locale} />
+            <GroupSection label={t("group_insurance")} docs={groups?.insurance ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_taxes")} docs={groups?.taxes ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_service")} docs={groups?.service ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            <GroupSection label={t("group_other")} docs={groups?.other ?? []} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
           </div>
         </>
       )}
