@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { VaultDocument } from "@/types/costs";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 
-const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry"];
+const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 export async function GET(
@@ -157,7 +157,7 @@ export async function GET(
 }
 
 const ManualDocSchema = z.object({
-  document_type: z.enum(["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "other"]),
+  document_type: z.enum(["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon", "other"]),
   amount_ron: z.number().positive().nullable().optional(),
   valid_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   valid_until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),

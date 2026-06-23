@@ -1,5 +1,5 @@
 export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload" | "manual";
-export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry";
+export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry" | "talon";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
 export interface Document {
@@ -61,6 +61,8 @@ export interface ParsedDocument {
   valid_from?: string | null;
   valid_until?: string | null;
   issuer?: string | null;
+  seria_polita?: string | null;
+  bonus_malus?: string | null;
   confidence: {
     document_type: number;
     total_kwh: number;

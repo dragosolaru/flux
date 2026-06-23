@@ -13,6 +13,7 @@ import {
   Pencil,
   Check,
   X,
+  CalendarDays,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -31,6 +32,9 @@ interface DocumentsClientProps {
   headingText: string;
 }
 
+const INSOLVENT_INSURERS = new Set(["Euroins România", "Euroins", "City Insurance"]);
+const MANDATORY_TYPES = new Set(["rca", "itp", "rovinieta"]);
+
 type DocTypeBadgeColor =
   | "bg-blue-500/20 text-blue-400 border-blue-500/30"
   | "bg-green-500/20 text-green-400 border-green-500/30"
@@ -38,6 +42,7 @@ type DocTypeBadgeColor =
   | "bg-purple-500/20 text-purple-400 border-purple-500/30"
   | "bg-orange-500/20 text-orange-400 border-orange-500/30"
   | "bg-red-500/20 text-red-400 border-red-500/30"
+  | "bg-teal-500/20 text-teal-400 border-teal-500/30"
   | "bg-muted/40 text-muted-foreground border-border";
 
 function docTypeBadgeColor(type: VaultDocument["document_type"], isProcessing: boolean): DocTypeBadgeColor {
@@ -61,6 +66,7 @@ function docTypeBadgeColor(type: VaultDocument["document_type"], isProcessing: b
     case "roadside_assistance": return "bg-green-500/20 text-green-400 border-green-500/30";
     case "spare_parts": return "bg-muted/40 text-muted-foreground border-border";
     case "ferry": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+    case "talon": return "bg-teal-500/20 text-teal-400 border-teal-500/30";
     default: return "bg-muted/40 text-muted-foreground border-border";
   }
 }
@@ -141,6 +147,7 @@ function DocCard({
       case "roadside_assistance": return t("type_roadside_assistance");
       case "spare_parts": return t("type_spare_parts");
       case "ferry": return t("type_ferry");
+      case "talon": return t("type_talon");
       default: return t("type_other");
     }
   })();
@@ -260,6 +267,10 @@ function DocCard({
           <p className="text-xs text-amber-400">{t("needs_review")}</p>
         )}
 
+        {doc.issuer && INSOLVENT_INSURERS.has(doc.issuer) && (
+          <p className="text-xs font-medium text-red-400">{t("insolvent_issuer_warning")}</p>
+        )}
+
         {doc.plate_number && (
           <p className="text-xs text-muted-foreground">
             {t("plate")}: <span className="font-mono font-medium text-foreground">{doc.plate_number}</span>
@@ -283,6 +294,17 @@ function DocCard({
             {t("expiry_label")}: {formatDate(doc.valid_until, locale)}
             {expiryText && <span className="ml-1">· {expiryText}</span>}
           </p>
+        )}
+
+        {doc.document_type === "rca" && days !== null && days <= 45 && (
+          <a
+            href="https://iasig.ro"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs text-blue-400 hover:underline"
+          >
+            {t("renew_rca_link")}
+          </a>
         )}
 
         {doc.original_filename && (
@@ -357,6 +379,49 @@ function NonVehicleCard({ doc, onDelete }: { doc: VaultDocument; onDelete: (id: 
         >
           {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function CoverageShield({ docs }: { docs: VaultDocument[] }) {
+  const t = useTranslations("documents");
+
+  const doneDocs = docs.filter((d) => d.status === "done" || d.status === "needs_review");
+  const validMandatory = new Set(
+    doneDocs
+      .filter((d) => d.document_type && MANDATORY_TYPES.has(d.document_type) && (d.days_until_expiry === null || d.days_until_expiry > 0))
+      .map((d) => d.document_type),
+  );
+  const score = Math.round((validMandatory.size / MANDATORY_TYPES.size) * 100);
+  const missing = MANDATORY_TYPES.size - validMandatory.size;
+
+  const color = score >= 100 ? "#22c55e" : score >= 67 ? "#f59e0b" : "#ef4444";
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - score / 100);
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
+      <svg width="48" height="48" viewBox="0 0 48 48" className="shrink-0 -rotate-90">
+        <circle cx="24" cy="24" r={radius} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/30" />
+        <circle
+          cx="24" cy="24" r={radius} fill="none"
+          stroke={color} strokeWidth="4"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.5s ease" }}
+        />
+      </svg>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-lg font-bold" style={{ color }}>{score}%</span>
+          <span className="text-xs text-muted-foreground">{t("coverage_score_label")}</span>
+        </div>
+        <p className="truncate text-xs text-muted-foreground/80">
+          {missing === 0 ? t("coverage_score_complete") : t("coverage_score_missing", { count: missing })}
+        </p>
       </div>
     </div>
   );
@@ -451,10 +516,12 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
 
   function handleDelete() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
   }
 
   function handleUpdated() {
     void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
   }
 
   const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle) ?? [];
@@ -474,15 +541,24 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
           <h1 className="text-xl font-semibold tracking-tight">{headingText}</h1>
           <p className="text-xs text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button
-          size="sm"
-          className="shrink-0"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading || !vehicleId}
-        >
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-          <span className="hidden sm:inline">{t("upload_btn")}</span>
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          {vehicleId && docs && docs.length > 0 && (
+            <Button variant="ghost" size="icon" className="size-9" asChild title={t("calendar_export_btn")}>
+              <a href={`/api/vehicles/${vehicleId}/vault/calendar`} download>
+                <CalendarDays className="size-4 text-muted-foreground" />
+              </a>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || !vehicleId}
+          >
+            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            <span className="hidden sm:inline">{t("upload_btn")}</span>
+          </Button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -517,6 +593,7 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
               ))}
             </div>
           )}
+          <CoverageShield docs={vehicleDocs} />
           <CostSummary docs={vehicleDocs} />
           <div className="space-y-5">
             <GroupSection label={t("group_insurance")} docs={groups.insurance} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
