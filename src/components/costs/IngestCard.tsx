@@ -4,7 +4,7 @@ import { Camera, Check, Copy, Loader2, Mail, MessageCircle } from "lucide-react"
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { UpgradeButton } from "@/components/billing/UpgradeButton";
@@ -31,15 +31,10 @@ export function IngestCard({
   docsThisMonth = 0,
 }: IngestCardProps) {
   const t = useTranslations();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
 
   const atFreeTierLimit = hasProSubscription === false && docsThisMonth >= FREE_TIER_MAX;
   const uploadDisabled = disabled || atFreeTierLimit;
-
-  function pickFile() {
-    if (!uploadDisabled) fileRef.current?.click();
-  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -82,26 +77,31 @@ export function IngestCard({
         )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            onChange={handleFile}
-            className="hidden"
-            disabled={uploadDisabled}
-          />
-
-          <Option
-            icon={
-              uploading
-                ? <Loader2 className="size-4 animate-spin" />
-                : <Camera className="size-4" />
-            }
-            label={t("ingest.option.upload.label")}
-            hint={uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
-            onClick={pickFile}
-            disabled={uploadDisabled}
-          />
+          {/* Use <label> wrapping the hidden input — guaranteed to open file picker on iOS/Android without programmatic .click() */}
+          <motion.label
+            whileTap={!uploadDisabled ? { scale: 0.97 } : undefined}
+            className={cn(
+              "flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors",
+              !uploadDisabled ? "hover:border-primary/50 hover:bg-accent" : "pointer-events-none opacity-60",
+            )}
+          >
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={handleFile}
+              className="hidden"
+              disabled={uploadDisabled}
+            />
+            <div className="flex size-4 shrink-0 items-center justify-center text-muted-foreground">
+              {uploading ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{t("ingest.option.upload.label")}</div>
+              <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                {uploading ? t("ingest.option.upload.uploading") : t("ingest.option.upload.description")}
+              </div>
+            </div>
+          </motion.label>
 
           <Option
             icon={<Mail className="size-4" />}
