@@ -121,7 +121,7 @@ function DocCard({
   const hasData = !!(doc.issuer ?? doc.valid_until ?? doc.plate_number);
 
   const typeLabel = (() => {
-    if (isProcessing || doc.document_type === null) return t("processing_type_placeholder");
+    if (isProcessing) return t("processing_type_placeholder");
     switch (doc.document_type) {
       case "rca": return t("type_rca");
       case "casco": return t("type_casco");
