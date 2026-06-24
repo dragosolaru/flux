@@ -69,14 +69,14 @@ export function LandingHero() {
         variants={cardVariant}
         initial="hidden"
         animate="visible"
-        className="absolute right-8 top-1/4 hidden rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl lg:block"
+        className="absolute right-8 top-1/4 hidden rounded-2xl border border-border bg-muted/40 p-4 backdrop-blur-xl lg:block"
         style={{ maxWidth: "280px" }}
       >
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-white">Battery</span>
           <span className="text-lg font-bold text-white">84%</span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
           <div className="h-full rounded-full bg-violet-500" style={{ width: "84%" }} />
         </div>
         <p className="mt-3 text-xs text-teal-400">⚡ Charge tonight 02:00–04:00 · €0.09/kWh</p>
@@ -91,7 +91,7 @@ export function LandingHero() {
         className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 text-center"
       >
         <motion.div variants={fadeUp}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-xs text-white/60">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
             <Zap className="size-3 text-violet-400" />
             {t("hero_badge")}
           </div>
@@ -123,7 +123,7 @@ export function LandingHero() {
           </Link>
           <Link
             href="/login"
-            className="w-full rounded-xl border border-white/20 px-8 py-3 text-center font-medium text-white transition-colors hover:bg-white/[0.06] sm:w-auto"
+            className="w-full rounded-xl border border-border px-8 py-3 text-center font-medium transition-colors hover:bg-muted/40 sm:w-auto"
           >
             {t("nav_login")}
           </Link>
