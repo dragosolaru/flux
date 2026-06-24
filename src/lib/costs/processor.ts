@@ -100,87 +100,22 @@ export async function processDocument(documentId: string): Promise<void> {
       return;
     }
 
-    // Currency conversion
-    const docDate =
-      finalParsed.period_end
-        ? new Date(finalParsed.period_end)
-        : finalParsed.session_timestamp
-          ? new Date(finalParsed.session_timestamp)
-          : new Date();
-
-    const exchangeRate = await getExchangeRate(finalParsed.currency ?? "RON", docDate);
-    const costTotal = finalParsed.electricity_cost ?? finalParsed.cost_total ?? 0;
-    const costRon = costTotal * exchangeRate;
-
-    let chargingSessionId: string | null = null;
-    let vehicleKwhAttributed: number | null = null;
-    let vehicleCostRon = costRon;
-    let periodStart: Date;
-    let periodEnd: Date;
-
-    if (finalParsed.document_type === "home_bill") {
-      periodStart = finalParsed.period_start ? new Date(finalParsed.period_start) : new Date(Date.now() - HOME_BILL_DEFAULT_PERIOD_DAYS * 86_400_000);
-      periodEnd = finalParsed.period_end ? new Date(finalParsed.period_end) : new Date();
-
-      if (doc.vehicle_id) {
-        const attribution = await attributeHomeBill(
-          doc.vehicle_id as string,
-          periodStart,
-          periodEnd,
-          finalParsed.total_kwh ?? 0,
-          costRon,
-        );
-        if (attribution.sessionCount > 0) {
-          vehicleKwhAttributed = attribution.vehicleKwh;
-          vehicleCostRon = attribution.vehicleCostRon;
-        } else {
-          // No charging sessions found for this period — can't attribute proportionally.
-          // Store the full bill cost and flag for review so the user can adjust.
-          vehicleKwhAttributed = finalParsed.total_kwh;
-          vehicleCostRon = costRon;
-        }
-      }
-    } else {
-      // public_receipt — period = same day as session
-      const ts = finalParsed.session_timestamp ? new Date(finalParsed.session_timestamp) : docDate;
-      periodStart = new Date(ts.toISOString().slice(0, 10));
-      periodEnd = new Date(ts.toISOString().slice(0, 10));
-      vehicleKwhAttributed = finalParsed.total_kwh;
-
-      if (doc.vehicle_id && finalParsed.session_timestamp) {
-        const match = await matchChargingSession(
-          doc.vehicle_id as string,
-          new Date(finalParsed.session_timestamp),
-        );
-        if (match) {
-          chargingSessionId = match.sessionId;
-          await supabase
-            .from("charging_sessions")
-            .update({ cost_ron: costRon, cost_source: "document" })
-            .eq("id", match.sessionId);
-        }
-      }
+    // Energy receipt (home_bill / public_receipt) uploaded to the per-vehicle vault:
+    // don't silently add it to costs. Park it and let the vault ask the user (see
+    // the "add to costs" action on /documents → POST .../vault/[id]/add-to-costs).
+    if (doc.source === "vault-upload") {
+      await supabase.from("documents").update({
+        document_type: finalParsed.document_type,
+        status: "needs_review",
+        parsed_json: finalParsed,
+        confidence: avgConf,
+        processed_at: new Date().toISOString(),
+      }).eq("id", documentId);
+      return;
     }
 
-    // Insert energy_cost record
-    if (doc.vehicle_id && finalParsed.document_type !== "unknown") {
-      await supabase.from("energy_costs").insert({
-        document_id: documentId,
-        vehicle_id: doc.vehicle_id,
-        document_type: finalParsed.document_type,
-        period_start: periodStart!.toISOString().slice(0, 10),
-        period_end: periodEnd!.toISOString().slice(0, 10),
-        total_kwh: finalParsed.total_kwh,
-        vehicle_kwh_attributed: vehicleKwhAttributed,
-        original_amount: costTotal,
-        original_currency: finalParsed.currency ?? "RON",
-        exchange_rate: exchangeRate,
-        cost_ron: vehicleCostRon,
-        provider_name: finalParsed.provider_name,
-        charger_network: finalParsed.charger_network,
-        location_name: finalParsed.location_name,
-        charging_session_id: chargingSessionId,
-      });
+    if (doc.vehicle_id) {
+      await createEnergyCostRecord(documentId, doc.vehicle_id as string, finalParsed);
     }
 
     const criticalConfidence = Math.min(
@@ -209,4 +144,91 @@ export async function processDocument(documentId: string): Promise<void> {
       })
       .eq("id", documentId);
   }
+}
+
+// Builds the energy_cost record (currency conversion, home-bill attribution, public
+// session matching) from an already-parsed document. Used by processDocument for
+// normal uploads, and by the vault "add to costs" action for energy receipts the
+// user explicitly chose to promote from the document vault.
+export async function createEnergyCostRecord(
+  documentId: string,
+  vehicleId: string,
+  parsed: ParsedDocument,
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+
+  const docDate =
+    parsed.period_end
+      ? new Date(parsed.period_end)
+      : parsed.session_timestamp
+        ? new Date(parsed.session_timestamp)
+        : new Date();
+
+  const exchangeRate = await getExchangeRate(parsed.currency ?? "RON", docDate);
+  const costTotal = parsed.electricity_cost ?? parsed.cost_total ?? 0;
+  const costRon = costTotal * exchangeRate;
+
+  let chargingSessionId: string | null = null;
+  let vehicleKwhAttributed: number | null = null;
+  let vehicleCostRon = costRon;
+  let periodStart: Date;
+  let periodEnd: Date;
+
+  if (parsed.document_type === "home_bill") {
+    periodStart = parsed.period_start ? new Date(parsed.period_start) : new Date(Date.now() - HOME_BILL_DEFAULT_PERIOD_DAYS * 86_400_000);
+    periodEnd = parsed.period_end ? new Date(parsed.period_end) : new Date();
+
+    const attribution = await attributeHomeBill(
+      vehicleId,
+      periodStart,
+      periodEnd,
+      parsed.total_kwh ?? 0,
+      costRon,
+    );
+    if (attribution.sessionCount > 0) {
+      vehicleKwhAttributed = attribution.vehicleKwh;
+      vehicleCostRon = attribution.vehicleCostRon;
+    } else {
+      // No charging sessions found for this period — can't attribute proportionally.
+      vehicleKwhAttributed = parsed.total_kwh;
+      vehicleCostRon = costRon;
+    }
+  } else {
+    // public_receipt — period = same day as session
+    const ts = parsed.session_timestamp ? new Date(parsed.session_timestamp) : docDate;
+    periodStart = new Date(ts.toISOString().slice(0, 10));
+    periodEnd = new Date(ts.toISOString().slice(0, 10));
+    vehicleKwhAttributed = parsed.total_kwh;
+
+    if (parsed.session_timestamp) {
+      const match = await matchChargingSession(vehicleId, new Date(parsed.session_timestamp));
+      if (match) {
+        chargingSessionId = match.sessionId;
+        await supabase
+          .from("charging_sessions")
+          .update({ cost_ron: costRon, cost_source: "document" })
+          .eq("id", match.sessionId);
+      }
+    }
+  }
+
+  if (parsed.document_type === "unknown") return;
+
+  await supabase.from("energy_costs").insert({
+    document_id: documentId,
+    vehicle_id: vehicleId,
+    document_type: parsed.document_type,
+    period_start: periodStart.toISOString().slice(0, 10),
+    period_end: periodEnd.toISOString().slice(0, 10),
+    total_kwh: parsed.total_kwh,
+    vehicle_kwh_attributed: vehicleKwhAttributed,
+    original_amount: costTotal,
+    original_currency: parsed.currency ?? "RON",
+    exchange_rate: exchangeRate,
+    cost_ron: vehicleCostRon,
+    provider_name: parsed.provider_name,
+    charger_network: parsed.charger_network,
+    location_name: parsed.location_name,
+    charging_session_id: chargingSessionId,
+  });
 }
