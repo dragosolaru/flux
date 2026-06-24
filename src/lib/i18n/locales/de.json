@@ -1100,6 +1100,8 @@
     "energy_doc_add_btn": "Zu Kosten hinzufügen",
     "energy_doc_added": "Zu Kosten hinzugefügt",
     "energy_doc_add_error": "Konnte nicht hinzugefügt werden",
+    "energy_doc_dismiss_btn": "Nicht jetzt",
+    "energy_doc_dismiss_error": "Konnte nicht verworfen werden",
     "type_talon": "Fahrzeugschein",
     "coverage_score_label": "Fahrzeugdokumentation",
     "coverage_score_complete": "Alle Pflichtdokumente gültig",

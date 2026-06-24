@@ -1100,6 +1100,8 @@
     "energy_doc_add_btn": "Adaugă la costuri",
     "energy_doc_added": "Adăugat la costuri",
     "energy_doc_add_error": "Nu s-a putut adăuga la costuri",
+    "energy_doc_dismiss_btn": "Nu acum",
+    "energy_doc_dismiss_error": "Nu s-a putut respinge",
     "type_talon": "Certificat de Înmatriculare",
     "coverage_score_label": "Documentație vehicul",
     "coverage_score_complete": "Toate documentele obligatorii valide",
