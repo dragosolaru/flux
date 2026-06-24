@@ -10,6 +10,18 @@
 > snippets and **must be re-verified against primary sources before they drive real
 > calculations, billing, or contracts.**
 
+> **Implementation status (verified in code, 2026-06-23):** This is a **strategy/research**
+> document — none of the external partner APIs below (vignette aggregators, insurance
+> brokers, VIN decoders, tax/ITP services) are integrated; there are no related env vars or
+> clients in `src/`. What *is* built today is the foundation the sequencing in §7 calls for:
+> a per-vehicle **document vault** (`/api/vehicles/[id]/vault` + `…/vault/calendar` +
+> `…/vault/[documentId]`), **car-document OCR** that already extracts the relevant types
+> (`src/lib/ai/prompts/car-document-extraction.ts`, `document-triage.ts`; the parser enum in
+> `src/lib/ai/document-parser.ts` includes `rca`, `casco`, `itp`, `rovinieta`, `vignette`,
+> `bridge_toll`, `car_tax`, `service`, `fine`, `leasing`, etc.), and an **alert/reminder
+> engine** (`src/lib/notifications/alert-engine.ts`). Everything past that — buying vignettes,
+> selling insurance, VIN decoding, tax estimation — is **planned**, not implemented.
+
 ## TL;DR — how we integrate & who we contract with
 
 | Domain | Verify API? | Sell/Buy API? | Recommended partner / path | Commission |

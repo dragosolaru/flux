@@ -45,24 +45,28 @@ Brand support is **registry-driven**, not subclassed. There are no brand-specifi
 src/lib/brands/
 ├── registry.ts              # BRANDS: Record<BrandKey, BrandProfile>
 ├── types.ts                 # BrandProfile, BrandCapabilities, TelemetryCapabilities, CommandCapabilities
-├── capabilities.ts          # capability map schema helpers
-├── models.ts                # per-brand model specs (WLTP figures, charge rates, capacity)
-└── <brand>/
-    ├── profile.ts           # capability map, displayName, dataSource
-    └── adapter.ts           # (raw) => Partial<VehicleState>
+├── command-map.ts           # COMMAND_CAP_MAP: CommandName → CommandCapabilities key
+├── adapter-utils.ts         # shared helpers for raw → VehicleState mapping
+├── models.ts                # BRAND_MODELS: per-brand model specs (WLTP figures, charge rates, capacity)
+└── tesla/
+    ├── profile.ts           # capability map, displayName, dataSource, adapter
+    ├── command-map.ts       # TESLA_COMMAND_MAP: CommandName → Fleet API command + body
+    └── vin-decoder.ts       # VIN → model inference
 ```
+
+Only `tesla` is registered today. The `adapter` lives on each `BrandProfile` (a pass-through for mock; the live mapping lives in `src/lib/tesla/api.ts`).
 
 ### BrandProfile shape
 
 ```ts
 interface BrandProfile {
-  key: BrandKey;           // "tesla" | "bmw" | "polestar" | "mercedes" | "vw" | "hyundai" | "renault"
+  key: BrandKey;           // "tesla" (only registered brand today)
   displayName: string;
   dataSource: "mock" | "live";
   capabilities: {
-    telemetry: TelemetryCapabilities;   // 31 fields, each boolean
-    commands:  CommandCapabilities;     // 18 commands, each boolean
-    history:   HistoryCapabilities;     // chargingSessions, trips, commandLog, retention
+    telemetry: TelemetryCapabilities;   // 32 fields, each boolean
+    commands:  CommandCapabilities;     // 22 commands, each boolean
+    history:   HistoryCapabilities;     // chargingSessions, trips, consumption, commandLog, retention
     refreshModel: "polling" | "push" | "on-demand";
   };
   adapter: (raw: unknown) => Partial<VehicleState>;
@@ -73,13 +77,13 @@ interface BrandProfile {
 
 ```ts
 // src/lib/brands/registry.ts
-export const BRANDS: Record<BrandKey, BrandProfile> = {
-  tesla, bmw, polestar, mercedes, vw, hyundai, renault
-};
+export const BRANDS: Record<BrandKey, BrandProfile> = { tesla };
 export function getBrand(key: string): BrandProfile | null
 ```
 
-`isLiveEnabled(brand)` (from `src/lib/live-integrations.ts`) reads the `LIVE_INTEGRATIONS` env var and sets `dataSource`. When the var is empty, every brand defaults to `"mock"`.
+`isLiveEnabled(brand)` (from `src/lib/live-integrations.ts`) reads the `LIVE_INTEGRATIONS` env var; the Tesla profile sets `dataSource` from it at module load. When the var is empty, the brand defaults to `"mock"`.
+
+Other brands (BMW, Polestar, Mercedes-EQ, VW, Hyundai/Kia, Renault) are archived on the `demo-brands-archive` branch — see `docs/BRANDS.md` for the re-introduction path.
 
 ### API dispatcher
 
@@ -87,11 +91,11 @@ export function getBrand(key: string): BrandProfile | null
 
 1. Load vehicle row; verify ownership via Auth.js session + `user_id` check.
 2. `getBrand(vehicle.brand)` — get profile.
-3. If `dataSource === "mock"` → load snapshot from `mock_vehicle_state`, call `tick(snapshot, now, brand)`, persist, normalize through `brand.adapter`.
-4. If `dataSource === "live"` → call brand's live adapter.
+3. If `isLiveEnabled(vehicle.brand) && vehicle.data_source === "live"` → call the brand's live path (Tesla Fleet API).
+4. Otherwise → load snapshot from `mock_vehicle_state`, call `tick(snapshot, now, brand)`, persist, normalize through `brand.adapter`.
 5. Return typed `VehicleState`.
 
-The decision is row-data (`vehicles.data_source`), not env-data. A single account can mix mock and live vehicles once live integrations reactivate.
+The live path requires **both** the env flag (`LIVE_INTEGRATIONS` includes the brand) and the row flag (`vehicles.data_source === "live"`). A single account can mix mock and live vehicles once live integrations reactivate.
 
 ---
 
@@ -178,7 +182,7 @@ while cursor < now:
 | `driving` | Drain: `(distKm / 100) × efficiencyKwhPer100km / batteryCapacityKwh × 100` pct | Odometer += distKm; location lerped toward targetLocation |
 | `charging` | Gain: `chargingRateKw × chunkHours / batteryCapacityKwh × 100` pct, capped at chargeLimit | chargingState = "charging" or "complete" once at limit |
 | `plugged-idle` | Same gain as charging if below chargeLimit; 0 rate if at limit | chargingState = "complete" at limit |
-| `parked` | Climate drain: 1.5 kW while `isClimateOn = true` | Battery left unchanged otherwise |
+| `parked` | Phantom (vampire) drain ~0.02 kW always, plus 1.5 kW while `isClimateOn = true` | chargingState = "disconnected" |
 
 ### applyCommand()
 
@@ -191,7 +195,7 @@ function applyCommand(
 ): MockVehicleSnapshot
 ```
 
-Before mutating state, `applyCommand` checks `brand.capabilities.commands[capKey]`. If `false`, throws `Error("command-not-supported:<command>")`, which the route handler converts to HTTP 422. This means the same rejection logic works in both the API and unit tests — no brand-check duplication.
+Before mutating state, `applyCommand` checks `brand.capabilities.commands[capKey]`. If `false`, throws `Error("command-not-supported:<command>")`, which the route handler returns as HTTP 400. The route also runs the same `COMMAND_CAP_MAP` capability check up front (also 400), so unsupported commands are rejected before any work — no brand-check duplication.
 
 Commands and their state effects:
 
@@ -201,11 +205,13 @@ Commands and their state effects:
 | `climate_on` / `climate_off` | `isClimateOn` |
 | `set_climate_temp` | `driverTempC = args.temp` |
 | `set_charge_limit` | `chargeLimit = clamp(args.limitPct, 50, 100)` |
-| `start_charging` / `stop_charging` | `chargingState` |
+| `start_charging` | `chargingState = "charging"` |
+| `stop_charging` | `chargingState = "stopped"` |
+| `schedule_charging` | `scheduledChargingEnabled = args.enable`, `scheduledChargingStartMinutes = args.time` |
 | `vent_windows` / `close_windows` | `windowsOpen` |
 | `activate_sentry` / `deactivate_sentry` | `isSentryMode` |
 | `honk`, `flash`, `remote_start` | Side-effect only; no state field |
-| `set_charge_amps`, `open_charge_port`, `close_charge_port` | No-op in v1 mock |
+| `set_charge_amps`, `open_charge_port`, `close_charge_port`, `schedule_departure`, `precondition_max`, `share_navigation` | Accepted; no-op in v1 mock |
 
 ### Scenario system
 
@@ -325,7 +331,8 @@ start_soc, end_soc, network, cost_eur,
 location_lat, location_lng, location_name, max_charging_rate_kw
 ```
 
-Indexed on `(vehicle_id, started_at DESC)`.
+Indexed on `(vehicle_id, started_at DESC)`. Migration `006` later adds `cost_ron` and
+`cost_source` (`document | tariff_estimate | manual`) — the cost-intelligence pipeline writes RON.
 
 ### trips
 
@@ -357,26 +364,28 @@ Tariff providers follow the same registry pattern as brands:
 
 ```
 src/lib/external/tariffs/
-├── registry.ts          # TARIFF_PROVIDERS = { tibber-mock, octopus-mock, awattar-mock }
-└── <provider>/
-    ├── provider.ts
-    └── fixtures.ts      # hourly prices, forecast, off-peak windows
+├── registry.ts          # TARIFF_PROVIDERS map + getProvider/listProviders
+├── types.ts             # TariffProvider, HourlyPrice, TariffForecast, SmartChargeRecommendation
+├── recommend.ts         # smart-charge window calculation
+└── providers/           # one file per provider
+    ├── electrica.ts · eon-ro.ts · enel-ro.ts · hidroelectrica.ts   # real Romanian
+    ├── tibber.ts                                                    # real international
+    └── tibber-mock.ts · octopus-mock.ts · awattar-mock.ts          # demo/testing
 ```
 
-Provider shape:
+Default provider is `electrica-ro`. Provider shape is intentionally minimal:
 
 ```ts
 interface TariffProvider {
   id: string;
   displayName: string;
-  getHourlyPrices(date: Date): HourlyPrice[];    // 24 entries
-  getForecast(): HourlyPrice[];                  // next 24h
-  getCurrentPrice(): number;                     // €/kWh
-  getOffPeakWindow(): { start: number; end: number };  // hours
+  getTodayPrices(date?: Date): HourlyPrice[];   // 24 entries, deterministic per calendar date
 }
 ```
 
-The user picks an active provider in Settings. The `/energy` page reads it. When real APIs are plugged in (roadmap 0.5+), only the underlying fetch changes; the shape stays.
+Forecast and smart-charge recommendation (`TariffForecast`, `SmartChargeRecommendation`) are
+derived from `getTodayPrices` in `recommend.ts` — not methods on the provider. The user picks an
+active provider in Settings; the `/energy` page reads it.
 
 ---
 
@@ -388,11 +397,21 @@ vehicles          — per-user vehicles (brand, model, data_source, scenario_id)
 tesla_tokens      — AES-256-GCM encrypted OAuth tokens (legacy live Tesla)
 vehicle_snapshots — append-only polling snapshots (legacy live Tesla)
 
-mock_vehicle_state — one row per vehicle; current simulator state
+mock_vehicle_state — one row per vehicle; current simulator state (+ vehicle_spec JSONB, migration 003)
 charging_sessions  — completed charging sessions, derived from simulator
 trips              — completed trips, derived from simulator
 command_events     — audit log of all user commands
+
+documents          — uploaded/emailed/WhatsApp'd bills & receipts (migration 006)
+energy_costs       — extracted per-document cost rows (migration 006)
+exchange_rates     — BNR EUR/RON cache (migration 006)
+vehicle_doc_meta   — car-admin docs: RCA/CASCO/ITP/etc. (migration 025)
+chargers           — charging-station catalogue (migration 017)
+push_subscriptions — web-push endpoints (migration 026)
 ```
+
+This is the load-bearing subset; migrations run through `030` (user_settings, subscription/Stripe
+events, feedback, notification prefs, …). See `supabase/migrations/` and `SYSTEMS.md` for the full list.
 
 All tables have RLS. The app never accesses Supabase from the browser with data queries — all reads and writes go through `/api/*` route handlers that use the service-role client after verifying the Auth.js session.
 
@@ -400,16 +419,19 @@ All tables have RLS. The app never accesses Supabase from the browser with data 
 
 ## Multi-vehicle UX
 
-Routes:
+Routes (under `src/app/(dashboard)/`):
 
 - `/garage` — default landing; grid of vehicle cards + fleet aggregates.
 - `/dashboard?v=<vehicleId>` — deep card view.
+- `/commands` — command panel for the active vehicle.
 - `/energy` — tariffs + smart charging recommendations.
-- `/charging-map` — charging-network discovery map.
+- `/charging` · `/charging-map` · `/map` — charging-network discovery and map views.
 - `/trip` — trip planner with charging-stop insertion.
+- `/costs` · `/documents` · `/insights` — cost intelligence, document vault, analytics.
 - `/about-data` — mock-vs-live transparency table.
+- `/settings` — preferences, provider selection, billing entry.
 
-Top nav has a **vehicle switcher pill** (current vehicle + dropdown of others). Dashboard, Trip, and Charging-Map pages all act on the active vehicle.
+Top nav has a **vehicle switcher pill** (current vehicle + dropdown of others). Vehicle-scoped pages all act on the active vehicle.
 
 ---
 
@@ -482,7 +504,7 @@ Advancing state on every read (rather than a background job) keeps the infrastru
 
 ### 8. Document processing is fire-and-forget
 
-`POST /api/documents` uploads the file, inserts a `pending` row, and returns `202` immediately. `processDocument(id)` runs async (`.catch()` updates the row to `error` on failure). This keeps the upload response fast regardless of Claude Vision latency (~2–5s per document).
+`POST /api/documents` uploads the file, inserts a `pending` row, and returns `202` immediately. `processDocument(id)` is scheduled with Next 16's `after()` so it runs after the response is sent; a `.catch()` logs failures. This keeps the upload response fast regardless of Claude Vision latency (~2–5s per document).
 
 ### 9. Cost attribution fallback
 
