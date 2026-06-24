@@ -276,7 +276,8 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 - **Connector-aware scoring:** `filterUsableStations` drops offline / low-confidence / incompatible-connector / `maxKw <= 0` stations; `scoreStation` weights effective kW minus detour (`detourKm * 2`) and price penalties. Zero-coverage gaps emit a `warning` naming the km range.
 - **Real weather:** `getWeatherAsync` (Open-Meteo, 30-min cell cache) drives derating.
 - **Reliability badge:** OCM `DateLastVerified` / `IsOperational` → offline / stale / good / unknown badge on `StopCard` + `StationDetailSheet`.
-- **Send to Tesla:** when the planned vehicle is a Tesla and the route is feasible, a button POSTs `share_navigation` (next waypoint); DC stops show a preconditioning badge (auto for Superchargers, manual otherwise).
+- **Send to Tesla:** when the planned vehicle is a Tesla and the route is feasible, a button POSTs `share_navigation` with **all charging stops as waypoints** (full route in one call); `precondition_max` is automatically called at departure for any non-Supercharger DC stop. Tesla handles Supercharger preconditioning internally. A manual "Pornește precondiționare" button is always visible as a fallback. A one-time dismissable disclaimer explains the behavior difference between Supercharger and non-Tesla stops.
+- **Saved routes:** users can save up to 10 planned routes (auto-named "Origine → Destinație", renameable). Accessible via bookmark icon → bottom sheet. Reload any saved route with one tap; manage (rename/delete) inline. Stored in `saved_routes` table (Supabase, RLS). API: `GET/POST /api/saved-routes`, `PATCH/DELETE /api/saved-routes/[id]`.
 
 **Corridor stations:** `fetchCorridorStations` sources stops from the PostGIS platform (per-segment bbox sampling) with an OCM fallback for non-bulk countries and a final Overpass fallback. `TripMap` renders nearby chargers as context dots from `GET /api/chargers`.
 

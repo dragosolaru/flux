@@ -92,7 +92,15 @@ Flux is a premium PWA that gives Tesla owners a beautifully minimal dashboard fo
 
 **Trip planner with real charging stops**
 - Problem: I'm driving from Bucharest to Vienna and I don't know where to stop, how long it'll take, or what it'll cost.
-- Solution: Enter your destination. Flux plans the real road route, inserts charging stops based on your actual battery level and weather (cold kills range), and sends the whole plan to your Tesla's navigation with battery preconditioning already queued.
+- Solution: Enter your destination. Flux plans the real road route, inserts charging stops based on your actual battery level and weather (cold kills range), and sends the **complete route — all charging stops at once** — to your Tesla's navigation. Battery preconditioning is queued automatically at departure so each charger is warm and ready when you arrive. Save the route and reload it next time in one tap.
+
+**Saved routes**
+- Problem: I drive the same road trip 3–4 times a year. Re-entering origin, destination, and all charging stops every time is tedious.
+- Solution: Tap the bookmark icon after planning any route. Flux saves it with the charging stops, times, and costs. Next time, one tap reloads the full plan and sends it to the car.
+
+**Battery preconditioning for any charger**
+- Problem: I know Tesla preconditions the battery before Superchargers, but I often use non-Tesla DC fast chargers and they're cold when I arrive — charging is slow for the first 10 minutes.
+- Solution: When you send a route from Flux, preconditioning is activated at departure for every charging stop — Supercharger or not. Tesla handles Superchargers automatically; for other DC fast chargers, Flux triggers preconditioning so the battery arrives at temperature. *Note: Tesla's firmware makes the final decision on timing based on distance and temperature.*
 
 **Receipt OCR / email ingest**
 - Problem: I have a folder of charging receipts I've never looked at and no idea what my EV actually costs to run.
@@ -175,8 +183,10 @@ and more.
 
 TRIP PLANNER
 Enter any destination and Flux plans the real road route with charging stops based on
-your actual battery, vehicle model, and current weather. Send the plan directly to
-your Tesla's navigation with one tap.
+your actual battery, vehicle model, and current weather. Send the entire route — all
+charging stops — directly to your Tesla's navigation with one tap. Battery
+preconditioning starts automatically so every charger is ready when you arrive.
+Save up to 10 favourite routes and reload them instantly for recurring road trips.
 
 AUTOMATIC COST TRACKING
 Forward a charging receipt by email or WhatsApp photo. AI reads the provider, kWh,
