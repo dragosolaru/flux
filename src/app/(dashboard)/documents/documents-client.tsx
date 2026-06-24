@@ -45,7 +45,7 @@ type DocTypeBadgeColor =
   | "bg-teal-500/20 text-teal-400 border-teal-500/30"
   | "bg-muted/40 text-muted-foreground border-border";
 
-function docTypeBadgeColor(type: VaultDocument["document_type"], isProcessing: boolean): DocTypeBadgeColor {
+function docTypeBadgeColor(type: NonNullable<VaultDocument["document_type"]> | null, isProcessing: boolean): DocTypeBadgeColor {
   if (isProcessing || type === null) return "bg-muted/40 text-muted-foreground border-border";
   switch (type) {
     case "rca": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
@@ -94,8 +94,40 @@ const INSURANCE_TYPES = new Set(["rca", "casco", "roadside_assistance"]);
 const TAX_TYPES = new Set(["rovinieta", "vignette", "bridge_toll", "car_tax", "highway_toll", "ferry", "parking"]);
 const SERVICE_TYPES = new Set(["service", "tires", "spare_parts", "car_wash", "fuel"]);
 
+type DocumentType = VaultDocument["document_type"];
+
+const FILENAME_KEYWORDS: Array<[RegExp, NonNullable<DocumentType>]> = [
+  [/anvelope|cauciuc|tyre|tire/i, "tires"],
+  [/\brca\b|rc\s*auto|responsabilitate\s*civila/i, "rca"],
+  [/casco/i, "casco"],
+  [/asigurare|polita|insurance/i, "rca"],
+  [/\bitp\b|inspectie\s*tehnica/i, "itp"],
+  [/rovinieta|vigneta\s*ro/i, "rovinieta"],
+  [/taxa\s*auto|impozit\s*auto/i, "car_tax"],
+  [/\bservice\b|reparati/i, "service"],
+  [/benzin|combustibil|motorin|carburant|fuel/i, "fuel"],
+  [/amenda|contraventie|fine/i, "fine"],
+  [/parcare|parking/i, "parking"],
+  [/spalatorie|car.?wash/i, "car_wash"],
+  [/piese\s*auto|spare.?part/i, "spare_parts"],
+  [/leasing/i, "leasing"],
+  [/tractare|depanare|roadside/i, "roadside_assistance"],
+  [/feribot|ferry/i, "ferry"],
+  [/autostrada|vignett/i, "highway_toll"],
+  [/pod\b|bridge.?toll/i, "bridge_toll"],
+  [/talon|carte\s*identitate\s*vehicul/i, "talon"],
+];
+
+function inferTypeFromFilename(filename: string | null): NonNullable<DocumentType> | null {
+  if (!filename) return null;
+  for (const [pattern, type] of FILENAME_KEYWORDS) {
+    if (pattern.test(filename)) return type;
+  }
+  return null;
+}
+
 function getGroup(doc: VaultDocument): "insurance" | "taxes" | "service" | "other" {
-  const t = doc.document_type;
+  const t = doc.document_type ?? inferTypeFromFilename(doc.original_filename);
   if (!t) return "other";
   if (INSURANCE_TYPES.has(t)) return "insurance";
   if (TAX_TYPES.has(t)) return "taxes";
@@ -126,9 +158,11 @@ function DocCard({
   const needsReview = doc.status === "needs_review";
   const hasData = !!(doc.issuer ?? doc.valid_until ?? doc.plate_number);
 
-  const typeLabel = (() => {
-    if (isProcessing) return t("processing_type_placeholder");
-    switch (doc.document_type) {
+  const inferredType = !doc.document_type && !isProcessing ? inferTypeFromFilename(doc.original_filename) : null;
+  const effectiveType = doc.document_type ?? inferredType;
+
+  function typeLabelFor(type: NonNullable<DocumentType> | null): string {
+    switch (type) {
       case "rca": return t("type_rca");
       case "casco": return t("type_casco");
       case "itp": return t("type_itp");
@@ -150,7 +184,11 @@ function DocCard({
       case "talon": return t("type_talon");
       default: return t("type_other");
     }
-  })();
+  }
+
+  const typeLabel = isProcessing
+    ? t("processing_type_placeholder")
+    : typeLabelFor(effectiveType);
 
   const days = doc.days_until_expiry;
   const expiryText = (() => {
@@ -216,9 +254,11 @@ function DocCard({
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className={cn(
-            "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-            docTypeBadgeColor(doc.document_type, isProcessing),
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
+            inferredType ? "opacity-70" : "",
+            docTypeBadgeColor(effectiveType, isProcessing),
           )}>
+            {inferredType && <span className="opacity-60">~</span>}
             {typeLabel}
           </span>
           {isProcessing && (
