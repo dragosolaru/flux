@@ -14,6 +14,7 @@ import {
   Check,
   X,
   CalendarDays,
+  Zap,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -457,6 +458,82 @@ function NonVehicleCard({ doc, onDelete }: { doc: VaultDocument; onDelete: (id: 
   );
 }
 
+function EnergyDocCard({
+  doc,
+  vehicleId,
+  onChanged,
+  onDelete,
+}: {
+  doc: VaultDocument;
+  vehicleId: string;
+  onChanged: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const t = useTranslations("documents");
+  const [deleting, setDeleting] = useState(false);
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      apiFetch(`/api/vehicles/${vehicleId}/vault/${doc.id}/add-to-costs`, { method: "POST" }),
+    onSuccess: () => { toast.success(t("energy_doc_added")); onChanged(); },
+    onError: () => toast.error(t("energy_doc_add_error")),
+  });
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await apiFetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+      onDelete(doc.id);
+    } catch {
+      toast.error(t("delete_error"));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-teal-500/30 bg-teal-500/5 p-4">
+      <Zap className="mt-0.5 size-4 shrink-0 text-teal-400" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <div>
+          <p className="text-sm font-medium text-teal-400">{doc.label?.trim() || t("energy_doc_title")}</p>
+          <p className="text-xs text-muted-foreground">{t("energy_doc_hint")}</p>
+          {doc.original_filename && (
+            <p className="mt-1 truncate text-xs text-muted-foreground/60">{doc.original_filename}</p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          className="h-7 bg-teal-600 text-xs hover:bg-teal-500"
+          onClick={() => addMutation.mutate()}
+          disabled={addMutation.isPending}
+        >
+          {addMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Receipt className="size-3.5" />}
+          {t("energy_doc_add_btn")}
+        </Button>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        {doc.view_url && (
+          <Button variant="ghost" size="icon" className="size-8" asChild>
+            <a href={doc.view_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="size-3.5" />
+            </a>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-muted-foreground hover:text-destructive"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CoverageShield({ docs }: { docs: VaultDocument[] }) {
   const t = useTranslations("documents");
 
@@ -604,8 +681,15 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
     void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
   }
 
-  const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle) ?? [];
+  const energyDocs = docs?.filter((d) => d.category === "energy") ?? [];
+  const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle && d.category !== "energy") ?? [];
   const vehicleDocs = docs?.filter((d) => !d.is_non_vehicle) ?? [];
+
+  function handleEnergyChanged() {
+    void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["documents", vehicleId] });
+    void qc.invalidateQueries({ queryKey: ["costs"] });
+  }
 
   const grouped = CATEGORY_ORDER
     .map((cat) => ({ cat, docs: vehicleDocs.filter((d) => getCategory(d) === cat) }))
@@ -663,6 +747,13 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
         </div>
       ) : (
         <>
+          {energyDocs.length > 0 && (
+            <div className="space-y-2">
+              {energyDocs.map((doc) => (
+                <EnergyDocCard key={doc.id} doc={doc} vehicleId={vehicleId ?? ""} onChanged={handleEnergyChanged} onDelete={handleDelete} />
+              ))}
+            </div>
+          )}
           {nonVehicleDocs.length > 0 && (
             <div className="space-y-2">
               {nonVehicleDocs.map((doc) => (
