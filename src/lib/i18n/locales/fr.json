@@ -332,7 +332,7 @@
     "subtitle": "Envoyez un reçu de n'importe quel réseau — Renovatio, IONITY, MOL, Petrom — nous le traiterons automatiquement.",
     "option": {
       "upload": {
-        "label": "Photo",
+        "label": "Photo / PDF",
         "description": "Télécharger",
         "uploading": "Envoi en cours…"
       },
@@ -1100,6 +1100,8 @@
     "energy_doc_add_btn": "Ajouter aux coûts",
     "energy_doc_added": "Ajouté aux coûts",
     "energy_doc_add_error": "Impossible d'ajouter aux coûts",
+    "energy_doc_dismiss_btn": "Pas maintenant",
+    "energy_doc_dismiss_error": "Impossible de rejeter",
     "type_talon": "Certificat d'immatriculation",
     "coverage_score_label": "Documentation du véhicule",
     "coverage_score_complete": "Tous les documents obligatoires valides",

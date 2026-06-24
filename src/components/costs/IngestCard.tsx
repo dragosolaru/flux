@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, Copy, Loader2, Mail, MessageCircle } from "lucide-react";
+import { Check, Copy, Loader2, Mail, MessageCircle, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -93,7 +93,7 @@ export function IngestCard({
               disabled={uploadDisabled}
             />
             <div className="flex size-4 shrink-0 items-center justify-center text-muted-foreground">
-              {uploading ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+              {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium">{t("ingest.option.upload.label")}</div>

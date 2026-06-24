@@ -332,7 +332,7 @@
     "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
     "option": {
       "upload": {
-        "label": "Fotó",
+        "label": "Fotó / PDF",
         "description": "Feltöltés",
         "uploading": "Feltöltés folyamatban…"
       },
@@ -1100,6 +1100,8 @@
     "energy_doc_add_btn": "Hozzáadás a költségekhez",
     "energy_doc_added": "Hozzáadva a költségekhez",
     "energy_doc_add_error": "Nem sikerült hozzáadni",
+    "energy_doc_dismiss_btn": "Nem most",
+    "energy_doc_dismiss_error": "Nem sikerült elvetni",
     "type_talon": "Forgalmi engedély",
     "coverage_score_label": "Jármű dokumentáció",
     "coverage_score_complete": "Minden kötelező dokumentum érvényes",

@@ -332,7 +332,7 @@
     "subtitle": "Send a receipt from any network — Renovatio, IONITY, MOL, Petrom — we'll process it automatically.",
     "option": {
       "upload": {
-        "label": "Photo",
+        "label": "Photo / PDF",
         "description": "Upload",
         "uploading": "Uploading…"
       },
@@ -1100,6 +1100,8 @@
     "energy_doc_add_btn": "Add to costs",
     "energy_doc_added": "Added to costs",
     "energy_doc_add_error": "Couldn't add to costs",
+    "energy_doc_dismiss_btn": "Not now",
+    "energy_doc_dismiss_error": "Couldn't dismiss",
     "type_talon": "Registration Certificate",
     "coverage_score_label": "Vehicle documentation",
     "coverage_score_complete": "All mandatory documents valid",
