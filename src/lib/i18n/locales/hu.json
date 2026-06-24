@@ -332,7 +332,7 @@
     "subtitle": "Küldjön be egy bizonylatot bármely hálózatból — Renovatio, IONITY, MOL, Petrom — automatikusan feldolgozzuk.",
     "option": {
       "upload": {
-        "label": "Fotó",
+        "label": "Fotó / PDF",
         "description": "Feltöltés",
         "uploading": "Feltöltés folyamatban…"
       },

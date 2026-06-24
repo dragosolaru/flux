@@ -332,7 +332,7 @@
     "subtitle": "Sende einen Beleg von einem beliebigen Netzwerk — Renovatio, IONITY, MOL, Petrom — wir verarbeiten ihn automatisch.",
     "option": {
       "upload": {
-        "label": "Foto",
+        "label": "Foto / PDF",
         "description": "Hochladen",
         "uploading": "Wird hochgeladen…"
       },
