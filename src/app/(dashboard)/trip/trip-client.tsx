@@ -516,8 +516,7 @@ export function TripClient() {
           exit="exit"
           className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-[20px] border-t border-border bg-card/95 shadow-2xl backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border lg:hidden"
         >
-          {/* Handle — always visible, outside the collapsible area so scroll
-              state never hides it. */}
+          {/* Handle — always visible. Shows drag indicator + chevron. */}
           <div className="flex min-h-11 w-full items-center justify-between gap-2 px-4 pb-1 pt-2">
             <button
               onClick={() => setPlanExpanded((v) => !v)}
@@ -525,41 +524,27 @@ export function TripClient() {
               aria-expanded={planExpanded}
               aria-label={planExpanded ? t("see_map") : t("see_plan")}
             >
-              {planExpanded ? (
-                <>
-                  <div className="mx-auto h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
-                  <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                </>
-              ) : (
-                <>
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {originShort} → {destinationShort}
-                    {activePlan!.totalDistanceKm > 0 && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {Math.round(activePlan!.totalDistanceKm)} km · {Math.floor(activePlan!.drivingMinutes / 60)}h {activePlan!.drivingMinutes % 60}min
-                      </span>
-                    )}
-                  </span>
-                  <ChevronUp className="ml-auto size-4 shrink-0 text-muted-foreground" />
-                </>
-              )}
+              <div className="mx-auto h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
+              {planExpanded
+                ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                : <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+              }
             </button>
-            {planExpanded && (
-              <button
-                onClick={() => setFormCollapsed(false)}
-                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
-              >
-                {t("edit_btn")}
-              </button>
-            )}
+            <button
+              onClick={() => setFormCollapsed(false)}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {t("edit_btn")}
+            </button>
           </div>
 
-          {/* Collapsible content — framer-motion height, always scrollable */}
+          {/* Results — collapses to ~160 px (shows share + chips) instead of 0,
+              so the primary action stays visible without expanding. */}
           <motion.div
-            animate={{ height: planExpanded ? "auto" : 0 }}
+            animate={{ height: planExpanded ? "auto" : 160 }}
             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
             className="overflow-x-hidden"
-            style={{ maxHeight: "calc(45dvh - 2.5rem)", overflowY: "auto" }}
+            style={{ maxHeight: "calc(45dvh - 2.5rem)", overflowY: planExpanded ? "auto" : "hidden" }}
           >
             <div className="px-4 pb-4 pt-1.5">
               <TripResultsBody {...resultsProps} />
@@ -916,6 +901,52 @@ function TripResultsBody({
 
   return (
     <div className="space-y-3">
+      {/* Share / sent — rendered FIRST so it stays visible in the peek state
+          of the mobile bottom sheet (collapsed to ~160 px). canShare is already
+          false for infeasible routes so no guard needed here. */}
+      {canShare && (
+        <AnimatePresence mode="wait">
+          {sharedRoute ? (
+            <motion.div
+              key="sent"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3"
+            >
+              <CheckCircle2 className="size-5 shrink-0 text-green-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-green-400">{t("share_sent_title")}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {showDisclaimer
+                    ? t("share_sent_detail_preconditioned")
+                    : t("share_sent_detail", { dest: destinationShort })}
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="send"
+              whileTap={{ scale: 0.97 }}
+              onClick={onShareToTesla}
+              disabled={sharing}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {sharing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Send className="size-4" />
+              )}
+              {sharing ? t("sharing") : t("share_to_tesla")}
+              {!sharing && activePlan.stops.length > 0 && (
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
+                  {activePlan.stops.length} ⚡
+                </span>
+              )}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      )}
+
       {/* Variant selector — alternative roads × charging strategies. Horizontal
           scroll rail on mobile; full-width stacked rows on desktop. */}
       {variants.length > 1 && (
@@ -997,49 +1028,6 @@ function TripResultsBody({
         /* Feasible route — normal result */
         <>
           <StatStrip stats={stats} />
-
-          {canShare && (
-            <AnimatePresence mode="wait">
-              {sharedRoute ? (
-                <motion.div
-                  key="sent"
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3"
-                >
-                  <CheckCircle2 className="size-5 shrink-0 text-green-400" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-green-400">{t("share_sent_title")}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {showDisclaimer
-                        ? t("share_sent_detail_preconditioned")
-                        : t("share_sent_detail", { dest: destinationShort })}
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="send"
-                  whileTap={{ scale: 0.97 }}
-                  onClick={onShareToTesla}
-                  disabled={sharing}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                >
-                  {sharing ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Send className="size-4" />
-                  )}
-                  {sharing ? t("sharing") : t("share_to_tesla")}
-                  {!sharing && activePlan.stops.length > 0 && (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
-                      {activePlan.stops.length} ⚡
-                    </span>
-                  )}
-                </motion.button>
-              )}
-            </AnimatePresence>
-          )}
 
           {/* Preconditioning disclaimer — shown once after sending a route
               that includes non-SC DC fast chargers. */}
