@@ -332,8 +332,8 @@
     "subtitle": "Trimite bonul de la orice rețea — Renovatio, IONITY, MOL, Petrom — și îl procesăm automat.",
     "option": {
       "upload": {
-        "label": "Foto",
-        "description": "Upload",
+        "label": "Foto / PDF",
+        "description": "Încarcă",
         "uploading": "Se încarcă…"
       },
       "email": {

@@ -332,7 +332,7 @@
     "subtitle": "Envoyez un reçu de n'importe quel réseau — Renovatio, IONITY, MOL, Petrom — nous le traiterons automatiquement.",
     "option": {
       "upload": {
-        "label": "Photo",
+        "label": "Photo / PDF",
         "description": "Télécharger",
         "uploading": "Envoi en cours…"
       },
