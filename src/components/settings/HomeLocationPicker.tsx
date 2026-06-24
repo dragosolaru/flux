@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, MapPin } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,30 +14,17 @@ interface GeocodeResult {
   displayName: string;
 }
 
-async function geocode(address: string, locale: string): Promise<GeocodeResult | null> {
-  const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", address);
-  url.searchParams.set("format", "json");
-  url.searchParams.set("limit", "1");
-
-  const res = await fetch(url.toString(), {
-    headers: { "Accept-Language": `${locale},en` },
-  });
+async function geocode(address: string): Promise<GeocodeResult | null> {
+  const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}&cc=ro`);
   if (!res.ok) return null;
-
-  const arr = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
-  if (arr.length === 0) return null;
-  const first = arr[0];
-  return {
-    lat: parseFloat(first.lat),
-    lng: parseFloat(first.lon),
-    displayName: first.display_name,
-  };
+  const data = (await res.json()) as { results?: Array<{ name: string; lat: number; lng: number }> };
+  const first = data.results?.[0];
+  if (!first) return null;
+  return { lat: first.lat, lng: first.lng, displayName: first.name };
 }
 
 export function HomeLocationPicker() {
   const t = useTranslations();
-  const locale = useLocale();
   const { data: prefs, isPlaceholderData } = usePreferences();
   const update = useUpdatePreferences();
 
@@ -63,7 +50,7 @@ export function HomeLocationPicker() {
     setError(null);
     setVerifying(true);
     try {
-      const result = await geocode(address.trim(), locale);
+      const result = await geocode(address.trim());
       if (!result) {
         setError(t("settings.home_location.error"));
         return;
