@@ -479,6 +479,13 @@ function EnergyDocCard({
     onError: () => toast.error(t("energy_doc_add_error")),
   });
 
+  const dismissMutation = useMutation({
+    mutationFn: () =>
+      apiFetch(`/api/vehicles/${vehicleId}/vault/${doc.id}/dismiss`, { method: "POST" }),
+    onSuccess: () => onChanged(),
+    onError: () => toast.error(t("energy_doc_dismiss_error")),
+  });
+
   async function handleDelete() {
     setDeleting(true);
     try {
@@ -502,15 +509,27 @@ function EnergyDocCard({
             <p className="mt-1 truncate text-xs text-muted-foreground/60">{doc.original_filename}</p>
           )}
         </div>
-        <Button
-          size="sm"
-          className="h-7 bg-teal-600 text-xs hover:bg-teal-500"
-          onClick={() => addMutation.mutate()}
-          disabled={addMutation.isPending}
-        >
-          {addMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Receipt className="size-3.5" />}
-          {t("energy_doc_add_btn")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="h-7 bg-teal-600 text-xs hover:bg-teal-500"
+            onClick={() => addMutation.mutate()}
+            disabled={addMutation.isPending || dismissMutation.isPending}
+          >
+            {addMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Receipt className="size-3.5" />}
+            {t("energy_doc_add_btn")}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => dismissMutation.mutate()}
+            disabled={addMutation.isPending || dismissMutation.isPending}
+          >
+            {dismissMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            {t("energy_doc_dismiss_btn")}
+          </Button>
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {doc.view_url && (
