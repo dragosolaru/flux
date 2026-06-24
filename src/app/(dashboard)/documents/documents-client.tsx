@@ -90,18 +90,27 @@ function formatDate(isoDate: string, locale: string): string {
   }
 }
 
-const INSURANCE_TYPES = new Set(["rca", "casco", "roadside_assistance"]);
-const TAX_TYPES = new Set(["rovinieta", "vignette", "bridge_toll", "car_tax", "highway_toll", "ferry", "parking"]);
-const SERVICE_TYPES = new Set(["service", "tires", "spare_parts", "car_wash", "fuel"]);
-
 type DocumentType = VaultDocument["document_type"];
+type DocumentCategory = NonNullable<VaultDocument["category"]>;
+
+const TYPE_TO_CATEGORY: Record<string, DocumentCategory> = {
+  rca: "insurance", casco: "insurance", roadside_assistance: "insurance",
+  talon: "registration",
+  itp: "inspection",
+  car_tax: "tax",
+  rovinieta: "toll", vignette: "toll", bridge_toll: "toll", highway_toll: "toll", ferry: "toll",
+  fuel: "operating", parking: "operating", car_wash: "operating",
+  service: "maintenance", tires: "maintenance", spare_parts: "maintenance",
+  leasing: "financing",
+  fine: "incident",
+};
 
 const FILENAME_KEYWORDS: Array<[RegExp, NonNullable<DocumentType>]> = [
   [/anvelope|cauciuc|tyre|tire/i, "tires"],
-  [/\brca\b|rc\s*auto|responsabilitate\s*civila/i, "rca"],
+  [/\brca\b|rc\s*auto|responsabilitate\s*civila|carte\s*verde|green\s*card/i, "rca"],
   [/casco/i, "casco"],
   [/asigurare|polita|insurance/i, "rca"],
-  [/\bitp\b|inspectie\s*tehnica/i, "itp"],
+  [/\bitp\b|inspectie\s*tehnica|t[üu]v|\bmot\b|controle\s*technique|revisione|\bitv\b/i, "itp"],
   [/rovinieta|vigneta\s*ro/i, "rovinieta"],
   [/taxa\s*auto|impozit\s*auto/i, "car_tax"],
   [/\bservice\b|reparati/i, "service"],
@@ -113,9 +122,10 @@ const FILENAME_KEYWORDS: Array<[RegExp, NonNullable<DocumentType>]> = [
   [/leasing/i, "leasing"],
   [/tractare|depanare|roadside/i, "roadside_assistance"],
   [/feribot|ferry/i, "ferry"],
-  [/autostrada|vignett/i, "highway_toll"],
+  [/autostrada|vignett|crit.?air/i, "highway_toll"],
   [/pod\b|bridge.?toll/i, "bridge_toll"],
-  [/talon|carte\s*identitate\s*vehicul/i, "talon"],
+  [/talon|carte\s*identitate\s*vehicul|certificat\s*inmatriculare|coc\b/i, "talon"],
+  [/permis|atestat|tahograf|tachograph/i, "fine"],
 ];
 
 function inferTypeFromFilename(filename: string | null): NonNullable<DocumentType> | null {
@@ -126,12 +136,31 @@ function inferTypeFromFilename(filename: string | null): NonNullable<DocumentTyp
   return null;
 }
 
-function getGroup(doc: VaultDocument): "insurance" | "taxes" | "service" | "other" {
+// Display order of category groups in the vault.
+const CATEGORY_ORDER: DocumentCategory[] = [
+  "insurance", "inspection", "registration", "tax", "toll",
+  "maintenance", "operating", "financing", "incident", "driver", "other",
+];
+
+const CATEGORY_I18N: Record<DocumentCategory, string> = {
+  insurance: "group_insurance",
+  inspection: "group_inspection",
+  registration: "group_registration",
+  tax: "group_taxes",
+  toll: "group_toll",
+  maintenance: "group_service",
+  operating: "group_operating",
+  financing: "group_financing",
+  incident: "group_incident",
+  driver: "group_driver",
+  energy: "group_other",
+  other: "group_other",
+};
+
+function getCategory(doc: VaultDocument): DocumentCategory {
+  if (doc.category && doc.category !== "energy") return doc.category;
   const t = doc.document_type ?? inferTypeFromFilename(doc.original_filename);
-  if (!t) return "other";
-  if (INSURANCE_TYPES.has(t)) return "insurance";
-  if (TAX_TYPES.has(t)) return "taxes";
-  if (SERVICE_TYPES.has(t)) return "service";
+  if (t && TYPE_TO_CATEGORY[t]) return TYPE_TO_CATEGORY[t];
   return "other";
 }
 
@@ -158,8 +187,10 @@ function DocCard({
   const needsReview = doc.status === "needs_review";
   const hasData = !!(doc.issuer ?? doc.valid_until ?? doc.plate_number);
 
-  const inferredType = !doc.document_type && !isProcessing ? inferTypeFromFilename(doc.original_filename) : null;
+  const aiLabel = doc.label?.trim() || null;
+  const inferredType = !doc.document_type && !aiLabel && !isProcessing ? inferTypeFromFilename(doc.original_filename) : null;
   const effectiveType = doc.document_type ?? inferredType;
+  const knownType = effectiveType && effectiveType !== "other" && effectiveType !== "unknown" ? effectiveType : null;
 
   function typeLabelFor(type: NonNullable<DocumentType> | null): string {
     switch (type) {
@@ -188,7 +219,9 @@ function DocCard({
 
   const typeLabel = isProcessing
     ? t("processing_type_placeholder")
-    : typeLabelFor(effectiveType);
+    : knownType
+      ? typeLabelFor(knownType)
+      : (aiLabel ?? typeLabelFor(effectiveType));
 
   const days = doc.days_until_expiry;
   const expiryText = (() => {
@@ -574,12 +607,9 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
   const nonVehicleDocs = docs?.filter((d) => d.is_non_vehicle) ?? [];
   const vehicleDocs = docs?.filter((d) => !d.is_non_vehicle) ?? [];
 
-  const groups = {
-    insurance: vehicleDocs.filter((d) => getGroup(d) === "insurance"),
-    taxes: vehicleDocs.filter((d) => getGroup(d) === "taxes"),
-    service: vehicleDocs.filter((d) => getGroup(d) === "service"),
-    other: vehicleDocs.filter((d) => getGroup(d) === "other"),
-  };
+  const grouped = CATEGORY_ORDER
+    .map((cat) => ({ cat, docs: vehicleDocs.filter((d) => getCategory(d) === cat) }))
+    .filter((g) => g.docs.length > 0);
 
   return (
     <PageWrapper className="mx-auto max-w-2xl gap-4 pb-28">
@@ -643,10 +673,9 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
           <CoverageShield docs={vehicleDocs} />
           <CostSummary docs={vehicleDocs} />
           <div className="space-y-5">
-            <GroupSection label={t("group_insurance")} docs={groups.insurance} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_taxes")} docs={groups.taxes} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_service")} docs={groups.service} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
-            <GroupSection label={t("group_other")} docs={groups.other} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            {grouped.map((g) => (
+              <GroupSection key={g.cat} label={t(CATEGORY_I18N[g.cat])} docs={g.docs} onDelete={handleDelete} onUpdated={handleUpdated} locale={locale} vehicleId={vehicleId ?? ""} />
+            ))}
           </div>
         </>
       )}

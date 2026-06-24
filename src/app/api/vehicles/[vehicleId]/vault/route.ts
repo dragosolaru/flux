@@ -3,11 +3,38 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import type { VaultDocument } from "@/types/costs";
+import type { VaultDocument, DocumentCategory } from "@/types/costs";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 
 const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
+
+const CATEGORY_VALUES = new Set<DocumentCategory>([
+  "insurance", "registration", "inspection", "tax", "toll",
+  "operating", "maintenance", "financing", "incident", "driver", "energy", "other",
+]);
+
+const TYPE_TO_CATEGORY: Record<string, DocumentCategory> = {
+  rca: "insurance", casco: "insurance", roadside_assistance: "insurance",
+  talon: "registration",
+  itp: "inspection",
+  car_tax: "tax",
+  rovinieta: "toll", vignette: "toll", bridge_toll: "toll", highway_toll: "toll", ferry: "toll",
+  fuel: "operating", parking: "operating", car_wash: "operating",
+  service: "maintenance", tires: "maintenance", spare_parts: "maintenance",
+  leasing: "financing",
+  fine: "incident",
+  home_bill: "energy", public_receipt: "energy", gas_bill: "energy", petrol_receipt: "energy",
+  other: "other", unknown: "other",
+};
+
+function deriveCategory(type: string | null, pjCategory: unknown): DocumentCategory | null {
+  if (typeof pjCategory === "string" && CATEGORY_VALUES.has(pjCategory as DocumentCategory)) {
+    return pjCategory as DocumentCategory;
+  }
+  if (type && TYPE_TO_CATEGORY[type]) return TYPE_TO_CATEGORY[type];
+  return null;
+}
 
 export async function GET(
   _req: Request,
@@ -128,14 +155,24 @@ export async function GET(
         ?? pjType
         ?? null;
 
+      const label = (pj?.label as string | null) ?? null;
+      const category = deriveCategory(finalType, pj?.category);
+
       const effectiveStatus = canRecover ? "done" : isStuck ? (meta ? "done" : "error") : (doc.status as VaultDocument["status"]);
       const isDone = effectiveStatus !== "pending" && effectiveStatus !== "processing";
-      // Only flag non-vehicle when type is explicitly known to be non-auto — never when null/unknown
-      const isNonVehicle = isDone && finalType !== null && NON_VEHICLE_TYPES.has(finalType);
+      // Flag non-vehicle by CATEGORY when known (driver/inspection/etc. are vehicle docs even if
+      // document_type fell back to "other"). For old docs without a category, fall back to the type check.
+      const isNonVehicle = isDone && (
+        category != null
+          ? (category === "other" || category === "energy")
+          : (finalType !== null && NON_VEHICLE_TYPES.has(finalType))
+      );
 
       return {
         id: doc.id,
         document_type: finalType,
+        label,
+        category,
         original_filename: doc.original_filename,
         mime_type: doc.mime_type,
         status: effectiveStatus,

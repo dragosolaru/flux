@@ -25,8 +25,12 @@ TIPURI DE DOCUMENTE:
 - "roadside_assistance" — poliță sau chitanță asistență rutieră (asistență rutieră, depanare, remorcare, AMR, ACR, RAR membership)
 - "spare_parts" — factură piese auto de schimb (piese, filtre, baterie 12V, geam, parbriz, componente separate — fără manoperă)
 - "ferry" — chitanță trecere feribot (ferry, pod plutitor, traversare fluviu, Calafat, Orșova)
-- "other" — altceva: confirmare transfer bancar ("Confirmare plată", "Ordin de plată", "OP"), extras de cont bancar, factură apă/gaz/telefon/internet, bon alimentar, cafea, țigări, factură medicală, orice document care NU este legat de vehicule sau energie electrică
+- "other" — altceva legat de vehicul sau șofer dar care NU e în lista de mai sus: Carte Verde, certificat conformitate (COC), inspecții străine (TÜV/MOT/Contrôle technique), zonă emisii (Crit'Air, Umweltplakette), taxă congestie, contract vânzare-cumpărare, permis de conducere, atestat, card tahograf, certificat medical șofer, constatare amiabilă, deviz reparație. SAU documente non-vehicul: transfer bancar, extras cont, factură apă/telefon/internet, bon alimentar, factură medicală.
 - "unknown" — documentul nu poate fi identificat
+
+PENTRU ORICE DOCUMENT setează DOUĂ câmpuri suplimentare:
+- "label": nume scurt (2–5 cuvinte) lizibil, ÎN ROMÂNĂ, al documentului — chiar dacă tipul e "other". Ex: "Carte Verde", "TÜV Germania", "Vinietă Crit'Air", "Contract vânzare-cumpărare", "Permis de conducere", "Constatare amiabilă", "Factură curent acasă", "Bon încărcare EV".
+- "category": una dintre insurance | registration | inspection | tax | toll | operating | maintenance | financing | incident | driver | energy | other. Alege după FUNCȚIA documentului. Folosește "energy" pentru home_bill/public_receipt/gas_bill/petrol_receipt. Pentru documentele auto/șofer folosește categoria potrivită (asigurare→insurance, ITP/TÜV→inspection, rovinietă/vinietă→toll, service/anvelope→maintenance, permis/atestat→driver etc.).
 
 REGULI STRICTE:
 - total_kwh = EXCLUSIV kWh de curent electric (nu gaz, nu echivalent termic)
@@ -43,6 +47,8 @@ Răspunde EXCLUSIV cu JSON valid, fără text, fără markdown:
 
 {
   "document_type": "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry" | "other" | "unknown",
+  "label": string,
+  "category": "insurance" | "registration" | "inspection" | "tax" | "toll" | "operating" | "maintenance" | "financing" | "incident" | "driver" | "energy" | "other",
   "has_non_electricity_items": boolean,
   "provider_name": string | null,
   "period_start": "YYYY-MM-DD" | null,

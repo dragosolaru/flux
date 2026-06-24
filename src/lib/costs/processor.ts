@@ -10,6 +10,17 @@ const CONFIDENCE_THRESHOLD = 0.7;
 
 const CAR_DOC_TYPES: DocumentType[] = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 
+// Categories that belong in the per-vehicle document vault (everything except energy bills and non-vehicle docs).
+const VEHICLE_CATEGORIES = new Set([
+  "insurance", "registration", "inspection", "tax", "toll",
+  "operating", "maintenance", "financing", "incident", "driver",
+]);
+
+function isVehicleDoc(parsed: ParsedDocument): boolean {
+  if (CAR_DOC_TYPES.includes(parsed.document_type as DocumentType)) return true;
+  return parsed.category != null && VEHICLE_CATEGORIES.has(parsed.category);
+}
+
 function averageConfidence(c: ParsedDocument["confidence"]): number {
   const vals = Object.values(c).filter((v) => typeof v === "number");
   if (vals.length === 0) return 0;
@@ -36,10 +47,14 @@ export async function processDocument(documentId: string): Promise<void> {
     // First pass: use energy prompt to classify the document
     const parsed = await parseDocument(doc as Document);
 
-    // If the energy prompt classified it as a car doc type, re-parse with car prompt
-    const isCarDoc = CAR_DOC_TYPES.includes(parsed.document_type as DocumentType);
-    const finalParsed = isCarDoc ? await parseCarDocument(doc as Document) : parsed;
+    // Re-parse with the richer car/expert prompt when pass 1 looks like a vehicle or
+    // driver document (known car type, a vehicle/driver category, or genuinely unknown).
+    const shouldCarParse = isVehicleDoc(parsed) || parsed.document_type === "unknown";
+    const finalParsed = shouldCarParse ? await parseCarDocument(doc as Document) : parsed;
     const avgConf = averageConfidence(finalParsed.confidence);
+
+    // Decide vault membership from the final (richer) result.
+    const isCarDoc = isVehicleDoc(finalParsed);
 
     if (isCarDoc) {
       if (doc.vehicle_id) {
