@@ -1039,6 +1039,7 @@
     "upload_btn": "Încarcă document",
     "upload_success": "Document încărcat",
     "upload_error": "Eroare la încărcare. Încearcă din nou.",
+    "upload_error_too_large": "Fișier prea mare (max 10 MB). Comprimă sau decupează imaginea.",
     "empty_title": "Niciun document încă",
     "empty_hint": "Încarcă RCA, ITP sau rovinieta, sau trimite-le pe email.",
     "view_btn": "Vizualizează",

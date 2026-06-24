@@ -1,5 +1,12 @@
 # Flux — Hetzner Deployment Guide
 
+> **This is the self-host alternative.** Flux runs in production on **Vercel** (see
+> `DEPLOYMENT.md`, live at flux-alpha-three.vercel.app). This guide describes deploying the
+> same codebase to your own Hetzner Cloud VM with Docker Compose + Traefik. It works because
+> `next.config.ts` sets `output: "standalone"` (the `Dockerfile` and `docker-compose.yml` in
+> the repo root are real and match the steps below). Pick this path only if you want to
+> self-host; otherwise use Vercel.
+
 Self-hosted production deployment on Hetzner Cloud using Docker Compose + Traefik.
 
 ---
@@ -173,26 +180,38 @@ curl -I https://www.yourdomain.com   # redirect → yourdomain.com
 
 ## Variabilele de mediu (`.env.production`)
 
-| Variabilă | Cum o obții |
-|-----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API (secret!) |
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | `https://yourdomain.com` |
-| `GOOGLE_CLIENT_ID` | [console.cloud.google.com](https://console.cloud.google.com) → Credentials |
-| `GOOGLE_CLIENT_SECRET` | același loc |
-| `TESLA_CLIENT_ID` | [developer.tesla.com](https://developer.tesla.com) |
-| `TESLA_CLIENT_SECRET` | același loc |
-| `TESLA_REDIRECT_URI` | `https://yourdomain.com/api/tesla/callback` |
-| `TESLA_TOKEN_ENCRYPTION_KEY` | `openssl rand -hex 32` |
-| `TESLA_PROXY_BASE_URL` | `https://proxy.yourdomain.com` (dacă ai VCP proxy) |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
-| `EMAIL_WEBHOOK_SECRET` | `openssl rand -hex 24` |
-| `NEXT_PUBLIC_CLOUDMAILIN_ADDRESS` | [app.cloudmailin.com](https://app.cloudmailin.com) |
-| `LIVE_INTEGRATIONS` | `tesla` (sau gol pentru demo) |
-| `DOMAIN` | `yourdomain.com` |
-| `ACME_EMAIL` | emailul tău (pentru alerte Let's Encrypt) |
+> Lista canonică, adnotată, este în `.env.local.example`. Tabelul de mai jos acoperă cele
+> necesare pentru Hetzner. `DOMAIN` și `ACME_EMAIL` sunt specifice Docker Compose / Traefik
+> (nu sunt citite de aplicație). Variabile precum `STRIPE_*`, push (VAPID), `RESEND_*`,
+> `TWILIO_*`, `UPSTASH_*`, `TOMTOM_API_KEY` etc. sunt opționale/feature-gated — vezi
+> `.env.local.example` și tabelele din `DEPLOYMENT.md`.
+
+| Variabilă | Cum o obții | Obligatoriu? |
+|-----------|-------------|--------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → API | da |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API | da |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API (secret!) | da |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 32` | da |
+| `NEXTAUTH_URL` | `https://yourdomain.com` | da |
+| `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys | da (pentru billing) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks | da (pentru billing) |
+| `STRIPE_PRO_MONTHLY_PRICE_ID` / `STRIPE_PRO_ANNUAL_PRICE_ID` | Stripe → Products → Prices | da (pentru billing) |
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) | da (OCR — Claude) |
+| `EMAIL_WEBHOOK_SECRET` | `openssl rand -hex 24` (trimis ca header `x-webhook-secret`) | da (email ingest) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | [console.cloud.google.com](https://console.cloud.google.com) → Credentials | opțional (login Google) |
+| `TESLA_CLIENT_ID` / `TESLA_CLIENT_SECRET` | [developer.tesla.com](https://developer.tesla.com) | opțional (Tesla live) |
+| `TESLA_REDIRECT_URI` | `https://yourdomain.com/api/tesla/callback` | opțional |
+| `TESLA_TOKEN_ENCRYPTION_KEY` | `openssl rand -hex 32` (32 bytes hex, AES-256-GCM) | opțional |
+| `TESLA_PROXY_BASE_URL` | `https://proxy.yourdomain.com` (dacă ai VCP proxy) | opțional |
+| `NEXT_PUBLIC_CLOUDMAILIN_ADDRESS` | [app.cloudmailin.com](https://app.cloudmailin.com) | opțional |
+| `LIVE_INTEGRATIONS` | `tesla` (sau gol pentru demo) | opțional |
+| `CRON_SECRET` | `openssl rand -hex 24` (Bearer pentru cron-uri) | opțional |
+| `DOMAIN` | `yourdomain.com` (Traefik) | da |
+| `ACME_EMAIL` | emailul tău (alerte Let's Encrypt) | da |
+
+> Notă: dacă rulezi un singur container, rate limiting cade pe fallback-ul in-memory
+> (`src/lib/rate-limit.ts`). Pentru limite partajate, setează `UPSTASH_REDIS_REST_URL` și
+> `UPSTASH_REDIS_REST_TOKEN`.
 
 ---
 

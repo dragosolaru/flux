@@ -2,7 +2,7 @@
 
 > AI-powered ingestion of energy bills and charger receipts. Claude Vision parses uploaded or emailed documents, extracts cost data, and attributes it to the correct vehicle.
 
-Source: `src/lib/costs/`, `src/lib/ai/`, `src/lib/external/bnr/`, `src/app/api/documents/`
+Source: `src/lib/costs/`, `src/lib/ai/`, `src/lib/external/bnr/`, `src/app/api/documents/`, `src/app/api/costs/`
 
 ---
 
@@ -10,40 +10,52 @@ Source: `src/lib/costs/`, `src/lib/ai/`, `src/lib/external/bnr/`, `src/app/api/d
 
 | Feature | Description |
 |---|---|
-| Input | JPG, PNG, WebP, PDF — up to 10 MB |
-| Ingest channels | File upload in app + email attachment |
-| Parsing | Claude Vision (`claude-sonnet-4-6`) |
+| Input | JPG, PNG, WebP, GIF, PDF — up to 10 MB |
+| Ingest channels | File upload (app + vault), inbound email, inbound WhatsApp |
+| Parsing | Claude (`claude-sonnet-4-6`) via `@anthropic-ai/sdk` |
 | Currency conversion | BNR (Banca Națională a României) XML API |
-| Cost ~per document | $0.003–0.008 |
 
 ---
 
 ## Document lifecycle
 
 ```
-upload / email
+upload / email / whatsapp
       │
       ▼
  documents table: status = "pending"
       │
-      ▼ (fire-and-forget async)
+      ▼ (async, via Next.js after())
  processDocument(id)
       │
       ├─ status = "processing"
       │
-      ├─ parseDocument()  →  Claude Vision  →  ParsedDocument JSON
+      ├─ pass 1: parseDocument()  →  Claude (energy prompt)  →  ParsedDocument JSON
+      │
+      ├─ if document_type is a car-doc type (rca/casco/itp/…):
+      │     pass 2: parseCarDocument()  →  Claude (car prompt)
+      │             → insert vehicle_doc_meta row → done | needs_review  (returns; no energy_costs)
+      │
+      ├─ if document_type is gas_bill / petrol_receipt / other:
+      │     status = "needs_review"  (returns; no energy_costs)
       │
       ├─ getExchangeRate()  →  convert to RON
       │
-      ├─ home_bill  →  attributeHomeBill()  →  vehicle's share
-      │   public_receipt  →  matchChargingSession()  →  link session
+      ├─ home_bill      →  attributeHomeBill()    →  vehicle's share
+      │   public_receipt →  matchChargingSession() →  link + write cost back to session
       │
-      ├─ insert energy_costs row
+      ├─ insert energy_costs row (only if vehicle_id set and type != "unknown")
       │
       └─ status = "done" | "needs_review" | "error"
 ```
 
-Documents with `min(confidence.cost_total, confidence.document_type) < 0.7` get `needs_review`.
+`processDocument` runs a **two-pass** flow: the energy prompt classifies and extracts first; if it
+detects a car-document type, the document is re-parsed with the dedicated car prompt and stored in
+`vehicle_doc_meta` instead of `energy_costs`.
+
+Confidence: a document is flagged `needs_review` when
+`min(confidence.cost_total, confidence.document_type) < 0.7` (energy docs) or when its average
+confidence `< 0.7` (car docs).
 
 Constant: `CONFIDENCE_THRESHOLD = 0.7` in `src/lib/costs/processor.ts`
 
@@ -51,63 +63,93 @@ Constant: `CONFIDENCE_THRESHOLD = 0.7` in `src/lib/costs/processor.ts`
 
 ## Document types
 
+The classifier recognizes a wide set of types (see `DocumentType` in `src/types/costs.ts`):
+energy docs (`home_bill`, `public_receipt`), other-fuel docs (`gas_bill`, `petrol_receipt`),
+and a large group of **car documents** (`rca`, `casco`, `itp`, `rovinieta`, `vignette`,
+`bridge_toll`, `car_tax`, `service`, `parking`, `fuel`, `tires`, `fine`, `highway_toll`,
+`car_wash`, `leasing`, `roadside_assistance`, `spare_parts`, `ferry`, `talon`), plus
+`other` and `unknown`.
+
+Only the two energy types create `energy_costs` rows. Car-document types go to
+`vehicle_doc_meta` (the document vault); everything else is stored on the `documents` row and
+flagged `needs_review`.
+
 ### home_bill
 
 Romanian electricity bill (E.ON, Electrica, CEZ, etc.).
 
 - Provider name, billing period (month range), total kWh, total cost
-- Attribution: compare vehicle's home charging sessions (`network IS NULL`) in the billing period against the total bill kWh
-  - `fraction = vehicleKwh / billTotalKwh`
+- Attribution (`attributeHomeBill` in `src/lib/costs/attribution.ts`): compare the vehicle's home
+  charging sessions (`network IS NULL`) in the billing period against the total bill kWh
+  - `fraction = min(vehicleKwh / billTotalKwh, 1)`
   - `vehicleCostRon = billCostRon × fraction`
-  - If no charging sessions found in period: use full bill cost (flagged as `needs_review`)
+  - If no charging sessions found in period: store the full bill cost and `vehicle_kwh_attributed =
+    total_kwh` (flagged `needs_review` only if confidence is low)
+- If `period_start`/`period_end` are missing, the period defaults to the last
+  `HOME_BILL_DEFAULT_PERIOD_DAYS = 30` days (`src/lib/costs/constants.ts`)
 
 ### public_receipt
 
-Public charger receipt (Electromob, Tesla SC, etc.).
+Public charger receipt (Ionity, Tesla Supercharger, Renovatio, etc.).
 
 - Charger network, session timestamp, kWh delivered, cost
-- Session matching: find the `charging_sessions` row within ±15 minutes of the receipt's timestamp
-- Constant: `toleranceMinutes = 15` in `src/lib/costs/session-matcher.ts`
+- Session matching (`matchChargingSession` in `src/lib/costs/session-matcher.ts`): find the
+  `charging_sessions` row within ±15 minutes of the receipt's timestamp; on a match, write
+  `cost_ron` + `cost_source = "document"` back to that session
+- Constant: `toleranceMinutes = 15` (default parameter in `session-matcher.ts`)
 
 ---
 
 ## Parsing pipeline
 
-File: `src/lib/ai/document-parser.ts`
+File: `src/lib/ai/document-parser.ts` (model `claude-sonnet-4-6`, `max_tokens: 1024`)
 
-1. Download document from Supabase Storage
-2. Encode as base64
-3. Build Claude message: document block + extraction prompt
-4. Parse JSON response, validate with Zod schema
-5. Strip markdown fences from response (Claude sometimes wraps JSON in ` ```json `)
+1. Download document from Supabase Storage (`documents` bucket)
+2. Encode as base64; PDFs sent as a `document` block, images as an `image` block
+3. Build the Claude message: file block + extraction prompt
+4. Strip markdown fences from the response (Claude sometimes wraps JSON in ` ```json `)
+5. Parse JSON, validate with Zod (`ParsedDocumentSchema` / `CarDocSchema`)
 
-### Prompt
+Two entry points: `parseDocument` (energy prompt) and `parseCarDocument` (car prompt, normalized
+back into the `ParsedDocument` shape).
 
-File: `src/lib/ai/prompts/document-extraction.ts`
+### Prompts
 
-Written in Romanian (documents are typically Romanian). Instructs Claude to output JSON with confidence scores per field (0.0–1.0).
+Files in `src/lib/ai/prompts/`:
 
-Output schema:
+- `document-extraction.ts` (`DOCUMENT_EXTRACTION_PROMPT`) — energy/classification prompt, used by `parseDocument`
+- `car-document-extraction.ts` (`CAR_DOCUMENT_EXTRACTION_PROMPT`) — used by `parseCarDocument`
+- `document-triage.ts` (`DOCUMENT_TRIAGE_PROMPT`) — a classify-only triage prompt that exists in
+  the tree but is **not yet wired into `processDocument`** (the pipeline is two-pass today)
+
+Prompts are written in Romanian (documents are typically Romanian). They instruct Claude to output
+JSON with per-field confidence scores (0.0–1.0).
+
+Energy output schema (`ParsedDocumentSchema`, abridged):
 
 ```ts
 {
-  document_type: "home_bill" | "public_receipt" | "unknown";
+  document_type: DocumentType;        // full enum, see src/types/costs.ts
+  has_non_electricity_items: boolean; // true for combined gas+electricity bills, etc.
   provider_name: string | null;
   period_start: string | null;        // ISO date YYYY-MM-DD
   period_end: string | null;
   session_timestamp: string | null;   // ISO datetime for receipts
   total_kwh: number | null;
   price_per_kwh: number | null;
+  electricity_cost: number | null;    // electricity-only subtotal; preferred over cost_total
   cost_total: number | null;
   currency: string;                   // default "RON"
   charger_network: string | null;
   location_name: string | null;
+  // car-doc fields (populated by parseCarDocument): plate_number, valid_from, valid_until, issuer
   confidence: {
     document_type: number;
     total_kwh: number;
     cost_total: number;
     period_start: number;
     session_timestamp: number;
+    valid_until?: number;
   };
 }
 ```
@@ -146,20 +188,38 @@ The address is generated by `src/lib/costs/vehicle-email.ts` and shown to the us
 
 ### Vehicle identification (priority order in `resolveVehicle`)
 
-1. `+subaddress` matches a vehicle short ID (8 hex chars) → **primary path**, that vehicle
-2. `+subaddress` matches a user's email local part → user's first active vehicle (fallback)
-3. Sender email matches a registered user → user's first active vehicle (fallback)
-4. Subject contains a vehicle nickname → that vehicle (fallback)
+1a. `+subaddress` matches a full vehicle UUID (legacy `flux+<full-uuid>@…` format) → that vehicle
+1b. `+subaddress` matches a vehicle short ID (8 hex chars) → **primary path**, that vehicle
+2. `+subaddress` matches a user's email local part (exact, no normalization) → user's first active vehicle
+3. Sender email matches a registered user → user's first active vehicle
 
-Unmatched documents go to `unmatched/` in Storage with `user_id = '00000000-…'` and `vehicle_id = null`. The user can claim them via `POST /api/documents/recover` (button in `/costs`).
+There is **no** subject-nickname fallback: scanning nicknames across users is a cross-tenant IDOR
+(a spoofed sender could attribute a document to a victim's vehicle), so it was deliberately removed.
+
+Unmatched mail lands in the fallback pool: documents go to `unmatched/` in Storage with
+`user_id = '00000000-0000-0000-0000-000000000000'`, `vehicle_id = null`, and status
+`needs_review`. The user can claim them via `POST /api/documents/recover` (matched by
+`sender_email`).
 
 ### Supported providers
 
 | Provider | Format | Notes |
 |---|---|---|
-| Cloudmailin | JSON or Multipart | Auto-detected by Content-Type |
-| Mailgun | multipart/form-data | `attachment-1`, `attachment-2` fields |
+| Cloudmailin | JSON or Multipart | Auto-detected by Content-Type (`application/json` → JSON parser, else multipart) |
+| Mailgun | multipart/form-data | `attachment*` fields |
 | SendGrid | multipart/form-data | Same field names |
+
+---
+
+## WhatsApp inbound
+
+File: `src/app/api/documents/inbound-whatsapp/route.ts`
+
+Webhook URL: `POST /api/documents/inbound-whatsapp` — a Twilio media webhook. Authenticated by
+validating Twilio's `X-Twilio-Signature` (HMAC-SHA1 of the URL + sorted POST params, keyed by the
+Twilio Auth Token) — not a static shared secret. Media is downloaded, filtered by supported MIME
+type, stored, and queued through the same `processDocument` pipeline. Unmatched media lands in the
+same fallback pool.
 
 ---
 
@@ -171,10 +231,14 @@ File: `src/app/api/costs/route.ts`
 |---|---|
 | Total cost | Sum of `energy_costs.cost_ron` for vehicle |
 | Home/public split | Filter by `document_type` |
-| Cost per km (home) | `homeCostRon / totalKm` |
-| Cost per km (blended) | `totalCostRon / totalKm` |
+| Cost per km (home) | `homeAttributedCostRon / totalKm` — home bills count only the vehicle's share (`cost_ron × vehicle_kwh_attributed / total_kwh`) |
+| Cost per km (public) | `publicCostRon / totalKm` |
+| Cost per km (blended) | `(homeAttributedCostRon + publicCostRon) / totalKm` |
 | Petrol comparison | `(7.5 RON × 7 L/100km) / 100 × totalKm` |
-| Monthly trend | Bucket by `period_start` YYYY-MM |
+| Monthly trend | Bucket by `period_start` (YYYY-MM), sorted ascending |
+
+`totalKm` comes from `trips` in the same date window, preferring `distance_km` and falling back to
+`end_odometer_km − start_odometer_km`.
 
 Constants in `src/app/api/costs/route.ts`:
 - `PETROL_PRICE_RON = 7.5`
@@ -193,10 +257,12 @@ Tracks every uploaded/emailed file.
 | `id` | uuid | PK |
 | `user_id` | uuid | FK → profiles |
 | `vehicle_id` | uuid | FK → vehicles; null if unmatched |
-| `source` | text | `upload` \| `email` |
+| `source` | text | `upload` \| `email` \| `whatsapp` \| `vault-upload` \| `manual` |
+| `document_type` | text | Set after parsing (see `DocumentType`) |
 | `storage_path` | text | Path in Supabase Storage `documents` bucket |
 | `mime_type` | text | |
 | `original_filename` | text | |
+| `sender_email` | text | Set for inbound email; used by the recover flow |
 | `status` | text | `pending` → `processing` → `done` \| `needs_review` \| `error` |
 | `parsed_json` | jsonb | Full `ParsedDocument` output from Claude |
 | `confidence` | numeric | Average confidence score |
@@ -217,8 +283,12 @@ One row per processed document (after attribution).
 | `original_amount` | numeric | Cost in original currency |
 | `original_currency` | text | e.g. `RON`, `EUR` |
 | `exchange_rate` | numeric | Rate to RON on document date |
-| `cost_ron` | numeric | Final cost in RON |
+| `cost_ron` | numeric | Final cost in RON (vehicle's attributed share for home bills) |
+| `provider_name` | text | From parsed document |
+| `charger_network` | text | From parsed document (public receipts) |
+| `location_name` | text | From parsed document |
 | `charging_session_id` | uuid | Linked session (public receipts) |
+| `is_manually_edited` | boolean | User overrode the parsed values |
 
 ### exchange_rates
 

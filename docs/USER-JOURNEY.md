@@ -32,7 +32,7 @@
 | **New visitor** | Discovers Flux via social/search; no account | Understand the value proposition without committing |
 | **Demo user** | Registered but hasn't connected a real Tesla | Explore with mock vehicle; build confidence |
 | **Connected owner** | Tesla OAuth done; has live telemetry | See live state; plan trips; track costs |
-| **Pro subscriber** | Pays €4.99/month | Unlimited vehicles, unlimited OCR, CSV export |
+| **Pro subscriber** | Pays €4.99/mo (or €3.25/mo annual) | Unlimited vehicles, unlimited OCR, full history, AI insights, CSV export |
 | **Fleet manager** | Multiple vehicles | Per-vehicle dashboards; aggregate views |
 
 ---
@@ -42,11 +42,13 @@
 ### Step 1 — Landing page (`/`)
 
 The user sees:
-- Hero: "Flux · Smart EV companion" — tagline, two CTAs (Start free / See demo)
+- Hero: badge "One app. Every mile." + headline "Your EV. Fully in focus." — two CTAs ("Get started" → `/register`, "Pricing" → `/pricing`)
 - Feature strip: live dashboard, trip planner, cost tracking, smart charging
-- Pricing teaser: Free vs Pro tiers with highlighted differences
+- Bento grid + social proof; positioning leans multi-brand ("Tesla today. More soon.")
 
-**Decision point:** *Create account* → Register flow. Already have account → Login.
+**Decision point:** *Get started* → Register flow. Already have account → Login.
+
+> Note: there is no pre-auth demo. The "Explore with demo data" path lives in the post-registration onboarding (add a mock vehicle), so "try it" requires an account first.
 
 ---
 
@@ -88,7 +90,7 @@ Triggered from the empty hero or **Garage → Add**.
 
 Fields:
 - **Model** — dropdown (Model 3, Model Y, Model S, Model X)
-- **Year** — dropdown (2018–2025)
+- **Year** — dropdown (last 8 model years, computed from the current year)
 - **Nickname** — free text (required)
 - **VIN (optional)** — auto-detects model + year from a 17-char Tesla VIN
 - **Scenario** — radio selection for mock behaviour:
@@ -219,9 +221,9 @@ The **Charging** tab updates as each stop is visited. The **Car** tab (dashboard
 4. Extracted data shown inline — user can correct any field
 5. Saved → cost entry appears in timeline
 
-### WhatsApp receipt inbox (Pro)
+### WhatsApp receipt inbox
 
-1. Settings → expand "Avansat" section → configure WhatsApp number
+1. Settings → expand "Advanced" section → configure WhatsApp number
 2. When charging at a public station that sends a WhatsApp receipt:
    - Forward message to Flux WhatsApp inbox
    - System auto-extracts cost + kWh
@@ -238,7 +240,7 @@ The **Charging** tab updates as each stop is visited. The **Car** tab (dashboard
 
 ## 6. Journey Map — Pro Upgrade
 
-> Triggered when: user tries to add 2nd vehicle, tries to export CSV, or uploads 4th document in month.
+> Triggered when: user tries to add a 2nd vehicle, or exceeds the free monthly document limit (6th energy document, or 11th vehicle/car document).
 
 ### Upgrade gate
 
@@ -256,7 +258,7 @@ The **Charging** tab updates as each stop is visited. The **Car** tab (dashboard
 
 ### Manage subscription
 
-1. `/settings` → expand "Contul & Billing" section
+1. `/settings` → expand "Account & Billing" section
 2. **Manage plan** button → Stripe Customer Portal
 3. Change card, cancel, view invoices — all handled by Stripe; no sensitive data in Flux DB
 
@@ -272,12 +274,12 @@ Each screen is listed with its route, primary content blocks, and the most commo
 
 | Block | Content |
 |-------|---------|
-| Hero | Tagline, Start free CTA, screenshot |
-| Features | 4-panel grid (dashboard, trip, costs, smart charging) |
-| Pricing teaser | Free vs Pro comparison table |
+| Hero | Badge "One app. Every mile." + headline "Your EV. Fully in focus." + Get started / Pricing CTAs |
+| Social proof | Charging-station count, languages, free-to-start, setup time |
+| Features | Alternating feature blocks (vehicle control, cost, trip) + bento grid |
 | Footer | Links, language selector |
 
-**Most common action:** Click "Start free" → `/register`
+**Most common action:** Click "Get started" → `/register`
 
 ---
 
@@ -343,6 +345,32 @@ Each screen is listed with its route, primary content blocks, and the most commo
 | Scheduled charging | Toggle + time picker |
 | Recent sessions | List: date, duration, kWh, cost, location tag |
 | Sync button | Fetch history from Tesla |
+
+---
+
+### `/insights` — Insights
+
+Per-vehicle analytics with a period selector (7d / 30d / 1y / all) that filters all sections.
+
+| Block | Content |
+|-------|---------|
+| Savings | EV vs petrol savings, CO₂ avoided (trees equivalent) |
+| Activity | Distance, energy, session counts |
+| Battery health | SoH trend over time |
+| Efficiency | Wh/km from personal consumption |
+
+---
+
+### `/documents` — Document Vault
+
+Per-vehicle store of car documents (RCA, CASCO, ITP, rovinieta, vignette, tolls, car tax, talon, service, parking…). OCR auto-classifies uploads and extracts plate, validity dates, issuer, amount.
+
+| Block | Content |
+|-------|---------|
+| Coverage Shield | SVG ring: % of mandatory RO docs (RCA, ITP, rovinieta) present and valid |
+| Calendar export | Download all expiry dates as `.ics` (30-day + 7-day alarms) |
+| FAB / upload | Add document (file upload or manual entry) |
+| Document list | Cards with expiry status, insolvent-insurer warning, RCA renewal link |
 
 ---
 
@@ -448,12 +476,13 @@ Settings uses **collapsible sections** with progressive disclosure. Section coll
 
 | Section | Collapsed by default | Key settings |
 |---------|---------------------|-------------|
-| Esențial | No | Language (EN/RO/DE/FR/HU), currency display, Install app |
-| Home location | No | Address + geocode verify |
+| Preferences | No | Language (EN/RO/DE/FR/HU), currency display, Install app |
+| Location | No | Address + geocode verify |
 | Energy tariff | No | Provider, hourly rate, Tibber |
+| Notifications | No (shown only when notifications flag is enabled) | Push subscription + per-event preferences |
 | Vehicles | No | List · scenario switcher (mock) · deactivate · inactive vehicles list |
-| Contul & Billing | Yes | Name, email, current plan, Upgrade CTA, Manage via Stripe Portal, GDPR export, delete account |
-| Avansat | Yes | WhatsApp number (Pro), charger network health stats |
+| Account & Billing | Yes | Name, email, current plan, Upgrade CTA, Manage via Stripe Portal, GDPR export, delete account |
+| Advanced | Yes | WhatsApp number, charger network health stats |
 
 All inputs use `auth-input` (borderless bottom-line style). No colored icon circles — bare monochrome icons only.
 
@@ -469,12 +498,14 @@ All inputs use `auth-input` (borderless bottom-line style). No colored icon circ
 
 ---
 
-### `/pricing` — Pricing Page
+### `/pricing` — Product Page
+
+> Nav label reads "Product". This is a full product presentation (hero, brand bar, feature explainers, roadmap, pricing, trust strip, FAQ, feedback form), not a bare pricing table.
 
 | Block | Content |
 |-------|---------|
-| Free tier | Features list: 1 vehicle, 3 docs/month, all planning tools |
-| Pro tier (€4.99/mo) | Unlimited vehicles + docs, CSV export, email/WhatsApp inbox, battery health |
+| Free tier | Features list: 1 vehicle, 5 energy + 10 vehicle docs/month, 30-day history, all planning tools |
+| Pro tier | Monthly/annual toggle (€4.99/mo or €3.25/mo annual); unlimited vehicles + docs, full history, AI insights |
 | Upgrade CTA | → Stripe Checkout |
 
 ---
@@ -496,10 +527,12 @@ Tapping the active tab scrolls the page back to the top.
 
 #### More sheet (SlideUpMenu)
 
-A glass slide-up sheet with a **2-column grid of compact monochrome tiles** (no colored icon circles). Items ordered by use frequency:
+A glass slide-up sheet with a **2-column grid of compact monochrome tiles** (no colored icon circles). Order in `SlideUpMenu.tsx`:
 
 | Tile | Route |
 |------|-------|
+| Insights | `/insights` |
+| Documents | `/documents` |
 | Costs | `/costs` |
 | Energy | `/energy` |
 | Charging map | `/charging-map` |
@@ -515,6 +548,8 @@ Drag down or tap X to dismiss.
 - Garage → `/garage`
 - Dashboard → `/dashboard`
 - Charging → `/charging`
+- Insights → `/insights`
+- Documents → `/documents`
 - Commands → `/commands`
 
 **Money & Energy**
@@ -530,7 +565,7 @@ Drag down or tap X to dismiss.
 - Settings → `/settings`
 - About Data → `/about-data`
 
-Lock icon (✦) on: Dashboard, Charging, Commands (VEHICLE), Costs (VEHICLE), Energy (TARIFF), Commands (COMMANDS).
+Lock icon (✦) on items below the user's current capability: Dashboard, Charging, Insights, Documents, Costs, Trip (VEHICLE); Energy (TARIFF); Commands (COMMANDS). Garage, Charging Map, Map, Settings, About Data require no capability.
 
 ---
 
@@ -543,7 +578,7 @@ Flux uses a capabilities model. Each capability is derived server-side from the 
 | `VEHICLE` | Dashboard live data, Charging status, Commands | Connect real Tesla **or** add mock vehicle |
 | `TARIFF` | Energy smart charging page | Configure energy provider in Settings |
 | `COMMANDS` | Remote lock/unlock/climate | Virtual Key paired in Tesla app |
-| `PRO` | 2nd+ vehicle, 4th+ doc upload, CSV export, WhatsApp/email inbox | Subscribe at `/pricing` → Stripe |
+| `PRO` | 2nd+ vehicle, exceeding the free monthly document limits (5 energy / 10 vehicle docs), CSV export, WhatsApp/email inbox | Subscribe at `/pricing` → Stripe |
 
 In the UI, gated features show a **✦ lock icon**. Attempting to use a gated feature shows an inline upgrade card.
 
@@ -597,7 +632,7 @@ Text inputs (login, register, settings, modals) use `.auth-input`: borderless wi
 The map sheet has three discrete snap heights: 68 px (collapsed summary) → 44 vh (mid / form) → 90 dvh (full). The handle pill clicks through these states; drag snaps to nearest.
 
 ### Collapsible settings
-Long settings pages use collapsible sections (Contul & Billing, Avansat) to reduce initial scroll depth. Row height `min-h-[44px]`, section headers near-invisible structural markers.
+Long settings pages use collapsible sections (Account & Billing, Advanced) to reduce initial scroll depth. Row height `min-h-[44px]`, section headers near-invisible structural markers.
 
 ### Ambient body tinting (dashboard)
 `document.body` gains a CSS class based on battery state: `ambient-full` (≥80%), `ambient-low` (≤20%), `ambient-charging` (charging active). A 1.4s `background-color` transition in `globals.css` creates a slow ambient colour shift. Classes clean up on component unmount.

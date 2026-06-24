@@ -1,6 +1,8 @@
 # ROADMAP
 
-Current status: Tesla-only MVP. Mock simulator runs all vehicles by default. Live Tesla integration is wired but dormant (activated via `LIVE_INTEGRATIONS=tesla` + per-vehicle OAuth pairing). Other brands are archived on `demo-brands-archive`. Cost Intelligence (AI document parsing) is fully working.
+_Status as of 2026-06-23._
+
+Current status: Tesla-only product, deployed on Vercel (flux-alpha-three.vercel.app). Mock simulator runs all vehicles by default. Live Tesla integration is wired but dormant (activated via `LIVE_INTEGRATIONS=tesla` + per-vehicle OAuth pairing; the connect route returns 410 until enabled). Other brands are archived on `demo-brands-archive`. Cost Intelligence (Claude document parsing), document vault, smart charging, trip planner, unified map, push notifications, and Stripe billing are all shipped.
 
 ---
 
@@ -13,9 +15,9 @@ Current status: Tesla-only MVP. Mock simulator runs all vehicles by default. Liv
 | Petrol comparison guard | ✓ | Hides when no EV cost data |
 | Tesla-only brand registry | ✓ | Other brands on archive branch |
 | Tesla live OAuth flow | dormant | Code exists, needs `LIVE_INTEGRATIONS=tesla` + tesla-proxy deploy |
-| Playwright smoke tests | TODO | Login → garage → add vehicle → upload doc |
+| Security audit pass | ✓ | See `docs/SECURITY-AUDIT.md` |
+| Playwright smoke tests | partial | Suite exists in `e2e/`; CI gate not yet enforced |
 | README screenshots | TODO | Show simulator, cost dashboard, email ingest |
-| Security audit pass | TODO | See `docs/SECURITY-AUDIT.md` (to be generated) |
 
 ---
 
@@ -45,11 +47,11 @@ See `docs/BRANDS.md` → "Adding a new brand" for the 10-step recovery procedure
 
 ## Real external data
 
-| Phase | Feature | Notes |
+| Feature | Status | Notes |
 |---|---|---|
-| 0.5 | Real tariff providers | Tibber + Octopus APIs replace mocks |
-| 0.6 | Real charging-network data | OpenChargeMap + Ionity/Fastned APIs |
-| 0.8 | Real trip routing | ABRP-grade planner replaces mock router |
+| Real tariff providers | partial | Tibber real (set `TIBBER_TOKEN`); others are mock price curves |
+| Real charging-network data | ✓ | PostGIS + OCM + OSM + BNetzA/NDW/IRVE/Austria; see `docs/FEATURES.md` §10 |
+| Real trip routing | ✓ | OSRM / ORS / TomTom, multi-strategy, Open-Meteo weather derating |
 
 ---
 
@@ -58,6 +60,8 @@ See `docs/BRANDS.md` → "Adding a new brand" for the 10-step recovery procedure
 | Feature | Notes |
 |---|---|
 | iOS / Android home screen widget | Battery + range via web push or wrapper app |
-| Cost export | CSV / PDF export of `energy_costs` table |
+| Cost export | ✓ CSV — `/api/costs/export`; PDF not yet |
 | Smart-charge coordinator | Multi-vehicle charging schedule vs tariff windows |
-| Monetization | Freemium (1 vehicle) + Pro ~€4.99/month |
+| Monetization | ✓ Freemium (1 vehicle, 3 docs/mo) + Pro via Stripe |
+| iOS/Android home screen widget | Battery + range via native widget or web push |
+| Document triage pre-pass | Wire `DOCUMENT_TRIAGE_PROMPT` into processor as fast first-pass classify step |

@@ -15,26 +15,41 @@
 
 ## Tesla OAuth flow (PKCE)
 
+All `/api/tesla/*` routes return **410** unless `isLiveEnabled("tesla")` (i.e. `tesla` is in
+`LIVE_INTEGRATIONS`).
+
 ```
 User clicks "Connect Tesla"
       │
       ▼
 GET /api/tesla/connect
-  → set HttpOnly cookies: pkce_verifier, oauth_state
+  → set HttpOnly cookie: tesla_pkce_verifier  (no state cookie — see below)
   → 302 redirect to auth.tesla.com with code_challenge
 
 Tesla authenticates user
       │
       ▼
 GET /api/tesla/callback?code=…&state=…
-  → verify state cookie
+  → verify state (self-verifying HMAC keyed to session.user.id; no cookie needed)
   → PKCE exchange: code + verifier → access_token + refresh_token
-  → probe regions (EU / NA / CN) to find vehicle
+  → probe regions (EU → NA → CN) to find the first vehicle
   → AES-256-GCM encrypt tokens
-  → upsert tesla_tokens table
-  → insert vehicles row with data_source = "live"
+  → insert vehicles row (is_active = true)
+  → insert tesla_tokens row (user_id + encrypted tokens + scopes)
   → 302 /dashboard
 ```
+
+**OAuth state is cookieless.** `generateState(userId)` produces
+`base64url(nonce).base64url(hmac(nonce, userId))` keyed by `NEXTAUTH_SECRET`; the callback
+recomputes the HMAC against the current session's user ID. Only `tesla_pkce_verifier` is stored as
+an HttpOnly cookie (PKCE requires it).
+
+> **Code bug (not fixed here):** the callback inserts the `vehicles` row **without** setting
+> `data_source`, so it falls to the column default `'mock'`. No code path ever sets
+> `data_source = 'live'`. As written, an OAuth-paired Tesla is stored as `mock`, so the live
+> dispatch path in `/api/vehicles/[id]/state` (which requires `data_source === 'live'`) never
+> activates. Pairing succeeds and tokens are stored, but live telemetry won't be fetched until the
+> column is set to `'live'`.
 
 ### Token refresh
 

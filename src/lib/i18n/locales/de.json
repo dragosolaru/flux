@@ -1039,6 +1039,7 @@
     "upload_btn": "Dokument hochladen",
     "upload_success": "Dokument hochgeladen",
     "upload_error": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+    "upload_error_too_large": "Datei zu groß (max. 10 MB). Bitte Bild komprimieren oder zuschneiden.",
     "empty_title": "Noch keine Dokumente",
     "empty_hint": "Lade deine Versicherung, HU oder Vignette hoch oder leite sie per E-Mail weiter.",
     "view_btn": "Ansehen",

@@ -1039,6 +1039,7 @@
     "upload_btn": "Upload document",
     "upload_success": "Document uploaded",
     "upload_error": "Upload failed. Please try again.",
+    "upload_error_too_large": "File too large (max 10 MB). Please compress or crop the image.",
     "empty_title": "No documents yet",
     "empty_hint": "Upload your RCA, ITP, or vignette, or forward them by email.",
     "view_btn": "View",

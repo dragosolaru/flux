@@ -2,7 +2,7 @@
 
 The Flux simulator is a deterministic, stateful engine that makes mock vehicles behave like real ones. Battery drains on driving physics, charges with accurate AC/DC rate math, climate costs kWh, commands mutate persistent state, and history tables fill automatically from motion-state transitions.
 
-Source: `src/lib/mock/` — `engine.ts`, `scenarios.ts`, `persistence.ts`, `seed.ts`, `types.ts`.
+Source: `src/lib/mock/` — `engine.ts`, `scenarios.ts`, `persistence.ts`, `seed.ts`, `seed-history.ts`, `types.ts`. Per-model specs live in `src/lib/brands/models.ts`.
 
 ---
 
@@ -18,7 +18,11 @@ GET /api/vehicles/:id/state
   └─ return VehicleState
 ```
 
-No background worker. The 30s TanStack Query polling on the dashboard drives ticks. A vehicle that hasn't been viewed in a week will catch up on the next read — the simulator fast-forwards through all elapsed scenario steps.
+No background worker. TanStack Query polling on the dashboard drives ticks. On each read the
+simulator fast-forwards from `lastTickAt` to `now`, but the catch-up window is **capped at 24 hours**
+(`MAX_SIMULATE_MS` in `engine.ts`): if more than a day has elapsed, only the last 24h are simulated.
+This bounds the chunk loop on stale rows; the snapshot still lands at the correct scenario phase for
+`now` because step selection is anchored to a fixed epoch (see CYCLE_ANCHOR).
 
 ---
 
@@ -42,7 +46,7 @@ interface MockVehicleSnapshot {
 }
 ```
 
-`vehicleSpec` comes from `models.ts` at seed time and contains real WLTP figures for the specific model (e.g., Tesla Model 3 uses 75 kWh / 16 kWh/100km; Model S uses 100 kWh / 20 kWh/100km). This overrides the scenario's built-in `vehicle` block so the same scenario produces accurate physics for different models.
+`vehicleSpec` comes from `src/lib/brands/models.ts` at seed time and contains real WLTP figures for the specific model (e.g., Tesla Model 3 uses 75 kWh / 16 kWh/100km; Model S uses 100 kWh / 20 kWh/100km). This overrides the scenario's built-in `vehicle` block so the same scenario produces accurate physics for different models.
 
 ---
 
@@ -65,11 +69,17 @@ function tick(
 ### Algorithm
 
 ```
-fromTime = new Date(snapshot.lastTickAt)
+fromTime  = new Date(snapshot.lastTickAt)
 elapsedMs = now - fromTime
 if elapsedMs ≤ 0: return snapshot unchanged
 
-cursor = fromTime
+// Cap catch-up at 24h to bound the loop on stale rows
+simulateFrom = elapsedMs > MAX_SIMULATE_MS ? now - MAX_SIMULATE_MS : fromTime
+
+scenario = getScenario(snapshot.scenarioId)
+if !scenario: return { ...snapshot, lastTickAt: now.toISOString() }
+
+cursor = simulateFrom
 prevMotion = snapshot.motionState
 
 while cursor < now:
@@ -84,7 +94,8 @@ while cursor < now:
   snapshot = applyChunk(snapshot, step, chunkSeconds, positionInStep, stepDuration, scenario)
   cursor += chunkSeconds * 1000ms
 
-return { ...snapshot, lastTickAt: now.toISOString() }
+// recordedAt is stamped from the simulation clock, not wall time
+return { ...snapshot, state: { ...snapshot.state, recordedAt: now.toISOString() }, lastTickAt: now.toISOString() }
 ```
 
 The loop chunking ensures correct physics across scenario-step boundaries. If 2 hours elapsed and the vehicle drove 30 min then charged 90 min, each segment gets its own physics pass.
@@ -129,13 +140,14 @@ Same charging formula as `charging` when `batteryLevel < chargeLimit`. When at l
 **`parked`**
 
 ```
-if state.isClimateOn:
-  climateKw = 1.5
-  drainKwh  = climateKw × (chunkSeconds / 3600)
-  batteryLevel -= (drainKwh / batteryCapacityKwh) × 100  (floor 0)
+phantomKw = 0.02                      // vampire drain, always on while parked
+climateKw = state.isClimateOn ? 1.5 : 0
+drainKwh  = (phantomKw + climateKw) × (chunkSeconds / 3600)
+batteryLevel -= (drainKwh / batteryCapacityKwh) × 100  (floor 0)
 ```
 
-No drain when climate is off and parked.
+Phantom (standby) drain applies even with climate off — roughly 0.6%/day for a 75 kWh pack. This
+feeds the vampire-drain chart on the insights page.
 
 ---
 
@@ -150,13 +162,11 @@ function applyCommand(
 ): MockVehicleSnapshot
 ```
 
-Before mutating state, checks `brand.capabilities.commands[capKey]`. If false, throws:
-
-```
-Error("command-not-supported:<command>")
-```
-
-The route handler converts this to HTTP 422 `{ error: "command-not-supported", command }`.
+The mock command route (`POST /api/vehicles/[vehicleId]/commands`) capability-checks **before**
+calling `applyCommand`, using `COMMAND_CAP_MAP`. Unsupported commands return HTTP **400**
+`{ message: "command-not-supported" }`. `applyCommand` itself also throws
+`Error("command-not-supported:<command>")` if its capability check fails (defense in depth); the
+route catches any throw and returns 400 with the error message as `message`.
 
 State mutations by command:
 
@@ -166,7 +176,7 @@ State mutations by command:
 | `unlock` | `isLocked = false` |
 | `climate_on` | `isClimateOn = true` |
 | `climate_off` | `isClimateOn = false` |
-| `set_climate_temp` | `driverTempC = args.temp` |
+| `set_climate_temp` | `driverTempC = args.temp` (when numeric) |
 | `set_charge_limit` | `chargeLimit = clamp(args.limitPct, 50, 100)` |
 | `start_charging` | `chargingState = "charging"` |
 | `stop_charging` | `chargingState = "stopped"` |
@@ -174,8 +184,9 @@ State mutations by command:
 | `close_windows` | All `windowsOpen.*` = false |
 | `activate_sentry` | `isSentryMode = true` |
 | `deactivate_sentry` | `isSentryMode = false` |
+| `schedule_charging` | `scheduledChargingEnabled = args.enable`, `scheduledChargingStartMinutes = args.time` |
 | `honk`, `flash`, `remote_start` | No state change (side-effect only) |
-| `set_charge_amps`, `open/close_charge_port` | No-op in v1 |
+| `set_charge_amps`, `open/close_charge_port`, `schedule_departure`, `precondition_max`, `share_navigation` | Accepted; no mock state mutation |
 
 ---
 
@@ -229,7 +240,7 @@ Result: opening the app at 08:30 on any day will show the commuter vehicle at ex
 | `targetLocation` | `{ lat: number; lng: number }` | No | Driving steps: position lerped toward this over step duration. |
 | `avgSpeedKmh` | `number` | No | Driving only. Default: 80 km/h. |
 | `chargingRateKw` | `number` | No | Charging/plugged-idle. Default: `vehicleSpec.maxAcChargingRateKw`. |
-| `chargingNetwork` | `ChargingNetwork` | No | `"home"` \| `"ionity"` \| `"tesla-sc"` \| `"enbw"` \| `"allego"` \| `"fastned"` \| `"other"`. Stored on the charging session row. |
+| `chargingNetwork` | `ChargingNetwork` | No | `"home"` \| `"ionity"` \| `"tesla-sc"` \| `"enbw"` \| `"allego"` \| `"fastned"` \| `"other"`. NOTE: not currently propagated to the charging session row (see Known gap above). |
 | `climateOn` | `boolean` | No | When omitted, climate state carries over unchanged from previous step. |
 | `driverTempC` | `number` | No | Applied only when `climateOn = true`. |
 
@@ -262,15 +273,24 @@ to=charging/plugged-idle, no session     → set activeChargingSessionStart, act
 
 - `prev.activeTripStart` set + `next.activeTripStart` null → `INSERT INTO trips`
 - `prev.activeChargingSessionStart` set + `next.activeChargingSessionStart` null → `INSERT INTO charging_sessions`
+- It also writes a `vehicle_snapshots` row at most once per 10-minute wall-clock bucket
+  (`maybeRecordSnapshot`), powering the vampire-drain / SoH / efficiency-vs-temp charts.
 
 Calculated on insert:
 
 ```
-trips.distance_km     = next.odometerKm - prev.activeTripStartOdometerKm
-trips.avg_speed_kmh   = (distance_km / durationSeconds) × 3600
+trips.distance_km     = next.odometerKm - prev.activeTripStartOdometerKm           (rounded 0.1)
+trips.avg_speed_kmh   = (distance_km / durationSeconds) × 3600                      (rounded 0.1)
+trips.energy_used_kwh, trips.efficiency_kwh_per_100km
+                      = distance × nominalEff × tempEfficiencyFactor(seasonalTempC) (cold/heat penalty)
 
-charging_sessions.energy_added_kwh = (endSoc - startSoc) / 100 × batteryCapacityKwh (approx)
+charging_sessions.energy_added_kwh = (endSoc - startSoc) / 100 × batteryCapacityKwh (rounded 0.1)
 ```
+
+> **Known gap:** `handleTransition` sets `activeChargingSessionNetwork = null` with a comment that
+> persistence will fill it from step info, but it never does — `chargingNetwork` from the scenario
+> step is **not** propagated, so mock `charging_sessions.network` is always `null`. (See code-bug
+> note; documented here because the scenario-authoring guidance below implies otherwise.)
 
 ---
 
@@ -294,7 +314,7 @@ The snapshot is immediately correct for "right now" — no boot period or blank 
 2. Decide on `cycleDurationSeconds`. Common values: 86400 (1 day), 172800 (2 days), 345600 (4 days), 604800 (7 days).
 3. Start with `startOffsetSeconds: 0` and add steps in ascending order. The last step's duration runs to `cycleDurationSeconds`.
 4. For driving steps, always provide `targetLocation` so the vehicle moves on the map.
-5. Use `chargingNetwork: "home"` for overnight AC charges; use a specific network (`"ionity"`, `"enbw"`, etc.) for DC fast charges. The network is stored on the `charging_sessions` row.
+5. Use `chargingNetwork: "home"` for overnight AC charges; use a specific network (`"ionity"`, `"enbw"`, etc.) for DC fast charges. (This field documents intent but is not yet written to the `charging_sessions` row — see Known gap above.)
 6. Register the scenario in `src/lib/mock/scenarios.ts`:
 
 ```ts

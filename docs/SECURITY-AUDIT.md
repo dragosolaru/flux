@@ -1,5 +1,9 @@
 # Security Audit — 2026-06-21 (third pass, 10-agent parallel review)
 
+> Doc re-verified against source on **2026-06-23**: findings #31/#32/#33, the GDPR-export
+> gap, and the "Upstash Redis" launch item were confirmed resolved/implemented in code and
+> updated below. Older "still open" rows that the code now contradicts have been corrected.
+
 > 10 independent expert agents (auth, DB/RLS, input validation, secrets/webhooks,
 > Tesla tokens, XSS/redirects, React/Next best-practice, i18n, docs/KISS, deps/config)
 > audited the whole codebase read-only, then findings were synthesised and fixed.
@@ -54,7 +58,7 @@ verified against actual source, not the log.
 | 1 | Google sign-in + inbound-email routes | `listUsers` performs an O(n) full-user scan to match by email. At thousands of users this becomes slow; there is no exploitable IDOR — the result is filtered server-side. **[TODO - pre-scale]** Add a unique index on `profiles.email` and use `getUserByEmail()` once Supabase Auth exposes it stably. | `[TODO - pre-scale]` |
 | 2 | `tariffs/settings` PUT | Missing Zod schema on the request body. Risk is low: the route is authenticated and TypeScript narrows the relevant fields. **[TODO - hardening]** Add a Zod schema matching the PATCH shape. | `[TODO - hardening]` |
 | 3 | Token single-flight TOCTOU | `refreshInFlight` guards concurrent refreshes in `src/lib/tesla/tokens.ts`. Under Node.js's single-threaded event loop there is no true race between the `get` and `set` calls. The concern is theoretical; the `finally` cleanup is correct. **[OK - documented]** | `[OK - documented]` |
-| 4 | In-memory rate limit buckets | `checkRateLimit` stores counters in module-level `Map` in `src/lib/rate-limit.ts`. If the app is horizontally scaled (multiple Node instances), each instance has its own bucket — a user could distribute requests across instances to bypass per-user caps. Mitigation: move to Redis (e.g., Upstash) before scaling beyond a single Vercel region. **[TODO - pre-scale]** | `[TODO - pre-scale]` |
+| 4 | Rate limit backing store | `checkRateLimit` (`src/lib/rate-limit.ts`) uses Upstash Redis (sliding window) when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set, and a per-process in-memory `Map` otherwise. Without Upstash configured, horizontally-scaled instances each keep their own bucket, so per-user caps can be bypassed across instances. **[CONFIG - set Upstash in prod]** (was a code TODO; now implemented and env-gated) | `[CONFIG]` |
 
 ---
 
@@ -127,7 +131,7 @@ verified against actual source, not the log.
 ✅ Rate limiting on `/api/auth/register`: 5 req/hr per IP  
 ✅ Token encryption: AES-256-GCM, fail-fast key validation  
 ✅ Tesla OAuth: PKCE + HMAC-bound state + constant-time compare  
-⚠️ Rate limiting in-memory — not shared across Vercel instances (good enough for MVP; migrate to Upstash Redis for scale)  
+⚠️ Rate limiting uses Upstash Redis when configured, else a per-instance in-memory fallback — set `UPSTASH_REDIS_REST_URL`/`_TOKEN` in production so caps hold across Vercel instances  
 ⚠️ RLS policies: audit `energy_costs`, `charging_sessions`, `trips`, `command_events` before full multi-tenant launch  
 
 ---
@@ -157,13 +161,13 @@ as unverified; the table below reflects code actually inspected and re-fixed.
 |---|---|---|---|---|
 | 34 | Low | `costs/export` | CSV cells not guarded against `= + - @` formula injection | Added `sanitizeCsvCell()` helper that prefixes dangerous cells with `\t`; covers `=`, `+`, `-`, `@`, `\t`, `\r` triggers |
 
-### Still open (tracked, not yet done)
+### Status of these findings (re-verified 2026-06-23 against code)
 
-| # | Severity | Area | Finding |
+| # | Severity | Area | Status |
 |---|---|---|---|
-| 31 | Medium | `billing/webhook` | No idempotency/ordering guard — retried/out-of-order Stripe events can flip tier. Needs a `stripe_events(id pk)` dedupe table |
-| 32 | Medium | `inbound-email` | `?secret=` query-param fallback still present (finding #20 not applied) — should be header-only |
-| 33 | Medium | `tesla/command`, `tesla/refresh` | Legacy live routes lack rate limits + own command allowlist; supersede with `/api/vehicles/[id]/commands` or delete |
+| 31 | Medium | `billing/webhook` | ✅ Fixed. `stripe_events(id pk)` dedupe table (migration 013); webhook inserts the event id and acks `23505` unique-violations as duplicates before applying state. |
+| 32 | Medium | `inbound-email` | ✅ Fixed. Header-only (`x-webhook-secret`), constant-time compare, fail-closed (503) if unset. No `?secret=` query fallback in `route.ts`. (Note: `.env.local.example` still mentions a query-param option in a comment — stale doc text only.) |
+| 33 | Medium | `tesla/command`, `tesla/refresh` | ✅ Fixed. Both gate on `isLiveEnabled("tesla")`, `auth()` + `session?.user?.id`, ownership `.eq("user_id", …)`, and rate limits (`tesla-command` 10/hr, `tesla-refresh` 30/hr). `tesla/command` has its own zod command allowlist. Still duplicates `/api/vehicles/[id]/commands`; consolidating remains a KISS cleanup, not a security gap. |
 
 ---
 
@@ -203,28 +207,36 @@ All routes use the admin client (`createSupabaseAdminClient()`) which bypasses R
 
 ### Gaps / notes
 
-- **`/api/user/export` — stale column references (finding #29 area):** The export route queries `charging_sessions`, `command_events` with `.eq("user_id", userId)`. Neither table has a direct `user_id` column — these queries silently return empty arrays. This is a data-export gap, not a security vulnerability (no data leaks), but the GDPR export omits these records. Tracked under finding #29 which was marked fixed but the export route was not updated. Should filter by `vehicle_id in (select id from vehicles where user_id = userId)` or join through vehicles. **Not a blocker for multi-tenant security.**
+- **`/api/user/export` — RESOLVED (re-verified 2026-06-23):** The export route now joins through `vehicles` — `charging_sessions`, `command_events`, and `energy_costs` are queried with `.in("vehicle_id", vehicleIds)` (vehicle ids first resolved via `.eq("user_id", userId)`), while `documents` filters directly on `user_id`. The earlier stale-`user_id`-column gap (finding #29 area) is fixed; the GDPR export now returns these records.
 - **`/api/costs` trips query:** Trips are filtered only by `vehicle_id` (no direct `user_id` filter), but vehicleId ownership is verified before the trips query executes. This is safe by construction.
 - **RLS as defence-in-depth:** Because the app uses the service-role admin client, RLS policies are not the primary enforcement layer — they are a backstop for any direct Supabase client access (e.g., from future client-side queries using the anon key). All policies are correctly scoped. No gaps in migration-level RLS.
 
 ### Verdict
 
-No cross-tenant data leakage paths identified for the five audited tables. The admin-client pattern is consistently paired with application-layer ownership checks. The only functional gap is the GDPR export silently returning empty `charging_sessions` and `command_events` due to the wrong filter column — this is a data completeness issue, not a security issue.
+No cross-tenant data leakage paths identified for the five audited tables. The admin-client pattern is consistently paired with application-layer ownership checks. The GDPR-export completeness gap noted earlier has since been fixed (the export now joins through `vehicles`). No outstanding functional or security gaps for these tables as of 2026-06-23.
 
 ---
 
 ## Remaining recommendations before public multi-tenant launch
 
-1. **Upstash Redis rate limiter** — replace in-memory `Map` (per-instance, resets on cold start; currently undermines the `register` brute-force limit too)
-2. **Stripe webhook idempotency** (finding #31)
-3. **Per-doc claim tokens** in recovery emails (replaces `sender_email` filter)
-4. **WhatsApp phone→user registration** — required before WhatsApp ingest can safely auto-attribute (currently unmatched-pool only)
-5. **Remove `?secret=` query fallback** on inbound-email (finding #32)
-6. **Tesla token revocation detection** + **key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`
-7. **Fix GDPR export** — `charging_sessions` and `command_events` queries in `/api/user/export` use non-existent `user_id` column; should join through `vehicles`
+Re-verified against code 2026-06-23. Resolved items removed.
 
-> Process note: keep this document in lockstep with the code. The second pass marked
-> #19/#20/#22/#23 resolved while the fixes were absent — always re-grep the code before
+1. **Configure Upstash Redis in production.** The limiter (`src/lib/rate-limit.ts`) already
+   uses Upstash when `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set; the in-memory fallback is
+   per-instance and resets on cold start. This is now an ops/config task, not a code change.
+2. **Per-doc claim tokens** in recovery emails (replaces the `sender_email` filter).
+3. **WhatsApp phone→user registration** — required before WhatsApp ingest can safely
+   auto-attribute (currently unmatched-pool only).
+4. **Tesla token revocation detection** + **key rotation tooling** for `TESLA_TOKEN_ENCRYPTION_KEY`.
+5. **Replace `listUsers` linear scans** in Google sign-in (`auth.ts`) and inbound-email user
+   resolution with a DB lookup before scale (O(n) per call; `perPage` truncation risk).
+
+Done since earlier passes (verified in code): Stripe webhook idempotency (`stripe_events`,
+migration 013); inbound-email header-only secret with fail-closed; GDPR export joined through
+`vehicles`; rate limits on `tesla/command` + `tesla/refresh`.
+
+> Process note: keep this document in lockstep with the code. Earlier passes marked
+> findings resolved while the fixes were absent — always re-grep the code before
 > trusting a "resolved" row.
 
 ---
