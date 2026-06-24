@@ -831,7 +831,20 @@
     "share_sent_title": "Trimis către Tesla",
     "share_sent_detail": "Navigarea spre {dest} e pe mașină",
     "location_not_found": "Locația nu a fost găsită",
-    "extra_cost_label": "Cost suplimentar"
+    "extra_cost_label": "Cost suplimentar",
+    "save_route_btn": "Salvează ruta",
+    "saved_routes_title": "Rute salvate",
+    "saved_routes_empty": "Nicio rută salvată",
+    "saved_route_saved": "Rută salvată",
+    "saved_route_limit": "Ai atins limita de 10 rute. Șterge una pentru a adăuga alta.",
+    "saved_route_error": "Nu s-a putut salva ruta",
+    "saved_route_load": "Încarcă",
+    "saved_route_rename_placeholder": "Numele rutei",
+    "saved_route_rename_save": "Salvează",
+    "saved_route_delete_confirm": "Ștergi această rută?",
+    "precondition_disclaimer": "Tesla gestionează automat precondiționarea la Superchargere. Pentru stații non-Tesla, am activat precondiționarea la plecare — mașina decide când să o pornească efectiv, în funcție de distanță și temperatură.",
+    "precondition_btn_manual": "Pornește precondiționare",
+    "share_sent_detail_preconditioned": "Rută trimisă — precondiționare activă pentru stațiile non-Tesla"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

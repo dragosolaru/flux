@@ -831,7 +831,20 @@
     "share_sent_title": "Sent to your Tesla",
     "share_sent_detail": "Navigation to {dest} is on your car",
     "location_not_found": "Location not found",
-    "extra_cost_label": "Extra cost"
+    "extra_cost_label": "Extra cost",
+    "save_route_btn": "Save route",
+    "saved_routes_title": "Saved routes",
+    "saved_routes_empty": "No saved routes yet",
+    "saved_route_saved": "Route saved",
+    "saved_route_limit": "You've reached the 10-route limit. Delete one to save another.",
+    "saved_route_error": "Could not save route",
+    "saved_route_load": "Load",
+    "saved_route_rename_placeholder": "Route name",
+    "saved_route_rename_save": "Save",
+    "saved_route_delete_confirm": "Delete this route?",
+    "precondition_disclaimer": "Tesla manages preconditioning automatically for Superchargers. For non-Tesla DC chargers, we activated preconditioning at departure — the car decides the exact timing based on distance and temperature.",
+    "precondition_btn_manual": "Precondition battery",
+    "share_sent_detail_preconditioned": "Route sent — preconditioning active for non-Tesla stops"
   },
   "notFoundPage": {
     "heading": "Page not found",

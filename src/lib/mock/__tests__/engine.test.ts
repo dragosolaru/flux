@@ -47,6 +47,7 @@ function makeSnapshot(overrides: Partial<MockVehicleSnapshot> = {}): MockVehicle
     isFrunkOpen: null,
     isSentryMode: false,
     isDashcamRecording: null,
+    isBatteryPreconditioning: null,
     softwareVersion: null,
     updateAvailable: null,
     updateVersionLabel: null,

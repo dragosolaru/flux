@@ -85,6 +85,7 @@ export function createInitialSnapshot(
     isFrunkOpen: false,
     isSentryMode: false,
     isDashcamRecording: false,
+    isBatteryPreconditioning: false,
     softwareVersion: softwareVersionFor(brand),
     updateAvailable: false,
     updateVersionLabel: null,
