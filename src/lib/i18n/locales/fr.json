@@ -1039,6 +1039,7 @@
     "upload_btn": "Téléverser un document",
     "upload_success": "Document téléversé",
     "upload_error": "Échec du téléversement. Veuillez réessayer.",
+    "upload_error_too_large": "Fichier trop volumineux (max 10 Mo). Veuillez compresser ou recadrer l'image.",
     "empty_title": "Aucun document pour l'instant",
     "empty_hint": "Téléversez votre assurance, contrôle technique ou vignette, ou envoyez-les par e-mail.",
     "view_btn": "Voir",

@@ -467,9 +467,11 @@ function GroupSection({
 }) {
   if (docs.length === 0) return null;
   const sorted = [...docs].sort((a, b) => {
-    if (a.days_until_expiry === null) return 1;
-    if (b.days_until_expiry === null) return -1;
-    return a.days_until_expiry - b.days_until_expiry;
+    const aProcessing = a.status === "pending" || a.status === "processing";
+    const bProcessing = b.status === "pending" || b.status === "processing";
+    if (aProcessing && !bProcessing) return -1;
+    if (!aProcessing && bProcessing) return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
   return (
@@ -494,6 +496,10 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
 
   async function handleUpload(file: File) {
     if (!vehicleId) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("upload_error_too_large"));
+      return;
+    }
     setUploading(true);
     try {
       const form = new FormData();
@@ -503,7 +509,8 @@ export function DocumentsClient({ headingText }: DocumentsClientProps) {
       const res = await fetch("/api/documents", { method: "POST", body: form });
       if (!res.ok) {
         const data = await res.json() as { message?: string };
-        throw new Error(data.message ?? "Upload failed");
+        toast.error(data.message ?? t("upload_error"));
+        return;
       }
       void qc.invalidateQueries({ queryKey: ["vault-documents", vehicleId] });
       toast.success(t("upload_success"));

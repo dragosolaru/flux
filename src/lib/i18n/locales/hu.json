@@ -1039,6 +1039,7 @@
     "upload_btn": "Dokumentum feltöltése",
     "upload_success": "Dokumentum feltöltve",
     "upload_error": "Feltöltés sikertelen. Kérjük, próbálja újra.",
+    "upload_error_too_large": "A fájl túl nagy (max 10 MB). Kérjük, tömörítse vagy vágja le a képet.",
     "empty_title": "Még nincs dokumentum",
     "empty_hint": "Töltse fel biztosítását, műszaki vizsgáját vagy matricáját, vagy küldje e-mailben.",
     "view_btn": "Megtekintés",
