@@ -1,5 +1,18 @@
 export type DocumentSource = "upload" | "email" | "whatsapp" | "vault-upload" | "manual";
 export type DocumentType = "home_bill" | "public_receipt" | "gas_bill" | "petrol_receipt" | "other" | "unknown" | "rca" | "casco" | "itp" | "rovinieta" | "vignette" | "bridge_toll" | "car_tax" | "service" | "parking" | "fuel" | "tires" | "fine" | "highway_toll" | "car_wash" | "leasing" | "roadside_assistance" | "spare_parts" | "ferry" | "talon";
+export type DocumentCategory =
+  | "insurance"
+  | "registration"
+  | "inspection"
+  | "tax"
+  | "toll"
+  | "operating"
+  | "maintenance"
+  | "financing"
+  | "incident"
+  | "driver"
+  | "energy"
+  | "other";
 export type DocumentStatus = "pending" | "processing" | "done" | "error" | "needs_review";
 
 export interface Document {
@@ -45,6 +58,8 @@ export interface EnergyCost {
 
 export interface ParsedDocument {
   document_type: DocumentType;
+  label?: string | null;
+  category?: DocumentCategory | null;
   has_non_electricity_items: boolean;
   provider_name: string | null;
   period_start: string | null;
@@ -76,6 +91,8 @@ export interface ParsedDocument {
 export interface VaultDocument {
   id: string;
   document_type: DocumentType | null;
+  label: string | null;
+  category: DocumentCategory | null;
   original_filename: string | null;
   mime_type: string;
   status: DocumentStatus;

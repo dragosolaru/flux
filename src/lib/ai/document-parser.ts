@@ -11,6 +11,12 @@ import type { Document } from "@/types/costs";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const CATEGORY_VALUES = [
+  "insurance", "registration", "inspection", "tax", "toll",
+  "operating", "maintenance", "financing", "incident", "driver",
+  "energy", "other",
+] as const;
+
 const ConfidenceSchema = z.object({
   document_type: z.number().min(0).max(1).catch(0),
   total_kwh: z.number().min(0).max(1).catch(0),
@@ -22,6 +28,8 @@ const ConfidenceSchema = z.object({
 
 const ParsedDocumentSchema = z.object({
   document_type: z.enum(["home_bill", "public_receipt", "gas_bill", "petrol_receipt", "other", "unknown", "rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry"]),
+  label: z.string().max(60).nullable().default(null),
+  category: z.enum(CATEGORY_VALUES).nullable().catch(null).default(null),
   has_non_electricity_items: z.boolean().default(false),
   provider_name: z.string().nullable().default(null),
   period_start: z.string().nullable().default(null),
@@ -50,6 +58,8 @@ const CarDocConfidenceSchema = z.object({
 
 const CarDocSchema = z.object({
   document_type: z.enum(["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon", "other", "unknown"]),
+  label: z.string().max(60).nullable().default(null),
+  category: z.enum(CATEGORY_VALUES).nullable().catch(null).default(null),
   plate_number: z.string().nullable().default(null),
   valid_from: z.string().nullable().default(null),
   valid_until: z.string().nullable().default(null),
@@ -170,6 +180,8 @@ export async function parseCarDocument(doc: Document): Promise<ParsedDocument> {
 
   return {
     document_type: carDoc.document_type,
+    label: carDoc.label,
+    category: carDoc.category,
     has_non_electricity_items: false,
     provider_name: carDoc.provider_name,
     period_start: carDoc.valid_from ?? null,
