@@ -470,6 +470,7 @@ function EnergyDocCard({
   onDelete: (id: string) => void;
 }) {
   const t = useTranslations("documents");
+  const tc = useTranslations("common");
   const [deleting, setDeleting] = useState(false);
 
   const addMutation = useMutation({
@@ -512,41 +513,42 @@ function EnergyDocCard({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            className="h-7 bg-teal-600 text-xs hover:bg-teal-500"
+            className="h-10 bg-teal-600 text-sm hover:bg-teal-500"
             onClick={() => addMutation.mutate()}
             disabled={addMutation.isPending || dismissMutation.isPending}
           >
-            {addMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Receipt className="size-3.5" />}
+            {addMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Receipt className="size-4" />}
             {t("energy_doc_add_btn")}
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+            className="h-10 text-sm text-muted-foreground hover:text-foreground"
             onClick={() => dismissMutation.mutate()}
             disabled={addMutation.isPending || dismissMutation.isPending}
           >
-            {dismissMutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            {dismissMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             {t("energy_doc_dismiss_btn")}
           </Button>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {doc.view_url && (
-          <Button variant="ghost" size="icon" className="size-8" asChild>
-            <a href={doc.view_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-3.5" />
+          <Button variant="ghost" size="icon" className="size-10" asChild>
+            <a href={doc.view_url} target="_blank" rel="noopener noreferrer" aria-label={t("view_btn")}>
+              <ExternalLink className="size-4" />
             </a>
           </Button>
         )}
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 text-muted-foreground hover:text-destructive"
+          aria-label={tc("delete")}
+          className="size-10 text-muted-foreground hover:text-destructive"
           onClick={handleDelete}
           disabled={deleting}
         >
-          {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+          {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
         </Button>
       </div>
     </div>

@@ -4,14 +4,18 @@ import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
+// Serialized payload cap — stops/plan_snapshot are free-form JSONB; without a
+// cap a client could persist multi-MB blobs replayed on every GET.
+const MAX_BODY_BYTES = 100_000;
+
 const SavedRouteSchema = z.object({
   name: z.string().min(1).max(100),
-  origin_label: z.string().min(1),
-  origin_lat: z.number(),
-  origin_lng: z.number(),
-  destination_label: z.string().min(1),
-  destination_lat: z.number(),
-  destination_lng: z.number(),
+  origin_label: z.string().min(1).max(300),
+  origin_lat: z.number().min(-90).max(90),
+  origin_lng: z.number().min(-180).max(180),
+  destination_label: z.string().min(1).max(300),
+  destination_lat: z.number().min(-90).max(90),
+  destination_lng: z.number().min(-180).max(180),
   stops: z.unknown(),
   plan_snapshot: z.unknown(),
 });
@@ -51,9 +55,14 @@ export async function POST(req: Request) {
     );
   }
 
+  const raw = await req.text();
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ message: "Payload too large" }, { status: 413 });
+  }
+
   let body: unknown;
   try {
-    body = await req.json();
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
   }

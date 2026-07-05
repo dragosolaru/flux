@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2, Bookmark, Trash2, Info, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,22 +19,15 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
+import {
+  useSavedRoutes,
+  useCreateSavedRoute,
+  useRenameSavedRoute,
+  useDeleteSavedRoute,
+  type SavedRoute,
+} from "@/hooks/useSavedRoutes";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
-
-interface SavedRoute {
-  id: string;
-  name: string;
-  origin_label: string;
-  origin_lat: number;
-  origin_lng: number;
-  destination_label: string;
-  destination_lat: number;
-  destination_lng: number;
-  stops: unknown;
-  plan_snapshot: unknown;
-  created_at: string;
-}
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
@@ -61,6 +54,17 @@ interface Vehicle {
   id: string;
   nickname: string | null;
   displayName: string;
+}
+
+// Saved snapshots come back as untyped JSONB — a truncated or legacy-shaped
+// blob must not crash the results panel, so validate the load-bearing arrays
+// before trusting the cast. Returns null → caller falls back to just
+// origin/destination (user can re-plan).
+function parseSnapshot(raw: unknown): (TripResponse & { savedVariant?: number }) | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as { plan?: { stops?: unknown }; variants?: unknown };
+  if (!Array.isArray(s.variants) || !Array.isArray(s.plan?.stops)) return null;
+  return raw as TripResponse & { savedVariant?: number };
 }
 
 const RECENT_KEY = "flux_recent_destinations";
@@ -153,30 +157,30 @@ export function TripClient() {
   const [recents, setRecents] = useState<RecentDestination[]>(getRecentDestinations);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [savedSheetOpen, setSavedSheetOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [routeSaved, setRouteSaved] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [preconditioningManually, setPreconditioningManually] = useState(false);
 
-  const qc = useQueryClient();
-  const { data: savedRoutes = [] } = useQuery<SavedRoute[]>({
-    queryKey: ["saved-routes"],
-    queryFn: () => apiFetch<SavedRoute[]>("/api/saved-routes"),
-    staleTime: 30_000,
-  });
-  const deleteSavedRoute = useMutation({
-    mutationFn: (id: string) => fetch(`/api/saved-routes/${id}`, { method: "DELETE" }),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["saved-routes"] }),
-  });
+  const { data: savedRoutes = [] } = useSavedRoutes();
+  const createSavedRoute = useCreateSavedRoute();
+  const deleteSavedRoute = useDeleteSavedRoute();
 
   // Silent locate so geocode searches can be biased toward the user even
-  // before they tap "use my location" — failures are fine, bias is optional.
+  // before they tap "use my location" — but only when permission was already
+  // granted, so page load never triggers the browser permission prompt.
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => undefined,
-      { timeout: 3000 },
-    );
+    if (!navigator.geolocation || !navigator.permissions) return;
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((status) => {
+        if (status.state !== "granted") return;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => undefined,
+          { timeout: 3000 },
+        );
+      })
+      .catch(() => undefined);
   }, []);
 
   const showRecents = destFocused && destination === null && recents.length > 0;
@@ -236,6 +240,7 @@ export function TripClient() {
       setPlan(result);
       setActiveVariant(0);
       setSharedRoute(false);
+      setRouteSaved(false);
       setFormCollapsed(true);
       setPlanExpanded(true);
     } catch (err) {
@@ -344,7 +349,7 @@ export function TripClient() {
         method: "POST",
         body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
       });
-      toast.success(t("share_success_preconditioned"));
+      toast.success(t("precondition_started"));
     } catch {
       toast.error(t("share_error"));
     } finally {
@@ -353,42 +358,46 @@ export function TripClient() {
   }
 
   async function handleSaveRoute() {
-    if (!activePlan || !origin || !destination) return;
-    setSaving(true);
+    if (!activePlan || !origin || !destination || routeSaved) return;
     try {
       const name = `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`;
-      await apiFetch("/api/saved-routes", {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          origin_label: origin.name,
-          origin_lat: origin.lat,
-          origin_lng: origin.lng,
-          destination_label: destination.name,
-          destination_lat: destination.lat,
-          destination_lng: destination.lng,
-          stops: activePlan.stops,
-          plan_snapshot: plan,
-        }),
+      await createSavedRoute.mutateAsync({
+        name,
+        origin_label: origin.name,
+        origin_lat: origin.lat,
+        origin_lng: origin.lng,
+        destination_label: destination.name,
+        destination_lat: destination.lat,
+        destination_lng: destination.lng,
+        stops: activePlan.stops,
+        // Persist the chosen variant so loading restores the same strategy the
+        // user picked, not variant 0.
+        plan_snapshot: plan ? { ...plan, savedVariant: activeVariant } : null,
       });
-      void qc.invalidateQueries({ queryKey: ["saved-routes"] });
+      setRouteSaved(true);
       toast.success(t("saved_route_saved"));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       toast.error(msg === "saved_routes_limit" ? t("saved_route_limit") : t("saved_route_error"));
-    } finally {
-      setSaving(false);
     }
   }
 
   function handleLoadRoute(r: SavedRoute) {
     setOrigin({ name: r.origin_label, lat: r.origin_lat, lng: r.origin_lng });
     setDestination({ name: r.destination_label, lat: r.destination_lat, lng: r.destination_lng });
-    if (r.plan_snapshot) {
-      setPlan(r.plan_snapshot as TripResponse);
-      setActiveVariant(0);
+    const snap = parseSnapshot(r.plan_snapshot);
+    if (snap) {
+      setPlan(snap);
+      setActiveVariant(
+        typeof snap.savedVariant === "number" &&
+          snap.savedVariant >= 0 &&
+          snap.savedVariant < snap.variants.length
+          ? snap.savedVariant
+          : 0,
+      );
       setSharedRoute(false);
       setShowDisclaimer(false);
+      setRouteSaved(true);
       setFormCollapsed(true);
       setPlanExpanded(true);
     }
@@ -452,7 +461,8 @@ export function TripClient() {
           destinationShort,
           onShareToTesla: handleShareToTesla,
           onSaveRoute: handleSaveRoute,
-          saving,
+          saving: createSavedRoute.isPending,
+          saved: routeSaved,
           showDisclaimer,
           onDismissDisclaimer: () => setShowDisclaimer(false),
           onManualPrecondition: handleManualPrecondition,
@@ -501,6 +511,16 @@ export function TripClient() {
         ) : (
           /* Full form */
           <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-2xl backdrop-blur-md">
+            <button
+              onClick={() => setSavedSheetOpen(true)}
+              className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <Bookmark className="size-4 shrink-0" />
+              <span className="flex-1 text-left">{t("saved_routes_title")}</span>
+              {savedRoutes.length > 0 && (
+                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">{savedRoutes.length}</span>
+              )}
+            </button>
             <TripPlannerForm {...formProps} />
           </div>
         )}
@@ -531,8 +551,15 @@ export function TripClient() {
               }
             </button>
             <button
+              onClick={() => setSavedSheetOpen(true)}
+              aria-label={t("saved_routes_title")}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <Bookmark className="size-4" />
+            </button>
+            <button
               onClick={() => setFormCollapsed(false)}
-              className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+              className="flex min-h-11 shrink-0 items-center text-sm text-muted-foreground hover:text-foreground"
             >
               {t("edit_btn")}
             </button>
@@ -559,12 +586,12 @@ export function TripClient() {
         <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2 space-y-4 scrollbar-none">
           <button
             onClick={() => setSavedSheetOpen(true)}
-            className="flex w-full items-center gap-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground hover:bg-muted transition-colors"
+            className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors"
           >
-            <Bookmark className="size-3.5 shrink-0" />
+            <Bookmark className="size-4 shrink-0" />
             <span className="flex-1 text-left">{t("saved_routes_title")}</span>
             {savedRoutes.length > 0 && (
-              <span className="rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">{savedRoutes.length}</span>
+              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">{savedRoutes.length}</span>
             )}
           </button>
           <TripPlannerForm {...formProps} />
@@ -581,7 +608,11 @@ export function TripClient() {
         onClose={() => setSavedSheetOpen(false)}
         routes={savedRoutes}
         onLoad={handleLoadRoute}
-        onDelete={(id) => deleteSavedRoute.mutate(id)}
+        onDelete={(id) =>
+          deleteSavedRoute.mutate(id, {
+            onError: () => toast.error(t("saved_route_error")),
+          })
+        }
         t={t}
       />
 
@@ -864,6 +895,7 @@ interface TripResultsBodyProps {
   onShareToTesla: () => void;
   onSaveRoute: () => void;
   saving: boolean;
+  saved: boolean;
   showDisclaimer: boolean;
   onDismissDisclaimer: () => void;
   onManualPrecondition: () => void;
@@ -886,12 +918,14 @@ function TripResultsBody({
   onShareToTesla,
   onSaveRoute,
   saving,
+  saved,
   showDisclaimer,
   onDismissDisclaimer,
   onManualPrecondition,
   preconditioningManually,
   hasTesla,
 }: TripResultsBodyProps) {
+  const tc = useTranslations("common");
   const stats: Stat[] = [
     { value: formatDuration(activePlan.totalMinutes), label: t("stat_time") },
     { value: `${Math.round(activePlan.totalDistanceKm)} km`, label: t("stat_distance") },
@@ -1032,41 +1066,48 @@ function TripResultsBody({
           {/* Preconditioning disclaimer — shown once after sending a route
               that includes non-SC DC fast chargers. */}
           {showDisclaimer && (
-            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2.5 text-xs text-blue-300">
-              <Info className="mt-0.5 size-3.5 shrink-0" />
-              <span className="flex-1">{t("precondition_disclaimer")}</span>
+            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 py-1 pl-3 pr-1 text-sm text-blue-200">
+              <Info className="mt-2.5 size-4 shrink-0" />
+              <span className="flex-1 py-2">{t("precondition_disclaimer")}</span>
               <button
                 onClick={onDismissDisclaimer}
-                className="shrink-0 text-blue-400/60 hover:text-blue-300"
-                aria-label="Dismiss"
+                className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-blue-300 hover:text-blue-100"
+                aria-label={tc("close")}
               >
-                <X className="size-3.5" />
+                <X className="size-4" />
               </button>
             </div>
           )}
 
-          {/* Save route button */}
+          {/* Save route button — locks into a "saved" state so repeated taps
+              don't create duplicate rows. */}
           <button
             onClick={onSaveRoute}
-            disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            disabled={saving || saved}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-70"
           >
-            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Bookmark className="size-3.5" />}
-            {t("save_route_btn")}
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : saved ? (
+              <CheckCircle2 className="size-4 text-green-400" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+            {saved ? t("saved_route_saved") : t("save_route_btn")}
           </button>
 
           {/* Manual precondition — available when there's a Tesla and the route is
               shared, as a standalone trigger outside of the share flow. */}
-          {hasTesla && sharedRoute && !showDisclaimer && (
+          {hasTesla && sharedRoute && (
             <button
               onClick={onManualPrecondition}
               disabled={preconditioningManually}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
               {preconditioningManually ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <Zap className="size-3.5" />
+                <Zap className="size-4" />
               )}
               {t("precondition_btn_manual")}
             </button>
@@ -1125,24 +1166,20 @@ interface SavedRoutesSheetProps {
 }
 
 function SavedRoutesSheet({ open, onClose, routes, onLoad, onDelete, t }: SavedRoutesSheetProps) {
+  const tc = useTranslations("common");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [renamePending, setRenamePending] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const qc = useQueryClient();
+  const renameRoute = useRenameSavedRoute();
 
   async function handleRename(id: string) {
     if (!renameValue.trim()) return;
-    setRenamePending(true);
     try {
-      await apiFetch(`/api/saved-routes/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ name: renameValue.trim() }),
-      });
-      void qc.invalidateQueries({ queryKey: ["saved-routes"] });
+      await renameRoute.mutateAsync({ id, name: renameValue.trim() });
       setRenamingId(null);
-    } finally {
-      setRenamePending(false);
+    } catch {
+      toast.error(t("saved_route_error"));
     }
   }
 
@@ -1174,14 +1211,15 @@ function SavedRoutesSheet({ open, onClose, routes, onLoad, onDelete, t }: SavedR
                 <Bookmark className="size-4 text-primary" />
                 <span className="text-sm font-semibold">{t("saved_routes_title")}</span>
                 {routes.length > 0 && (
-                  <span className="rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">
                     {routes.length}/10
                   </span>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={tc("close")}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X className="size-4" />
               </button>
@@ -1208,20 +1246,42 @@ function SavedRoutesSheet({ open, onClose, routes, onLoad, onDelete, t }: SavedR
                               if (e.key === "Escape") setRenamingId(null);
                             }}
                             placeholder={t("saved_route_rename_placeholder")}
-                            className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                            className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
                           />
                           <button
                             onClick={() => void handleRename(r.id)}
-                            disabled={renamePending || !renameValue.trim()}
-                            className="shrink-0 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                            disabled={renameRoute.isPending || !renameValue.trim()}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                           >
-                            {renamePending ? <Loader2 className="size-3 animate-spin" /> : t("saved_route_rename_save")}
+                            {renameRoute.isPending ? <Loader2 className="size-4 animate-spin" /> : t("saved_route_rename_save")}
                           </button>
                           <button
                             onClick={() => setRenamingId(null)}
-                            className="shrink-0 text-muted-foreground hover:text-foreground"
+                            aria-label={tc("cancel")}
+                            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
                           >
                             <X className="size-4" />
+                          </button>
+                        </div>
+                      ) : confirmDeleteId === r.id ? (
+                        <div className="flex min-h-11 items-center gap-2">
+                          <p className="min-w-0 flex-1 text-sm text-foreground">
+                            {t("saved_route_delete_confirm")}
+                          </p>
+                          <button
+                            onClick={() => {
+                              onDelete(r.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground"
+                          >
+                            {tc("delete")}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            {tc("cancel")}
                           </button>
                         </div>
                       ) : (
@@ -1233,33 +1293,28 @@ function SavedRoutesSheet({ open, onClose, routes, onLoad, onDelete, t }: SavedR
                                   setRenamingId(r.id);
                                   setRenameValue(r.name);
                                 }}
-                                className="flex items-center gap-1 text-left text-sm font-medium text-foreground hover:text-primary"
+                                className="flex min-h-11 items-center gap-1.5 text-left text-sm font-medium text-foreground hover:text-primary"
                               >
                                 <span className="line-clamp-1">{r.name}</span>
-                                <Pencil className="size-3 shrink-0 text-muted-foreground" />
+                                <Pencil className="size-3.5 shrink-0 text-muted-foreground" />
                               </button>
-                              <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
+                              <p className="line-clamp-1 text-xs text-muted-foreground">
                                 {r.origin_label.split(",")[0]} → {r.destination_label.split(",")[0]}
                               </p>
                             </div>
-                            <div className="flex shrink-0 items-center gap-1">
-                              <button
-                                onClick={() => {
-                                  if (window.confirm(t("saved_route_delete_confirm"))) {
-                                    onDelete(r.id);
-                                  }
-                                }}
-                                className="rounded-lg p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => setConfirmDeleteId(r.id)}
+                              aria-label={tc("delete")}
+                              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
                           </div>
                           <button
                             onClick={() => onLoad(r)}
-                            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
-                            <Route className="size-3" />
+                            <Route className="size-3.5" />
                             {t("saved_route_load")}
                           </button>
                         </>

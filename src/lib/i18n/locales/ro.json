@@ -842,8 +842,9 @@
     "saved_route_rename_placeholder": "Numele rutei",
     "saved_route_rename_save": "Salvează",
     "saved_route_delete_confirm": "Ștergi această rută?",
-    "precondition_disclaimer": "Tesla gestionează automat precondiționarea la Superchargere. Pentru stații non-Tesla, am activat precondiționarea la plecare — mașina decide când să o pornească efectiv, în funcție de distanță și temperatură.",
-    "precondition_btn_manual": "Pornește precondiționare",
+    "precondition_disclaimer": "Bateria se va preîncălzi automat înainte de opririle de încărcare. La Superchargere, Tesla face asta singură; pentru celelalte stații am activat noi preîncălzirea — mașina alege momentul potrivit.",
+    "precondition_btn_manual": "Pornește precondiționarea",
+    "precondition_started": "Precondiționarea bateriei a pornit",
     "share_sent_detail_preconditioned": "Rută trimisă — precondiționare activă pentru stațiile non-Tesla"
   },
   "notFoundPage": {
@@ -1114,7 +1115,7 @@
     "energy_doc_added": "Adăugat la costuri",
     "energy_doc_add_error": "Nu s-a putut adăuga la costuri",
     "energy_doc_dismiss_btn": "Nu acum",
-    "energy_doc_dismiss_error": "Nu s-a putut respinge",
+    "energy_doc_dismiss_error": "Nu s-a putut ascunde. Încearcă din nou.",
     "type_talon": "Certificat de Înmatriculare",
     "coverage_score_label": "Documentație vehicul",
     "coverage_score_complete": "Toate documentele obligatorii valide",
