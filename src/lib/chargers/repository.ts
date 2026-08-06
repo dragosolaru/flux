@@ -52,6 +52,15 @@ export async function markCountryFresh(cc: BulkCountry): Promise<void> {
   await redis.set(countryKey(cc), Date.now(), { ex: COUNTRY_TTL_SECONDS });
 }
 
+/**
+ * Whether a bulk country was imported recently enough to skip. Without Redis
+ * there is no freshness record, so callers must treat every country as stale.
+ */
+export async function isCountryFresh(cc: BulkCountry): Promise<boolean> {
+  if (!redis) return false;
+  return (await redis.get(countryKey(cc))) !== null;
+}
+
 function computeClusterHash(c: ChargerCluster): string {
   // Connectors/sources are merged in arrival order, which varies between
   // ingests (parallel fetches interleave). Sort them for the hash only, so a

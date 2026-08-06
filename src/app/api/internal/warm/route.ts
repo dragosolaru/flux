@@ -3,11 +3,18 @@ import type { NextRequest } from "next/server";
 
 import { isBulkCountry } from "@/lib/chargers/countries";
 import { bulkImportCountry } from "@/lib/chargers/ingest/bulk";
+import { isCountryFresh } from "@/lib/chargers/repository";
 import { constantTimeEqual } from "@/lib/crypto/timing";
 
-// Full-country bulk import endpoint, invoked by the per-country Vercel crons.
+// Full-country bulk import endpoint, invoked by the Vercel crons.
 // Protected by the x-webhook-secret header; fails closed (503) if unconfigured.
 export const maxDuration = 300;
+
+// Stop starting new work well before maxDuration so the handler can still write
+// its ingest_runs rows and respond instead of being killed mid-import.
+const BUDGET_MS = 250_000;
+// Rough floor for a country import; below this there is no point starting one.
+const MIN_COUNTRY_MS = 20_000;
 
 export async function GET(req: NextRequest) {
   // Vercel Cron attaches `Authorization: Bearer $CRON_SECRET`; manual triggers
@@ -38,14 +45,34 @@ export async function GET(req: NextRequest) {
 
   // Sequential: each import is memory-heavy and the whole handler shares one
   // 300 s budget, so a parallel fan-out would risk timing out mid-country.
+  //
+  // Countries already fresh are skipped, and the loop stops once the remaining
+  // budget can no longer fit a country. Because freshness outlives the daily
+  // schedule, successive runs pick up where the previous one stopped instead of
+  // always re-importing the head of the list and never reaching the tail.
+  const startedAt = Date.now();
+  const deadline = startedAt + BUDGET_MS;
+
   const results: Record<string, unknown> = {};
   for (const cc of countries) {
+    if (Date.now() + MIN_COUNTRY_MS > deadline) {
+      results[cc] = { skipped: "budget-exhausted" };
+      continue;
+    }
+    if (await isCountryFresh(cc)) {
+      results[cc] = { skipped: "fresh" };
+      continue;
+    }
     try {
-      results[cc] = await bulkImportCountry(cc);
+      results[cc] = await bulkImportCountry(cc, deadline);
     } catch (err) {
       results[cc] = { error: err instanceof Error ? err.message : "failed" };
     }
   }
 
-  return NextResponse.json({ countries, results });
+  return NextResponse.json({
+    countries,
+    elapsedMs: Date.now() - startedAt,
+    results,
+  });
 }

@@ -15,6 +15,7 @@ import { fetchCountryDe } from "./bnetza";
 import { fetchCountryAt } from "./austria";
 import { fetchCountryNl } from "./ndw";
 import { fetchCountryOcm } from "./ocm";
+import { fetchCountryTomTom } from "./tomtom";
 
 function sevenDaysAgo(): Date {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -46,19 +47,24 @@ const FULL_OFFICIAL_SOURCE: ReadonlySet<BulkCountry> = new Set(["fr", "de", "nl"
  */
 export async function bulkImportCountry(
   cc: BulkCountry,
+  deadline?: number,
 ): Promise<{ fetched: number; upserted: number; cells: number }> {
   const bbox = BULK_COUNTRIES[cc];
   const supabase = createSupabaseAdminClient();
 
   const ocmSince = FULL_OFFICIAL_SOURCE.has(cc) ? sevenDaysAgo() : undefined;
-  const [officialResult, ocmResult] = await Promise.allSettled([
+  const [officialResult, ocmResult, tomtomResult] = await Promise.allSettled([
     fetchOfficialSource(cc),
     fetchCountryOcm(cc.toUpperCase(), ocmSince),
+    // Bulk countries short-circuit lazy tile ingest, so TomTom has to be swept
+    // here or it never reaches them.
+    fetchCountryTomTom(bbox, deadline),
   ]);
 
   const raws = [
     ...(officialResult.status === "fulfilled" ? officialResult.value : []),
     ...(ocmResult.status === "fulfilled" ? ocmResult.value : []),
+    ...(tomtomResult.status === "fulfilled" ? tomtomResult.value : []),
   ];
   const fetched = raws.length;
 
