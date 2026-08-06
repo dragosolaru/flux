@@ -60,11 +60,55 @@ interface Vehicle {
 // blob must not crash the results panel, so validate the load-bearing arrays
 // before trusting the cast. Returns null → caller falls back to just
 // origin/destination (user can re-plan).
-function parseSnapshot(raw: unknown): (TripResponse & { savedVariant?: number }) | null {
+function parseSnapshot(raw: unknown): TripResponse | null {
   if (!raw || typeof raw !== "object") return null;
   const s = raw as { plan?: { stops?: unknown }; variants?: unknown };
   if (!Array.isArray(s.variants) || !Array.isArray(s.plan?.stops)) return null;
-  return raw as TripResponse & { savedVariant?: number };
+  // Validate the elements too, not just the containers: routeLines and the
+  // variant chips dereference `v.plan` unguarded, so a variant missing it
+  // throws during render and takes the whole page down — permanently, since
+  // the bad blob is reloaded on every visit.
+  const variantsOk = s.variants.every(
+    (v) =>
+      v != null &&
+      typeof v === "object" &&
+      Array.isArray((v as { plan?: { stops?: unknown } }).plan?.stops),
+  );
+  if (!variantsOk) return null;
+  return raw as TripResponse;
+}
+
+// Snapshots are persisted as JSONB behind a 100 KB request cap. A planned
+// TripResponse carries a full-geometry polyline per variant (OSRM is queried
+// with overview=full), so storing it verbatim puts any real road trip far over
+// the cap — a 1400 km route rejects with 413. Keep only the variant the user
+// actually chose, and thin its polyline to an overview-quality line.
+const SNAPSHOT_MAX_POINTS = 400;
+
+function downsample(coords: [number, number][]): [number, number][] {
+  if (coords.length <= SNAPSHOT_MAX_POINTS) return coords;
+  const step = (coords.length - 1) / (SNAPSHOT_MAX_POINTS - 1);
+  const out: [number, number][] = [];
+  for (let i = 0; i < SNAPSHOT_MAX_POINTS; i++) {
+    out.push(coords[Math.round(i * step)]);
+  }
+  return out;
+}
+
+function compactSnapshot(response: TripResponse, variantIndex: number): TripResponse {
+  const variant = response.variants[variantIndex] ?? response.variants[0] ?? null;
+  const source = variant?.plan ?? response.plan;
+  const slimPlan: TripPlan = {
+    ...source,
+    polyline: source.polyline
+      ? { ...source.polyline, coordinates: downsample(source.polyline.coordinates) }
+      : null,
+  };
+  return {
+    ...response,
+    plan: slimPlan,
+    variants: variant ? [{ ...variant, plan: slimPlan }] : [],
+  };
 }
 
 const RECENT_KEY = "flux_recent_destinations";
@@ -370,9 +414,9 @@ export function TripClient() {
         destination_lat: destination.lat,
         destination_lng: destination.lng,
         stops: activePlan.stops,
-        // Persist the chosen variant so loading restores the same strategy the
-        // user picked, not variant 0.
-        plan_snapshot: plan ? { ...plan, savedVariant: activeVariant } : null,
+        // Only the chosen variant is stored, so loading restores the strategy
+        // the user picked and variant 0 is always the right one.
+        plan_snapshot: plan ? compactSnapshot(plan, activeVariant) : {},
       });
       setRouteSaved(true);
       toast.success(t("saved_route_saved"));
@@ -382,24 +426,32 @@ export function TripClient() {
     }
   }
 
+  // Saving is variant-specific, so switching variants means the stored route no
+  // longer matches what is on screen — re-arm the save button.
+  function handleVariantChange(index: number) {
+    setActiveVariant(index);
+    setRouteSaved(false);
+  }
+
   function handleLoadRoute(r: SavedRoute) {
     setOrigin({ name: r.origin_label, lat: r.origin_lat, lng: r.origin_lng });
     setDestination({ name: r.destination_label, lat: r.destination_lat, lng: r.destination_lng });
     const snap = parseSnapshot(r.plan_snapshot);
+    setSharedRoute(false);
+    setShowDisclaimer(false);
+    setActiveVariant(0);
     if (snap) {
       setPlan(snap);
-      setActiveVariant(
-        typeof snap.savedVariant === "number" &&
-          snap.savedVariant >= 0 &&
-          snap.savedVariant < snap.variants.length
-          ? snap.savedVariant
-          : 0,
-      );
-      setSharedRoute(false);
-      setShowDisclaimer(false);
       setRouteSaved(true);
       setFormCollapsed(true);
       setPlanExpanded(true);
+    } else {
+      // Unreadable or legacy snapshot: drop the previous plan rather than
+      // leaving route A's map and stops on screen under route B's labels —
+      // saving from that state would persist the wrong plan.
+      setPlan(null);
+      setRouteSaved(false);
+      setFormCollapsed(false);
     }
     setSavedSheetOpen(false);
   }
@@ -454,7 +506,7 @@ export function TripClient() {
           activePlan,
           variants,
           activeVariant,
-          setActiveVariant,
+          setActiveVariant: handleVariantChange,
           canShare,
           sharing,
           sharedRoute,
@@ -488,7 +540,7 @@ export function TripClient() {
           onStationSelect={setSelectedStop}
           nearbyStations={nearbyStations}
           routes={routeLines}
-          onRouteSelect={setActiveVariant}
+          onRouteSelect={handleVariantChange}
         />
       </div>
 

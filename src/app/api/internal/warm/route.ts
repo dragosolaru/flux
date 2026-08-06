@@ -15,6 +15,9 @@ export const maxDuration = 300;
 const BUDGET_MS = 250_000;
 // Rough floor for a country import; below this there is no point starting one.
 const MIN_COUNTRY_MS = 20_000;
+// Upper bound on the request's country list — the full BULK_COUNTRIES set is
+// well under this, so anything larger is a malformed or abusive call.
+const MAX_COUNTRIES = 24;
 
 export async function GET(req: NextRequest) {
   // Vercel Cron attaches `Authorization: Bearer $CRON_SECRET`; manual triggers
@@ -38,8 +41,15 @@ export async function GET(req: NextRequest) {
     .map((c) => c.trim().toLowerCase())
     .filter((c) => c.length > 0);
 
-  const countries = requested.filter(isBulkCountry);
-  if (countries.length === 0 || countries.length !== requested.length) {
+  if (requested.length > MAX_COUNTRIES) {
+    return NextResponse.json({ message: "too-many-countries" }, { status: 400 });
+  }
+
+  // Deduplicate: without Redis every repeat would re-run a full import rather
+  // than being skipped as fresh, letting one call burn the whole budget on the
+  // same country.
+  const countries = [...new Set(requested)].filter(isBulkCountry);
+  if (countries.length === 0 || countries.length !== new Set(requested).size) {
     return NextResponse.json({ message: "unknown-country" }, { status: 400 });
   }
 
@@ -64,7 +74,7 @@ export async function GET(req: NextRequest) {
       continue;
     }
     try {
-      results[cc] = await bulkImportCountry(cc, deadline);
+      results[cc] = await bulkImportCountry(cc);
     } catch (err) {
       results[cc] = { error: err instanceof Error ? err.message : "failed" };
     }

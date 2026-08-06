@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
 import { canAddVehicle } from "@/lib/subscription";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // GET /api/vehicles — list vehicles for the current user
 // ?include_inactive=true returns all vehicles regardless of is_active
@@ -103,6 +104,15 @@ export async function POST(req: NextRequest) {
   const userId = await ensureSupabaseUserId(session);
   if (!userId) {
     return NextResponse.json({ message: "Failed to resolve user" }, { status: 500 });
+  }
+
+  // Tier limits bound the free plan, but a paid plan is otherwise an unbounded
+  // insert — every added vehicle also seeds a year of mock history.
+  if (!(await checkRateLimit(userId, "vehicle-write", 20))) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded" },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
   }
 
   const body = await req.json().catch(() => null);

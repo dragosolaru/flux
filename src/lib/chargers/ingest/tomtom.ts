@@ -135,53 +135,6 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
   return fetchBounded(bbox, apiKey, MAX_PAGES);
 }
 
-// Bulk sweep tuning. A country is walked as 1°×1° cells because TomTom caps the
-// search radius at 100 km; cells run in small concurrent batches so a wide
-// country finishes inside the cron's shared time budget, and pages are capped
-// tighter than the tile path to stay within the free tier's daily quota.
-const BULK_MAX_PAGES = 2;
-const BULK_CONCURRENCY = 6;
-
-/**
- * Country-wide TomTom sweep for the bulk importer.
- *
- * Bulk-imported countries short-circuit lazy tile ingest (see
- * repository.ensureAreaFresh), so without this pass TomTom would never
- * contribute to them at all — its data would only ever reach countries that are
- * NOT bulk imported.
- *
- * `deadline` (epoch ms) stops the sweep early so a slow country cannot consume
- * the whole cron budget; partial TomTom coverage still merges cleanly because
- * the next run re-clusters against what is already stored.
- */
-export async function fetchCountryTomTom(
-  bbox: BBox,
-  deadline?: number,
-): Promise<RawCharger[]> {
-  const apiKey = process.env.TOMTOM_API_KEY;
-  if (!apiKey) return [];
-
-  const cells: BBox[] = [];
-  for (let lat = Math.floor(bbox.minLat); lat <= Math.floor(bbox.maxLat); lat++) {
-    for (let lng = Math.floor(bbox.minLng); lng <= Math.floor(bbox.maxLng); lng++) {
-      cells.push({ minLat: lat, maxLat: lat + 1, minLng: lng, maxLng: lng + 1 });
-    }
-  }
-
-  const out: RawCharger[] = [];
-  for (let i = 0; i < cells.length; i += BULK_CONCURRENCY) {
-    if (deadline != null && Date.now() >= deadline) break;
-    const batch = cells.slice(i, i + BULK_CONCURRENCY);
-    const settled = await Promise.allSettled(
-      batch.map((cell) => fetchBounded(cell, apiKey, BULK_MAX_PAGES)),
-    );
-    for (const r of settled) {
-      if (r.status === "fulfilled") out.push(...r.value);
-    }
-  }
-  return out;
-}
-
 export const tomtomConnector: SourceConnector = {
   id: "tomtom",
   fetchTile,

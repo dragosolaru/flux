@@ -15,7 +15,6 @@ import { fetchCountryDe } from "./bnetza";
 import { fetchCountryAt } from "./austria";
 import { fetchCountryNl } from "./ndw";
 import { fetchCountryOcm } from "./ocm";
-import { fetchCountryTomTom } from "./tomtom";
 
 function sevenDaysAgo(): Date {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -45,26 +44,28 @@ const FULL_OFFICIAL_SOURCE: ReadonlySet<BulkCountry> = new Set(["fr", "de", "nl"
  *    to keep memory bounded: filter → findInBBox → clusterChargers → persistClusters.
  * 3. Marks the country fresh and records an ingest_runs row.
  */
+// NOTE: TomTom is deliberately NOT swept here. Its categorySearch is a
+// nearest-first radius query, so a 1°×1° cell (~68 km radius, ~8,600 km²)
+// returns only the POIs closest to the cell centre — a centre-biased sample,
+// not country coverage — while costing ~2 requests per cell against a ~2,500/day
+// free tier and pushing a wide country past the cron's time budget. TomTom
+// therefore only contributes on the lazy tile path, which bulk-fresh countries
+// skip. Closing that gap needs a bulk-oriented TomTom product, not this API.
 export async function bulkImportCountry(
   cc: BulkCountry,
-  deadline?: number,
 ): Promise<{ fetched: number; upserted: number; cells: number }> {
   const bbox = BULK_COUNTRIES[cc];
   const supabase = createSupabaseAdminClient();
 
   const ocmSince = FULL_OFFICIAL_SOURCE.has(cc) ? sevenDaysAgo() : undefined;
-  const [officialResult, ocmResult, tomtomResult] = await Promise.allSettled([
+  const [officialResult, ocmResult] = await Promise.allSettled([
     fetchOfficialSource(cc),
     fetchCountryOcm(cc.toUpperCase(), ocmSince),
-    // Bulk countries short-circuit lazy tile ingest, so TomTom has to be swept
-    // here or it never reaches them.
-    fetchCountryTomTom(bbox, deadline),
   ]);
 
   const raws = [
     ...(officialResult.status === "fulfilled" ? officialResult.value : []),
     ...(ocmResult.status === "fulfilled" ? ocmResult.value : []),
-    ...(tomtomResult.status === "fulfilled" ? tomtomResult.value : []),
   ];
   const fetched = raws.length;
 

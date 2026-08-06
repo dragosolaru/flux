@@ -139,7 +139,10 @@ function operatorContained(a: string | null, b: string | null): boolean {
   if (ta.size === 0 || tb.size === 0) return false;
   const [small, large] = ta.size <= tb.size ? [ta, tb] : [tb, ta];
   const smallLen = [...small].join("").length;
-  if (smallLen < 4) return false;
+  // 5 chars, not 4: a 4-letter generic word ("Park", "Volt") is not a brand and
+  // would otherwise be absorbed by every superset name ("Park & Charge",
+  // "Volt Mobility"). Real short brands here — Shell, Tesla, Enel — reach 5.
+  if (smallLen < 5) return false;
   for (const t of small) if (!large.has(t)) return false;
   return true;
 }
@@ -196,21 +199,23 @@ export function matchScore(
 ): number {
   const distanceM = haversineMeters(raw, candidate);
   const operator = operatorSimilarity(raw.operator, candidate.operator);
-  // Same physical point → merge duplicates, BUT keep two clearly different
-  // operators sitting at the same coordinate as separate stations (don't let
-  // dedup swallow genuine co-located networks — sources should accumulate).
-  if (distanceM <= SAME_SITE_M) {
-    // Compare on slugs, not raw strings: a purely non-Latin operator (Greek
-    // "ΔΕΗ", Cyrillic) slugifies to null and carries no comparable signal, so
-    // treating it as "named" would score 0 and strand it as a duplicate pin.
-    const bothNamed =
-      slugify(raw.operator) != null && slugify(candidate.operator) != null;
-    // Compatible (or unknown) operator → same physical duplicate, merge.
-    if (!bothNamed || operator >= 0.5) return 1;
-    // Same point but two clearly different operators → distinct co-located
-    // stations; never merge so sources accumulate instead of excluding.
-    return 0;
-  }
+
+  // Two records that both name an operator, and name clearly different ones,
+  // are different networks — never merge them at ANY distance. Applying this
+  // only inside SAME_SITE_M made the score non-monotonic: a pair scored 0 at
+  // 39 m but ~0.83 at 50 m, where spatial+connector+name alone clear the
+  // threshold. Motorway service areas hosting two operators tens of metres
+  // apart are exactly the case that has to survive dedup.
+  //
+  // Compared on raw strings, not slugs: slugify() strips non-Latin scripts to
+  // null, and treating that as "unknown operator" would let a Greek- or
+  // Cyrillic-named station merge into any co-located one.
+  const bothNamed = raw.operator != null && candidate.operator != null;
+  if (bothNamed && operator < 0.5) return 0;
+
+  // Same physical point with a compatible or unknown operator → duplicate.
+  if (distanceM <= SAME_SITE_M) return 1;
+
   const spatial = spatialScore(distanceM);
   const connector = connectorOverlap(raw.connectors, candidate.connectors);
   const name = tokenOverlap(raw.name, candidate.name);

@@ -12,9 +12,32 @@ minute; pasul 3 (Tesla) este singura lucrare de infrastructură reală.
 Repo-ul nu are runner CI de migrații; acestea se aplică manual în
 **Supabase Dashboard → SQL Editor**. De aplicat (idempotente):
 
-- [ ] `031_enable_rls_charger_tables.sql` — RLS pe tabelele partajate
+- [ ] `031_enable_rls_charger_tables.sql` — RLS pe tabelele partajate.
+      **Fără ea, cheia publică anon dă citire/scriere pe `chargers`,
+      `charger_connectors`, `charger_sources`, `ingest_runs`, `exchange_rates`
+      prin PostgREST.**
 - [ ] `032_saved_routes.sql` — tabela rute salvate (**fără ea, salvarea rutelor dă 500 în producție**)
 - [ ] `033_saved_routes_index.sql` — index `user_id`
+- [ ] `034_dedupe_chargers_by_site.sql` — colapsează stațiile duplicate deja
+      stocate (dedup-ul din cod previne duplicate noi, dar nu le repară pe
+      cele existente)
+
+## 1b. Upstash Redis — OBLIGATORIU, nu opțional
+
+Fără `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`:
+
+- **Rate limiting cade pe memoria instanței** (`src/lib/rate-limit.ts`) — se
+  resetează la fiecare cold start, deci pe serverless practic nu limitează
+  nimic. Afectează direct costul OCR/Anthropic.
+- **Fiecare citire de hartă reface ingest-ul complet** (`repository.ts`
+  `ensureAreaFresh`) — toate tile-urile par învechite, deci fiecare pan pe hartă
+  declanșează OCM + Overpass + TomTom inline. Latență de secunde și consum de
+  cotă la furnizori.
+- **Cron-ul de warm reia mereu capul listei** — `isCountryFresh` întoarce mereu
+  fals, deci țările de la coadă nu se importă niciodată.
+
+- [ ] `UPSTASH_REDIS_REST_URL`
+- [ ] `UPSTASH_REDIS_REST_TOKEN`
 
 ## 2. Vercel — variabile de mediu (producție)
 
@@ -25,6 +48,16 @@ Minim pentru funcționare (auth-ul a picat deja o dată din cauza lor):
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` + redirect URI `…/api/auth/callback/google` în Google Cloud Console
 - [ ] `ANTHROPIC_API_KEY` — pipeline-ul OCR pentru costuri
+- [ ] `TOMTOM_API_KEY` — fără ea conectorul TomTom întoarce gol în tăcere;
+      se pierde ~o treime din acoperirea stațiilor plus datele de putere per
+      conector. Notă: TomTom contribuie doar pe calea leneșă (tile), nu în
+      importul bulk — vezi comentariul din `src/lib/chargers/ingest/bulk.ts`.
+- [ ] `CRON_SECRET` — fără ea rutele de cron eșuează închis (503)
+- [ ] `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+      `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_ANNUAL_PRICE_ID` — necesare
+      înainte de a încasa bani
+- [ ] Opționale: `OPENROUTESERVICE_API_KEY`, `CHARGEPRICE_API_KEY`,
+      `TIBBER_TOKEN`, `OPEN_CHARGE_MAP_API_KEY`, `INGEST_WEBHOOK_SECRET`
 
 ## 3. Tesla Fleet API — integrare live (blocker pentru comenzi reale)
 

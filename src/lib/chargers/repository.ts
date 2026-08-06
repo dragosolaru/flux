@@ -35,7 +35,9 @@ function freshnessKey(tile: Tile): string {
   //       add the TomTom source, and restore rows migration 021 may have
   //       collapsed by location cell regardless of operator.
   //   v4: batched hash-aware upserts (022) + country-level bulk freshness.
-  return `chargers:tile:v4:${tileKey(tile)}`;
+  //   v5: widened same-site radius to 40 m, operator-name containment, and the
+  //       operator-conflict guard applied at every distance (034).
+  return `chargers:tile:v5:${tileKey(tile)}`;
 }
 
 function countryKey(cc: BulkCountry): string {

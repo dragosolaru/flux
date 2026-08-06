@@ -94,13 +94,21 @@ describe("OCM duplicate patterns — same site must collapse to one pin", () => 
     ).toBe(1);
   });
 
-  it("merges a non-Latin operator against its Latin counterpart", () => {
-    // slugify() strips every non [a-z0-9] char, so a purely Greek (or Cyrillic)
-    // operator slugifies to null. Treating that as "named" scored 0 similarity
-    // and stranded the pair as two pins; it is now read as unknown → merge.
+  it("keeps a non-Latin operator separate from an unrelated Latin one", () => {
+    // Two records that each name an operator are never merged unless the names
+    // are demonstrably similar. "ΔΕΗ" and "PPC" ARE the same company, but no
+    // string comparison can know that, and treating a non-comparable name as
+    // "unknown" would let it absorb any co-located station. Staying split is
+    // the safe failure. The mixed-script form ("ΔΕΗ blue" / "PPC blue") does
+    // merge, because the Latin remainder is comparable.
     const a = raw({ ...KAVALA, operator: "ΔΕΗ", connectors: ccs150 });
     expect(
       matchScore(a, { ...KAVALA, operator: "PPC", connectors: ccs150, name: null }),
+    ).toBe(0);
+    expect(
+      matchScore(raw({ ...KAVALA, operator: "ΔΕΗ blue", connectors: ccs150 }), {
+        ...KAVALA, operator: "PPC blue", connectors: ccs150, name: null,
+      }),
     ).toBe(1);
   });
 
