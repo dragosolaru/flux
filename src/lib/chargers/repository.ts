@@ -41,7 +41,12 @@ function freshnessKey(tile: Tile): string {
 }
 
 function countryKey(cc: BulkCountry): string {
-  return `chargers:country:v1:${cc}`;
+  // Namespaced like the tile key so a bump invalidates country freshness in one
+  // shot. This matters after any bulk deletion of chargers: a stale "fresh"
+  // marker makes ensureAreaFresh short-circuit, and the map would serve an
+  // empty country until the 48 h TTL expired instead of re-ingesting it.
+  //   v2: same-site dedup rules widened (034) + safe to truncate and refill.
+  return `chargers:country:v2:${cc}`;
 }
 
 async function markTileFresh(tile: Tile): Promise<void> {
