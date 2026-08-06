@@ -37,8 +37,15 @@
 -- Idempotent: re-running is a no-op once every site holds a single row.
 -- =============================================================================
 
--- p_limit bounds a single call so a very large country can be worked through in
--- batches: re-run the same call until it returns 0.
+-- p_limit bounds a single call so a very large group can be worked through in
+-- batches: re-run the same call until it returns 0. Rows whose country is NULL
+-- are usually the largest group (sources that do not report a country), so that
+-- pass in particular wants a batch limit.
+--
+-- The country predicate is branched rather than written as a single
+-- `country is not distinct from p_country`: that operator has no btree operator
+-- class, so it forces a sequential scan over the whole table. `= p_country` and
+-- `is null` both use chargers_country (btree indexes do store NULLs).
 create or replace function public.dedupe_chargers_by_site(
   p_country char(2),
   p_limit   integer default 200000
@@ -51,21 +58,39 @@ as $$
 declare
   v_deleted integer;
 begin
-  delete from chargers
-  where id in (
-    select c.id
-    from chargers c
-    where c.country is not distinct from p_country
-      and exists (
-        select 1
-        from chargers k
-        where k.id <> c.id
-          and st_dwithin(c.location, k.location, 40)
-          and coalesce(k.operator_id, '~unknown') = coalesce(c.operator_id, '~unknown')
-          and (k.confidence, k.source_count, k.id) > (c.confidence, c.source_count, c.id)
-      )
-    limit p_limit
-  );
+  if p_country is null then
+    delete from chargers
+    where id in (
+      select c.id
+      from chargers c
+      where c.country is null
+        and exists (
+          select 1
+          from chargers k
+          where k.id <> c.id
+            and st_dwithin(c.location, k.location, 40)
+            and coalesce(k.operator_id, '~unknown') = coalesce(c.operator_id, '~unknown')
+            and (k.confidence, k.source_count, k.id) > (c.confidence, c.source_count, c.id)
+        )
+      limit p_limit
+    );
+  else
+    delete from chargers
+    where id in (
+      select c.id
+      from chargers c
+      where c.country = p_country
+        and exists (
+          select 1
+          from chargers k
+          where k.id <> c.id
+            and st_dwithin(c.location, k.location, 40)
+            and coalesce(k.operator_id, '~unknown') = coalesce(c.operator_id, '~unknown')
+            and (k.confidence, k.source_count, k.id) > (c.confidence, c.source_count, c.id)
+        )
+      limit p_limit
+    );
+  end if;
 
   get diagnostics v_deleted = row_count;
   return v_deleted;
@@ -86,4 +111,5 @@ select 'si' as country, public.dedupe_chargers_by_site('SI') as deleted;
 select 'de' as country, public.dedupe_chargers_by_site('DE') as deleted;
 select 'fr' as country, public.dedupe_chargers_by_site('FR') as deleted;
 select 'nl' as country, public.dedupe_chargers_by_site('NL') as deleted;
-select 'null' as country, public.dedupe_chargers_by_site(null) as deleted;
+-- Rows with no country are typically the largest group; run in batches until 0.
+select 'null' as country, public.dedupe_chargers_by_site(null, 2000) as deleted;
