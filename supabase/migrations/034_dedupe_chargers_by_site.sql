@@ -97,8 +97,45 @@ begin
 end;
 $$;
 
--- Run one country at a time so each statement stays well inside the timeout.
--- Countries not listed here are covered by the trailing NULL/other passes.
+-- Country-agnostic batched pass. Prefer this: `country` is NULL on the large
+-- majority of rows, because Overpass/OSM data carries no country (addr:country
+-- is rarely tagged — country is implied geographically), so partitioning the
+-- work by country leaves most of the table untouched and pushes everything into
+-- one oversized NULL pass. Re-run until it returns 0.
+create or replace function public.dedupe_chargers_batch(p_limit integer default 2000)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+begin
+  delete from chargers
+  where id in (
+    select c.id
+    from chargers c
+    where exists (
+      select 1
+      from chargers k
+      where k.id <> c.id
+        and st_dwithin(c.location, k.location, 40)
+        and coalesce(k.operator_id, '~unknown') = coalesce(c.operator_id, '~unknown')
+        and (k.confidence, k.source_count, k.id) > (c.confidence, c.source_count, c.id)
+    )
+    limit p_limit
+  );
+
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+-- Run repeatedly until it reports 0.
+select public.dedupe_chargers_batch(2000) as deleted;
+
+-- Per-country variant, kept for targeting a single country. See the note above:
+-- on this dataset it only reaches the minority of rows that carry a country.
 select 'ro' as country, public.dedupe_chargers_by_site('RO') as deleted;
 select 'bg' as country, public.dedupe_chargers_by_site('BG') as deleted;
 select 'gr' as country, public.dedupe_chargers_by_site('GR') as deleted;
