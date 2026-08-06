@@ -51,7 +51,7 @@ const MATCH_DECAY_M = 150;
 // community submissions at one coordinate; without this they each fall below the
 // match threshold (spatial weight alone is < threshold) and stack on the map as
 // a single spiderfied point instead of merging into one charger.
-const SAME_SITE_M = 25;
+const SAME_SITE_M = 40;
 
 // Match-score weights. Spatial proximity dominates because two records at the
 // same coordinates are almost certainly the same physical site; the other
@@ -126,12 +126,31 @@ function levenshtein(a: string, b: string): number {
   return prev[n];
 }
 
+/**
+ * True when one operator's tokens are fully contained in the other's — the same
+ * network written two ways ("Tesla" / "Tesla Supercharger", "Shell" / "Shell
+ * Recharge"). Plain edit distance scores these far apart because the suffix
+ * dominates the length. Requires ≥4 chars on the shorter side so a generic
+ * fragment can't swallow an unrelated operator.
+ */
+function operatorContained(a: string | null, b: string | null): boolean {
+  const ta = new Set(tokens(a));
+  const tb = new Set(tokens(b));
+  if (ta.size === 0 || tb.size === 0) return false;
+  const [small, large] = ta.size <= tb.size ? [ta, tb] : [tb, ta];
+  const smallLen = [...small].join("").length;
+  if (smallLen < 4) return false;
+  for (const t of small) if (!large.has(t)) return false;
+  return true;
+}
+
 /** Operator similarity: exact slug match is strong; otherwise normalized edit distance. */
 function operatorSimilarity(a: string | null, b: string | null): number {
   const sa = slugify(a);
   const sb = slugify(b);
   if (!sa || !sb) return 0;
   if (sa === sb) return 1;
+  if (operatorContained(a, b)) return 1;
   const dist = levenshtein(sa, sb);
   const maxLen = Math.max(sa.length, sb.length);
   return maxLen === 0 ? 0 : Math.max(0, 1 - dist / maxLen);
@@ -181,7 +200,11 @@ export function matchScore(
   // operators sitting at the same coordinate as separate stations (don't let
   // dedup swallow genuine co-located networks — sources should accumulate).
   if (distanceM <= SAME_SITE_M) {
-    const bothNamed = raw.operator != null && candidate.operator != null;
+    // Compare on slugs, not raw strings: a purely non-Latin operator (Greek
+    // "ΔΕΗ", Cyrillic) slugifies to null and carries no comparable signal, so
+    // treating it as "named" would score 0 and strand it as a duplicate pin.
+    const bothNamed =
+      slugify(raw.operator) != null && slugify(candidate.operator) != null;
     // Compatible (or unknown) operator → same physical duplicate, merge.
     if (!bothNamed || operator >= 0.5) return 1;
     // Same point but two clearly different operators → distinct co-located

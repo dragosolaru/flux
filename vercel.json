@@ -1,6 +1,7 @@
 {
   "crons": [
-    { "path": "/api/internal/warm?country=ro", "schedule": "0 3 * * *" },
+    { "path": "/api/internal/warm?country=ro,hu,bg,rs,mk", "schedule": "0 3 * * *" },
+    { "path": "/api/internal/warm?country=gr,hr,si,at,de,fr,nl", "schedule": "0 4 * * *" },
     { "path": "/api/cron/poll-vehicles", "schedule": "0 6 * * *" }
   ]
 }

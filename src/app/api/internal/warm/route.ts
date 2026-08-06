@@ -24,11 +24,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const country = new URL(req.url).searchParams.get("country") ?? "";
-  if (!isBulkCountry(country)) {
+  // Accepts one country or a comma-separated list, so a single cron entry can
+  // cover a whole corridor (Vercel plans cap the number of cron jobs).
+  const requested = (new URL(req.url).searchParams.get("country") ?? "")
+    .split(",")
+    .map((c) => c.trim().toLowerCase())
+    .filter((c) => c.length > 0);
+
+  const countries = requested.filter(isBulkCountry);
+  if (countries.length === 0 || countries.length !== requested.length) {
     return NextResponse.json({ message: "unknown-country" }, { status: 400 });
   }
 
-  const result = await bulkImportCountry(country);
-  return NextResponse.json({ country, ...result });
+  // Sequential: each import is memory-heavy and the whole handler shares one
+  // 300 s budget, so a parallel fan-out would risk timing out mid-country.
+  const results: Record<string, unknown> = {};
+  for (const cc of countries) {
+    try {
+      results[cc] = await bulkImportCountry(cc);
+    } catch (err) {
+      results[cc] = { error: err instanceof Error ? err.message : "failed" };
+    }
+  }
+
+  return NextResponse.json({ countries, results });
 }
