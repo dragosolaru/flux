@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2 } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2, Bookmark, Trash2, Info, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -15,9 +15,17 @@ import { DesktopSidebar, StatStrip, type Stat } from "@/components/map/map-ui";
 import * as chargersApi from "@/lib/api/chargers";
 import * as tripApi from "@/lib/api/trip";
 import * as vehiclesApi from "@/lib/api/vehicles";
+import { apiFetch } from "@/lib/api-fetch";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
+import {
+  useSavedRoutes,
+  useCreateSavedRoute,
+  useRenameSavedRoute,
+  useDeleteSavedRoute,
+  type SavedRoute,
+} from "@/hooks/useSavedRoutes";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 
@@ -46,6 +54,17 @@ interface Vehicle {
   id: string;
   nickname: string | null;
   displayName: string;
+}
+
+// Saved snapshots come back as untyped JSONB — a truncated or legacy-shaped
+// blob must not crash the results panel, so validate the load-bearing arrays
+// before trusting the cast. Returns null → caller falls back to just
+// origin/destination (user can re-plan).
+function parseSnapshot(raw: unknown): (TripResponse & { savedVariant?: number }) | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as { plan?: { stops?: unknown }; variants?: unknown };
+  if (!Array.isArray(s.variants) || !Array.isArray(s.plan?.stops)) return null;
+  return raw as TripResponse & { savedVariant?: number };
 }
 
 const RECENT_KEY = "flux_recent_destinations";
@@ -137,16 +156,31 @@ export function TripClient() {
   const [destFocused, setDestFocused] = useState(false);
   const [recents, setRecents] = useState<RecentDestination[]>(getRecentDestinations);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [savedSheetOpen, setSavedSheetOpen] = useState(false);
+  const [routeSaved, setRouteSaved] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [preconditioningManually, setPreconditioningManually] = useState(false);
+
+  const { data: savedRoutes = [] } = useSavedRoutes();
+  const createSavedRoute = useCreateSavedRoute();
+  const deleteSavedRoute = useDeleteSavedRoute();
 
   // Silent locate so geocode searches can be biased toward the user even
-  // before they tap "use my location" — failures are fine, bias is optional.
+  // before they tap "use my location" — but only when permission was already
+  // granted, so page load never triggers the browser permission prompt.
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => undefined,
-      { timeout: 3000 },
-    );
+    if (!navigator.geolocation || !navigator.permissions) return;
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((status) => {
+        if (status.state !== "granted") return;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => undefined,
+          { timeout: 3000 },
+        );
+      })
+      .catch(() => undefined);
   }, []);
 
   const showRecents = destFocused && destination === null && recents.length > 0;
@@ -206,6 +240,7 @@ export function TripClient() {
       setPlan(result);
       setActiveVariant(0);
       setSharedRoute(false);
+      setRouteSaved(false);
       setFormCollapsed(true);
       setPlanExpanded(true);
     } catch (err) {
@@ -278,12 +313,11 @@ export function TripClient() {
     if (!teslaVehicle || !activePlan || !destination) return;
     setSharing(true);
     try {
-      // First non-SC fast stop gets auto-preconditioning.
-      const firstStop = activePlan.stops[0] ?? null;
-      const willPrecondition =
-        firstStop !== null &&
-        needsPreconditioning(firstStop.station.maxKw) &&
-        !isSuperchargerNetwork(firstStop.station.networkId);
+      // Precondition if ANY stop is a non-SC DC fast charger.
+      // Superchargers are handled automatically by Tesla's firmware.
+      const willPrecondition = activePlan.stops.some(
+        (s) => needsPreconditioning(s.station.maxKw) && !isSuperchargerNetwork(s.station.networkId),
+      );
 
       await vehiclesApi.shareNavigation(
         teslaVehicle.id,
@@ -298,12 +332,76 @@ export function TripClient() {
         { precondition: willPrecondition },
       );
       setSharedRoute(true);
+      if (willPrecondition) setShowDisclaimer(true);
       toast.success(willPrecondition ? t("share_success_preconditioned") : t("share_success"));
     } catch {
       toast.error(t("share_error"));
     } finally {
       setSharing(false);
     }
+  }
+
+  async function handleManualPrecondition() {
+    if (!teslaVehicle) return;
+    setPreconditioningManually(true);
+    try {
+      await apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
+        method: "POST",
+        body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
+      });
+      toast.success(t("precondition_started"));
+    } catch {
+      toast.error(t("share_error"));
+    } finally {
+      setPreconditioningManually(false);
+    }
+  }
+
+  async function handleSaveRoute() {
+    if (!activePlan || !origin || !destination || routeSaved) return;
+    try {
+      const name = `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`;
+      await createSavedRoute.mutateAsync({
+        name,
+        origin_label: origin.name,
+        origin_lat: origin.lat,
+        origin_lng: origin.lng,
+        destination_label: destination.name,
+        destination_lat: destination.lat,
+        destination_lng: destination.lng,
+        stops: activePlan.stops,
+        // Persist the chosen variant so loading restores the same strategy the
+        // user picked, not variant 0.
+        plan_snapshot: plan ? { ...plan, savedVariant: activeVariant } : null,
+      });
+      setRouteSaved(true);
+      toast.success(t("saved_route_saved"));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(msg === "saved_routes_limit" ? t("saved_route_limit") : t("saved_route_error"));
+    }
+  }
+
+  function handleLoadRoute(r: SavedRoute) {
+    setOrigin({ name: r.origin_label, lat: r.origin_lat, lng: r.origin_lng });
+    setDestination({ name: r.destination_label, lat: r.destination_lat, lng: r.destination_lng });
+    const snap = parseSnapshot(r.plan_snapshot);
+    if (snap) {
+      setPlan(snap);
+      setActiveVariant(
+        typeof snap.savedVariant === "number" &&
+          snap.savedVariant >= 0 &&
+          snap.savedVariant < snap.variants.length
+          ? snap.savedVariant
+          : 0,
+      );
+      setSharedRoute(false);
+      setShowDisclaimer(false);
+      setRouteSaved(true);
+      setFormCollapsed(true);
+      setPlanExpanded(true);
+    }
+    setSavedSheetOpen(false);
   }
 
   const stops = activePlan?.stops.map((s) => ({
@@ -362,6 +460,14 @@ export function TripClient() {
           sharedRoute,
           destinationShort,
           onShareToTesla: handleShareToTesla,
+          onSaveRoute: handleSaveRoute,
+          saving: createSavedRoute.isPending,
+          saved: routeSaved,
+          showDisclaimer,
+          onDismissDisclaimer: () => setShowDisclaimer(false),
+          onManualPrecondition: handleManualPrecondition,
+          preconditioningManually,
+          hasTesla: teslaVehicle !== null,
         }
       : null;
 
@@ -405,6 +511,16 @@ export function TripClient() {
         ) : (
           /* Full form */
           <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-2xl backdrop-blur-md">
+            <button
+              onClick={() => setSavedSheetOpen(true)}
+              className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <Bookmark className="size-4 shrink-0" />
+              <span className="flex-1 text-left">{t("saved_routes_title")}</span>
+              {savedRoutes.length > 0 && (
+                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">{savedRoutes.length}</span>
+              )}
+            </button>
             <TripPlannerForm {...formProps} />
           </div>
         )}
@@ -420,8 +536,7 @@ export function TripClient() {
           exit="exit"
           className="absolute bottom-0 left-0 right-0 z-[1000] rounded-t-[20px] border-t border-border bg-card/95 shadow-2xl backdrop-blur-md before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border lg:hidden"
         >
-          {/* Handle — always visible, outside the collapsible area so scroll
-              state never hides it. */}
+          {/* Handle — always visible. Shows drag indicator + chevron. */}
           <div className="flex min-h-11 w-full items-center justify-between gap-2 px-4 pb-1 pt-2">
             <button
               onClick={() => setPlanExpanded((v) => !v)}
@@ -429,41 +544,34 @@ export function TripClient() {
               aria-expanded={planExpanded}
               aria-label={planExpanded ? t("see_map") : t("see_plan")}
             >
-              {planExpanded ? (
-                <>
-                  <div className="mx-auto h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
-                  <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                </>
-              ) : (
-                <>
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {originShort} → {destinationShort}
-                    {activePlan!.totalDistanceKm > 0 && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {Math.round(activePlan!.totalDistanceKm)} km · {Math.floor(activePlan!.drivingMinutes / 60)}h {activePlan!.drivingMinutes % 60}min
-                      </span>
-                    )}
-                  </span>
-                  <ChevronUp className="ml-auto size-4 shrink-0 text-muted-foreground" />
-                </>
-              )}
+              <div className="mx-auto h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
+              {planExpanded
+                ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                : <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+              }
             </button>
-            {planExpanded && (
-              <button
-                onClick={() => setFormCollapsed(false)}
-                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
-              >
-                {t("edit_btn")}
-              </button>
-            )}
+            <button
+              onClick={() => setSavedSheetOpen(true)}
+              aria-label={t("saved_routes_title")}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <Bookmark className="size-4" />
+            </button>
+            <button
+              onClick={() => setFormCollapsed(false)}
+              className="flex min-h-11 shrink-0 items-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              {t("edit_btn")}
+            </button>
           </div>
 
-          {/* Collapsible content — framer-motion height, always scrollable */}
+          {/* Results — collapses to ~160 px (shows share + chips) instead of 0,
+              so the primary action stays visible without expanding. */}
           <motion.div
-            animate={{ height: planExpanded ? "auto" : 0 }}
+            animate={{ height: planExpanded ? "auto" : 160 }}
             transition={{ type: "spring", bounce: 0, duration: 0.35 }}
             className="overflow-x-hidden"
-            style={{ maxHeight: "calc(45dvh - 2.5rem)", overflowY: "auto" }}
+            style={{ maxHeight: "calc(45dvh - 2.5rem)", overflowY: planExpanded ? "auto" : "hidden" }}
           >
             <div className="px-4 pb-4 pt-1.5">
               <TripResultsBody {...resultsProps} />
@@ -476,6 +584,16 @@ export function TripClient() {
       {/* Desktop sidebar (lg+) — same content, always visible, no collapse */}
       <DesktopSidebar title={t("title")} icon={Route}>
         <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2 space-y-4 scrollbar-none">
+          <button
+            onClick={() => setSavedSheetOpen(true)}
+            className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <Bookmark className="size-4 shrink-0" />
+            <span className="flex-1 text-left">{t("saved_routes_title")}</span>
+            {savedRoutes.length > 0 && (
+              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">{savedRoutes.length}</span>
+            )}
+          </button>
           <TripPlannerForm {...formProps} />
           {resultsProps && (
             <div className="border-t border-border pt-4">
@@ -484,6 +602,19 @@ export function TripClient() {
           )}
         </div>
       </DesktopSidebar>
+
+      <SavedRoutesSheet
+        open={savedSheetOpen}
+        onClose={() => setSavedSheetOpen(false)}
+        routes={savedRoutes}
+        onLoad={handleLoadRoute}
+        onDelete={(id) =>
+          deleteSavedRoute.mutate(id, {
+            onError: () => toast.error(t("saved_route_error")),
+          })
+        }
+        t={t}
+      />
 
       {selectedStop && (
         <StationDetailSheet
@@ -762,6 +893,14 @@ interface TripResultsBodyProps {
   sharedRoute: boolean;
   destinationShort: string;
   onShareToTesla: () => void;
+  onSaveRoute: () => void;
+  saving: boolean;
+  saved: boolean;
+  showDisclaimer: boolean;
+  onDismissDisclaimer: () => void;
+  onManualPrecondition: () => void;
+  preconditioningManually: boolean;
+  hasTesla: boolean;
 }
 
 function TripResultsBody({
@@ -777,7 +916,16 @@ function TripResultsBody({
   sharedRoute,
   destinationShort,
   onShareToTesla,
+  onSaveRoute,
+  saving,
+  saved,
+  showDisclaimer,
+  onDismissDisclaimer,
+  onManualPrecondition,
+  preconditioningManually,
+  hasTesla,
 }: TripResultsBodyProps) {
+  const tc = useTranslations("common");
   const stats: Stat[] = [
     { value: formatDuration(activePlan.totalMinutes), label: t("stat_time") },
     { value: `${Math.round(activePlan.totalDistanceKm)} km`, label: t("stat_distance") },
@@ -787,6 +935,52 @@ function TripResultsBody({
 
   return (
     <div className="space-y-3">
+      {/* Share / sent — rendered FIRST so it stays visible in the peek state
+          of the mobile bottom sheet (collapsed to ~160 px). canShare is already
+          false for infeasible routes so no guard needed here. */}
+      {canShare && (
+        <AnimatePresence mode="wait">
+          {sharedRoute ? (
+            <motion.div
+              key="sent"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3"
+            >
+              <CheckCircle2 className="size-5 shrink-0 text-green-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-green-400">{t("share_sent_title")}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {showDisclaimer
+                    ? t("share_sent_detail_preconditioned")
+                    : t("share_sent_detail", { dest: destinationShort })}
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="send"
+              whileTap={{ scale: 0.97 }}
+              onClick={onShareToTesla}
+              disabled={sharing}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {sharing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Send className="size-4" />
+              )}
+              {sharing ? t("sharing") : t("share_to_tesla")}
+              {!sharing && activePlan.stops.length > 0 && (
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
+                  {activePlan.stops.length} ⚡
+                </span>
+              )}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      )}
+
       {/* Variant selector — alternative roads × charging strategies. Horizontal
           scroll rail on mobile; full-width stacked rows on desktop. */}
       {variants.length > 1 && (
@@ -869,45 +1063,54 @@ function TripResultsBody({
         <>
           <StatStrip stats={stats} />
 
-          {canShare && (
-            <AnimatePresence mode="wait">
-              {sharedRoute ? (
-                <motion.div
-                  key="sent"
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3"
-                >
-                  <CheckCircle2 className="size-5 shrink-0 text-green-400" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-green-400">{t("share_sent_title")}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {t("share_sent_detail", { dest: destinationShort })}
-                    </p>
-                  </div>
-                </motion.div>
+          {/* Preconditioning disclaimer — shown once after sending a route
+              that includes non-SC DC fast chargers. */}
+          {showDisclaimer && (
+            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 py-1 pl-3 pr-1 text-sm text-blue-200">
+              <Info className="mt-2.5 size-4 shrink-0" />
+              <span className="flex-1 py-2">{t("precondition_disclaimer")}</span>
+              <button
+                onClick={onDismissDisclaimer}
+                className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-blue-300 hover:text-blue-100"
+                aria-label={tc("close")}
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Save route button — locks into a "saved" state so repeated taps
+              don't create duplicate rows. */}
+          <button
+            onClick={onSaveRoute}
+            disabled={saving || saved}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-70"
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : saved ? (
+              <CheckCircle2 className="size-4 text-green-400" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+            {saved ? t("saved_route_saved") : t("save_route_btn")}
+          </button>
+
+          {/* Manual precondition — available when there's a Tesla and the route is
+              shared, as a standalone trigger outside of the share flow. */}
+          {hasTesla && sharedRoute && (
+            <button
+              onClick={onManualPrecondition}
+              disabled={preconditioningManually}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {preconditioningManually ? (
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <motion.button
-                  key="send"
-                  whileTap={{ scale: 0.97 }}
-                  onClick={onShareToTesla}
-                  disabled={sharing}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                >
-                  {sharing ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Send className="size-4" />
-                  )}
-                  {sharing ? t("sharing") : t("share_to_tesla")}
-                  {!sharing && activePlan.stops.length > 0 && (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
-                      {activePlan.stops.length} ⚡
-                    </span>
-                  )}
-                </motion.button>
+                <Zap className="size-4" />
               )}
-            </AnimatePresence>
+              {t("precondition_btn_manual")}
+            </button>
           )}
 
           {activePlan.warning && (
@@ -926,7 +1129,6 @@ function TripResultsBody({
                   index={i}
                   preconditioned={
                     sharedRoute &&
-                    i === 0 &&
                     needsPreconditioning(stop.station.maxKw) &&
                     !isSuperchargerNetwork(stop.station.networkId)
                   }
@@ -947,5 +1149,184 @@ function TripResultsBody({
         </p>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SavedRoutesSheet — bottom sheet listing bookmarked routes with load/delete.
+// ---------------------------------------------------------------------------
+
+interface SavedRoutesSheetProps {
+  open: boolean;
+  onClose: () => void;
+  routes: SavedRoute[];
+  onLoad: (r: SavedRoute) => void;
+  onDelete: (id: string) => void;
+  t: Translator;
+}
+
+function SavedRoutesSheet({ open, onClose, routes, onLoad, onDelete, t }: SavedRoutesSheetProps) {
+  const tc = useTranslations("common");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const renameRoute = useRenameSavedRoute();
+
+  async function handleRename(id: string) {
+    if (!renameValue.trim()) return;
+    try {
+      await renameRoute.mutateAsync({ id, name: renameValue.trim() });
+      setRenamingId(null);
+    } catch {
+      toast.error(t("saved_route_error"));
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1100] bg-black/50"
+            onClick={onClose}
+          />
+
+          {/* Sheet */}
+          <motion.div
+            key="sheet"
+            variants={slideUp}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed bottom-0 left-0 right-0 z-[1101] max-h-[70dvh] overflow-y-auto rounded-t-[20px] border-t border-border bg-card shadow-2xl"
+          >
+            <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Bookmark className="size-4 text-primary" />
+                <span className="text-sm font-semibold">{t("saved_routes_title")}</span>
+                {routes.length > 0 && (
+                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">
+                    {routes.length}/10
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={onClose}
+                aria-label={tc("close")}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {routes.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">{t("saved_routes_empty")}</p>
+              ) : (
+                <div className="space-y-2">
+                  {routes.map((r) => (
+                    <div
+                      key={r.id}
+                      className="rounded-xl border border-border bg-card/60 p-3"
+                    >
+                      {renamingId === r.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            autoFocus
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") void handleRename(r.id);
+                              if (e.key === "Escape") setRenamingId(null);
+                            }}
+                            placeholder={t("saved_route_rename_placeholder")}
+                            className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <button
+                            onClick={() => void handleRename(r.id)}
+                            disabled={renameRoute.isPending || !renameValue.trim()}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                          >
+                            {renameRoute.isPending ? <Loader2 className="size-4 animate-spin" /> : t("saved_route_rename_save")}
+                          </button>
+                          <button
+                            onClick={() => setRenamingId(null)}
+                            aria-label={tc("cancel")}
+                            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="size-4" />
+                          </button>
+                        </div>
+                      ) : confirmDeleteId === r.id ? (
+                        <div className="flex min-h-11 items-center gap-2">
+                          <p className="min-w-0 flex-1 text-sm text-foreground">
+                            {t("saved_route_delete_confirm")}
+                          </p>
+                          <button
+                            onClick={() => {
+                              onDelete(r.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground"
+                          >
+                            {tc("delete")}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="flex min-h-11 shrink-0 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            {tc("cancel")}
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <button
+                                onClick={() => {
+                                  setRenamingId(r.id);
+                                  setRenameValue(r.name);
+                                }}
+                                className="flex min-h-11 items-center gap-1.5 text-left text-sm font-medium text-foreground hover:text-primary"
+                              >
+                                <span className="line-clamp-1">{r.name}</span>
+                                <Pencil className="size-3.5 shrink-0 text-muted-foreground" />
+                              </button>
+                              <p className="line-clamp-1 text-xs text-muted-foreground">
+                                {r.origin_label.split(",")[0]} → {r.destination_label.split(",")[0]}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setConfirmDeleteId(r.id)}
+                              aria-label={tc("delete")}
+                              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => onLoad(r)}
+                            className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          >
+                            <Route className="size-3.5" />
+                            {t("saved_route_load")}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

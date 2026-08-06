@@ -831,7 +831,21 @@
     "share_sent_title": "Envoyé vers Tesla",
     "share_sent_detail": "Navigation vers {dest} sur la voiture",
     "location_not_found": "Lieu introuvable",
-    "extra_cost_label": "Coût supplémentaire"
+    "extra_cost_label": "Coût supplémentaire",
+    "save_route_btn": "Sauvegarder l'itinéraire",
+    "saved_routes_title": "Itinéraires sauvegardés",
+    "saved_routes_empty": "Aucun itinéraire sauvegardé",
+    "saved_route_saved": "Itinéraire sauvegardé",
+    "saved_route_limit": "Limite de 10 itinéraires atteinte. Supprimez-en un pour en ajouter un autre.",
+    "saved_route_error": "Impossible de sauvegarder l'itinéraire",
+    "saved_route_load": "Charger",
+    "saved_route_rename_placeholder": "Nom de l'itinéraire",
+    "saved_route_rename_save": "Enregistrer",
+    "saved_route_delete_confirm": "Supprimer cet itinéraire ?",
+    "precondition_disclaimer": "Tesla gère automatiquement le préconditionnement aux Superchargeurs. Pour les bornes DC non-Tesla, nous avons activé le préconditionnement au départ — la voiture décide du moment exact selon la distance et la température.",
+    "precondition_btn_manual": "Préconditionner la batterie",
+    "precondition_started": "Préconditionnement de la batterie lancé",
+    "share_sent_detail_preconditioned": "Itinéraire envoyé — préconditionnement actif pour les bornes non-Tesla"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

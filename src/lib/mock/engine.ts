@@ -310,7 +310,9 @@ export function applyCommand(
       if (typeof args?.time === "number") state.scheduledChargingStartMinutes = args.time;
       break;
     case "schedule_departure": break; // no mock state mutation needed
-    case "precondition_max":   break; // no mock state mutation needed
+    case "precondition_max":
+      state.isBatteryPreconditioning = args?.on === true;
+      break;
     case "share_navigation":   break; // accepted; no mock state mutation needed
   }
 

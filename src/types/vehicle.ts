@@ -121,6 +121,7 @@ export interface VehicleState {
   isFrunkOpen: boolean | null;
   isSentryMode: boolean | null;
   isDashcamRecording: boolean | null;
+  isBatteryPreconditioning: boolean | null;
 
   // --- software / health ----------------------------------------------
   softwareVersion: string | null;

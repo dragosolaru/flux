@@ -146,6 +146,7 @@ function mapVehicleData(
     isFrunkOpen: null,
     isSentryMode: veh?.sentry_mode ?? null,
     isDashcamRecording: null,
+    isBatteryPreconditioning: null,
     // software
     softwareVersion: veh?.car_version ?? null,
     updateAvailable: null,

@@ -831,7 +831,21 @@
     "share_sent_title": "An Tesla gesendet",
     "share_sent_detail": "Navigation nach {dest} ist im Auto",
     "location_not_found": "Ort nicht gefunden",
-    "extra_cost_label": "Mehrkosten"
+    "extra_cost_label": "Mehrkosten",
+    "save_route_btn": "Route speichern",
+    "saved_routes_title": "Gespeicherte Routen",
+    "saved_routes_empty": "Noch keine gespeicherten Routen",
+    "saved_route_saved": "Route gespeichert",
+    "saved_route_limit": "Limit von 10 Routen erreicht. Lösche eine, um eine neue zu speichern.",
+    "saved_route_error": "Route konnte nicht gespeichert werden",
+    "saved_route_load": "Laden",
+    "saved_route_rename_placeholder": "Routenname",
+    "saved_route_rename_save": "Speichern",
+    "saved_route_delete_confirm": "Route löschen?",
+    "precondition_disclaimer": "Tesla verwaltet das Vorkonditionieren bei Superchargern automatisch. Für Nicht-Tesla-DC-Lader haben wir das Vorkonditionieren bei Abfahrt aktiviert — das Auto entscheidet den genauen Zeitpunkt basierend auf Entfernung und Temperatur.",
+    "precondition_btn_manual": "Batterie vorkonditionieren",
+    "precondition_started": "Batterie-Vorkonditionierung gestartet",
+    "share_sent_detail_preconditioned": "Route gesendet — Vorkonditionierung für Nicht-Tesla-Stationen aktiv"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

@@ -38,10 +38,17 @@ export async function POST(
 
   if (!doc) return NextResponse.json({ message: "Document not found" }, { status: 404 });
 
-  await supabase
+  const { error } = await supabase
     .from("documents")
     .update({ source: "upload" })
-    .eq("id", documentId);
+    .eq("id", documentId)
+    .eq("vehicle_id", vehicleId)
+    .eq("user_id", session.user.id);
+
+  if (error) {
+    console.error("[vault/dismiss]", error.message);
+    return NextResponse.json({ message: "Failed to dismiss" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

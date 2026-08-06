@@ -831,7 +831,21 @@
     "share_sent_title": "Elküldve a Teslának",
     "share_sent_detail": "A navigáció ({dest}) az autón van",
     "location_not_found": "Helyszín nem található",
-    "extra_cost_label": "Többletköltség"
+    "extra_cost_label": "Többletköltség",
+    "save_route_btn": "Útvonal mentése",
+    "saved_routes_title": "Mentett útvonalak",
+    "saved_routes_empty": "Még nincsenek mentett útvonalak",
+    "saved_route_saved": "Útvonal mentve",
+    "saved_route_limit": "Elérted a 10 útvonal korlátot. Törölj egyet, hogy újat menthess.",
+    "saved_route_error": "Az útvonalat nem sikerült menteni",
+    "saved_route_load": "Betöltés",
+    "saved_route_rename_placeholder": "Útvonal neve",
+    "saved_route_rename_save": "Mentés",
+    "saved_route_delete_confirm": "Törli ezt az útvonalat?",
+    "precondition_disclaimer": "A Tesla automatikusan kezeli az előkondicionálást a Supercharger-eknél. Nem Tesla DC töltőknél az előkondicionálást induláskor aktiváltuk — az autó a távolság és hőmérséklet alapján dönti el a pontos időzítést.",
+    "precondition_btn_manual": "Akkumulátor előkondicionálása",
+    "precondition_started": "Az akkumulátor előkondicionálása elindult",
+    "share_sent_detail_preconditioned": "Útvonal elküldve — előkondicionálás aktív a nem Tesla állomásoknál"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",
