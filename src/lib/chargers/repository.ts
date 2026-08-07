@@ -3,9 +3,9 @@
 // and mark the tile fresh in Redis. `ensureAreaFresh` runs it only for stale tiles.
 
 import { createHash } from "node:crypto";
-import { Redis } from "@upstash/redis";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { redis } from "@/lib/redis";
 import type { BBox } from "./types";
 import type { ChargerCluster } from "./dedup";
 import { fetchAllSources } from "./ingest";
@@ -13,11 +13,6 @@ import { clusterChargers } from "./dedup";
 import { findInBBox } from "./query";
 import { tilesForBBox, tileKey, type Tile } from "./tiles";
 import { bulkCountryContaining, type BulkCountry } from "./countries";
-
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? Redis.fromEnv()
-    : null;
 
 // Lazy-path tiles stay fresh for 7 days; the cron warms hot tiles more often.
 const TILE_TTL_SECONDS = 7 * 24 * 60 * 60;

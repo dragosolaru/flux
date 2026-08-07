@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { isRedisConfigured, redisSource } from "@/lib/redis";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -78,7 +79,8 @@ export async function GET() {
   const config = {
     tomtomKey: !!process.env.TOMTOM_API_KEY,
     openChargeMapKey: !!process.env.OPEN_CHARGE_MAP_API_KEY,
-    redis: !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
+    redis: isRedisConfigured(),
+    redisSource: redisSource(),
     anthropicKey: !!process.env.ANTHROPIC_API_KEY,
     cronSecret: !!process.env.CRON_SECRET,
     ingestWebhookSecret: !!process.env.INGEST_WEBHOOK_SECRET,

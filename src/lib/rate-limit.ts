@@ -1,5 +1,5 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { redis as sharedRedis } from "@/lib/redis";
 
 interface RateLimitEntry { count: number; windowStart: number }
 
@@ -22,9 +22,7 @@ function checkInMemory(key: string, maxPerHour: number): boolean {
 
 // Upstash sliding-window limiter, shared across all serverless instances.
 // One limiter per (bucket, max) pair so each bucket keeps its own quota.
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? Redis.fromEnv()
-  : null;
+const redis = sharedRedis;
 const limiters = new Map<string, Ratelimit>();
 
 function getLimiter(bucket: string, maxPerHour: number): Ratelimit | null {
