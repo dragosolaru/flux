@@ -52,6 +52,11 @@ const MATCH_DECAY_M = 150;
 // match threshold (spatial weight alone is < threshold) and stack on the map as
 // a single spiderfied point instead of merging into one charger.
 const SAME_SITE_M = 40;
+// Radius within which hardware agreement may override a disagreement about the
+// operator's name. Tight on purpose: this is the span of a single bank of
+// stalls, where three sources describing one site land, and where two different
+// networks do not.
+const NAME_OVERRIDE_M = 15;
 
 // Match-score weights. Spatial proximity dominates because two records at the
 // same coordinates are almost certainly the same physical site; the other
@@ -211,10 +216,41 @@ export function matchScore(
   // null, and treating that as "unknown operator" would let a Greek- or
   // Cyrillic-named station merge into any co-located one.
   const bothNamed = raw.operator != null && candidate.operator != null;
-  if (bothNamed && operator < 0.5) return 0;
+  const namesConflict = bothNamed && operator < 0.5;
 
-  // Same physical point with a compatible or unknown operator → duplicate.
-  if (distanceM <= SAME_SITE_M) return 1;
+  // Standing on one site, a disagreement about the operator's NAME is weaker
+  // evidence than agreement about the hardware. Sources routinely attribute the
+  // same charge point differently — the network on one ("PlugQ"), the fuel
+  // station hosting it on another ("Jet Oil ΚΟΥΤΣΙΜΑΝΗ") — and vetoing on that
+  // alone drew one Greek site as three pins.
+  //
+  // Two records at the same coordinate carrying the same connectors, or the
+  // same rated power, are the same physical kit under two names. Preferring to
+  // merge here is also the cheaper mistake: one pin where there should be two
+  // still gets the driver to a working charger, while three pins for one site
+  // corrupts the count and lets the planner treat one stop as three.
+  const sameHardware = (): boolean => {
+    if (connectorOverlap(raw.connectors, candidate.connectors) >= 0.5) return true;
+    const a = maxPowerOf(raw.connectors);
+    const b = maxPowerOf(candidate.connectors);
+    return a != null && b != null && Math.round(a) === Math.round(b);
+  };
+
+  if (distanceM <= SAME_SITE_M) {
+    if (!namesConflict) return 1;
+    // Overriding a name conflict needs BOTH a much tighter radius and matching
+    // hardware. Matching hardware alone is weak — CCS at 150 kW is a stock
+    // configuration two unrelated networks will both have — so it only counts
+    // inside one bay cluster, where separate operators do not realistically
+    // co-locate. At 39 m two named networks stay apart; that is a motorway
+    // service area, not one site described twice.
+    return distanceM <= NAME_OVERRIDE_M && sameHardware() ? 1 : 0;
+  }
+
+  // Past the same-site radius the name conflict is decisive again — this is
+  // what keeps two operators sharing a service area from collapsing, and keeps
+  // the score from rising with distance.
+  if (namesConflict) return 0;
 
   const spatial = spatialScore(distanceM);
   const connector = connectorOverlap(raw.connectors, candidate.connectors);

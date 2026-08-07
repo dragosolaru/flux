@@ -95,6 +95,8 @@ describe("OCM duplicate patterns — same site must collapse to one pin", () => 
   });
 
   it("keeps a non-Latin operator separate from an unrelated Latin one", () => {
+    // 30 m: far enough that the name is the deciding signal rather than the
+    // same-bay hardware override.
     // Two records that each name an operator are never merged unless the names
     // are demonstrably similar. "ΔΕΗ" and "PPC" ARE the same company, but no
     // string comparison can know that, and treating a non-comparable name as
@@ -103,7 +105,13 @@ describe("OCM duplicate patterns — same site must collapse to one pin", () => 
     // merge, because the Latin remainder is comparable.
     const a = raw({ ...KAVALA, operator: "ΔΕΗ", connectors: ccs150 });
     expect(
-      matchScore(a, { ...KAVALA, operator: "PPC", connectors: ccs150, name: null }),
+      matchScore(a, {
+        lat: KAVALA.lat + latOffset(30),
+        lng: KAVALA.lng,
+        operator: "PPC",
+        connectors: ccs150,
+        name: null,
+      }),
     ).toBe(0);
     expect(
       matchScore(raw({ ...KAVALA, operator: "ΔΕΗ blue", connectors: ccs150 }), {
@@ -124,7 +132,13 @@ describe("guards — genuinely distinct stations must stay separate", () => {
   it("keeps two different networks at one coordinate apart", () => {
     const a = raw({ ...KAVALA, operator: "Ionity", connectors: ccs150 });
     expect(
-      matchScore(a, { ...KAVALA, operator: "Enel X", connectors: ccs150, name: null }),
+      matchScore(a, {
+        lat: KAVALA.lat + latOffset(30),
+        lng: KAVALA.lng,
+        operator: "Enel X",
+        connectors: ccs150,
+        name: null,
+      }),
     ).toBe(0);
   });
 
@@ -132,7 +146,13 @@ describe("guards — genuinely distinct stations must stay separate", () => {
     // "EV" ⊄ "EVBox" — containment requires ≥4 chars on the shorter side.
     const a = raw({ ...KAVALA, operator: "EV", connectors: ccs150 });
     expect(
-      matchScore(a, { ...KAVALA, operator: "EVBox Fast", connectors: ccs150, name: null }),
+      matchScore(a, {
+        lat: KAVALA.lat + latOffset(30),
+        lng: KAVALA.lng,
+        operator: "EVBox Fast",
+        connectors: ccs150,
+        name: null,
+      }),
     ).toBe(0);
   });
 
@@ -147,5 +167,65 @@ describe("guards — genuinely distinct stations must stay separate", () => {
         name: null,
       }),
     ).toBeLessThan(0.6);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reported from the field (Litochoro, GR): one site drawn as three pins.
+// Sources named it three ways — the network on one, the fuel station hosting it
+// on another — and a name disagreement vetoed the merge at zero metres.
+// ---------------------------------------------------------------------------
+
+describe("one site, several operator names", () => {
+  const ccs240: ChargerConnector[] = [{ type: "ccs2", powerKw: 240, count: 2 }];
+  const LITOCHORO = { lat: 40.1017, lng: 22.5061 };
+
+  it("merges the network name with the host's name at the same point", () => {
+    const a = raw({ ...LITOCHORO, operator: "PlugQ", connectors: ccs240 });
+    expect(
+      matchScore(a, {
+        ...LITOCHORO,
+        operator: "Jet Oil ΚΟΥΤΣΙΜΑΝΗ",
+        connectors: ccs240,
+        name: "PlugQ - Jet Oil Λιτόχωρο",
+      }),
+    ).toBe(1);
+  });
+
+  it("merges on identical rated power when connector detail is missing", () => {
+    const a = raw({ ...LITOCHORO, operator: "PlugQ", connectors: ccs240 });
+    expect(
+      matchScore(a, {
+        ...LITOCHORO,
+        operator: "Jet Oil",
+        connectors: [{ type: "other", powerKw: 240, count: 1 }],
+        name: null,
+      }),
+    ).toBe(1);
+  });
+
+  it("still separates different operators running different hardware", () => {
+    const a = raw({ ...LITOCHORO, operator: "Ionity", connectors: ccs240 });
+    expect(
+      matchScore(a, {
+        ...LITOCHORO,
+        operator: "Enel X",
+        connectors: [{ type: "type2", powerKw: 22, count: 1 }],
+        name: null,
+      }),
+    ).toBe(0);
+  });
+
+  it("keeps a name conflict decisive beyond the same-site radius", () => {
+    const a = raw({ ...LITOCHORO, operator: "Ionity", connectors: ccs240 });
+    expect(
+      matchScore(a, {
+        lat: LITOCHORO.lat + latOffset(50),
+        lng: LITOCHORO.lng,
+        operator: "Enel X",
+        connectors: ccs240,
+        name: null,
+      }),
+    ).toBe(0);
   });
 });

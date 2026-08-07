@@ -96,10 +96,15 @@ describe("clusterChargers", () => {
   it("keeps two clearly different operators at the same point as separate stations", () => {
     // Co-located but distinct networks (e.g. two operators in one car park) must
     // not be swallowed by the same-site merge — sources accumulate, not exclude.
+    //
+    // Separated by ~30 m rather than the ~1.4 m this used to use. Two operators
+    // sharing a car park stand that far apart at least; at 1.4 m with identical
+    // hardware the data is not describing two networks, it is describing one
+    // site under two names — which is the Litochoro case, and now merges.
     const clusters = clusterChargers(
       [
         raw({ source: "ocm", sourceRef: "a", operator: "Ionity", name: "Ionity Hub" }),
-        raw({ source: "osm", sourceRef: "b", lat: 44.42681, lng: 26.10251, operator: "Enel X", name: "Enel Station" }),
+        raw({ source: "osm", sourceRef: "b", lat: 44.42707, lng: 26.1025, operator: "Enel X", name: "Enel Station" }),
       ],
       [],
     );

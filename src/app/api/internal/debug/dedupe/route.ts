@@ -29,11 +29,23 @@ export async function POST() {
   for (let i = 0; i < MAX_PASSES; i++) {
     if (Date.now() - startedAt > BUDGET_MS) break;
 
-    const { data, error } = await supabase.rpc("dedupe_chargers_batch", { p_limit: BATCH });
+    // Two passes with different rules: same-operator duplicates (034) and one
+    // site under several operator names (038). Running both here means the
+    // button means "collapse duplicates", not "collapse one kind of duplicate".
+    const [byOperator, byName] = await Promise.all([
+      supabase.rpc("dedupe_chargers_batch", { p_limit: BATCH }),
+      supabase.rpc("dedupe_same_site_names", { p_limit: BATCH }),
+    ]);
+    const error = byOperator.error ?? byName.error;
+    const data =
+      (typeof byOperator.data === "number" ? byOperator.data : 0) +
+      (typeof byName.data === "number" ? byName.data : 0);
     if (error) {
       const hint = error.message.includes("dedupe_chargers_batch")
         ? " — apply migration 034 first"
-        : "";
+        : error.message.includes("dedupe_same_site_names")
+          ? " — apply migration 038 first"
+          : "";
       return NextResponse.json(
         { message: `${error.message}${hint}`, deletedBefore: total, passes },
         { status: 500 },
