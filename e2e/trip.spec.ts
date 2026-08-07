@@ -20,7 +20,7 @@ test.describe("trip planner", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/trip");
-    await expect(page).toHaveURL(/\/trip/);
+    await expect(page).toHaveURL(/\/map/);
 
     // Give the page a moment to settle (map initialisation is async)
     await page.waitForTimeout(2_000);
