@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRight,
+  Bookmark,
+  CheckCircle2,
   Pencil,
   X,
   Zap,
@@ -38,6 +40,8 @@ import * as vehiclesApi from "@/lib/api/vehicles";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useCreateSavedRoute } from "@/hooks/useSavedRoutes";
+import { compactSnapshot } from "@/lib/trip/snapshot";
 import { shareRoute } from "@/lib/trip/share-route";
 import { routeNeedsPreconditioning } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
@@ -378,6 +382,82 @@ export function MapClient() {
    * endpoints, so without this a planned route could be changed but never put
    * away — the strip, the drawn line and the stop pins stayed for the session.
    */
+  // Saving is here; browsing saved routes still lives on /trip until that
+  // sheet is ported too.
+  const createSavedRoute = useCreateSavedRoute();
+  const [routeSaved, setRouteSaved] = useState(false);
+
+  async function handleSaveRoute() {
+    if (!activePlan || !origin || !destination || routeSaved) return;
+    try {
+      await createSavedRoute.mutateAsync({
+        name: `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`,
+        origin_label: origin.name,
+        origin_lat: origin.lat,
+        origin_lng: origin.lng,
+        destination_label: destination.name,
+        destination_lat: destination.lat,
+        destination_lng: destination.lng,
+        stops: activePlan.stops,
+        // Only the chosen variant, polyline thinned — a full three-variant
+        // snapshot exceeds the request cap on any real road trip.
+        plan_snapshot: plan ? compactSnapshot(plan, activeVariant) : {},
+      });
+      setRouteSaved(true);
+      toast.success(tTrip("saved_route_saved"));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(
+        msg === "saved_routes_limit" ? tTrip("saved_route_limit") : tTrip("saved_route_error"),
+      );
+    }
+  }
+
+  const [loadingArea, setLoadingArea] = useState<{ lat: number; lng: number } | null>(null);
+  const [extraStations, setExtraStations] = useState<Charger[]>([]);
+
+  // TripMap filters this to within 5 km of the driven line; areas the user
+  // asked for explicitly are merged in and deliberately exempt from that.
+  const planStations = useMemo(() => {
+    if (extraStations.length === 0) return stations;
+    const seen = new Set(stations.map((c) => c.id));
+    return [...stations, ...extraStations.filter((c) => !seen.has(c.id))];
+  }, [stations, extraStations]);
+
+  const handleAreaRequest = useCallback(
+    async (lat: number, lng: number) => {
+      if (loadingArea) return; // one at a time — each can trigger a full ingest
+      setLoadingArea({ lat, lng });
+      try {
+        const pad = 0.22;
+        const bbox = { minLat: lat - pad, maxLat: lat + pad, minLng: lng - pad, maxLng: lng + pad };
+        const merge = (found: Charger[]) => {
+          setExtraStations((prev) => {
+            const seen = new Set(prev.map((c) => c.id));
+            return [...prev, ...found.filter((c) => !seen.has(c.id))];
+          });
+          return found.length;
+        };
+        // The read endpoint answers from what is stored and ingests a cold area
+        // in the background, so a first press on virgin ground would otherwise
+        // report nothing while the sources were still being fetched.
+        let count = merge(await chargersApi.inBBox(bbox, { limit: 500 }));
+        for (const delay of [4000, 7000]) {
+          await new Promise((r) => setTimeout(r, delay));
+          const again = await chargersApi.inBBox(bbox, { limit: 500 });
+          if (again.length > count) count = merge(again);
+          else break;
+        }
+        toast.success(tTrip("area_loaded", { count }));
+      } catch {
+        toast.error(tTrip("area_error"));
+      } finally {
+        setLoadingArea(null);
+      }
+    },
+    [loadingArea, tTrip],
+  );
+
   function handleClearPlan() {
     setPlan(null);
     setPlanError(null);
@@ -385,6 +465,9 @@ export function MapClient() {
     setSharedRoute(false);
     setEditingRoute(false);
     setPlanDisplayState("compact");
+    setRouteSaved(false);
+    // Areas pulled in for the previous route are no longer "on the way".
+    setExtraStations([]);
   }
 
   async function handleShareRoute() {
@@ -498,6 +581,9 @@ export function MapClient() {
             onStationSelect={setSelectedStop}
             routes={routeLines}
             onRouteSelect={handleRouteSelect}
+            nearbyStations={planStations}
+            onAreaRequest={(lat, lng) => void handleAreaRequest(lat, lng)}
+            loadingArea={loadingArea}
           />
         ) : (
           <StationMap
@@ -616,6 +702,8 @@ export function MapClient() {
                 sharedRoute={sharedRoute}
                 onShareToTesla={handleShareToTesla}
                 onShareRoute={() => void handleShareRoute()}
+                onSaveRoute={() => void handleSaveRoute()}
+                routeSaved={routeSaved}
                 originShort={originShort}
                 destinationShort={destinationShort}
                 fromEUR={fromEUR}
@@ -896,6 +984,8 @@ export function MapClient() {
               onPlan={handlePlan}
               onShareToTesla={handleShareToTesla}
               onShareRoute={() => void handleShareRoute()}
+                onSaveRoute={() => void handleSaveRoute()}
+                routeSaved={routeSaved}
               originShort={originShort}
               destinationShort={destinationShort}
               tTrip={tTrip}
@@ -1020,6 +1110,8 @@ interface RouteAccordionProps {
   sharedRoute: boolean;
   onShareToTesla: () => void;
   onShareRoute: () => void;
+  onSaveRoute: () => void;
+  routeSaved: boolean;
   originShort: string;
   destinationShort: string;
   fromEUR: (eur: number) => string;
@@ -1045,6 +1137,8 @@ function RouteAccordion({
   sharedRoute,
   onShareToTesla,
   onShareRoute,
+  onSaveRoute,
+  routeSaved,
   originShort,
   destinationShort,
   fromEUR,
@@ -1129,6 +1223,21 @@ function RouteAccordion({
                           </button>
                         )}
 
+                        {active && (
+                          <button
+                            onClick={onSaveRoute}
+                            disabled={routeSaved}
+                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+                          >
+                            {routeSaved ? (
+                              <CheckCircle2 className="size-3.5 text-green-400" />
+                            ) : (
+                              <Bookmark className="size-3.5" />
+                            )}
+                            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
+                          </button>
+                        )}
+
                         {vp.warning && (
                               <p className="text-2xs text-amber-400/80">{vp.warning}</p>
                             )}
@@ -1172,6 +1281,21 @@ function RouteAccordion({
                           >
                             <Share2 className="size-3.5" />
                             {tTrip("share_route_btn")}
+                          </button>
+                        )}
+
+                        {active && (
+                          <button
+                            onClick={onSaveRoute}
+                            disabled={routeSaved}
+                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+                          >
+                            {routeSaved ? (
+                              <CheckCircle2 className="size-3.5 text-green-400" />
+                            ) : (
+                              <Bookmark className="size-3.5" />
+                            )}
+                            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
                           </button>
                         )}
 
@@ -1240,6 +1364,8 @@ interface PlanResultsProps {
   sharedRoute: boolean;
   onShareToTesla: () => void;
   onShareRoute: () => void;
+  onSaveRoute: () => void;
+  routeSaved: boolean;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1256,6 +1382,8 @@ function PlanResults({
   sharedRoute,
   onShareToTesla,
   onShareRoute,
+  onSaveRoute,
+  routeSaved,
   originShort,
   destinationShort,
   tTrip,
@@ -1324,6 +1452,19 @@ function PlanResults({
             {tTrip("share_route_btn")}
           </button>
 
+          <button
+            onClick={onSaveRoute}
+            disabled={routeSaved}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+          >
+            {routeSaved ? (
+              <CheckCircle2 className="size-4 text-green-400" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
+          </button>
+
           {activePlan.warning && (
                 <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
               )}
@@ -1362,6 +1503,19 @@ function PlanResults({
           >
             <Share2 className="size-4" />
             {tTrip("share_route_btn")}
+          </button>
+
+          <button
+            onClick={onSaveRoute}
+            disabled={routeSaved}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+          >
+            {routeSaved ? (
+              <CheckCircle2 className="size-4 text-green-400" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
           </button>
 
           {activePlan.warning && (
@@ -1444,6 +1598,8 @@ interface PlanContentProps {
   onPlan: () => void;
   onShareToTesla: () => void;
   onShareRoute: () => void;
+  onSaveRoute: () => void;
+  routeSaved: boolean;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1479,6 +1635,8 @@ function PlanContent({
   onPlan,
   onShareToTesla,
   onShareRoute,
+  onSaveRoute,
+  routeSaved,
   originShort,
   destinationShort,
   tTrip,
@@ -1595,6 +1753,8 @@ function PlanContent({
             sharedRoute={sharedRoute}
             onShareToTesla={onShareToTesla}
             onShareRoute={onShareRoute}
+            onSaveRoute={onSaveRoute}
+            routeSaved={routeSaved}
             originShort={originShort}
             destinationShort={destinationShort}
             tTrip={tTrip}

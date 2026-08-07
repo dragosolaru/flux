@@ -54,6 +54,23 @@ Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (
 
 ---
 
+## 🟠 Finish unifying the two trip planners (2026-08-07)
+
+The planner exists on `/trip` and as the Plan tab on `/map`. Three bugs in a row
+came from a feature landing on one screen only — most seriously, `/map` decided
+preconditioning from the first stop alone while `/trip` checked every stop, so a
+route starting at a Supercharger arrived cold at the next DC charger.
+
+Shared so far: `src/lib/trip/{share-route,precondition,snapshot}.ts`, plus
+`useSavedRoutes`. `/map` now has share, save, clear, preconditioning, corridor
+stations and long-press area loading.
+
+- [ ] **Port the saved-routes browser** (`SavedRoutesSheet`) to `/map`. Saving
+      works there; loading and managing still only on `/trip`.
+- [ ] **Port the manual precondition button and its disclaimer** to `/map`.
+- [ ] **Then retire `/trip`** — redirect to `/map?mode=plan` and drop the
+      Sidebar entry, rather than maintaining two screens.
+
 ## 🟠 Loose ends from the charger-data work (2026-08-07)
 
 Recorded so they are not lost — none block launch.
