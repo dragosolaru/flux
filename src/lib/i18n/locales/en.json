@@ -874,7 +874,10 @@
     "precondition_disclaimer": "Tesla manages preconditioning automatically for Superchargers. For non-Tesla DC chargers, we activated preconditioning at departure — the car decides the exact timing based on distance and temperature.",
     "precondition_btn_manual": "Precondition battery",
     "precondition_started": "Battery preconditioning started",
-    "share_sent_detail_preconditioned": "Route sent — preconditioning active for non-Tesla stops"
+    "share_sent_detail_preconditioned": "Route sent — preconditioning active for non-Tesla stops",
+    "area_loaded": "{count} chargers loaded for that area",
+    "area_error": "Could not load that area",
+    "area_hint": "Long-press the map to load chargers there"
   },
   "notFoundPage": {
     "heading": "Page not found",

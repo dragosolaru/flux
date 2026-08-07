@@ -28,6 +28,7 @@ import {
 } from "@/hooks/useSavedRoutes";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
+import type { Charger } from "@/lib/chargers/types";
 
 const TripMap = dynamic(() => import("@/components/trip/TripMap"), { ssr: false });
 
@@ -332,6 +333,38 @@ export function TripClient() {
     };
   }, [activePlan?.polyline, origin, destination]);
 
+  // Areas the user long-pressed, plus whichever is in flight. Requesting an
+  // area also warms it server-side: the read path ingests a cold bbox from every
+  // source before answering, so this doubles as "go and find what is here".
+  const [loadingArea, setLoadingArea] = useState<{ lat: number; lng: number } | null>(null);
+  const [extraStations, setExtraStations] = useState<Charger[]>([]);
+
+  const handleAreaRequest = useCallback(
+    async (lat: number, lng: number) => {
+      if (loadingArea) return; // one at a time — each can trigger a full ingest
+      setLoadingArea({ lat, lng });
+      try {
+        // ~25 km around the press. Small enough to stay quick on a cold area,
+        // big enough to be worth the tap.
+        const pad = 0.22;
+        const found = await chargersApi.inBBox(
+          { minLat: lat - pad, maxLat: lat + pad, minLng: lng - pad, maxLng: lng + pad },
+          { limit: 500 },
+        );
+        setExtraStations((prev) => {
+          const seen = new Set(prev.map((c) => c.id));
+          return [...prev, ...found.filter((c) => !seen.has(c.id))];
+        });
+        toast.success(t("area_loaded", { count: found.length }));
+      } catch {
+        toast.error(t("area_error"));
+      } finally {
+        setLoadingArea(null);
+      }
+    },
+    [loadingArea, t],
+  );
+
   // All chargers near the corridor — same platform endpoint the station map uses.
   const { data: nearbyStations = [] } = useQuery({
     queryKey: ["trip-corridor-chargers", routeBBox],
@@ -339,6 +372,16 @@ export function TripClient() {
     enabled: routeBBox !== null && plan !== null,
     staleTime: 300_000,
   });
+
+  // Corridor results plus anything the user pulled in by long-pressing. The
+  // corridor set is filtered to the route inside TripMap; requested areas are
+  // deliberately exempt from that, since asking for an area off-route is the
+  // whole point.
+  const mapStations = useMemo(() => {
+    if (extraStations.length === 0) return nearbyStations;
+    const seen = new Set(nearbyStations.map((c) => c.id));
+    return [...nearbyStations, ...extraStations.filter((c) => !seen.has(c.id))];
+  }, [nearbyStations, extraStations]);
 
   // Target Tesla for "Send to Tesla": the planned vehicle if it's a Tesla,
   // otherwise the first Tesla in the garage — so the button shows even when the
@@ -538,10 +581,28 @@ export function TripClient() {
           polyline={activePlan?.polyline ?? null}
           className="h-full w-full"
           onStationSelect={setSelectedStop}
-          nearbyStations={nearbyStations}
+          nearbyStations={mapStations}
+          onAreaRequest={(lat, lng) => void handleAreaRequest(lat, lng)}
+          loadingArea={loadingArea}
           routes={routeLines}
           onRouteSelect={handleVariantChange}
         />
+
+        {/* A long-press is invisible unless it is named. Shown only once a plan
+            exists, which is when exploring around the route is worth doing, and
+            replaced by the count while an area is loading. */}
+        {plan && (
+          <div className="pointer-events-none absolute bottom-3 left-1/2 z-[400] -translate-x-1/2 rounded-full bg-card/85 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-sm lg:bottom-4">
+            {loadingArea ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="size-3 animate-spin" />
+                {tc("loading")}
+              </span>
+            ) : (
+              t("area_hint")
+            )}
+          </div>
+        )}
       </div>
 
       {/* Search overlay — top left (mobile only) */}

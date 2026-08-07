@@ -874,7 +874,10 @@
     "precondition_disclaimer": "Bateria se va preîncălzi automat înainte de opririle de încărcare. La Superchargere, Tesla face asta singură; pentru celelalte stații am activat noi preîncălzirea — mașina alege momentul potrivit.",
     "precondition_btn_manual": "Pornește precondiționarea",
     "precondition_started": "Precondiționarea bateriei a pornit",
-    "share_sent_detail_preconditioned": "Rută trimisă — precondiționare activă pentru stațiile non-Tesla"
+    "share_sent_detail_preconditioned": "Rută trimisă — precondiționare activă pentru stațiile non-Tesla",
+    "area_loaded": "{count} stații încărcate pentru zona aceea",
+    "area_error": "Nu s-a putut încărca zona",
+    "area_hint": "Ține apăsat pe hartă ca să aduci stațiile de acolo"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

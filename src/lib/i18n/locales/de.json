@@ -874,7 +874,10 @@
     "precondition_disclaimer": "Tesla verwaltet das Vorkonditionieren bei Superchargern automatisch. Für Nicht-Tesla-DC-Lader haben wir das Vorkonditionieren bei Abfahrt aktiviert — das Auto entscheidet den genauen Zeitpunkt basierend auf Entfernung und Temperatur.",
     "precondition_btn_manual": "Batterie vorkonditionieren",
     "precondition_started": "Batterie-Vorkonditionierung gestartet",
-    "share_sent_detail_preconditioned": "Route gesendet — Vorkonditionierung für Nicht-Tesla-Stationen aktiv"
+    "share_sent_detail_preconditioned": "Route gesendet — Vorkonditionierung für Nicht-Tesla-Stationen aktiv",
+    "area_loaded": "{count} Ladepunkte für diesen Bereich geladen",
+    "area_error": "Bereich konnte nicht geladen werden",
+    "area_hint": "Karte lange drücken, um dort Ladepunkte zu laden"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

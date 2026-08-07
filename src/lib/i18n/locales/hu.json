@@ -874,7 +874,10 @@
     "precondition_disclaimer": "A Tesla automatikusan kezeli az előkondicionálást a Supercharger-eknél. Nem Tesla DC töltőknél az előkondicionálást induláskor aktiváltuk — az autó a távolság és hőmérséklet alapján dönti el a pontos időzítést.",
     "precondition_btn_manual": "Akkumulátor előkondicionálása",
     "precondition_started": "Az akkumulátor előkondicionálása elindult",
-    "share_sent_detail_preconditioned": "Útvonal elküldve — előkondicionálás aktív a nem Tesla állomásoknál"
+    "share_sent_detail_preconditioned": "Útvonal elküldve — előkondicionálás aktív a nem Tesla állomásoknál",
+    "area_loaded": "{count} töltő betöltve arra a területre",
+    "area_error": "A terület nem tölthető be",
+    "area_hint": "Nyomja hosszan a térképet a töltők betöltéséhez"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

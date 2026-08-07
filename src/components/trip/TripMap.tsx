@@ -65,6 +65,10 @@ interface TripMapProps {
   // All chargers near the corridor (from the station platform) shown as subtle
   // context dots so the planner map reflects real coverage like the main map.
   nearbyStations?: Charger[];
+  /** Long-press (or right-click) on the map — "fetch chargers around here". */
+  onAreaRequest?: (lat: number, lng: number) => void;
+  /** Centre of the area currently being fetched, so it can be shown loading. */
+  loadingArea?: { lat: number; lng: number } | null;
   // All variant roads. Inactive ones are drawn subtly and are clickable to
   // select; the active one is drawn prominently on top.
   routes?: RouteLine[];
@@ -91,7 +95,26 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
-export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations, routes, onRouteSelect }: TripMapProps) {
+/**
+ * Turns a long-press into an area request. Leaflet raises `contextmenu` for
+ * both a touch long-press and a desktop right-click, so one handler covers
+ * both without a custom gesture recogniser.
+ */
+function AreaRequestHandler({ onRequest }: { onRequest: (lat: number, lng: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const handler = (e: L.LeafletMouseEvent) => {
+      onRequest(e.latlng.lat, e.latlng.lng);
+    };
+    map.on("contextmenu", handler);
+    return () => {
+      map.off("contextmenu", handler);
+    };
+  }, [map, onRequest]);
+  return null;
+}
+
+export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations, routes, onRouteSelect, onAreaRequest, loadingArea }: TripMapProps) {
   useLeafletIconFix();
 
   // Stations shown alongside the planned stops: the ones actually on the way.
@@ -166,6 +189,26 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
       />
 
       {allPoints.length >= 2 && <FitBounds points={allPoints} />}
+
+      {onAreaRequest && <AreaRequestHandler onRequest={onAreaRequest} />}
+
+      {/* Where the user asked for chargers, while that area is being fetched.
+          Anchored to the map rather than shown as a toast so it is obvious
+          WHICH area is loading when several taps happen in a row. */}
+      {loadingArea && (
+        <CircleMarker
+          center={[loadingArea.lat, loadingArea.lng]}
+          radius={26}
+          className="animate-pulse"
+          pathOptions={{
+            fillColor: "#38bdf8",
+            fillOpacity: 0.15,
+            color: "#38bdf8",
+            weight: 2,
+            opacity: 0.8,
+          }}
+        />
+      )}
 
       {/* Context layer: every charger near the corridor as a small dot, drawn
           before the route + stops so those stay prominent (airy, uncluttered). */}

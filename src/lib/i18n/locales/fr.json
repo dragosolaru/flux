@@ -874,7 +874,10 @@
     "precondition_disclaimer": "Tesla gère automatiquement le préconditionnement aux Superchargeurs. Pour les bornes DC non-Tesla, nous avons activé le préconditionnement au départ — la voiture décide du moment exact selon la distance et la température.",
     "precondition_btn_manual": "Préconditionner la batterie",
     "precondition_started": "Préconditionnement de la batterie lancé",
-    "share_sent_detail_preconditioned": "Itinéraire envoyé — préconditionnement actif pour les bornes non-Tesla"
+    "share_sent_detail_preconditioned": "Itinéraire envoyé — préconditionnement actif pour les bornes non-Tesla",
+    "area_loaded": "{count} bornes chargées pour cette zone",
+    "area_error": "Impossible de charger cette zone",
+    "area_hint": "Appui long sur la carte pour charger les bornes"
   },
   "notFoundPage": {
     "heading": "Page introuvable",
