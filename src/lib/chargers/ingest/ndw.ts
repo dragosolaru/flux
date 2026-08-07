@@ -4,6 +4,7 @@
 
 import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 const NDW_URL =
   "https://dotnl.ndw.nu/api/rest/geojson/dynamic-road-status/charge-point-data/v1/features";
@@ -114,7 +115,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) {
-      console.error(`[ndw] fetch ${res.status}`);
+      recordDebugLog("error", "ndw", `fetch ${res.status}`);
       return [];
     }
 
@@ -129,7 +130,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[ndw] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "ndw", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }
@@ -153,7 +154,7 @@ export async function fetchCountryNl(): Promise<RawCharger[]> {
       signal: AbortSignal.timeout(60000),
     });
     if (!res.ok) {
-      console.error(`[ndw] fetch ${res.status}`);
+      recordDebugLog("error", "ndw", `fetch ${res.status}`);
       return [];
     }
 
@@ -168,7 +169,7 @@ export async function fetchCountryNl(): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[ndw] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "ndw", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }

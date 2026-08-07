@@ -7,6 +7,7 @@ import type {
 } from "../types";
 import { STALE_AFTER_DAYS } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 interface OcmConnectionType {
   ID?: number | null;
@@ -156,7 +157,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       signal: AbortSignal.timeout(9000),
     });
     if (!res.ok) {
-      console.error(`[ocm] tile fetch ${res.status}`);
+      recordDebugLog("error", "ocm", `tile fetch ${res.status}`);
       return [];
     }
 
@@ -212,7 +213,7 @@ export async function fetchCountryOcm(
       signal: AbortSignal.timeout(60000),
     });
     if (!res.ok) {
-      console.error(`[ocm] country fetch ${res.status}`);
+      recordDebugLog("error", "ocm", `country fetch ${res.status}`);
       return [];
     }
 

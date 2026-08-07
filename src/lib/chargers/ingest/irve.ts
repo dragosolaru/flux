@@ -5,6 +5,7 @@
 
 import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../types";
 import { canonicalConnectorType } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 // Consolidated GeoJSON published daily by data.gouv.fr.
 // Using the stable resource URL from the IRVE national dataset.
@@ -153,7 +154,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[irve] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "irve", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }
@@ -171,7 +172,7 @@ export async function fetchCountryFr(): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[irve] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "irve", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }

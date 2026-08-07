@@ -5,6 +5,7 @@ import type {
   SourceConnector,
 } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 // TomTom Search — EV Station category (7309). Free tier ~2,500 req/day. Strong
 // European coverage incl. Romania, with per-connector type + rated power. Gated
@@ -106,7 +107,7 @@ async function fetchPage(
   if (!res.ok) {
     // Silent [] here previously hid quota exhaustion (403) and key problems:
     // the sweep looked successful while contributing nothing.
-    console.error(`[tomtom] categorySearch ${res.status}`);
+    recordDebugLog("error", "tomtom", `categorySearch ${res.status}`);
     return [];
   }
   const data = (await res.json()) as TomTomResponse;

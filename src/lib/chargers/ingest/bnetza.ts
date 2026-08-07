@@ -4,6 +4,7 @@
 
 import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 const BNETZA_URL = "https://ladestationen.api.bund.dev/api/query";
 
@@ -96,7 +97,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) {
-      console.error(`[bnetza] fetch ${res.status}`);
+      recordDebugLog("error", "bnetza", `fetch ${res.status}`);
       return [];
     }
 
@@ -111,7 +112,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[bnetza] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "bnetza", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }

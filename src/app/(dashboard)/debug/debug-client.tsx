@@ -36,8 +36,29 @@ interface IngestRun {
   finished_at: string | null;
 }
 
+interface DebugLog {
+  level: "info" | "warn" | "error";
+  scope: string;
+  message: string;
+  context: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface MigrationRow {
+  id: string;
+  description: string;
+  status: "applied" | "unknown";
+  appliedAt: string | null;
+}
+
+interface MigrationsPayload {
+  bootstrapped: boolean;
+  migrations: MigrationRow[];
+}
+
 interface DebugPayload {
   generatedAt: string;
+  logs: DebugLog[];
   chargers: ChargerStats | null;
   sources: { source: string; rows: number }[];
   recentRuns: IngestRun[];
@@ -70,6 +91,32 @@ export function DebugClient() {
     staleTime: 10_000,
   });
 
+  const migrations = useQuery<MigrationsPayload>({
+    queryKey: ["debug-migrations"],
+    queryFn: () => apiFetch<MigrationsPayload>("/api/internal/debug/migrations"),
+    staleTime: 10_000,
+  });
+
+  async function applyMigration(id: string) {
+    setRunning(id);
+    setLastError(null);
+    try {
+      await apiFetch("/api/internal/debug/migrations", {
+        method: "POST",
+        body: JSON.stringify({ id }),
+      });
+      toast.success(`${id} applied`);
+      void migrations.refetch();
+      void refetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setLastError(`${id} failed: ${message}`);
+      toast.error(`${id} failed`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runIngest(label: string, body: Record<string, unknown>) {
     setRunning(label);
     setLastError(null);
@@ -93,7 +140,7 @@ export function DebugClient() {
 
   function copyAll() {
     const blob = JSON.stringify(
-      { diagnostics: data ?? null, lastResult, lastError },
+      { diagnostics: data ?? null, migrations: migrations.data ?? null, lastResult, lastError },
       null,
       2,
     );
@@ -292,6 +339,94 @@ export function DebugClient() {
         <p className="text-xs text-muted-foreground">
           Presence only — no key values are ever sent to the browser.
         </p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Migrations</h2>
+        {migrations.data && !migrations.data.bootstrapped && (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
+            Supabase SQL editor once; every migration below then applies from here.
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          &quot;Unknown&quot; means this panel has no record of applying it — a migration you ran by
+          hand in the SQL editor also shows as unknown. Re-applying is safe: all of them are
+          idempotent.
+        </p>
+        <div className="space-y-2">
+          {(migrations.data?.migrations ?? []).map((m) => (
+            <div
+              key={m.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 p-3"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-xs">{m.id}</p>
+                <p className="text-xs text-muted-foreground">{m.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] ${
+                    m.status === "applied"
+                      ? "bg-green-500/15 text-green-300"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {m.status}
+                </span>
+                <button
+                  onClick={() => void applyMigration(m.id)}
+                  disabled={running !== null}
+                  className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm hover:bg-muted disabled:opacity-50"
+                >
+                  {running === m.id ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+                  Apply
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-2 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Server logs</h2>
+        <p className="text-xs text-muted-foreground">
+          Warnings and errors recorded by the ingest pipeline, newest first. Needs migration
+          037.
+        </p>
+        {data.logs.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nothing recorded.</p>
+        ) : (
+          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+            {data.logs.map((l, i) => (
+              <div key={i} className="rounded-lg bg-muted/40 p-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={
+                      l.level === "error"
+                        ? "font-semibold text-destructive"
+                        : l.level === "warn"
+                          ? "font-semibold text-amber-400"
+                          : "text-muted-foreground"
+                    }
+                  >
+                    {l.level}
+                  </span>
+                  <span className="font-mono text-muted-foreground">{l.scope}</span>
+                  <span className="ml-auto text-muted-foreground">
+                    {new Date(l.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <p className="mt-1 break-words">{l.message}</p>
+                {l.context && (
+                  <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
+                    {JSON.stringify(l.context)}
+                  </pre>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="space-y-2 rounded-xl border border-border p-4">

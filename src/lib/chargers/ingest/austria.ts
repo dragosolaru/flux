@@ -5,6 +5,7 @@
 
 import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../types";
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
+import { recordDebugLog } from "@/lib/debug-log";
 
 const AUSTRIA_URL =
   "https://gis.bgld.gv.at/arcgis/rest/services/Oeffentlich/E_Tankstellen/MapServer/0/query";
@@ -111,7 +112,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) {
-      console.error(`[austria] fetch ${res.status}`);
+      recordDebugLog("error", "austria", `fetch ${res.status}`);
       return [];
     }
 
@@ -125,7 +126,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
     }
     return out;
   } catch (err) {
-    console.error(`[austria] fetch failed:`, err instanceof Error ? err.message : err);
+    recordDebugLog("error", "austria", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
     return [];
   }
 }

@@ -23,7 +23,7 @@ export async function GET() {
   const supabase = createSupabaseAdminClient();
   const warnings: string[] = [];
 
-  const [{ data: chargerStats }, { data: runs }, { data: sources }] = await Promise.all([
+  const [{ data: chargerStats }, { data: runs }, { data: sources }, { data: logs }] = await Promise.all([
     supabase.rpc("debug_charger_stats").single(),
     supabase
       .from("ingest_runs")
@@ -31,6 +31,11 @@ export async function GET() {
       .order("finished_at", { ascending: false })
       .limit(25),
     supabase.rpc("debug_source_counts"),
+    supabase
+      .from("debug_logs")
+      .select("level, scope, message, context, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
   const stats = (chargerStats ?? null) as {
@@ -92,8 +97,12 @@ export async function GET() {
     warnings.push("TOMTOM_API_KEY is unset — the TomTom connector is a silent no-op.");
   }
 
+  // Trim the rolling window opportunistically rather than on a schedule.
+  void supabase.rpc("prune_debug_logs", { p_keep: 500 });
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
+    logs: logs ?? [],
     chargers: stats,
     sources: sourceCounts,
     recentRuns: runs ?? [],
