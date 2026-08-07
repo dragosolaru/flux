@@ -378,6 +378,7 @@
   },
   "dashboard": {
     "live_label": "Live",
+    "demo_label": "Demo",
     "live_subtitle": "updates every 30s",
     "demo_subtitle": "Demo data · updates every 30s",
     "refresh": "Refresh",

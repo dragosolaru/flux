@@ -378,6 +378,7 @@
   },
   "dashboard": {
     "live_label": "Live",
+    "demo_label": "Demó",
     "live_subtitle": "30s-onként frissül",
     "demo_subtitle": "Demo adatok · 30s-onként frissül",
     "refresh": "Frissítés",

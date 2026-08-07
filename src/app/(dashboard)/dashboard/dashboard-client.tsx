@@ -61,7 +61,7 @@ function getSocColor(level: number): string {
 // --------------------------------------------------------------------------
 // Hero card — floats directly on the page background (no card chrome)
 // --------------------------------------------------------------------------
-function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string }) {
+function HeroCard({ state, isLoading, isFetching, vehicleName, simulated }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string; simulated: boolean }) {
   const td = useTranslations("dashboard");
   const rawSoc = state?.batteryLevel;
   const displayBattery =
@@ -80,7 +80,12 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
         ) : (
-          <LiveBadge fresh={fresh} isFetching={isFetching} label={td("live_label")} />
+          <LiveBadge
+            fresh={fresh}
+            isFetching={isFetching}
+            label={simulated ? td("demo_label") : td("live_label")}
+            simulated={simulated}
+          />
         )}
       </div>
 
@@ -144,14 +149,33 @@ function HeroCard({ state, isLoading, isFetching, vehicleName }: { state: Vehicl
   );
 }
 
-function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: boolean; label: string }) {
+/**
+ * `fresh` is about the timestamp, not the source — and the simulator always
+ * produces a current one, so this read "Live" on a mock vehicle forever. That
+ * is how a linked car showing Prague and 15 degrees to a driver in Greece
+ * looked like a working live integration rather than a bug. `simulated` says
+ * which it is; freshness now only chooses how alive the badge looks.
+ */
+function LiveBadge({
+  fresh,
+  isFetching,
+  label,
+  simulated,
+}: {
+  fresh: boolean;
+  isFetching?: boolean;
+  label: string;
+  simulated?: boolean;
+}) {
   const dotColor = isFetching ? "bg-primary" : fresh ? "bg-chart-2" : "bg-muted-foreground";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-        fresh
-          ? "bg-chart-2/15 text-chart-2"
-          : "bg-muted text-muted-foreground"
+        simulated
+          ? "bg-amber-500/15 text-amber-400"
+          : fresh
+            ? "bg-chart-2/15 text-chart-2"
+            : "bg-muted text-muted-foreground"
       }`}
     >
       {isFetching ? (
@@ -162,7 +186,13 @@ function LiveBadge({ fresh, isFetching, label }: { fresh: boolean; isFetching?: 
         />
       ) : (
         <span
-          className={`size-1.5 rounded-full transition-colors ${fresh ? "animate-pulse bg-chart-2" : "bg-muted-foreground"}`}
+          className={`size-1.5 rounded-full transition-colors ${
+            simulated
+              ? "bg-amber-400"
+              : fresh
+                ? "animate-pulse bg-chart-2"
+                : "bg-muted-foreground"
+          }`}
         />
       )}
       {label}
@@ -505,7 +535,13 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
 
       <GettingStartedCard data={checklist} />
 
-      <HeroCard state={data} isLoading={isLoading} isFetching={isFetching} vehicleName={vehicleName} />
+      <HeroCard
+        state={data}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        vehicleName={vehicleName}
+        simulated={vehicle?.dataSource !== "live"}
+      />
 
       {isError ? (
         <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">

@@ -123,19 +123,44 @@ export async function GET(req: NextRequest) {
     .from("profiles")
     .upsert({ id: session.user.id }, { onConflict: "id" });
 
-  const { data: createdVehicle, error: vehErr } = await supabase
+  // data_source MUST be set. The column defaults to 'mock' (migration 002), and
+  // the state route takes the live path only when it reads 'live' — so a
+  // successfully linked car was being handed to the simulator, showing Prague
+  // and 15 degrees to a driver in Greece. Linking looked like it worked because
+  // it did; only this one field was missing.
+  const fields = {
+    brand: "tesla",
+    display_name: vehicle.display_name,
+    vin: vehicle.vin,
+    tesla_vehicle_id: vehicle.id,
+    tesla_region: foundRegion,
+    data_source: "live" as const,
+    is_active: true,
+  };
+
+  // Linking again — after a failure, or to re-authorise — must not add a second
+  // copy of the same car. Matched on the Tesla id rather than the VIN because
+  // that is what every later API call keys on.
+  const { data: existingVehicle } = await supabase
     .from("vehicles")
-    .insert({
-      user_id: session.user.id,
-      brand: "tesla",
-      display_name: vehicle.display_name,
-      vin: vehicle.vin,
-      tesla_vehicle_id: vehicle.id,
-      tesla_region: foundRegion,
-      is_active: true,
-    })
     .select("id")
-    .single();
+    .eq("user_id", session.user.id)
+    .eq("tesla_vehicle_id", vehicle.id)
+    .maybeSingle();
+
+  const { data: createdVehicle, error: vehErr } = existingVehicle
+    ? await supabase
+        .from("vehicles")
+        .update(fields)
+        .eq("id", existingVehicle.id)
+        .eq("user_id", session.user.id)
+        .select("id")
+        .single()
+    : await supabase
+        .from("vehicles")
+        .insert({ user_id: session.user.id, ...fields })
+        .select("id")
+        .single();
 
   if (vehErr || !createdVehicle) {
     logServer("error", "tesla/callback", "vehicle insert failed", {

@@ -378,6 +378,7 @@
   },
   "dashboard": {
     "live_label": "Live",
+    "demo_label": "Demo",
     "live_subtitle": "se actualizează la 30s",
     "demo_subtitle": "Date demo · se actualizează la 30s",
     "refresh": "Reîmprospătează",
