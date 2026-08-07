@@ -398,7 +398,12 @@
     "time_now": "most",
     "time_min_ago": "{m} perce",
     "time_hour_ago": "{h} órája",
-    "time_day_ago": "{d} napja"
+    "time_day_ago": "{d} napja",
+    "polling_active": "Élő frissítés bekapcsolva — ez ébren tartja az autót.",
+    "polling_paused_idle": "10 perc tétlenség után szüneteltetve, hogy az autó alhasson.",
+    "polling_paused": "Szüneteltetve — az autó alhat.",
+    "let_it_sleep": "Hagyd aludni",
+    "resume_polling": "Folytatás"
   },
   "charging": {
     "page_title": "Töltés",

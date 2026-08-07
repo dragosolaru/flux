@@ -36,6 +36,30 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1e. Fleet API data we do not fetch yet
+The integration currently asks for four `vehicle_data` sub-endpoints
+(`charge_state`, `climate_state`, `drive_state`, `vehicle_state`) and
+`dx/charging/history`. Worth having, roughly in value order:
+
+- **`nearby_charging_sites`** — Superchargers near the car *with live stall
+  counts*. This is a partial answer to "no real-time availability from any
+  source", which is listed elsewhere here as the planner's largest data gap and
+  as needing a commercial feed. It only covers Tesla's own network and only
+  around a linked car, but that is more than zero and costs nothing.
+- **`vehicle_config`** — model, trim, wheels, battery type. Would let the
+  planner stop guessing consumption from the display name.
+- **`charge_schedule_data` / `preconditioning_schedule_data`** — the schedules
+  already set in the car. Today the app writes schedules without being able to
+  read what is there, so it cannot show the driver their own settings.
+- **`service_data`**, **`release_notes`** — service state and firmware notes.
+
+Not available however much we would like it: **historical consumption**. Tesla
+exposes no trip or energy history endpoint, so the efficiency figures have to be
+accumulated from polling over time, or come from Fleet Telemetry (a streaming
+product with its own setup). `dx/charging/history` covers Supercharger sessions
+only — home and third-party charging never appears there, which is worth saying
+in the UI rather than leaving an empty list that looks broken.
+
 ### 1d. Polling wakes a sleeping car every 30 s
 `useVehicle` polls `refetchInterval: 30_000`, and `fetchVehicleData` answers a
 408 by calling `wake_up` and retrying. So an open dashboard keeps a linked car

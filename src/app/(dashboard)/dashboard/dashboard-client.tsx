@@ -156,6 +156,49 @@ function HeroCard({ state, isLoading, isFetching, vehicleName, simulated }: { st
  * looked like a working live integration rather than a bug. `simulated` says
  * which it is; freshness now only chooses how alive the badge looks.
  */
+/**
+ * Says whether the car is being polled, and lets the driver stop it.
+ *
+ * Polling a linked car wakes it, so an open dashboard keeps it awake. The
+ * counterpart in useVehicle stops on its own after ten idle minutes — this makes
+ * that state visible, because silently stopping would look like the app had
+ * frozen, and gives an immediate "let it sleep" for someone who is done looking.
+ */
+function SleepControl({
+  active,
+  pausedByIdle,
+  onPause,
+  onResume,
+  t,
+}: {
+  active: boolean;
+  pausedByIdle: boolean;
+  onPause: () => void;
+  onResume: () => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="mx-4 mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/60 px-4 py-3 md:mx-6">
+      <span
+        className={`size-2 shrink-0 rounded-full ${active ? "animate-pulse bg-chart-2" : "bg-muted-foreground"}`}
+      />
+      <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+        {active
+          ? t("polling_active")
+          : pausedByIdle
+            ? t("polling_paused_idle")
+            : t("polling_paused")}
+      </p>
+      <button
+        onClick={active ? onPause : onResume}
+        className="flex min-h-11 shrink-0 items-center rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium hover:bg-muted"
+      >
+        {active ? t("let_it_sleep") : t("resume_polling")}
+      </button>
+    </div>
+  );
+}
+
 function LiveBadge({
   fresh,
   isFetching,
@@ -471,7 +514,11 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
   const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
   const brand = (vehicle?.brand ?? "tesla") as BrandKey;
 
-  const { data, isLoading, isFetching, isError, refetch } = useVehicle(vehicleId);
+  const isLive = vehicle?.dataSource === "live";
+  const { data, isLoading, isFetching, isError, refetch, polling } = useVehicle(
+    vehicleId,
+    isLive,
+  );
   const td = useTranslations("dashboard");
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
 
@@ -540,8 +587,21 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
         isLoading={isLoading}
         isFetching={isFetching}
         vehicleName={vehicleName}
-        simulated={vehicle?.dataSource !== "live"}
+        simulated={!isLive}
       />
+
+      {isLive && (
+        <SleepControl
+          active={polling.active}
+          pausedByIdle={polling.pausedByIdle}
+          onPause={polling.pause}
+          onResume={() => {
+            polling.resume();
+            void refetch();
+          }}
+          t={td}
+        />
+      )}
 
       {isError ? (
         <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">

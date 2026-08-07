@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+import { errorContext, logServer } from "@/lib/debug-log";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -83,7 +85,20 @@ export async function POST(
     return NextResponse.json({ synced: inserted, total: sessions.length });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Sync failed";
-    console.error("[vehicles/[vehicleId]/charging-history]", msg);
-    return NextResponse.json({ message: "Sync failed" }, { status: 502 });
+    // fetchTeslaChargingHistory throws `Tesla charging history <status>: <body>`,
+    // and that status is the whole diagnosis — 401 is a token problem, 403 a
+    // missing scope, 404 a wrong path, 4xx on the query a bad page parameter.
+    // Collapsing all of it into "Sync failed" left the one useful fact in a log
+    // nobody reads from a phone.
+    logServer("error", "tesla/charging-history", msg, errorContext(err));
+    const status = /history (\d{3}):/.exec(msg)?.[1] ?? null;
+    return NextResponse.json(
+      {
+        message: "Sync failed",
+        upstreamStatus: status ? Number(status) : null,
+        detail: msg.slice(0, 300),
+      },
+      { status: 502 },
+    );
   }
 }

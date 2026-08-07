@@ -398,7 +398,12 @@
     "time_now": "maintenant",
     "time_min_ago": "il y a {m}m",
     "time_hour_ago": "il y a {h}h",
-    "time_day_ago": "il y a {d}j"
+    "time_day_ago": "il y a {d}j",
+    "polling_active": "Mises à jour en direct actives — la voiture reste éveillée.",
+    "polling_paused_idle": "En pause après 10 minutes d'inactivité, pour que la voiture dorme.",
+    "polling_paused": "En pause — la voiture peut dormir.",
+    "let_it_sleep": "La laisser dormir",
+    "resume_polling": "Reprendre"
   },
   "charging": {
     "page_title": "Recharge",

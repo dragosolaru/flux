@@ -398,7 +398,12 @@
     "time_now": "jetzt",
     "time_min_ago": "vor {m} Min.",
     "time_hour_ago": "vor {h} Std.",
-    "time_day_ago": "vor {d} T."
+    "time_day_ago": "vor {d} T.",
+    "polling_active": "Live-Updates an — das hält das Auto wach.",
+    "polling_paused_idle": "Nach 10 Minuten Inaktivität pausiert, damit das Auto schlafen kann.",
+    "polling_paused": "Pausiert — das Auto kann schlafen.",
+    "let_it_sleep": "Schlafen lassen",
+    "resume_polling": "Fortsetzen"
   },
   "charging": {
     "page_title": "Laden",

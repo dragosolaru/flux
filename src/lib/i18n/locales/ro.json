@@ -398,7 +398,12 @@
     "time_now": "acum",
     "time_min_ago": "{m}m în urmă",
     "time_hour_ago": "{h}h în urmă",
-    "time_day_ago": "{d}z în urmă"
+    "time_day_ago": "{d}z în urmă",
+    "polling_active": "Actualizări live pornite — asta ține mașina trează.",
+    "polling_paused_idle": "Oprite după 10 minute de inactivitate, ca mașina să poată dormi.",
+    "polling_paused": "Oprite — mașina poate dormi.",
+    "let_it_sleep": "Las-o să doarmă",
+    "resume_polling": "Reia"
   },
   "charging": {
     "page_title": "Încărcare",

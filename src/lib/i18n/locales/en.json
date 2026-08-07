@@ -398,7 +398,12 @@
     "time_now": "now",
     "time_min_ago": "{m}m ago",
     "time_hour_ago": "{h}h ago",
-    "time_day_ago": "{d}d ago"
+    "time_day_ago": "{d}d ago",
+    "polling_active": "Live updates on — this keeps the car awake.",
+    "polling_paused_idle": "Paused after 10 minutes idle, so the car can sleep.",
+    "polling_paused": "Paused — the car can sleep.",
+    "let_it_sleep": "Let it sleep",
+    "resume_polling": "Resume"
   },
   "charging": {
     "page_title": "Charging",
