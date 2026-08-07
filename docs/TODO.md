@@ -65,6 +65,19 @@ Still open:
       a live-but-read-only vehicle.
 - [ ] **Rotate `TESLA_TOKEN_ENCRYPTION_KEY` procedure** — document how, and
       re-encrypt existing rows.
+- [ ] **Rotate the command-signing keypair before real customers.** The pair in
+      use was generated in an assistant session and its private half passed
+      through a chat transcript, which is fine for a maintainer testing their own
+      car and not fine once it can unlock somebody else's. Generate a fresh pair
+      on a trusted machine, set `TESLA_PUBLIC_KEY` from it, put the private half
+      in the Fly secret, re-pair the Virtual Key, and confirm with the panel's
+      "Check status" that Tesla reports the same point.
+- [ ] **Work out how to rotate the key at Tesla.** `POST /api/1/partner_accounts`
+      for an already-registered domain returns the existing record untouched —
+      observed with a two-month-old key while a new one was being served. Whether
+      the partner record's stale key actually blocks anything is unconfirmed: the
+      car gets its Virtual Key from the domain at pairing time, so car↔proxy may
+      be the only pair that has to agree. Establish which before relying on it.
 - [x] Notify on sensitive commands — `alertOnSensitiveCommand` fires on a
       successful `unlock` or `remote_start` through whichever channels the owner
       has enabled. Requires `NEXT_PUBLIC_NOTIFICATIONS_ENABLED` and at least one
