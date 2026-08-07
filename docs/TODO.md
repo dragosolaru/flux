@@ -9,6 +9,15 @@ _Last updated: 2026-06-24_
 ### 0. Go-live gate — must clear before real customers
 Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
 
+- [x] **Serve the partner public key** — `/.well-known/appspecific/com.tesla.3p.public-key.pem`
+      now exists (it did not, though `tesla-proxy/README.md` assumed it did).
+      Tesla fetches it during partner registration and Virtual Key pairing, so
+      nothing else Tesla-side could have worked without it. Needs
+      `TESLA_PUBLIC_KEY`; answers 503 when unset rather than an empty 200.
+- [ ] **Set the Tesla env vars and register the partner account** — full ordered
+      procedure in `docs/VEHICLE-CONNECTION.md` ("Going live with the Fleet
+      API"). The debug panel reports the same checklist as `tesla.steps` and
+      names the first unmet one.
 - [ ] **Deploy `tesla-proxy` on Fly.io** and set `TESLA_PROXY_BASE_URL`. Without
       it every command on a Model 3/Y/S/X built after 2021 fails with
       `VCP_REQUIRED` (412). See `tesla-proxy/README.md`.
@@ -86,14 +95,14 @@ Recorded so they are not lost — none block launch.
 - [ ] **NDW (Netherlands) returns 400 on every request.** Same practical effect
       as BNetzA: the source contributes nothing. Confirmed by the source counts
       in the debug panel — only `ocm`, `osm` and `tomtom` have rows.
-- [ ] **~6,300 chargers have no `charger_sources` row.** 22,253 chargers against
-      15,953 source rows. Suspected cause: `upsert_chargers_batch` inserts
-      sources with `on conflict (source, source_ref) do update set charger_id =
-      excluded.charger_id`, so a ref claimed by a second charger *moves*, leaving
-      the first with none. `source_count` on `chargers` is written from the
-      payload rather than counted from the table, so it does not reveal this.
-      Confidence scoring reads source count, so this would understate it.
-      Needs confirming against the live table before changing the upsert.
+- [x] **Chargers with no `charger_sources` row** — was 6,300, then 1,160 after
+      the first dedupe, which confirmed the cause: the orphans were duplicate
+      rows whose refs had been claimed by the survivor. Migration 043 makes the
+      dedupe *transfer* refs to the survivor instead of cascading them away, and
+      recomputes `source_count` from the table rather than trusting the payload.
+      Remaining gap: in a chain longer than the merge radius the best neighbour
+      can itself be deleted in the same pass, and those refs still cascade —
+      re-ingest recovers them.
 - [ ] **BNetzA source is disabled**, not fixed. `ladestationen.api.bund.dev`
       returns 404 on every request; the connector is gated behind an optional
       `BNETZA_URL` env var. Germany therefore has OCM + OSM + TomTom only.

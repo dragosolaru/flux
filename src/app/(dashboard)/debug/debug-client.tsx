@@ -147,6 +147,7 @@ export function DebugClient() {
   }
 
   const [probe, setProbe] = useState<ProbeRow[] | null>(null);
+  const [rawProbe, setRawProbe] = useState<unknown>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Populated only when the clipboard write is refused, so the text can still
   // be selected by hand — some mobile browsers block the API outright.
@@ -270,6 +271,27 @@ export function DebugClient() {
     }
   }
 
+  // Shows the upstream response verbatim. `probe` above reports that a source
+  // returned nothing; this reports why — the parse error names a format but not
+  // the columns, and a 400 names no parameter at all.
+  async function runSourceProbe(source: string) {
+    setRunning(`raw:${source}`);
+    setLastError(null);
+    setRawProbe(null);
+    try {
+      setRawProbe(
+        await apiFetch<unknown>("/api/internal/debug/source-probe", {
+          method: "POST",
+          body: JSON.stringify({ source }),
+        }),
+      );
+    } catch (err) {
+      setLastError(`Source probe failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runDedupe() {
     setRunning("dedupe");
     setLastError(null);
@@ -314,6 +336,7 @@ export function DebugClient() {
         diagnostics: data ?? null,
         migrations: migrations.data ?? null,
         probe,
+        rawProbe,
         ocrResult,
         lastResult,
         lastError,
@@ -712,6 +735,31 @@ export function DebugClient() {
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Raw source response</h2>
+        <p className="text-xs text-muted-foreground">
+          Fetches a source&apos;s upstream URL and shows the status, content type and the first
+          4,000 characters verbatim. Use this when a connector is broken and the log only says
+          the response would not parse. Nothing is written, and the URLs are fixed server-side.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {["irve", "ndw", "ndw-nobbox", "austria", "bnetza"].map((id) => (
+            <IngestButton
+              key={id}
+              label={id}
+              busy={running === `raw:${id}`}
+              disabled={running !== null}
+              onClick={() => void runSourceProbe(id)}
+            />
+          ))}
+        </div>
+        {rawProbe != null && (
+          <pre className="-mx-4 max-h-80 overflow-auto px-4 text-2xs leading-relaxed text-muted-foreground">
+            {JSON.stringify(rawProbe, null, 2)}
+          </pre>
         )}
       </section>
 

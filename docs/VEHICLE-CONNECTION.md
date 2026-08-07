@@ -116,3 +116,92 @@ New Tesla vehicles require the Tesla Vehicle Command Protocol (VCP) which uses a
 - Encryption key: `TESLA_TOKEN_ENCRYPTION_KEY` (32-byte hex, server-only)
 - The browser never sees tokens — all Tesla API calls are brokered through `/api/tesla/*`
 - Supabase RLS ensures token rows are only readable by the owning user's service-role queries
+
+---
+
+## Going live with the Fleet API
+
+Order matters — each step is useless without the ones above it. The debug panel
+reports the same list under `tesla.steps` and names the first unmet one as
+`tesla.nextStep`, so you can check progress from a phone.
+
+### 1. Command-signing keypair
+
+Tesla requires an EC P-256 keypair. The public half must be served over HTTPS at
+a fixed path on the domain registered with the developer account; the private
+half only ever lives on the proxy.
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out tesla-private.pem
+openssl ec -in tesla-private.pem -pubout -out tesla-public.pem
+```
+
+Set `TESLA_PUBLIC_KEY` in Vercel to the contents of `tesla-public.pem`. Vercel
+env vars cannot hold real newlines, so escape them:
+
+```bash
+awk '{printf "%s\\n", $0}' tesla-public.pem
+```
+
+`src/app/.well-known/appspecific/com.tesla.3p.public-key.pem/route.ts` unescapes
+and serves it as `application/x-pem-file`. Verify before continuing — Tesla
+reports a missing key and a malformed key identically:
+
+```bash
+curl https://<domain>/.well-known/appspecific/com.tesla.3p.public-key.pem \
+  | openssl ec -pubin -noout -text
+```
+
+The route answers **503** rather than an empty 200 when the variable is unset,
+because a blank 200 is the harder failure to notice.
+
+### 2. App credentials
+
+From the Tesla developer portal: `TESLA_CLIENT_ID`, `TESLA_CLIENT_SECRET`. The
+redirect URI registered there must exactly match `https://<domain>/connect/tesla`.
+Also set `TESLA_TOKEN_ENCRYPTION_KEY` (32 bytes, base64) — refresh tokens are
+AES-256-GCM encrypted at rest with it.
+
+### 3. Register the partner account
+
+One call per region, with a partner token (client-credentials grant, not a user
+token). Tesla fetches the key from step 1 during this call, so it must already
+be live.
+
+```bash
+TOKEN=$(curl -s -X POST https://auth.tesla.com/oauth2/v3/token \
+  -d grant_type=client_credentials \
+  -d client_id=$TESLA_CLIENT_ID -d client_secret=$TESLA_CLIENT_SECRET \
+  -d 'scope=openid vehicle_device_data vehicle_cmds vehicle_charging_cmds' \
+  -d audience=https://fleet-api.prd.eu.vn.cloud.tesla.com | jq -r .access_token)
+
+curl -X POST https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/partner_accounts \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"domain":"<domain>"}'
+```
+
+Use the EU host — `TESLA_REGIONS` in `src/lib/tesla/constants.ts` maps regions,
+and a car registered in Europe is not visible from the NA host.
+
+### 4. Deploy the signing proxy
+
+See `tesla-proxy/README.md`. Set `TESLA_PROXY_BASE_URL` to the Fly URL. Without
+it, every command on a Model 3/Y/S/X built after mid-2021 fails with
+`VCP_REQUIRED` (412) — read-only vehicle data still works, so this is the step
+whose absence looks like "the app works but no button does anything".
+
+### 5. Flip the switch
+
+`LIVE_INTEGRATIONS=tesla`. Until then `src/lib/live-integrations.ts` keeps the
+mock simulator in front of every call, which is why the app appears to work
+fully with no Tesla credentials at all.
+
+### 6. Pair the Virtual Key
+
+Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla
+app installed and approves. Without pairing, signed commands are rejected even
+with everything above correct.
+
+> Scope note: `TESLA_SCOPES` requests `vehicle_cmds`, which grants unlock and
+> remote start. `docs/TODO.md` item 1b tracks offering a read-only link for
+> owners who only want cost and trip tracking.

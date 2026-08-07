@@ -93,7 +93,27 @@ export async function GET() {
     liveIntegrations: process.env.LIVE_INTEGRATIONS ?? "",
     openRouteServiceKey: !!process.env.OPENROUTESERVICE_API_KEY,
     stripe: !!process.env.STRIPE_SECRET_KEY,
+    // Everything the live Tesla path needs, in the order it is needed. Reported
+    // together because a half-configured integration fails at the point of use
+    // — a command returning 412 — rather than at startup.
+    teslaClientId: !!process.env.TESLA_CLIENT_ID,
+    teslaClientSecret: !!process.env.TESLA_CLIENT_SECRET,
+    teslaPublicKey: !!process.env.TESLA_PUBLIC_KEY,
+    teslaTokenEncryptionKey: !!process.env.TESLA_TOKEN_ENCRYPTION_KEY,
+    teslaLive: (process.env.LIVE_INTEGRATIONS ?? "").split(",").map((s) => s.trim()).includes("tesla"),
   };
+
+  // Ordered so the first unmet prerequisite is the one to act on: each step is
+  // useless without the ones above it.
+  const teslaSteps: { step: string; ok: boolean; blocks: string }[] = [
+    { step: "TESLA_CLIENT_ID", ok: config.teslaClientId, blocks: "the OAuth redirect to Tesla" },
+    { step: "TESLA_CLIENT_SECRET", ok: config.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
+    { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: config.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
+    { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing" },
+    { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy, blocks: "every command on a post-2021 car (412 VCP_REQUIRED)" },
+    { step: "LIVE_INTEGRATIONS=tesla", ok: config.teslaLive, blocks: "using the real Fleet API instead of the simulator" },
+  ];
+  const teslaNextStep = teslaSteps.find((s) => !s.ok)?.step ?? null;
 
   if (!config.redis) {
     warnings.push(
@@ -114,6 +134,7 @@ export async function GET() {
     sources: sourceCounts,
     recentRuns: runs ?? [],
     config,
+    tesla: { steps: teslaSteps, nextStep: teslaNextStep },
     warnings,
   });
 }
