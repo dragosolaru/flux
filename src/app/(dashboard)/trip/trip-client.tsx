@@ -26,6 +26,7 @@ import {
   useDeleteSavedRoute,
   type SavedRoute,
 } from "@/hooks/useSavedRoutes";
+import { shareRoute } from "@/lib/trip/share-route";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger } from "@/lib/chargers/types";
@@ -466,41 +467,20 @@ export function TripClient() {
   async function handleShareRoute() {
     if (!activePlan || !origin || !destination) return;
 
-    const pt = (p: { lat: number; lng: number }) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
-    const url = new URL("https://www.google.com/maps/dir/");
-    url.searchParams.set("api", "1");
-    url.searchParams.set("origin", pt(origin));
-    url.searchParams.set("destination", pt(destination));
-    url.searchParams.set("travelmode", "driving");
-    if (activePlan.stops.length > 0) {
-      url.searchParams.set("waypoints", activePlan.stops.map((st) => pt(st.station)).join("|"));
-    }
-
-    const title = `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`;
-    const link = url.toString();
-
-    // Preconditioning is about the car, not about who receives the link, so it
-    // fires here too — sharing to the Tesla app still means driving to a
+    // Preconditioning is about the car and the route, not about who receives
+    // the link — sharing to the Tesla app still means arriving at a
     // non-Supercharger DC stop with a cold battery otherwise.
     void maybePrecondition();
 
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, text: title, url: link });
-        return;
-      }
-      await navigator.clipboard.writeText(link);
-      toast.success(t("share_link_copied"));
-    } catch (err) {
-      // A dismissed share sheet rejects with AbortError; that is not a failure.
-      if (err instanceof Error && err.name === "AbortError") return;
-      try {
-        await navigator.clipboard.writeText(link);
-        toast.success(t("share_link_copied"));
-      } catch {
-        toast.error(t("share_error"));
-      }
-    }
+    const outcome = await shareRoute({
+      origin,
+      destination,
+      stops: activePlan.stops.map((st) => st.station),
+      title: `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`,
+    });
+
+    if (outcome === "copied") toast.success(t("share_link_copied"));
+    else if (outcome === "failed") toast.error(t("share_error"));
   }
 
   /**

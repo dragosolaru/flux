@@ -17,6 +17,7 @@ import {
   Pencil,
   Zap,
   Send,
+  Share2,
   List,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,7 @@ import * as vehiclesApi from "@/lib/api/vehicles";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
+import { shareRoute } from "@/lib/trip/share-route";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
@@ -364,6 +366,25 @@ export function MapClient() {
   const teslaVehicle = plan?.vehicle?.brand === "tesla" ? plan.vehicle : null;
   const canShare = teslaVehicle !== null && activePlan !== null && activePlan.feasible !== false;
 
+  /**
+   * Hands the whole plan — stops included — to the OS share sheet, so it can go
+   * to the Tesla app or any navigation app, and works with no Tesla linked.
+   * `share_navigation` stays as the path that pushes waypoints into the car.
+   */
+  async function handleShareRoute() {
+    if (!activePlan || !origin || !destination) return;
+
+    const outcome = await shareRoute({
+      origin,
+      destination,
+      stops: activePlan.stops.map((st) => st.station),
+      title: `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`,
+    });
+
+    if (outcome === "copied") toast.success(tTrip("share_link_copied"));
+    else if (outcome === "failed") toast.error(tTrip("share_error"));
+  }
+
   async function handleShareToTesla() {
     if (!teslaVehicle || !activePlan || !destination) return;
     setSharing(true);
@@ -565,6 +586,7 @@ export function MapClient() {
                 sharing={sharing}
                 sharedRoute={sharedRoute}
                 onShareToTesla={handleShareToTesla}
+                onShareRoute={() => void handleShareRoute()}
                 originShort={originShort}
                 destinationShort={destinationShort}
                 fromEUR={fromEUR}
@@ -844,6 +866,7 @@ export function MapClient() {
               locating={locating}
               onPlan={handlePlan}
               onShareToTesla={handleShareToTesla}
+              onShareRoute={() => void handleShareRoute()}
               originShort={originShort}
               destinationShort={destinationShort}
               tTrip={tTrip}
@@ -967,6 +990,7 @@ interface RouteAccordionProps {
   sharing: boolean;
   sharedRoute: boolean;
   onShareToTesla: () => void;
+  onShareRoute: () => void;
   originShort: string;
   destinationShort: string;
   fromEUR: (eur: number) => string;
@@ -991,6 +1015,7 @@ function RouteAccordion({
   sharing,
   sharedRoute,
   onShareToTesla,
+  onShareRoute,
   originShort,
   destinationShort,
   fromEUR,
@@ -1065,7 +1090,17 @@ function RouteAccordion({
                           <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                           <div className="space-y-0.5">
                             <p className="text-xs font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
-                            {vp.warning && (
+                            {active && (
+                          <button
+                            onClick={onShareRoute}
+                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          >
+                            <Share2 className="size-3.5" />
+                            {tTrip("share_route_btn")}
+                          </button>
+                        )}
+
+                        {vp.warning && (
                               <p className="text-2xs text-amber-400/80">{vp.warning}</p>
                             )}
                             <p className="text-2xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
@@ -1098,6 +1133,16 @@ function RouteAccordion({
                               <Send className="size-3.5" />
                             )}
                             {tTrip("share_to_tesla")}
+                          </button>
+                        )}
+
+                        {active && (
+                          <button
+                            onClick={onShareRoute}
+                            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          >
+                            <Share2 className="size-3.5" />
+                            {tTrip("share_route_btn")}
                           </button>
                         )}
 
@@ -1165,6 +1210,7 @@ interface PlanResultsProps {
   sharing: boolean;
   sharedRoute: boolean;
   onShareToTesla: () => void;
+  onShareRoute: () => void;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1180,6 +1226,7 @@ function PlanResults({
   sharing,
   sharedRoute,
   onShareToTesla,
+  onShareRoute,
   originShort,
   destinationShort,
   tTrip,
@@ -1240,7 +1287,15 @@ function PlanResults({
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
             <div className="space-y-1.5">
               <p className="text-sm font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
-              {activePlan.warning && (
+              <button
+            onClick={onShareRoute}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Share2 className="size-4" />
+            {tTrip("share_route_btn")}
+          </button>
+
+          {activePlan.warning && (
                 <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
               )}
               <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
@@ -1271,6 +1326,14 @@ function PlanResults({
               {tTrip("share_to_tesla")}
             </button>
           )}
+
+          <button
+            onClick={onShareRoute}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Share2 className="size-4" />
+            {tTrip("share_route_btn")}
+          </button>
 
           {activePlan.warning && (
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
@@ -1351,6 +1414,7 @@ interface PlanContentProps {
   locating: boolean;
   onPlan: () => void;
   onShareToTesla: () => void;
+  onShareRoute: () => void;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1385,6 +1449,7 @@ function PlanContent({
   locating,
   onPlan,
   onShareToTesla,
+  onShareRoute,
   originShort,
   destinationShort,
   tTrip,
@@ -1500,6 +1565,7 @@ function PlanContent({
             sharing={sharing}
             sharedRoute={sharedRoute}
             onShareToTesla={onShareToTesla}
+            onShareRoute={onShareRoute}
             originShort={originShort}
             destinationShort={destinationShort}
             tTrip={tTrip}
