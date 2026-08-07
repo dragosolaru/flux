@@ -36,6 +36,14 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1c. Linking only imports the first vehicle
+`src/app/api/tesla/callback/route.ts` takes `list.response[0]` and stops, so an
+owner with two Teslas gets one and no way to add the other — the garage's "add
+vehicle" path creates a mock, not a linked car. Fine while the maintainer is the
+only user; a visible defect the first time a two-car household signs up. The fix
+is to insert every vehicle in the list and let the garage deactivate the ones
+they do not want.
+
 ### 1b. Tesla account security (before real customers link a car)
 Linking grants `vehicle_device_data`, `vehicle_cmds` and
 `vehicle_charging_cmds` (`src/lib/tesla/constants.ts`), i.e. live location plus
