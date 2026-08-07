@@ -879,7 +879,8 @@
     "area_error": "Could not load that area",
     "area_hint": "Long-press the map to load chargers there",
     "share_route_btn": "Share route",
-    "share_link_copied": "Route link copied"
+    "share_link_copied": "Route link copied",
+    "clear_plan": "Clear route"
   },
   "notFoundPage": {
     "heading": "Page not found",

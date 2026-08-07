@@ -879,7 +879,8 @@
     "area_error": "Impossible de charger cette zone",
     "area_hint": "Appui long sur la carte pour charger les bornes",
     "share_route_btn": "Partager l’itinéraire",
-    "share_link_copied": "Lien de l’itinéraire copié"
+    "share_link_copied": "Lien de l’itinéraire copié",
+    "clear_plan": "Effacer l’itinéraire"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

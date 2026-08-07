@@ -15,6 +15,7 @@ import {
   ChevronRight,
   ArrowRight,
   Pencil,
+  X,
   Zap,
   Send,
   Share2,
@@ -38,6 +39,7 @@ import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
 import { shareRoute } from "@/lib/trip/share-route";
+import { routeNeedsPreconditioning } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
@@ -371,8 +373,29 @@ export function MapClient() {
    * to the Tesla app or any navigation app, and works with no Tesla linked.
    * `share_navigation` stays as the path that pushes waypoints into the car.
    */
+  /**
+   * Discard the plan and return to exploring. The pencil only edits the
+   * endpoints, so without this a planned route could be changed but never put
+   * away — the strip, the drawn line and the stop pins stayed for the session.
+   */
+  function handleClearPlan() {
+    setPlan(null);
+    setPlanError(null);
+    setActiveVariant(0);
+    setSharedRoute(false);
+    setEditingRoute(false);
+    setPlanDisplayState("compact");
+  }
+
   async function handleShareRoute() {
     if (!activePlan || !origin || !destination) return;
+
+    // The battery cares about the route, not about which app receives the link.
+    if (teslaVehicle && routeNeedsPreconditioning(activePlan.stops)) {
+      void vehiclesApi
+        .sendCommand(teslaVehicle.id, "precondition_max", { on: true })
+        .catch(() => undefined);
+    }
 
     const outcome = await shareRoute({
       origin,
@@ -389,11 +412,7 @@ export function MapClient() {
     if (!teslaVehicle || !activePlan || !destination) return;
     setSharing(true);
     try {
-      const firstStop = activePlan.stops[0] ?? null;
-      const willPrecondition =
-        firstStop !== null &&
-        needsPreconditioning(firstStop.station.maxKw) &&
-        !isSuperchargerNetwork(firstStop.station.networkId);
+      const willPrecondition = routeNeedsPreconditioning(activePlan.stops);
 
       await vehiclesApi.shareNavigation(
         teslaVehicle.id,
@@ -563,18 +582,28 @@ export function MapClient() {
               planMinimized hides the strip to show the map. ChevronUp in tabs row toggles it. */}
           {mode === "plan" && !editingRoute && plan && activePlan && !planMinimized && (
             <div className="border-t border-border/40">
-              <button
-                onClick={() => setEditingRoute(true)}
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left"
-              >
-                <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-medium text-foreground">
-                  <span className="truncate">{originShort}</span>
-                  <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{destinationShort}</span>
-                </span>
-                <Pencil className="size-3 shrink-0 text-muted-foreground" />
-              </button>
+              <div className="flex w-full items-center gap-1 px-3 py-1.5">
+                <button
+                  onClick={() => setEditingRoute(true)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                >
+                  <Navigation className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-medium text-foreground">
+                    <span className="truncate">{originShort}</span>
+                    <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{destinationShort}</span>
+                  </span>
+                  <Pencil className="size-3 shrink-0 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={handleClearPlan}
+                  aria-label={tTrip("clear_plan")}
+                  title={tTrip("clear_plan")}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
 
               <RouteAccordion
                 plan={plan}

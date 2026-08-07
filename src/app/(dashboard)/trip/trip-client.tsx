@@ -27,6 +27,7 @@ import {
   type SavedRoute,
 } from "@/hooks/useSavedRoutes";
 import { shareRoute } from "@/lib/trip/share-route";
+import { routeNeedsPreconditioning } from "@/lib/trip/precondition";
 import { slideUp } from "@/lib/animations/variants";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger } from "@/lib/chargers/types";
@@ -428,9 +429,7 @@ export function TripClient() {
     try {
       // Precondition if ANY stop is a non-SC DC fast charger.
       // Superchargers are handled automatically by Tesla's firmware.
-      const willPrecondition = activePlan.stops.some(
-        (s) => needsPreconditioning(s.station.maxKw) && !isSuperchargerNetwork(s.station.networkId),
-      );
+      const willPrecondition = routeNeedsPreconditioning(activePlan.stops);
 
       await vehiclesApi.shareNavigation(
         teslaVehicle.id,
@@ -490,10 +489,7 @@ export function TripClient() {
    */
   async function maybePrecondition(): Promise<boolean> {
     if (!teslaVehicle || !activePlan) return false;
-    const needed = activePlan.stops.some(
-      (st) => needsPreconditioning(st.station.maxKw) && !isSuperchargerNetwork(st.station.networkId),
-    );
-    if (!needed) return false;
+    if (!routeNeedsPreconditioning(activePlan.stops)) return false;
     try {
       await apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
         method: "POST",

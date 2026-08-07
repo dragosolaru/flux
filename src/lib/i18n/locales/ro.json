@@ -879,7 +879,8 @@
     "area_error": "Nu s-a putut încărca zona",
     "area_hint": "Ține apăsat pe hartă ca să aduci stațiile de acolo",
     "share_route_btn": "Trimite traseul",
-    "share_link_copied": "Link-ul traseului a fost copiat"
+    "share_link_copied": "Link-ul traseului a fost copiat",
+    "clear_plan": "Șterge traseul"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

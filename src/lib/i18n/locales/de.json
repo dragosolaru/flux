@@ -879,7 +879,8 @@
     "area_error": "Bereich konnte nicht geladen werden",
     "area_hint": "Karte lange drücken, um dort Ladepunkte zu laden",
     "share_route_btn": "Route teilen",
-    "share_link_copied": "Routenlink kopiert"
+    "share_link_copied": "Routenlink kopiert",
+    "clear_plan": "Route löschen"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

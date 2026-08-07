@@ -879,7 +879,8 @@
     "area_error": "A terület nem tölthető be",
     "area_hint": "Nyomja hosszan a térképet a töltők betöltéséhez",
     "share_route_btn": "Útvonal megosztása",
-    "share_link_copied": "Útvonal-hivatkozás másolva"
+    "share_link_copied": "Útvonal-hivatkozás másolva",
+    "clear_plan": "Útvonal törlése"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",
