@@ -1,8 +1,8 @@
 // Sharing a planned route to whatever app the driver picks.
 //
-// Lives here rather than in a page because the trip planner exists twice — the
-// dedicated /trip screen and the Plan tab on /map — and the first version of
-// this only reached one of them.
+// Kept out of the page because the first version of this lived in one of two
+// duplicated planners and so reached only one screen. The screens are now one,
+// but the logic stays independently testable.
 
 export interface RoutePoint {
   lat: number;

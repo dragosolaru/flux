@@ -78,8 +78,7 @@ Dashboard pages live under `src/app/(dashboard)/` (auth-gated layout):
 | `/insights` | Insights | savings, CO₂, activity, battery health, efficiency |
 | `/energy` | Energy | tariff prices + smart-charge timing |
 | `/charging-map` | Charging map | station map browser |
-| `/map` | Unified map | combined trip planner + station browser |
-| `/trip` | Trip planner | ABRP-style route + charging stops |
+| `/map` | Unified map | station browser (Explore) + trip planner (Plan). `/trip` redirects here |
 | `/settings` | Settings | locale, currency, home, tariff, vehicles, billing, notifications, account |
 | `/about-data` | About your data | privacy / data transparency page |
 

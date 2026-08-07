@@ -40,8 +40,14 @@ import * as vehiclesApi from "@/lib/api/vehicles";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useCreateSavedRoute } from "@/hooks/useSavedRoutes";
-import { compactSnapshot } from "@/lib/trip/snapshot";
+import {
+  useSavedRoutes,
+  useCreateSavedRoute,
+  useDeleteSavedRoute,
+  type SavedRoute,
+} from "@/hooks/useSavedRoutes";
+import { SavedRoutesSheet } from "@/components/trip/SavedRoutesSheet";
+import { compactSnapshot, parseSnapshot } from "@/lib/trip/snapshot";
 import { shareRoute } from "@/lib/trip/share-route";
 import { routeNeedsPreconditioning } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
@@ -382,10 +388,45 @@ export function MapClient() {
    * endpoints, so without this a planned route could be changed but never put
    * away — the strip, the drawn line and the stop pins stayed for the session.
    */
-  // Saving is here; browsing saved routes still lives on /trip until that
-  // sheet is ported too.
+  const { data: savedRoutes = [] } = useSavedRoutes();
   const createSavedRoute = useCreateSavedRoute();
+  const deleteSavedRoute = useDeleteSavedRoute();
   const [routeSaved, setRouteSaved] = useState(false);
+  const [savedSheetOpen, setSavedSheetOpen] = useState(false);
+  const [preconditioningManually, setPreconditioningManually] = useState(false);
+
+  function handleLoadSavedRoute(r: SavedRoute) {
+    setOrigin({ name: r.origin_label, lat: r.origin_lat, lng: r.origin_lng });
+    setDestination({ name: r.destination_label, lat: r.destination_lat, lng: r.destination_lng });
+    const snap = parseSnapshot(r.plan_snapshot);
+    setActiveVariant(0);
+    setSharedRoute(false);
+    if (snap) {
+      setPlan(snap as TripResponse);
+      setRouteSaved(true);
+      setEditingRoute(false);
+    } else {
+      // Unreadable or legacy snapshot: drop the previous plan rather than
+      // leaving one route's map under another's labels.
+      setPlan(null);
+      setRouteSaved(false);
+      setEditingRoute(true);
+    }
+    setSavedSheetOpen(false);
+  }
+
+  async function handleManualPrecondition() {
+    if (!teslaVehicle) return;
+    setPreconditioningManually(true);
+    try {
+      await vehiclesApi.sendCommand(teslaVehicle.id, "precondition_max", { on: true });
+      toast.success(tTrip("precondition_started"));
+    } catch {
+      toast.error(tTrip("share_error"));
+    } finally {
+      setPreconditioningManually(false);
+    }
+  }
 
   async function handleSaveRoute() {
     if (!activePlan || !origin || !destination || routeSaved) return;
@@ -680,6 +721,14 @@ export function MapClient() {
                     <span className="truncate">{destinationShort}</span>
                   </span>
                   <Pencil className="size-3 shrink-0 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => setSavedSheetOpen(true)}
+                  aria-label={tTrip("saved_routes_title")}
+                  title={tTrip("saved_routes_title")}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Bookmark className="size-3.5" />
                 </button>
                 <button
                   onClick={handleClearPlan}
@@ -986,6 +1035,9 @@ export function MapClient() {
               onShareRoute={() => void handleShareRoute()}
                 onSaveRoute={() => void handleSaveRoute()}
                 routeSaved={routeSaved}
+                onManualPrecondition={() => void handleManualPrecondition()}
+                preconditioningManually={preconditioningManually}
+                hasTesla={teslaVehicle !== null}
               originShort={originShort}
               destinationShort={destinationShort}
               tTrip={tTrip}
@@ -1003,6 +1055,19 @@ export function MapClient() {
       {selectedStop && (
         <StationDetailSheet stop={selectedStop} onClose={() => setSelectedStop(null)} />
       )}
+
+      <SavedRoutesSheet
+        open={savedSheetOpen}
+        onClose={() => setSavedSheetOpen(false)}
+        routes={savedRoutes}
+        onLoad={handleLoadSavedRoute}
+        onDelete={(id) =>
+          deleteSavedRoute.mutate(id, {
+            onError: () => toast.error(tTrip("saved_route_error")),
+          })
+        }
+        t={tTrip}
+      />
     </div>
   );
 }
@@ -1366,6 +1431,9 @@ interface PlanResultsProps {
   onShareRoute: () => void;
   onSaveRoute: () => void;
   routeSaved: boolean;
+  onManualPrecondition: () => void;
+  preconditioningManually: boolean;
+  hasTesla: boolean;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1384,6 +1452,9 @@ function PlanResults({
   onShareRoute,
   onSaveRoute,
   routeSaved,
+  onManualPrecondition,
+  preconditioningManually,
+  hasTesla,
   originShort,
   destinationShort,
   tTrip,
@@ -1465,6 +1536,21 @@ function PlanResults({
             {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
           </button>
 
+          {hasTesla && (
+            <button
+              onClick={onManualPrecondition}
+              disabled={preconditioningManually}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              {preconditioningManually ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Zap className="size-4" />
+              )}
+              {tTrip("precondition_btn_manual")}
+            </button>
+          )}
+
           {activePlan.warning && (
                 <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
               )}
@@ -1517,6 +1603,21 @@ function PlanResults({
             )}
             {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
           </button>
+
+          {hasTesla && (
+            <button
+              onClick={onManualPrecondition}
+              disabled={preconditioningManually}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              {preconditioningManually ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Zap className="size-4" />
+              )}
+              {tTrip("precondition_btn_manual")}
+            </button>
+          )}
 
           {activePlan.warning && (
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
@@ -1600,6 +1701,9 @@ interface PlanContentProps {
   onShareRoute: () => void;
   onSaveRoute: () => void;
   routeSaved: boolean;
+  onManualPrecondition: () => void;
+  preconditioningManually: boolean;
+  hasTesla: boolean;
   originShort: string;
   destinationShort: string;
   tTrip: ReturnType<typeof useTranslations>;
@@ -1637,6 +1741,9 @@ function PlanContent({
   onShareRoute,
   onSaveRoute,
   routeSaved,
+  onManualPrecondition,
+  preconditioningManually,
+  hasTesla,
   originShort,
   destinationShort,
   tTrip,
@@ -1755,6 +1862,9 @@ function PlanContent({
             onShareRoute={onShareRoute}
             onSaveRoute={onSaveRoute}
             routeSaved={routeSaved}
+            onManualPrecondition={onManualPrecondition}
+            preconditioningManually={preconditioningManually}
+            hasTesla={hasTesla}
             originShort={originShort}
             destinationShort={destinationShort}
             tTrip={tTrip}

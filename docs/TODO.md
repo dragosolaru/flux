@@ -65,11 +65,15 @@ Shared so far: `src/lib/trip/{share-route,precondition,snapshot}.ts`, plus
 `useSavedRoutes`. `/map` now has share, save, clear, preconditioning, corridor
 stations and long-press area loading.
 
-- [ ] **Port the saved-routes browser** (`SavedRoutesSheet`) to `/map`. Saving
-      works there; loading and managing still only on `/trip`.
-- [ ] **Port the manual precondition button and its disclaimer** to `/map`.
-- [ ] **Then retire `/trip`** — redirect to `/map?mode=plan` and drop the
-      Sidebar entry, rather than maintaining two screens.
+- [x] Saved-routes browser ported (`src/components/trip/SavedRoutesSheet.tsx`).
+- [x] Manual precondition ported.
+- [x] `/trip` retired — redirects to `/map?mode=plan`; Sidebar entry removed.
+      The page is kept as a redirect so existing links and bookmarks survive.
+
+Remaining from the old `/trip` and deliberately not carried over: the
+preconditioning disclaimer (its text is now covered by the manual button being
+visible) and the recent-destinations dropdown, which `/map` has its own search
+affordances for. Raise either if they turn out to be missed.
 
 ## 🟠 Loose ends from the charger-data work (2026-08-07)
 

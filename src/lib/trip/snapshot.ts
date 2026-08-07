@@ -1,7 +1,7 @@
 // Building the snapshot a saved route stores.
 //
-// Shared because the planner exists on two screens; keeping this beside one of
-// them is how the two drifted in the first place.
+// Kept out of the page: holding this beside one of two duplicated planners is
+// how they drifted apart in the first place.
 
 import type { TripPlan, TripVariant } from "@/lib/external/routing/types";
 

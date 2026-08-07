@@ -64,7 +64,6 @@ const SECTIONS: NavSection[] = [
     titleKey: "nav.section.planning",
     items: [
       { href: "/map",  labelKey: "nav.map",  icon: Route, capability: "NONE" },
-      { href: "/trip", labelKey: "nav.trip", icon: Route, capability: "VEHICLE" },
     ],
   },
 ];

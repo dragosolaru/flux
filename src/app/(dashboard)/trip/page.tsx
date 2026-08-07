@@ -1,25 +1,14 @@
-import type { Viewport } from "next";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
-import { TripClient } from "./trip-client";
-
-export const metadata = { title: "Trip Planner · Flux" };
-
-// Disable browser page-zoom on this full-screen map page so a pinch zooms the
-// map only — page-level pinch-zoom is jarring on mobile. Scoped to this route;
-// content pages keep normal zoom.
-export const viewport: Viewport = {
-  themeColor: "#09090b",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-};
-
-export default async function TripPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-  return <TripClient />;
+// The dedicated trip screen is retired. Planning now lives as a tab on /map,
+// which reached parity in 53218da..: share, save, browse saved routes, clear,
+// preconditioning (manual and automatic), corridor stations and long-press area
+// loading.
+//
+// Maintaining two planners produced three bugs in a row from a feature landing
+// on one screen only — most seriously preconditioning decided from the first
+// stop on one and every stop on the other. Redirecting rather than deleting
+// keeps existing links and bookmarks working.
+export default function TripPage() {
+  redirect("/map?mode=plan");
 }
