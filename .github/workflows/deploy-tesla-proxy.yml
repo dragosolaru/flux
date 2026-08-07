@@ -1,0 +1,69 @@
+name: Deploy Tesla proxy
+
+# Deploying the command-signing proxy needs flyctl, which needs a machine — and
+# the person who has to do it is usually holding a phone. Running it here means
+# the whole setup is reachable from a browser: create the app and the token in
+# the Fly dashboard, add the token to GitHub, press "Run workflow".
+#
+# Manual trigger only. This proxy signs commands that unlock a car; redeploying
+# it should be a decision, not a side effect of an unrelated push. The path
+# filter on push is deliberately absent for the same reason.
+on:
+  workflow_dispatch:
+    inputs:
+      create_app:
+        description: "Create the Fly app first (only needed the very first time)"
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Fly rejects a deploy with no signing key rather than starting a proxy that
+    # cannot sign anything — entrypoint.sh exits 1 on a missing
+    # TESLA_PRIVATE_KEY, so a bad deploy fails fast rather than half-working.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create the app
+        if: ${{ inputs.create_app }}
+        working-directory: tesla-proxy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        # Tolerates "already exists" so a re-run with the box ticked is not a
+        # failure — the app name is fixed in fly.toml, so this is idempotent in
+        # effect if not in the API.
+        run: flyctl apps create flux-tesla-proxy --org personal || true
+
+      - name: Check the signing key is set
+        working-directory: tesla-proxy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if flyctl secrets list --app flux-tesla-proxy | grep -q TESLA_PRIVATE_KEY; then
+            echo "TESLA_PRIVATE_KEY is set."
+          else
+            echo "::error::TESLA_PRIVATE_KEY is not set on flux-tesla-proxy."
+            echo "Set it in the Fly dashboard under Secrets, or with:"
+            echo '  fly secrets set TESLA_PRIVATE_KEY="<base64 of the EC private key PEM>"'
+            echo "The proxy exits on startup without it, so deploying now would just fail."
+            exit 1
+          fi
+
+      - name: Deploy
+        working-directory: tesla-proxy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only
+
+      - name: Report the URL
+        run: |
+          echo "### Proxy deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Set `TESLA_PROXY_BASE_URL` in Vercel to:' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '    https://flux-tesla-proxy.fly.dev' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Then redeploy Flux, and the Go live panel should show every step met." >> "$GITHUB_STEP_SUMMARY"

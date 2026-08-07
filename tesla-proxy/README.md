@@ -15,7 +15,28 @@ The proxy is **stateless** — the only secret it holds is the command-signing
 private key (a Fly secret, not in the image). Flux passes the user's Tesla
 access token in the `Authorization` header on every request.
 
-## One-time deploy
+## Deploying from a phone
+
+`fly deploy` needs flyctl, which needs a machine. `.github/workflows/deploy-tesla-proxy.yml`
+runs it on Actions instead, so the whole setup is reachable from a browser:
+
+1. **Fly dashboard** → create an app named `flux-tesla-proxy` (or tick "Create
+   the Fly app" on the first workflow run), then **Tokens** → create a deploy
+   token.
+2. **GitHub** → repo Settings → Secrets and variables → Actions → new secret
+   `FLY_API_TOKEN`, paste the token.
+3. **Fly dashboard** → the app → Secrets → add `TESLA_PRIVATE_KEY`. The value is
+   the EC private key PEM, raw or base64 — `entrypoint.sh` accepts either. This
+   is a Fly secret, never a file in the image and never a Vercel variable.
+4. **GitHub** → Actions → "Deploy Tesla proxy" → Run workflow.
+5. Set `TESLA_PROXY_BASE_URL=https://flux-tesla-proxy.fly.dev` in Vercel and
+   redeploy.
+
+The workflow refuses to deploy when `TESLA_PRIVATE_KEY` is unset rather than
+shipping a proxy that exits on startup — the failure is the same either way, but
+this one says why.
+
+## One-time deploy (from a machine with flyctl)
 
 ```bash
 # In the project root:
