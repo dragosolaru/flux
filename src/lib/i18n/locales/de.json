@@ -698,8 +698,7 @@
     "send_to_car_success": "Ans Auto gesendet",
     "send_to_car_preconditioned": "Gesendet — dein Auto navigiert hierher und temperiert die Batterie vor",
     "send_to_car_error": "Konnte nicht ans Auto senden",
-    "sending": "Wird gesendet…",
-    "cluster_label": "ORTE"
+    "sending": "Wird gesendet…"
   },
   "auth": {
     "title_login": "Willkommen zurück",

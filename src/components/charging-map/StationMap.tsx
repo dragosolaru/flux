@@ -84,24 +84,18 @@ function stationIcon(
 //
 // Deliberately NOT tier-coloured: it used to be primary blue, the same blue the
 // sub-50 kW tier uses, so a blue pill reading "22" was either a 22 kW station or
-// 22 grouped stations with nothing to tell them apart. A dark bubble with a
-// white ring reads as a container rather than as one more station, and the
-// count is suffixed so the number is never ambiguous.
-function makeClusterIcon(label: string) {
-  return function clusterIcon(cluster: { getChildCount: () => number }): L.DivIcon {
+// 22 grouped stations with nothing to tell them apart. The dark fill and white
+// ring carry that distinction on their own now that station pills render their
+// unit — a written-out label was redundant and cluttered the map.
+function clusterIcon(cluster: { getChildCount: () => number }): L.DivIcon {
   const count = cluster.getChildCount();
-  const size = count < 10 ? 34 : count < 100 ? 40 : 48;
-  const font = count < 100 ? 12 : 11;
+  const size = count < 10 ? 32 : count < 100 ? 38 : 46;
   return L.divIcon({
     className: "",
-    html: `<div style="width:${size}px;height:${size}px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,.92);color:#fff;border-radius:9999px;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,0.45);line-height:1">
-      <span style="font-size:${font}px;font-weight:700">${count}</span>
-      <span style="font-size:8px;font-weight:600;opacity:.75;letter-spacing:.03em">${label}</span>
-    </div>`,
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    });
-  };
+    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:700;border-radius:9999px;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,0.45)">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -372,7 +366,7 @@ export default function StationMap({
       {/* Station markers — clustered so dense/overlapping sites collapse into a
           single counted bubble that splits apart as you zoom in. */}
       <MarkerClusterGroup
-        iconCreateFunction={makeClusterIcon(t("cluster_label"))}
+        iconCreateFunction={clusterIcon}
         showCoverageOnHover={false}
         maxClusterRadius={50}
         spiderfyOnMaxZoom

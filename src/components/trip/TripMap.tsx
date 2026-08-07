@@ -2,10 +2,15 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, CircleMarker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, CircleMarker, Polyline, Tooltip, useMap } from "react-leaflet";
 import { useEffect, useMemo, useRef } from "react";
 import type { ChargingStop } from "@/lib/external/routing/types";
 import type { Charger } from "@/lib/chargers/types";
+
+// How far off the driven line a charger can sit and still count as "on the way".
+// Wide enough to include a station one motorway exit away, narrow enough that a
+// long route does not drag in a whole region.
+const CORRIDOR_KM = 5;
 
 function useLeafletIconFix() {
   const done = useRef(false);
@@ -89,18 +94,51 @@ function FitBounds({ points }: { points: [number, number][] }) {
 export default function TripMap({ origin, destination, stops, polyline, className, onStationSelect, nearbyStations, routes, onRouteSelect }: TripMapProps) {
   useLeafletIconFix();
 
-  // Drop context dots that coincide with a numbered planned stop (~80 m) so the
-  // prominent stop pins aren't doubled. Memoized so the layer is stable.
+  // Stations shown alongside the planned stops: the ones actually on the way.
+  //
+  // The query behind `nearbyStations` fetches by the route's bounding box, which
+  // on a long trip is an enormous rectangle — most of it nowhere near the road.
+  // Filtering by real distance to the driven line is what makes this "chargers
+  // along my route" rather than "chargers somewhere in this region".
   const contextStations = useMemo(() => {
     const list = nearbyStations ?? [];
-    if (stops.length === 0) return list;
+    if (list.length === 0) return list;
+
+    // Sample the polyline instead of testing every vertex: a full-geometry line
+    // can carry thousands of points, and 1 km of sampling is far finer than the
+    // corridor width being tested for.
+    const line = polyline?.coordinates ?? [];
+    const sampled: [number, number][] = [];
+    if (line.length > 0) {
+      const step = Math.max(1, Math.floor(line.length / 400));
+      for (let i = 0; i < line.length; i += step) {
+        const [lng, lat] = line[i];
+        sampled.push([lat, lng]);
+      }
+    }
+
+    const nearRoute = (c: { lat: number; lng: number }) => {
+      if (sampled.length === 0) return true; // no line yet — show everything
+      // Degrees, not metres: cheap, and the latitude correction keeps the
+      // corridor from widening as the route runs north.
+      const latTol = CORRIDOR_KM / 111;
+      const cosLat = Math.cos((c.lat * Math.PI) / 180) || 1;
+      const lngTol = CORRIDOR_KM / (111 * cosLat);
+      return sampled.some(
+        ([lat, lng]) => Math.abs(lat - c.lat) < latTol && Math.abs(lng - c.lng) < lngTol,
+      );
+    };
+
+    // Drop context dots that coincide with a numbered planned stop (~80 m) so
+    // the prominent stop pins aren't doubled.
     return list.filter(
       (c) =>
+        nearRoute(c) &&
         !stops.some(
           (s) => Math.abs(s.lat - c.lat) < 0.0007 && Math.abs(s.lng - c.lng) < 0.0007,
         ),
     );
-  }, [nearbyStations, stops]);
+  }, [nearbyStations, stops, polyline]);
 
   const allPoints: [number, number][] = [
     ...(origin ? [[origin.lat, origin.lng] as [number, number]] : []),
@@ -135,15 +173,24 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
         <CircleMarker
           key={c.id}
           center={[c.lat, c.lng]}
-          radius={3.5}
+          // 3.5 px was effectively invisible on a phone. Big enough to see and
+          // to hit, still clearly subordinate to the numbered stop pins.
+          radius={6}
           pathOptions={{
             fillColor: tierColor(c.maxPowerKw, c.availability),
             color: "#ffffff",
-            weight: 1,
-            fillOpacity: 0.85,
-            opacity: 0.6,
+            weight: 1.5,
+            fillOpacity: 0.9,
+            opacity: 0.9,
           }}
-        />
+        >
+          <Tooltip direction="top" offset={[0, -6]} opacity={1}>
+            <span className="text-xs font-medium">
+              {c.name ?? "—"}
+              {c.maxPowerKw ? ` · ${Math.round(c.maxPowerKw)} kW` : ""}
+            </span>
+          </Tooltip>
+        </CircleMarker>
       ))}
 
       {/* Alternative roads: inactive drawn subtly + clickable, active on top. */}

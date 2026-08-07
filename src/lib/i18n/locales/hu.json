@@ -698,8 +698,7 @@
     "send_to_car_success": "Elküldve az autóba",
     "send_to_car_preconditioned": "Elküldve — az autó idenavigál és előfűti az akkumulátort",
     "send_to_car_error": "Nem sikerült elküldeni az autóba",
-    "sending": "Küldés…",
-    "cluster_label": "HELY"
+    "sending": "Küldés…"
   },
   "auth": {
     "title_login": "Üdv újra",
