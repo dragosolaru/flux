@@ -26,6 +26,31 @@ const TILE_TTL_SECONDS = 7 * 24 * 60 * 60;
 // 48 hours so every tile within it does not re-ingest data already imported.
 const COUNTRY_TTL_SECONDS = 48 * 60 * 60;
 
+// Per-instance fallback used only when Redis is absent. Without it every map
+// read treats every tile as stale and re-runs a full seven-source ingest, so a
+// missing or briefly unreachable Redis turns each pan into seconds of latency
+// and a burst of third-party calls. A serverless instance is short-lived and
+// each keeps its own copy, so this is a damper, not a cache — Redis is still
+// required in production.
+const memoryFreshness = new Map<string, number>();
+const MEMORY_TTL_MS = 10 * 60 * 1000;
+
+function memoryFresh(key: string): boolean {
+  const at = memoryFreshness.get(key);
+  if (at === undefined) return false;
+  if (Date.now() - at > MEMORY_TTL_MS) {
+    memoryFreshness.delete(key);
+    return false;
+  }
+  return true;
+}
+
+function markMemoryFresh(key: string): void {
+  // Bound the map: an instance serving many areas must not grow without limit.
+  if (memoryFreshness.size > 5_000) memoryFreshness.clear();
+  memoryFreshness.set(key, Date.now());
+}
+
 function freshnessKey(tile: Tile): string {
   // Namespace is bumped whenever ingestion/dedup behaviour changes so cached
   // tiles re-ingest and pick up the new logic in one shot.
@@ -50,8 +75,12 @@ function countryKey(cc: BulkCountry): string {
 }
 
 async function markTileFresh(tile: Tile): Promise<void> {
-  if (!redis) return;
-  await redis.set(freshnessKey(tile), Date.now(), { ex: TILE_TTL_SECONDS });
+  const key = freshnessKey(tile);
+  if (!redis) {
+    markMemoryFresh(key);
+    return;
+  }
+  await redis.set(key, Date.now(), { ex: TILE_TTL_SECONDS });
 }
 
 export async function markCountryFresh(cc: BulkCountry): Promise<void> {
@@ -213,7 +242,7 @@ export async function ensureAreaFresh(bbox: BBox): Promise<void> {
   if (redis) {
     values = await redis.mget<(string | null)[]>(...keys);
   } else {
-    values = keys.map(() => null);
+    values = keys.map((k) => (memoryFresh(k) ? "1" : null));
   }
 
   const staleTiles = tiles.filter((_, i) => values[i] === null);

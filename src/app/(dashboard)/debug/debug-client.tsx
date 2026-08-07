@@ -66,6 +66,17 @@ interface DebugPayload {
   warnings: string[];
 }
 
+interface ProbeRow {
+  source: string;
+  count: number;
+  ms: number;
+  withOperator: number;
+  withCountry: number;
+  withPower: number;
+  sample: { name: string | null; operator: string | null; country: string | null } | null;
+  error?: string;
+}
+
 interface IngestResult {
   mode: string;
   elapsedMs: number;
@@ -117,6 +128,77 @@ export function DebugClient() {
     }
   }
 
+  const [probe, setProbe] = useState<ProbeRow[] | null>(null);
+
+  async function applyAllMigrations() {
+    const list = migrations.data?.migrations ?? [];
+    setRunning("all-migrations");
+    setLastError(null);
+    const failures: string[] = [];
+    for (const m of list) {
+      try {
+        await apiFetch("/api/internal/debug/migrations", {
+          method: "POST",
+          body: JSON.stringify({ id: m.id }),
+        });
+      } catch (err) {
+        failures.push(err instanceof Error ? err.message : String(err));
+      }
+    }
+    setRunning(null);
+    void migrations.refetch();
+    void refetch();
+    if (failures.length === 0) {
+      toast.success(`${list.length} migrations applied`);
+    } else {
+      setLastError(failures.join("\n"));
+      toast.error(`${failures.length} of ${list.length} failed`);
+    }
+  }
+
+  async function runProbe(region: (typeof CORRIDOR)[number]) {
+    setRunning(`probe:${region.label}`);
+    setLastError(null);
+    setProbe(null);
+    try {
+      // Probe a small window at the region's centre — this measures each
+      // source, it does not import.
+      const midLat = (region.minLat + region.maxLat) / 2;
+      const midLng = (region.minLng + region.maxLng) / 2;
+      const res = await apiFetch<{ results: ProbeRow[] }>("/api/internal/debug/probe", {
+        method: "POST",
+        body: JSON.stringify({
+          minLat: midLat - 0.25,
+          minLng: midLng - 0.25,
+          maxLat: midLat + 0.25,
+          maxLng: midLng + 0.25,
+        }),
+      });
+      setProbe(res.results);
+    } catch (err) {
+      setLastError(`Probe failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function runDedupe() {
+    setRunning("dedupe");
+    setLastError(null);
+    setLastResult(null);
+    try {
+      const res = await apiFetch<IngestResult>("/api/internal/debug/dedupe", { method: "POST" });
+      setLastResult(res);
+      toast.success("Dedupe finished");
+      void refetch();
+    } catch (err) {
+      setLastError(`Dedupe failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error("Dedupe failed");
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runIngest(label: string, body: Record<string, unknown>) {
     setRunning(label);
     setLastError(null);
@@ -140,7 +222,7 @@ export function DebugClient() {
 
   function copyAll() {
     const blob = JSON.stringify(
-      { diagnostics: data ?? null, migrations: migrations.data ?? null, lastResult, lastError },
+      { diagnostics: data ?? null, migrations: migrations.data ?? null, probe, lastResult, lastError },
       null,
       2,
     );
@@ -342,7 +424,21 @@ export function DebugClient() {
       </section>
 
       <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Migrations</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Migrations</h2>
+          <button
+            onClick={() => void applyAllMigrations()}
+            disabled={running !== null}
+            className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm hover:bg-muted disabled:opacity-50"
+          >
+            {running === "all-migrations" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Play className="size-4" />
+            )}
+            Apply all
+          </button>
+        </div>
         {migrations.data && !migrations.data.bootstrapped && (
           <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
             Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
@@ -386,6 +482,80 @@ export function DebugClient() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Probe sources</h2>
+        <p className="text-xs text-muted-foreground">
+          Queries each source separately for a small window and reports what it returned —
+          nothing is written. The combined ingest cannot tell a dead connector apart from an
+          area with no chargers.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {CORRIDOR.map((r) => (
+            <IngestButton
+              key={r.label}
+              label={`Probe ${r.label}`}
+              busy={running === `probe:${r.label}`}
+              disabled={running !== null}
+              onClick={() => void runProbe(r)}
+            />
+          ))}
+        </div>
+        {probe && (
+          <div className="-mx-4 overflow-x-auto px-4">
+            <table className="w-full min-w-[560px] text-xs">
+              <thead className="text-left text-muted-foreground">
+                <tr>
+                  <th className="py-1.5 pr-3">Source</th>
+                  <th className="py-1.5 pr-3">Rows</th>
+                  <th className="py-1.5 pr-3">ms</th>
+                  <th className="py-1.5 pr-3">w/ operator</th>
+                  <th className="py-1.5 pr-3">w/ country</th>
+                  <th className="py-1.5 pr-3">w/ power</th>
+                  <th className="py-1.5">Sample</th>
+                </tr>
+              </thead>
+              <tbody>
+                {probe.map((r) => (
+                  <tr key={r.source} className="border-t border-border/60">
+                    <td className="py-1.5 pr-3 font-mono">{r.source}</td>
+                    <td className={`py-1.5 pr-3 tabular-nums ${r.count === 0 ? "text-amber-400" : ""}`}>
+                      {r.count}
+                    </td>
+                    <td className="py-1.5 pr-3 tabular-nums text-muted-foreground">{r.ms}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{r.withOperator}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{r.withCountry}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{r.withPower}</td>
+                    <td className="py-1.5 text-muted-foreground">
+                      {r.error
+                        ? `error: ${r.error}`
+                        : r.sample
+                          ? [r.sample.name, r.sample.operator, r.sample.country]
+                              .filter(Boolean)
+                              .join(" · ") || "—"
+                          : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Collapse duplicates</h2>
+        <p className="text-xs text-muted-foreground">
+          Repeats the batched dedupe until nothing is left to merge. Needs migration 034. New
+          duplicates are prevented at ingest, so this is for rows stored before that fix.
+        </p>
+        <IngestButton
+          label="Run dedupe"
+          busy={running === "dedupe"}
+          disabled={running !== null}
+          onClick={() => void runDedupe()}
+        />
       </section>
 
       <section className="space-y-2 rounded-xl border border-border p-4">
