@@ -104,6 +104,9 @@ function AreaRequestHandler({ onRequest }: { onRequest: (lat: number, lng: numbe
   const map = useMap();
   useEffect(() => {
     const handler = (e: L.LeafletMouseEvent) => {
+      // Without this a desktop right-click opens the browser's own context menu
+      // on top of the request we just started.
+      L.DomEvent.preventDefault(e.originalEvent);
       onRequest(e.latlng.lat, e.latlng.lng);
     };
     map.on("contextmenu", handler);
@@ -177,9 +180,11 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
     <MapContainer
       center={[48, 12]}
       zoom={5}
-      style={{ height: "100%", width: "100%" }}
       scrollWheelZoom
       className={className}
+      // iOS answers a long press with the text-selection callout unless both
+      // are suppressed, which swallows the gesture before Leaflet sees it.
+      style={{ height: "100%", width: "100%", WebkitTouchCallout: "none", userSelect: "none" }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'

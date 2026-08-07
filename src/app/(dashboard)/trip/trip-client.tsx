@@ -286,6 +286,8 @@ export function TripClient() {
       setActiveVariant(0);
       setSharedRoute(false);
       setRouteSaved(false);
+      // Areas pulled in for the previous route are no longer "on the way".
+      setExtraStations([]);
       setFormCollapsed(true);
       setPlanExpanded(true);
     } catch (err) {
@@ -338,6 +340,10 @@ export function TripClient() {
   // source before answering, so this doubles as "go and find what is here".
   const [loadingArea, setLoadingArea] = useState<{ lat: number; lng: number } | null>(null);
   const [extraStations, setExtraStations] = useState<Charger[]>([]);
+  // The caption teaches a gesture; once it has been used it is just clutter.
+  const [areaHintSeen, setAreaHintSeen] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem("flux_area_hint_seen") === "1",
+  );
 
   const handleAreaRequest = useCallback(
     async (lat: number, lng: number) => {
@@ -347,22 +353,41 @@ export function TripClient() {
         // ~25 km around the press. Small enough to stay quick on a cold area,
         // big enough to be worth the tap.
         const pad = 0.22;
-        const found = await chargersApi.inBBox(
-          { minLat: lat - pad, maxLat: lat + pad, minLng: lng - pad, maxLng: lng + pad },
-          { limit: 500 },
-        );
-        setExtraStations((prev) => {
-          const seen = new Set(prev.map((c) => c.id));
-          return [...prev, ...found.filter((c) => !seen.has(c.id))];
-        });
-        toast.success(t("area_loaded", { count: found.length }));
+        const bbox = { minLat: lat - pad, maxLat: lat + pad, minLng: lng - pad, maxLng: lng + pad };
+
+        const merge = (found: Charger[]) => {
+          setExtraStations((prev) => {
+            const seen = new Set(prev.map((c) => c.id));
+            return [...prev, ...found.filter((c) => !seen.has(c.id))];
+          });
+          return found.length;
+        };
+
+        // The read endpoint answers from what is already stored and ingests a
+        // cold area in the background, so a first press on virgin ground would
+        // otherwise report "0 chargers" while the sources were still being
+        // fetched. Re-read a couple of times to pick that up — the loading ring
+        // stays put throughout, which is what the press promised.
+        let count = merge(await chargersApi.inBBox(bbox, { limit: 500 }));
+        for (const delay of [4000, 7000]) {
+          await new Promise((r) => setTimeout(r, delay));
+          const again = await chargersApi.inBBox(bbox, { limit: 500 });
+          if (again.length > count) count = merge(again);
+          else break;
+        }
+
+        toast.success(t("area_loaded", { count }));
+        if (!areaHintSeen) {
+          localStorage.setItem("flux_area_hint_seen", "1");
+          setAreaHintSeen(true);
+        }
       } catch {
         toast.error(t("area_error"));
       } finally {
         setLoadingArea(null);
       }
     },
-    [loadingArea, t],
+    [loadingArea, t, areaHintSeen],
   );
 
   // All chargers near the corridor — same platform endpoint the station map uses.
@@ -591,7 +616,7 @@ export function TripClient() {
         {/* A long-press is invisible unless it is named. Shown only once a plan
             exists, which is when exploring around the route is worth doing, and
             replaced by the count while an area is loading. */}
-        {plan && (
+        {plan && (loadingArea || !areaHintSeen) && (
           <div className="pointer-events-none absolute bottom-3 left-1/2 z-[400] -translate-x-1/2 rounded-full bg-card/85 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-sm lg:bottom-4">
             {loadingArea ? (
               <span className="flex items-center gap-1.5">
