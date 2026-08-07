@@ -84,6 +84,22 @@ Minim pentru funcționare (auth-ul a picat deja o dată din cauza lor):
 - [ ] `CRON_SECRET` + cron-urile Vercel (poll-vehicles) dacă activezi notificările
       (`NEXT_PUBLIC_NOTIFICATIONS_ENABLED=true`).
 
+## 4b. Securitate Tesla — înainte ca un client real să conecteze o mașină
+
+Conectarea acordă `vehicle_device_data`, `vehicle_cmds`, `vehicle_charging_cmds`:
+locație live plus blocare/deblocare, climatizare, port de încărcare, pornire de
+la distanță. Tokenii sunt criptați la rest, deci o scurgere doar a bazei nu
+ajunge — dar una a cheii de criptare împreună cu baza, da.
+
+- [ ] Deconectare din aplicație care revocă accesul și șterge tokenii
+      (nu există azi)
+- [ ] Istoricul comenzilor vizibil pentru utilizator (`command_events` se scrie
+      deja, dar nu se afișează nicăieri)
+- [ ] Confirmare suplimentară pentru deblocare și pornire de la distanță
+- [ ] Evaluat dacă `vehicle_cmds` merită cerut pentru conturile care vor doar
+      costuri și rute — fără el dispare complet riscul de deblocare
+- [ ] Procedură de rotire pentru `TESLA_TOKEN_ENCRYPTION_KEY`
+
 ## 5. Nice-to-have imediat după lansare (din docs/TODO.md)
 
 1. Tarife reale (Tibber `TIBBER_TOKEN`; restul provider-ilor rămân curbe mock).

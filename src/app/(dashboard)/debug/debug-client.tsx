@@ -85,6 +85,23 @@ interface IngestResult {
   [key: string]: unknown;
 }
 
+// Every bulk country, so a region can be topped up without editing code.
+// Order puts the RO/Balkan corridor first because that is the one being worked.
+const COUNTRIES: { code: string; name: string }[] = [
+  { code: "ro", name: "Romania" },
+  { code: "bg", name: "Bulgaria" },
+  { code: "gr", name: "Greece" },
+  { code: "rs", name: "Serbia" },
+  { code: "mk", name: "North Macedonia" },
+  { code: "hu", name: "Hungary" },
+  { code: "at", name: "Austria" },
+  { code: "hr", name: "Croatia" },
+  { code: "si", name: "Slovenia" },
+  { code: "de", name: "Germany" },
+  { code: "fr", name: "France" },
+  { code: "nl", name: "Netherlands" },
+];
+
 const CORRIDOR = [
   { label: "Cluj", minLat: 46.5, minLng: 23.2, maxLat: 47.2, maxLng: 24.2 },
   { label: "Bucharest", minLat: 44.2, minLng: 25.8, maxLat: 44.7, maxLng: 26.4 },
@@ -135,6 +152,13 @@ export function DebugClient() {
   // be selected by hand — some mobile browsers block the API outright.
   const [copyFallback, setCopyFallback] = useState<string | null>(null);
   const [ocrVariant, setOcrVariant] = useState<"energy" | "car">("energy");
+  const [pickedCountries, setPickedCountries] = useState<string[]>(["ro"]);
+
+  function toggleCountry(code: string) {
+    setPickedCountries((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
+    );
+  }
 
   async function clearCache(region?: (typeof CORRIDOR)[number]) {
     const label = region ? `cache:${region.label}` : "cache:all";
@@ -443,19 +467,64 @@ export function DebugClient() {
           source, including OpenStreetMap and TomTom.
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          <IngestButton
-            label="Countries: RO, BG, GR"
-            busy={running === "RO/BG/GR"}
-            disabled={running !== null}
-            onClick={() => void runIngest("RO/BG/GR", { mode: "country", countries: ["ro", "bg", "gr"] })}
-          />
-          <IngestButton
-            label="Countries: RS, MK, HU"
-            busy={running === "RS/MK/HU"}
-            disabled={running !== null}
-            onClick={() => void runIngest("RS/MK/HU", { mode: "country", countries: ["rs", "mk", "hu"] })}
-          />
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Pick countries
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {COUNTRIES.map((c) => {
+              const on = pickedCountries.includes(c.code);
+              return (
+                <button
+                  key={c.code}
+                  onClick={() => toggleCountry(c.code)}
+                  disabled={running !== null}
+                  className={`min-h-11 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50 ${
+                    on
+                      ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
+                      : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <IngestButton
+              label={
+                pickedCountries.length === 0
+                  ? "Select at least one"
+                  : `Fetch ${pickedCountries.length} selected`
+              }
+              busy={running === "countries"}
+              disabled={running !== null || pickedCountries.length === 0}
+              onClick={() =>
+                void runIngest("countries", {
+                  mode: "country",
+                  countries: pickedCountries,
+                })
+              }
+            />
+            <button
+              onClick={() => setPickedCountries(COUNTRIES.map((c) => c.code))}
+              disabled={running !== null}
+              className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
+            >
+              Select all
+            </button>
+            <button
+              onClick={() => setPickedCountries([])}
+              disabled={running !== null}
+              className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
+            >
+              Clear
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Countries imported in the last 48 h are skipped as fresh. Clear the freshness cache
+            below to force a re-import.
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">

@@ -6,6 +6,43 @@ _Last updated: 2026-06-24_
 
 ## 🔴 Critical / Blockers
 
+### 0. Go-live gate — must clear before real customers
+Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
+
+- [ ] **Deploy `tesla-proxy` on Fly.io** and set `TESLA_PROXY_BASE_URL`. Without
+      it every command on a Model 3/Y/S/X built after 2021 fails with
+      `VCP_REQUIRED` (412). See `tesla-proxy/README.md`.
+- [ ] **Set `LIVE_INTEGRATIONS=tesla`** — the switch from the mock simulator to
+      the real Fleet API. Everything else Tesla-side is already in-tree.
+- [ ] **Re-enable subscription limits** in `src/lib/subscription.ts`
+      (`canUploadDocument` / `canUploadVaultDocument` are `TODO(live)` stubs
+      returning `{ allowed: true }`). Restore the pre-9715eb1 bodies.
+- [ ] **Stripe live keys** — `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+      `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_ANNUAL_PRICE_ID`. The debug
+      panel reports `stripe: false` today.
+- [ ] **Tesla security hardening before linking real accounts** — see item 1b.
+
+### 1b. Tesla account security (before real customers link a car)
+Linking grants `vehicle_device_data`, `vehicle_cmds` and
+`vehicle_charging_cmds` (`src/lib/tesla/constants.ts`), i.e. live location plus
+lock/unlock, climate, charge port and remote start. Tokens are encrypted at rest
+(AES-256-GCM via `TESLA_TOKEN_ENCRYPTION_KEY`), so a database leak alone is not
+enough — but a leak of that key alongside it is.
+
+Missing before this is safe to offer broadly:
+- [ ] **In-app disconnect** that revokes the Tesla grant and deletes the stored
+      tokens. There is no user-facing revoke path today.
+- [ ] **Surface `command_events` to the user** — the audit rows are written and
+      included in the data export, but nothing shows "what was commanded, when".
+      An owner should be able to see an unlock they did not issue.
+- [ ] **Step-up confirmation for unlock / remote start.** A hijacked session can
+      currently issue them with one tap, and remote start on some models allows
+      driving away.
+- [ ] **Consider dropping `vehicle_cmds`** for accounts that only want cost and
+      trip tracking — read-only linking removes the entire unlock risk class.
+- [ ] **Rotate `TESLA_TOKEN_ENCRYPTION_KEY` procedure** — document how, and
+      re-encrypt existing rows.
+
 ### 1. Tesla VCP proxy — Vehicle Command Protocol for post-2021 cars
 Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (HTTP 412) on every Model 3/Y/S/X built after mid-2021. The code in `src/lib/tesla/api.ts` already branches on `TESLA_PROXY_BASE_URL`; the `tesla-http-proxy` Go binary needs to be deployed on Fly.io and the env var set.
 - **Effort:** `[L]` — infra only, no code changes needed
