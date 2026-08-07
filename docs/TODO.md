@@ -14,6 +14,11 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       Tesla fetches it during partner registration and Virtual Key pairing, so
       nothing else Tesla-side could have worked without it. Needs
       `TESLA_PUBLIC_KEY`; answers 503 when unset rather than an empty 200.
+- [ ] **`/connect/tesla` shows the raw error code, not what to do.** The page
+      renders `t("error", { code })`, so a driver who hits `fleet_api_rejected`
+      or `no_vehicles` sees a slug. Needs a hint per known code, in all five
+      locales. Not urgent while the maintainer is the only one linking, but it
+      is the first thing a real customer would see go wrong.
 - [ ] **Set the Tesla env vars and register the partner account** — full ordered
       procedure in `docs/VEHICLE-CONNECTION.md` ("Going live with the Fleet
       API"). The debug panel reports the same checklist as `tesla.steps` and

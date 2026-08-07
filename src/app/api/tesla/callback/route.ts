@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { errorContext, logServer } from "@/lib/debug-log";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { exchangeCodeForTokens, verifyState } from "@/lib/tesla/auth";
 import { fetchVehicleList } from "@/lib/tesla/api";
@@ -54,7 +55,8 @@ export async function GET(req: NextRequest) {
       clientSecret: process.env.TESLA_CLIENT_SECRET!,
       redirectUri: process.env.TESLA_REDIRECT_URI!,
     });
-  } catch {
+  } catch (err) {
+    logServer("error", "tesla/callback", "token exchange failed", errorContext(err));
     return NextResponse.redirect(
       new URL("/connect/tesla?error=token_exchange", req.url),
     );
@@ -64,6 +66,14 @@ export async function GET(req: NextRequest) {
   const regions: TeslaRegion[] = ["eu", "na", "cn"];
   let foundRegion: TeslaRegion | null = null;
   let vehicle: { id: number; vin: string; display_name: string } | null = null;
+
+  // Two very different failures used to look identical here — an account with
+  // no cars, and the Fleet API refusing us because the partner account is not
+  // registered (which it is not until TESLA_PUBLIC_KEY is served and
+  // /api/1/partner_accounts has been called). Both ended as `no_vehicles` with
+  // every error swallowed, so linking appeared to succeed and the app quietly
+  // kept showing the mock vehicle. Record which one it was.
+  const regionErrors: Record<string, unknown> = {};
 
   for (const region of regions) {
     try {
@@ -81,14 +91,28 @@ export async function GET(req: NextRequest) {
         };
         break;
       }
-    } catch {
-      // Try next region.
+      regionErrors[region] = "reachable, but the account has no vehicles here";
+    } catch (err) {
+      regionErrors[region] = err instanceof Error ? err.message : String(err);
     }
   }
 
   if (!foundRegion || !vehicle) {
+    const everyRegionErrored = regions.every(
+      (r) => typeof regionErrors[r] === "string" && !String(regionErrors[r]).startsWith("reachable"),
+    );
+    logServer("error", "tesla/callback", "no vehicle found after linking", {
+      regions: regionErrors,
+      // The likeliest cause by far, and not something the Tesla error text says.
+      hint: everyRegionErrored
+        ? "every region rejected the call — check the partner account is registered and TESLA_PUBLIC_KEY is served"
+        : "the account appears to have no vehicles",
+    });
     return NextResponse.redirect(
-      new URL("/connect/tesla?error=no_vehicles", req.url),
+      new URL(
+        `/connect/tesla?error=${everyRegionErrored ? "fleet_api_rejected" : "no_vehicles"}`,
+        req.url,
+      ),
     );
   }
 
@@ -114,6 +138,9 @@ export async function GET(req: NextRequest) {
     .single();
 
   if (vehErr || !createdVehicle) {
+    logServer("error", "tesla/callback", "vehicle insert failed", {
+      detail: vehErr?.message ?? "no row returned",
+    });
     return NextResponse.redirect(
       new URL("/connect/tesla?error=vehicle_save", req.url),
     );
