@@ -9,6 +9,7 @@ import { TESLA_COMMAND_MAP } from "@/lib/brands/tesla/command-map";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { applyCommand } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot, recordCommandEvent } from "@/lib/mock/persistence";
+import { alertOnSensitiveCommand } from "@/lib/notifications/security-alert";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendVehicleCommand } from "@/lib/tesla/api";
@@ -101,6 +102,12 @@ export async function POST(
         body: entry.buildBody(args),
       });
       await recordCommandEvent(vehicleId, command, args, result.response.result, result.response.reason || null);
+      alertOnSensitiveCommand({
+        userId: session.user.id,
+        command,
+        vehicleName: vehicle.display_name,
+        success: result.response.result,
+      });
       return NextResponse.json({ success: result.response.result, result: result.response.reason });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Command failed";
@@ -131,6 +138,12 @@ export async function POST(
     const next = applyCommand(prev, command, args ?? null, profile);
     await saveSnapshot(vehicleId, prev, next);
     await recordCommandEvent(vehicleId, command, args ?? null, true, null);
+    alertOnSensitiveCommand({
+      userId: session.user.id,
+      command,
+      vehicleName: vehicle.display_name,
+      success: true,
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     const errorCode = err instanceof Error ? err.message : "unknown";

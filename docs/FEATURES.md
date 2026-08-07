@@ -436,6 +436,18 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 ---
 
+
+**Tesla account safety:** linking grants `vehicle_device_data`, `vehicle_cmds`
+and `vehicle_charging_cmds`, so a linked account exposes live location plus
+unlock, climate, charge port and remote start. Tokens are encrypted at rest
+(AES-256-GCM). Three controls sit on top: `DELETE /api/tesla/connection` revokes
+each refresh token at Tesla and deletes the stored rows (Settings → Advanced →
+Tesla; vehicles fall back to the simulator, trips/costs/documents are kept);
+`GET /api/vehicles/[id]/command-history` surfaces the `command_events` audit
+under the controls on `/commands`; and `unlock` / `remote_start` ask for
+confirmation before firing, then notify the owner on success via
+`alertOnSensitiveCommand` (`src/lib/notifications/security-alert.ts`).
+
 ## 24. Security hardening
 
 - **Auth on every route** + Supabase UUID-scoped queries (`.eq("user_id", …)`); write routes resolve `ensureSupabaseUserId`.

@@ -43,10 +43,10 @@ Still open:
       a live-but-read-only vehicle.
 - [ ] **Rotate `TESLA_TOKEN_ENCRYPTION_KEY` procedure** — document how, and
       re-encrypt existing rows.
-- [ ] **Notify on sensitive commands.** The audit is passive; an owner only sees
-      an unlicensed unlock if they go looking. A push/email on unlock and remote
-      start would close that. Notification plumbing already exists behind
-      `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`.
+- [x] Notify on sensitive commands — `alertOnSensitiveCommand` fires on a
+      successful `unlock` or `remote_start` through whichever channels the owner
+      has enabled. Requires `NEXT_PUBLIC_NOTIFICATIONS_ENABLED` and at least one
+      channel configured, otherwise it is a no-op.
 
 ### 1. Tesla VCP proxy — Vehicle Command Protocol for post-2021 cars
 Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (HTTP 412) on every Model 3/Y/S/X built after mid-2021. The code in `src/lib/tesla/api.ts` already branches on `TESLA_PROXY_BASE_URL`; the `tesla-http-proxy` Go binary needs to be deployed on Fly.io and the env var set.
