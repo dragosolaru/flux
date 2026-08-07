@@ -103,7 +103,12 @@ async function fetchPage(
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(9000),
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    // Silent [] here previously hid quota exhaustion (403) and key problems:
+    // the sweep looked successful while contributing nothing.
+    console.error(`[tomtom] categorySearch ${res.status}`);
+    return [];
+  }
   const data = (await res.json()) as TomTomResponse;
   return Array.isArray(data.results) ? data.results : [];
 }

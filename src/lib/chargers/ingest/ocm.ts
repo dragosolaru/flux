@@ -134,8 +134,13 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
   try {
     const url = new URL("https://api.openchargemap.io/v3/poi/");
     url.searchParams.set("output", "json");
+    // compact strips null fields; verbose must stay ON because it is what
+    // expands the reference objects. With verbose=false OCM returns
+    // OperatorID/CountryID integers instead of OperatorInfo/Country objects,
+    // and mapOcmPoi reads the objects — so every row landed with a null
+    // operator and null country.
     url.searchParams.set("compact", "true");
-    url.searchParams.set("verbose", "false");
+    url.searchParams.set("verbose", "true");
     url.searchParams.set("maxresults", "2000");
     // OCM boundingbox: (lat1,lng1),(lat2,lng2).
     url.searchParams.set(
@@ -150,7 +155,10 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(9000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[ocm] tile fetch ${res.status}`);
+      return [];
+    }
 
     const data: unknown = await res.json();
     if (!Array.isArray(data)) return [];
@@ -183,8 +191,13 @@ export async function fetchCountryOcm(
   try {
     const url = new URL("https://api.openchargemap.io/v3/poi/");
     url.searchParams.set("output", "json");
+    // compact strips null fields; verbose must stay ON because it is what
+    // expands the reference objects. With verbose=false OCM returns
+    // OperatorID/CountryID integers instead of OperatorInfo/Country objects,
+    // and mapOcmPoi reads the objects — so every row landed with a null
+    // operator and null country.
     url.searchParams.set("compact", "true");
-    url.searchParams.set("verbose", "false");
+    url.searchParams.set("verbose", "true");
     url.searchParams.set("maxresults", "5000");
     url.searchParams.set("countrycode", countryCode);
     if (modifiedSince) {
@@ -198,7 +211,10 @@ export async function fetchCountryOcm(
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(60000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[ocm] country fetch ${res.status}`);
+      return [];
+    }
 
     const data: unknown = await res.json();
     if (!Array.isArray(data)) return [];
