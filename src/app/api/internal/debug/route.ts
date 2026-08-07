@@ -50,14 +50,19 @@ export async function GET() {
     if (stats.total === 0) {
       warnings.push("Charger table is empty — run an ingest.");
     } else {
+      // A total absence is a broken mapping. A partial one is not: OSM carries
+      // no operator or country of its own (addr:country is rarely tagged, since
+      // country is implied geographically), and rows ingested before a mapping
+      // fix keep their old values until their area is ingested again. Warning
+      // on the partial case cried wolf permanently.
       if (stats.operators === 0) {
         warnings.push(
-          "No charger has an operator. OCM returns operator only with verbose=true; check the OCM mapping.",
+          "No charger has an operator at all — the source mapping is broken, not merely sparse.",
         );
       }
-      if (stats.no_country / Math.max(stats.total, 1) > 0.5) {
+      if (stats.no_country === stats.total) {
         warnings.push(
-          `${stats.no_country} of ${stats.total} chargers have no country — likely an OCM mapping or source-mix problem.`,
+          "No charger has a country at all — the source mapping is broken, not merely sparse.",
         );
       }
     }
