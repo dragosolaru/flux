@@ -877,7 +877,9 @@
     "share_sent_detail_preconditioned": "Rută trimisă — precondiționare activă pentru stațiile non-Tesla",
     "area_loaded": "{count} stații încărcate pentru zona aceea",
     "area_error": "Nu s-a putut încărca zona",
-    "area_hint": "Ține apăsat pe hartă ca să aduci stațiile de acolo"
+    "area_hint": "Ține apăsat pe hartă ca să aduci stațiile de acolo",
+    "share_route_btn": "Trimite traseul",
+    "share_link_copied": "Link-ul traseului a fost copiat"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

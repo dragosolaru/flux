@@ -877,7 +877,9 @@
     "share_sent_detail_preconditioned": "Útvonal elküldve — előkondicionálás aktív a nem Tesla állomásoknál",
     "area_loaded": "{count} töltő betöltve arra a területre",
     "area_error": "A terület nem tölthető be",
-    "area_hint": "Nyomja hosszan a térképet a töltők betöltéséhez"
+    "area_hint": "Nyomja hosszan a térképet a töltők betöltéséhez",
+    "share_route_btn": "Útvonal megosztása",
+    "share_link_copied": "Útvonal-hivatkozás másolva"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

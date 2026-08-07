@@ -877,7 +877,9 @@
     "share_sent_detail_preconditioned": "Route sent — preconditioning active for non-Tesla stops",
     "area_loaded": "{count} chargers loaded for that area",
     "area_error": "Could not load that area",
-    "area_hint": "Long-press the map to load chargers there"
+    "area_hint": "Long-press the map to load chargers there",
+    "share_route_btn": "Share route",
+    "share_link_copied": "Route link copied"
   },
   "notFoundPage": {
     "heading": "Page not found",

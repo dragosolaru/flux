@@ -107,6 +107,10 @@ function AreaRequestHandler({ onRequest }: { onRequest: (lat: number, lng: numbe
       // Without this a desktop right-click opens the browser's own context menu
       // on top of the request we just started.
       L.DomEvent.preventDefault(e.originalEvent);
+      // A selection may already have started before the CSS took effect (or in
+      // a browser that ignores it); drop it so the press does not leave text
+      // highlighted across the screen.
+      window.getSelection()?.removeAllRanges();
       onRequest(e.latlng.lat, e.latlng.lng);
     };
     map.on("contextmenu", handler);
@@ -182,9 +186,7 @@ export default function TripMap({ origin, destination, stops, polyline, classNam
       zoom={5}
       scrollWheelZoom
       className={className}
-      // iOS answers a long press with the text-selection callout unless both
-      // are suppressed, which swallows the gesture before Leaflet sees it.
-      style={{ height: "100%", width: "100%", WebkitTouchCallout: "none", userSelect: "none" }}
+      style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'

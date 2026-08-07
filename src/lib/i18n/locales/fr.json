@@ -877,7 +877,9 @@
     "share_sent_detail_preconditioned": "Itinéraire envoyé — préconditionnement actif pour les bornes non-Tesla",
     "area_loaded": "{count} bornes chargées pour cette zone",
     "area_error": "Impossible de charger cette zone",
-    "area_hint": "Appui long sur la carte pour charger les bornes"
+    "area_hint": "Appui long sur la carte pour charger les bornes",
+    "share_route_btn": "Partager l’itinéraire",
+    "share_link_copied": "Lien de l’itinéraire copié"
   },
   "notFoundPage": {
     "heading": "Page introuvable",

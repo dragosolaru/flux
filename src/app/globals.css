@@ -307,3 +307,15 @@ input[type="range"].soc-slider::-moz-range-track {
   border-radius: 9999px;
   background: var(--border);
 }
+
+/* The map's long-press gesture is a first-class control (it loads chargers for
+   that area). Without this the press starts a text selection instead — which on
+   iOS also raises the callout and swallows the gesture before Leaflet sees it.
+   Applied to descendants too: the selection otherwise escapes into whatever the
+   drag passes over. */
+.leaflet-container,
+.leaflet-container * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

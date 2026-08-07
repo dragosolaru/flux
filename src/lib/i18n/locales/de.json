@@ -877,7 +877,9 @@
     "share_sent_detail_preconditioned": "Route gesendet — Vorkonditionierung für Nicht-Tesla-Stationen aktiv",
     "area_loaded": "{count} Ladepunkte für diesen Bereich geladen",
     "area_error": "Bereich konnte nicht geladen werden",
-    "area_hint": "Karte lange drücken, um dort Ladepunkte zu laden"
+    "area_hint": "Karte lange drücken, um dort Ladepunkte zu laden",
+    "share_route_btn": "Route teilen",
+    "share_link_copied": "Routenlink kopiert"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

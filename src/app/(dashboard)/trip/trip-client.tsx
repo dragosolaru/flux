@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, SlidersHorizontal, Clock, X, CheckCircle2, Bookmark, Trash2, Info, Zap } from "lucide-react";
+import { Route, Loader2, AlertCircle, Navigation, Pencil, AlertTriangle, ChevronUp, ChevronDown, Send, Share2, SlidersHorizontal, Clock, X, CheckCircle2, Bookmark, Trash2, Info, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -453,6 +453,79 @@ export function TripClient() {
     }
   }
 
+  /**
+   * Hands the whole route to the OS share sheet, so it can go to the Tesla app
+   * (or anywhere else) rather than only through the Fleet API.
+   *
+   * The link is a Google Maps directions URL carrying every charging stop as a
+   * waypoint — the one route format the Tesla app and every other navigation
+   * app understand from a share. `share_navigation` remains the path that
+   * pushes waypoints straight into the car; this is the path that works when no
+   * Tesla is linked, or when the driver would rather pick the app themselves.
+   */
+  async function handleShareRoute() {
+    if (!activePlan || !origin || !destination) return;
+
+    const pt = (p: { lat: number; lng: number }) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
+    const url = new URL("https://www.google.com/maps/dir/");
+    url.searchParams.set("api", "1");
+    url.searchParams.set("origin", pt(origin));
+    url.searchParams.set("destination", pt(destination));
+    url.searchParams.set("travelmode", "driving");
+    if (activePlan.stops.length > 0) {
+      url.searchParams.set("waypoints", activePlan.stops.map((st) => pt(st.station)).join("|"));
+    }
+
+    const title = `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`;
+    const link = url.toString();
+
+    // Preconditioning is about the car, not about who receives the link, so it
+    // fires here too — sharing to the Tesla app still means driving to a
+    // non-Supercharger DC stop with a cold battery otherwise.
+    void maybePrecondition();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: title, url: link });
+        return;
+      }
+      await navigator.clipboard.writeText(link);
+      toast.success(t("share_link_copied"));
+    } catch (err) {
+      // A dismissed share sheet rejects with AbortError; that is not a failure.
+      if (err instanceof Error && err.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success(t("share_link_copied"));
+      } catch {
+        toast.error(t("share_error"));
+      }
+    }
+  }
+
+  /**
+   * Warm the battery when the route includes a DC stop Tesla will not handle
+   * itself. Superchargers precondition from the car's own navigation, so firing
+   * for those would be redundant.
+   */
+  async function maybePrecondition(): Promise<boolean> {
+    if (!teslaVehicle || !activePlan) return false;
+    const needed = activePlan.stops.some(
+      (st) => needsPreconditioning(st.station.maxKw) && !isSuperchargerNetwork(st.station.networkId),
+    );
+    if (!needed) return false;
+    try {
+      await apiFetch(`/api/vehicles/${teslaVehicle.id}/commands`, {
+        method: "POST",
+        body: JSON.stringify({ command: "precondition_max", args: { on: true } }),
+      });
+      setShowDisclaimer(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function handleManualPrecondition() {
     if (!teslaVehicle) return;
     setPreconditioningManually(true);
@@ -580,6 +653,7 @@ export function TripClient() {
           sharedRoute,
           destinationShort,
           onShareToTesla: handleShareToTesla,
+          onShareRoute: () => void handleShareRoute(),
           onSaveRoute: handleSaveRoute,
           saving: createSavedRoute.isPending,
           saved: routeSaved,
@@ -1031,6 +1105,7 @@ interface TripResultsBodyProps {
   sharedRoute: boolean;
   destinationShort: string;
   onShareToTesla: () => void;
+  onShareRoute: () => void;
   onSaveRoute: () => void;
   saving: boolean;
   saved: boolean;
@@ -1054,6 +1129,7 @@ function TripResultsBody({
   sharedRoute,
   destinationShort,
   onShareToTesla,
+  onShareRoute,
   onSaveRoute,
   saving,
   saved,
@@ -1200,6 +1276,21 @@ function TripResultsBody({
         /* Feasible route — normal result */
         <>
           <StatStrip stats={stats} />
+
+          {/* Works with or without a linked Tesla: hands the whole route, stops
+              included, to the OS share sheet. */}
+          <button
+            onClick={onShareRoute}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Share2 className="size-4" />
+            {t("share_route_btn")}
+            {activePlan.stops.length > 0 && (
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
+                {activePlan.stops.length} ⚡
+              </span>
+            )}
+          </button>
 
           {/* Preconditioning disclaimer — shown once after sending a route
               that includes non-SC DC fast chargers. */}
