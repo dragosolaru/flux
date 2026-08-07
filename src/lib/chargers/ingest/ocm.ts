@@ -100,6 +100,22 @@ function mapConnection(conn: OcmConnection): ChargerConnector {
   };
 }
 
+/**
+ * OCM uses placeholder titles for a missing operator — "(Unknown Operator)" is
+ * the common one. Storing that verbatim is worse than storing nothing: it
+ * becomes a real operator_id, so dedup reads two unrelated networks that both
+ * carry the placeholder as the SAME operator and merges them, while a genuinely
+ * unknown operator (null) would have been treated as unknown and handled by the
+ * other signals.
+ */
+function normaliseOperator(title: string | null | undefined): string | null {
+  const value = title?.trim();
+  if (!value) return null;
+  if (/^\(?\s*unknown\b/i.test(value)) return null;
+  if (/^n\/?a$/i.test(value)) return null;
+  return value;
+}
+
 export function mapOcmPoi(poi: OcmPoi): RawCharger | null {
   const info = poi.AddressInfo;
   if (!info) return null;
@@ -117,7 +133,7 @@ export function mapOcmPoi(poi: OcmPoi): RawCharger | null {
     lat,
     lng,
     name: info.Title ?? null,
-    operator: poi.OperatorInfo?.Title ?? null,
+    operator: normaliseOperator(poi.OperatorInfo?.Title),
     address: {
       street: info.AddressLine1 ?? null,
       city: info.Town ?? null,

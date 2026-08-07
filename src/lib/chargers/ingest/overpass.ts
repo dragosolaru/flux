@@ -103,7 +103,7 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
         "User-Agent": "Flux-Chargers/1.0",
       },
       body,
-      signal: AbortSignal.timeout(25_000),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) throw new Error(`overpass ${res.status}`);
     const data = (await res.json()) as OverpassResponse;

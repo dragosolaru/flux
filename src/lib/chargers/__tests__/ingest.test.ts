@@ -183,3 +183,32 @@ describe("mapOverpassElement", () => {
     expect(mapOverpassElement({ type: "node", id: 1, tags: {} })).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// OCM placeholder operators — storing "(Unknown Operator)" verbatim makes it a
+// real operator_id, so dedup would read two unrelated networks that both carry
+// the placeholder as the same operator and merge them.
+// ---------------------------------------------------------------------------
+
+describe("OCM operator placeholders", () => {
+  function poiWithOperator(title: string | null) {
+    return {
+      ID: 1,
+      AddressInfo: { Title: "Site", Latitude: 44.4, Longitude: 26.1 },
+      OperatorInfo: title === null ? null : { Title: title },
+      Connections: [],
+    };
+  }
+
+  it("drops OCM's unknown-operator placeholder", () => {
+    expect(mapOcmPoi(poiWithOperator("(Unknown Operator)"))?.operator).toBeNull();
+    expect(mapOcmPoi(poiWithOperator("Unknown"))?.operator).toBeNull();
+    expect(mapOcmPoi(poiWithOperator("N/A"))?.operator).toBeNull();
+    expect(mapOcmPoi(poiWithOperator("   "))?.operator).toBeNull();
+  });
+
+  it("keeps a real operator name", () => {
+    expect(mapOcmPoi(poiWithOperator("Ionity"))?.operator).toBe("Ionity");
+    expect(mapOcmPoi(poiWithOperator("PPC blue"))?.operator).toBe("PPC blue");
+  });
+});

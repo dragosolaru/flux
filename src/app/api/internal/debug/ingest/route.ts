@@ -12,8 +12,15 @@ import type { BBox } from "@/lib/chargers/types";
 // session, so the browser never needs CRON_SECRET.
 export const maxDuration = 300;
 
-const BUDGET_MS = 250_000;
+// Well under maxDuration on purpose. A request that runs for four minutes dies
+// in the browser ("Load failed" in Safari) long before the function stops, so
+// the call returns early with progress instead and is tapped again — the
+// response carries cellsDone/cells and a complete flag for exactly that.
+const BUDGET_MS = 110_000;
 const MIN_CELL_MS = 12_000;
+// Cells are independent, so a couple run at once; kept low so a burst does not
+// trip rate limiting at Overpass or TomTom.
+const CELL_CONCURRENCY = 2;
 const REGION_CELL_DEG = 0.5;
 const MAX_REGION_SQ_DEG = 60;
 
@@ -102,15 +109,23 @@ export async function POST(req: Request) {
 
   let upserted = 0;
   let done = 0;
-  for (const cell of cells) {
+  for (let i = 0; i < cells.length; i += CELL_CONCURRENCY) {
     if (Date.now() + MIN_CELL_MS > deadline) break;
-    try {
-      const r = await ingestArea(cell);
-      upserted += r.upserted;
-    } catch (err) {
-      logs.push(`cell ${cell.minLat},${cell.minLng}: ERROR ${err instanceof Error ? err.message : "failed"}`);
-    }
-    done++;
+    const batch = cells.slice(i, i + CELL_CONCURRENCY);
+    const settled = await Promise.allSettled(batch.map((cell) => ingestArea(cell)));
+    settled.forEach((r, k) => {
+      if (r.status === "fulfilled") {
+        upserted += r.value.upserted;
+      } else {
+        const cell = batch[k];
+        logs.push(
+          `cell ${cell.minLat},${cell.minLng}: ERROR ${
+            r.reason instanceof Error ? r.reason.message : "failed"
+          }`,
+        );
+      }
+      done++;
+    });
   }
   logs.push(`region: ${done}/${cells.length} cells, upserted ${upserted}`);
 
