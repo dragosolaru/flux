@@ -29,25 +29,55 @@ lock/unlock, climate, charge port and remote start. Tokens are encrypted at rest
 (AES-256-GCM via `TESLA_TOKEN_ENCRYPTION_KEY`), so a database leak alone is not
 enough — but a leak of that key alongside it is.
 
-Missing before this is safe to offer broadly:
-- [ ] **In-app disconnect** that revokes the Tesla grant and deletes the stored
-      tokens. There is no user-facing revoke path today.
-- [ ] **Surface `command_events` to the user** — the audit rows are written and
-      included in the data export, but nothing shows "what was commanded, when".
-      An owner should be able to see an unlock they did not issue.
-- [ ] **Step-up confirmation for unlock / remote start.** A hijacked session can
-      currently issue them with one tap, and remote start on some models allows
-      driving away.
+Done (2026-08-07):
+- [x] In-app disconnect — `DELETE /api/tesla/connection` revokes each refresh
+      token at Tesla then deletes the stored rows; UI in Settings → Advanced.
+- [x] Command audit surfaced — `GET /api/vehicles/[id]/command-history`,
+      rendered under the controls on `/commands`.
+- [x] Confirmation before `unlock` and `remote_start`.
+
+Still open:
 - [ ] **Consider dropping `vehicle_cmds`** for accounts that only want cost and
       trip tracking — read-only linking removes the entire unlock risk class.
+      Needs a scope choice at connect time and a capability model that tolerates
+      a live-but-read-only vehicle.
 - [ ] **Rotate `TESLA_TOKEN_ENCRYPTION_KEY` procedure** — document how, and
       re-encrypt existing rows.
+- [ ] **Notify on sensitive commands.** The audit is passive; an owner only sees
+      an unlicensed unlock if they go looking. A push/email on unlock and remote
+      start would close that. Notification plumbing already exists behind
+      `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`.
 
 ### 1. Tesla VCP proxy — Vehicle Command Protocol for post-2021 cars
 Commands (lock, climate, horn, charge limit) silently fail with `VCP_REQUIRED` (HTTP 412) on every Model 3/Y/S/X built after mid-2021. The code in `src/lib/tesla/api.ts` already branches on `TESLA_PROXY_BASE_URL`; the `tesla-http-proxy` Go binary needs to be deployed on Fly.io and the env var set.
 - **Effort:** `[L]` — infra only, no code changes needed
 
 ---
+
+## 🟠 Loose ends from the charger-data work (2026-08-07)
+
+Recorded so they are not lost — none block launch.
+
+- [ ] **BNetzA source is disabled**, not fixed. `ladestationen.api.bund.dev`
+      returns 404 on every request; the connector is gated behind an optional
+      `BNETZA_URL` env var. Germany therefore has OCM + OSM + TomTom only.
+      A replacement endpoint has to be verified against the live service before
+      being trusted.
+- [ ] **TomTom never reaches bulk-imported countries.** It only contributes on
+      the lazy tile path, which bulk-fresh countries skip; its categorySearch is
+      a nearest-first radius query, so sweeping a country with it returns a
+      centre-biased sample. Closing this needs a bulk-oriented TomTom product.
+- [ ] **~5,400 chargers still carry no country.** Rows stored before the OCM
+      `compact=false` fix keep their old values until their area is ingested
+      again, and OSM supplies no country at all. Cosmetic — country is not used
+      by the map or the planner.
+- [ ] **Austria's official source is regional.** `gis.bgld.gv.at` is Burgenland's
+      ArcGIS, not a national register.
+- [ ] **No real-time availability from any source.** Nothing tells a driver
+      whether a stall is free. This is the single largest data gap for the trip
+      planner; it needs Hubject/intercharge or Eco-Movement, both commercial.
+- [ ] **Overpass is slow.** 15 s timeout after 9 s proved too short; it still
+      returns nothing for some windows.
 
 ## 🟡 High Priority — Next Sprint
 

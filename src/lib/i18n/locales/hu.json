@@ -325,6 +325,15 @@
         "heat": "Hőhullám (35°C+)",
         "hail": "Jégeső / erős szél"
       }
+    },
+    "tesla": {
+      "not_connected": "Nincs csatlakoztatott Tesla-fiók.",
+      "connected_description": "Csatlakoztatva. A Flux olvashatja a jármű adatait és parancsokat küldhet a nevében.",
+      "disconnect": "Tesla leválasztása",
+      "disconnect_confirm": "Visszavonja a Flux hozzáférését a Teslánál és törli a tárolt tokeneket. Az utak, költségek és dokumentumok megmaradnak; a járművek szimulált adatokra váltanak.",
+      "disconnect_action": "Leválasztás",
+      "disconnected": "Leválasztva ({count} token törölve)",
+      "disconnect_error": "A leválasztás nem sikerült. Kérjük, próbálja újra."
     }
   },
   "ingest": {
@@ -459,6 +468,14 @@
         "body": "Az autó rövid ideig kulcs nélkül is vezethető lesz.",
         "action": "Engedélyezés"
       }
+    },
+    "history": {
+      "title": "Legutóbbi parancsok",
+      "loading": "Előzmények betöltése…",
+      "error": "Az előzmények nem tölthetők be.",
+      "empty": "Még nem küldött parancsot.",
+      "sensitive": "érzékeny",
+      "footer": "Ha olyan parancsot lát, amelyet nem Ön adott ki, válassza le a Teslát a Beállításokban és változtasson jelszót."
     }
   },
   "garage": {

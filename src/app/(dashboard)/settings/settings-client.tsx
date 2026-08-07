@@ -53,6 +53,7 @@ import { ManageSubscriptionButton } from "@/components/billing/ManageSubscriptio
 import * as vehiclesApi from "@/lib/api/vehicles";
 import * as tariffsApi from "@/lib/api/tariffs";
 import * as meApi from "@/lib/api/me";
+import { TeslaConnectionCard } from "@/components/settings/TeslaConnectionCard";
 
 interface SettingsClientProps {
   userId: string;
@@ -360,6 +361,15 @@ export function SettingsClient({ userName, userEmail }: SettingsClientProps) {
           <SectionHeader title="WhatsApp" icon={MessageCircle} />
           <Card className="p-4">
             <WhatsAppPhonePicker />
+          </Card>
+        </section>
+
+        <section id="tesla-connection" className="mt-3 flex flex-col gap-2">
+          <SectionHeader title="Tesla" icon={Car} />
+          <Card className="p-4">
+            <TeslaConnectionCard
+              connected={(allVehicles ?? []).some((v) => v.dataSource === "live")}
+            />
           </Card>
         </section>
 

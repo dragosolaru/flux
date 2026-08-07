@@ -325,6 +325,15 @@
         "heat": "Hitzewelle (35°C+)",
         "hail": "Hagel / starker Wind"
       }
+    },
+    "tesla": {
+      "not_connected": "Kein Tesla-Konto verbunden.",
+      "connected_description": "Verbunden. Flux kann Fahrzeugdaten lesen und Befehle in Ihrem Namen senden.",
+      "disconnect": "Tesla trennen",
+      "disconnect_confirm": "Widerruft den Zugriff von Flux bei Tesla und löscht die gespeicherten Tokens. Fahrten, Kosten und Dokumente bleiben erhalten; Fahrzeuge wechseln zurück zu simulierten Daten.",
+      "disconnect_action": "Trennen",
+      "disconnected": "Getrennt ({count} Token entfernt)",
+      "disconnect_error": "Trennen fehlgeschlagen. Bitte erneut versuchen."
     }
   },
   "ingest": {
@@ -459,6 +468,14 @@
         "body": "Das Auto lässt sich dann kurzzeitig ohne Schlüssel fahren.",
         "action": "Aktivieren"
       }
+    },
+    "history": {
+      "title": "Letzte Befehle",
+      "loading": "Verlauf wird geladen…",
+      "error": "Verlauf konnte nicht geladen werden.",
+      "empty": "Noch keine Befehle gesendet.",
+      "sensitive": "sensibel",
+      "footer": "Sehen Sie einen Befehl, den Sie nicht gesendet haben? Trennen Sie Tesla in den Einstellungen und ändern Sie Ihr Passwort."
     }
   },
   "garage": {

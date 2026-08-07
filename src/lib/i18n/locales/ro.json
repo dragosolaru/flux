@@ -325,6 +325,15 @@
         "heat": "Val de căldură (35°C+)",
         "hail": "Grindină / vânt puternic"
       }
+    },
+    "tesla": {
+      "not_connected": "Niciun cont Tesla conectat.",
+      "connected_description": "Conectat. Flux poate citi datele mașinii și trimite comenzi în numele tău.",
+      "disconnect": "Deconectează Tesla",
+      "disconnect_confirm": "Revocă accesul Flux la Tesla și șterge tokenii salvați. Cursele, costurile și documentele rămân, iar mașinile revin pe date simulate.",
+      "disconnect_action": "Deconectează",
+      "disconnected": "Deconectat ({count} token(i) șterși)",
+      "disconnect_error": "Deconectarea nu a reușit. Încearcă din nou."
     }
   },
   "ingest": {
@@ -459,6 +468,14 @@
         "body": "Mașina poate fi condusă fără cheie pentru scurt timp.",
         "action": "Activează"
       }
+    },
+    "history": {
+      "title": "Comenzi recente",
+      "loading": "Se încarcă istoricul…",
+      "error": "Nu s-a putut încărca istoricul.",
+      "empty": "Nicio comandă trimisă încă.",
+      "sensitive": "sensibilă",
+      "footer": "Dacă vezi o comandă pe care nu ai dat-o tu, deconectează Tesla din Setări și schimbă-ți parola."
     }
   },
   "garage": {

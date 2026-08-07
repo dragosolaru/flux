@@ -325,6 +325,15 @@
         "heat": "Heat wave (35°C+)",
         "hail": "Hail / strong wind"
       }
+    },
+    "tesla": {
+      "not_connected": "No Tesla account is linked.",
+      "connected_description": "Linked. Flux can read vehicle data and send commands on your behalf.",
+      "disconnect": "Disconnect Tesla",
+      "disconnect_confirm": "This revokes Flux’s access at Tesla and deletes the stored tokens. Your trips, costs and documents are kept, and vehicles switch back to simulated data.",
+      "disconnect_action": "Disconnect",
+      "disconnected": "Disconnected ({count} token(s) removed)",
+      "disconnect_error": "Could not disconnect. Please try again."
     }
   },
   "ingest": {
@@ -459,6 +468,14 @@
         "body": "This lets the car be driven without a key for a short window.",
         "action": "Enable"
       }
+    },
+    "history": {
+      "title": "Recent commands",
+      "loading": "Loading history…",
+      "error": "Could not load history.",
+      "empty": "No commands issued yet.",
+      "sensitive": "sensitive",
+      "footer": "If you see a command you did not issue, disconnect Tesla in Settings and change your password."
     }
   },
   "garage": {

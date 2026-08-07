@@ -325,6 +325,15 @@
         "heat": "Canicule (35°C+)",
         "hail": "Grêle / vent fort"
       }
+    },
+    "tesla": {
+      "not_connected": "Aucun compte Tesla lié.",
+      "connected_description": "Lié. Flux peut lire les données du véhicule et envoyer des commandes en votre nom.",
+      "disconnect": "Déconnecter Tesla",
+      "disconnect_confirm": "Révoque l’accès de Flux chez Tesla et supprime les jetons stockés. Vos trajets, coûts et documents sont conservés ; les véhicules repassent en données simulées.",
+      "disconnect_action": "Déconnecter",
+      "disconnected": "Déconnecté ({count} jeton(s) supprimé(s))",
+      "disconnect_error": "Échec de la déconnexion. Veuillez réessayer."
     }
   },
   "ingest": {
@@ -459,6 +468,14 @@
         "body": "La voiture pourra rouler sans clé pendant un court instant.",
         "action": "Activer"
       }
+    },
+    "history": {
+      "title": "Commandes récentes",
+      "loading": "Chargement de l’historique…",
+      "error": "Impossible de charger l’historique.",
+      "empty": "Aucune commande envoyée.",
+      "sensitive": "sensible",
+      "footer": "Si vous voyez une commande que vous n’avez pas envoyée, déconnectez Tesla dans les Réglages et changez votre mot de passe."
     }
   },
   "garage": {

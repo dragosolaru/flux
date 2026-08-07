@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { CommandHistory } from "@/components/vehicle/CommandHistory";
 import { FeatureGate } from "@/components/layout/FeatureGate";
 import { useVehicle } from "@/hooks/useVehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
@@ -84,6 +85,12 @@ function VehicleCommands({
       <SectionHeader title={name} icon={Car} />
       <Card variant="surface" className="p-5 mt-2">
         <CommandPanel vehicleId={id} brand={brand} state={data} />
+
+        {/* The audit trail sits with the controls that write it, so an unlock
+            nobody recognises is visible where it would be acted on. */}
+        <div className="mt-6">
+          <CommandHistory vehicleId={id} />
+        </div>
       </Card>
     </motion.div>
   );
