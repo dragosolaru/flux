@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Copy,
+  ChevronRight,
   Database,
   Loader2,
   Play,
@@ -64,6 +65,7 @@ interface DebugPayload {
   sources: { source: string; rows: number }[];
   recentRuns: IngestRun[];
   config: Record<string, boolean | string>;
+  tesla?: { steps: { step: string; ok: boolean; blocks: string }[]; nextStep: string | null };
   warnings: string[];
 }
 
@@ -148,6 +150,11 @@ export function DebugClient() {
 
   const [probe, setProbe] = useState<ProbeRow[] | null>(null);
   const [rawProbe, setRawProbe] = useState<unknown>(null);
+  // Panels are closed by default so the page opens as a status screen rather
+  // than a wall of controls — it is read on a phone far more often than acted on.
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [apiPath, setApiPath] = useState("/api/chargers/stats");
+  const [apiResult, setApiResult] = useState<unknown>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Populated only when the clipboard write is refused, so the text can still
   // be selected by hand — some mobile browsers block the API outright.
@@ -292,6 +299,41 @@ export function DebugClient() {
     }
   }
 
+  /**
+   * Calls one of the app's own API routes and shows the response.
+   *
+   * Same-origin from the browser with the caller's own session, so this is a
+   * request they could already make by typing the URL — no server route, and
+   * none of the SSRF surface a server-side fetcher would have. Restricted to
+   * GET under /api/ so it stays a diagnostic and cannot mutate anything.
+   */
+  async function callApi() {
+    const path = apiPath.trim();
+    if (!path.startsWith("/api/")) {
+      setLastError("Path must start with /api/");
+      return;
+    }
+    setRunning("api");
+    setLastError(null);
+    setApiResult(null);
+    const startedAt = Date.now();
+    try {
+      const res = await fetch(path, { headers: { Accept: "application/json" } });
+      const text = await res.text();
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        // Not JSON — an HTML error page is itself the useful answer.
+      }
+      setApiResult({ path, status: res.status, ms: Date.now() - startedAt, body });
+    } catch (err) {
+      setApiResult({ path, error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runDedupe() {
     setRunning("dedupe");
     setLastError(null);
@@ -337,6 +379,7 @@ export function DebugClient() {
         migrations: migrations.data ?? null,
         probe,
         rawProbe,
+        apiResult,
         ocrResult,
         lastResult,
         lastError,
@@ -381,9 +424,31 @@ export function DebugClient() {
   }
 
   const c = data.chargers;
+  const tesla = data.tesla;
+  const migrationList = migrations.data?.migrations ?? [];
+  const unapplied = migrationList.filter((m) => m.status !== "applied");
+  const unsetConfig = Object.entries(data.config).filter(
+    ([, v]) => v === false || v === "",
+  );
+  const deadSources = data.logs.filter((l) => l.level === "error").length;
+
+  // One line saying what to do next, rather than leaving it to be inferred from
+  // four separate sections. Ordered by what blocks the most.
+  const nextAction =
+    !migrations.data?.bootstrapped
+      ? "Paste migration 037 into the Supabase SQL editor — nothing else here can run without it."
+      : unapplied.length > 0
+        ? `Apply ${unapplied.length} migration${unapplied.length > 1 ? "s" : ""}: ${unapplied.map((m) => m.id.slice(0, 3)).join(", ")}.`
+        : tesla?.nextStep
+          ? `Tesla: set ${tesla.nextStep}.`
+          : null;
+
+  function toggle(id: string) {
+    setOpen((o) => ({ ...o, [id]: !o[id] }));
+  }
 
   return (
-    <div className="space-y-5 p-4 pb-24 lg:p-6">
+    <div className="space-y-4 p-4 pb-24 lg:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="flex items-center gap-2 text-lg font-semibold">
           <Database className="size-5 text-primary" />
@@ -411,9 +476,7 @@ export function DebugClient() {
       {copyFallback && (
         <section className="space-y-2 rounded-xl border border-border p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
-              Tap inside, select all, copy.
-            </p>
+            <p className="text-xs text-muted-foreground">Tap inside, select all, copy.</p>
             <button
               onClick={() => setCopyFallback(null)}
               className="flex min-h-11 items-center px-2 text-sm text-muted-foreground hover:text-foreground"
@@ -430,29 +493,31 @@ export function DebugClient() {
         </section>
       )}
 
+      {/* ---- Status: the whole point of opening the page ---- */}
+      {nextAction && (
+        <section className="rounded-xl border border-primary/40 bg-primary/10 p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-primary">Next step</p>
+          <p className="mt-1 text-sm">{nextAction}</p>
+        </section>
+      )}
+
       {data.warnings.length > 0 && (
-        <section className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-amber-400">
-            <AlertTriangle className="size-4" />
-            {data.warnings.length} warning{data.warnings.length > 1 ? "s" : ""}
-          </p>
-          <ul className="space-y-1.5">
-            {data.warnings.map((w, i) => (
-              <li key={i} className="text-sm text-amber-200/90">
-                • {w}
-              </li>
-            ))}
-          </ul>
+        <section className="space-y-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          {data.warnings.map((w, i) => (
+            <p key={i} className="flex gap-2 text-sm text-amber-200/90">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-400" />
+              {w}
+            </p>
+          ))}
         </section>
       )}
 
       <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Charger database</h2>
         {c ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="Total" value={c.total.toLocaleString()} />
-            <Stat label="No country" value={c.no_country.toLocaleString()} bad={c.no_country > 0} />
+            <Stat label="Chargers" value={c.total.toLocaleString()} />
             <Stat label="Operators" value={c.operators.toLocaleString()} bad={c.operators === 0} />
+            <Stat label="No country" value={c.no_country.toLocaleString()} bad={c.no_country > 0} />
             <Stat
               label="No operator"
               value={c.no_operator.toLocaleString()}
@@ -464,92 +529,203 @@ export function DebugClient() {
             Stats unavailable — migration 035 may not be applied yet.
           </p>
         )}
-
-        <div>
-          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Rows per source
-          </p>
+        <div className="flex flex-wrap gap-2">
           {data.sources.length === 0 ? (
             <p className="text-sm text-muted-foreground">No sources have contributed.</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {data.sources.map((s) => (
-                <span key={s.source} className="rounded-full bg-muted px-2.5 py-1 text-xs">
-                  {s.source}: <span className="font-semibold">{s.rows.toLocaleString()}</span>
-                </span>
-              ))}
-            </div>
+            data.sources.map((s) => (
+              <span key={s.source} className="rounded-full bg-muted px-2.5 py-1 text-xs">
+                {s.source}: <span className="font-semibold">{s.rows.toLocaleString()}</span>
+              </span>
+            ))
           )}
         </div>
       </section>
 
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Populate now</h2>
-        <p className="text-xs text-muted-foreground">
-          Country mode fetches OCM plus the national registries. Region mode fetches every
-          source, including OpenStreetMap and TomTom.
-        </p>
-
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Pick countries
+      {/* ---- Setup ---- */}
+      <Panel
+        title="Migrations"
+        badge={
+          !migrations.data?.bootstrapped
+            ? "runner missing"
+            : unapplied.length > 0
+              ? `${unapplied.length} to apply`
+              : "all applied"
+        }
+        tone={unapplied.length > 0 || !migrations.data?.bootstrapped ? "warn" : "ok"}
+        open={open.migrations ?? unapplied.length > 0}
+        onToggle={() => toggle("migrations")}
+      >
+        {migrations.data && !migrations.data.bootstrapped && (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
+            Supabase SQL editor once; every migration below then applies from here.
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {COUNTRIES.map((c) => {
-              const on = pickedCountries.includes(c.code);
-              return (
-                <button
-                  key={c.code}
-                  onClick={() => toggleCountry(c.code)}
-                  disabled={running !== null}
-                  className={`min-h-11 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50 ${
-                    on
-                      ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
-                      : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+        )}
+        <div className="flex flex-wrap gap-2">
+          <IngestButton
+            label="Apply all"
+            busy={running === "all-migrations"}
+            disabled={running !== null}
+            onClick={() => void applyAllMigrations()}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          &quot;Unknown&quot; only means this panel has no record — one you ran by hand shows the
+          same. Re-applying is safe; all are idempotent. Order matters for any migration that
+          replaces a function, and the runner refuses one that would overwrite a newer
+          definition.
+        </p>
+        <div className="space-y-2">
+          {migrationList.map((m) => (
+            <div
+              key={m.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 p-3"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-xs">{m.id}</p>
+                <p className="text-xs text-muted-foreground">{m.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] ${
+                    m.status === "applied"
+                      ? "bg-green-500/15 text-green-300"
+                      : "bg-amber-500/15 text-amber-300"
                   }`}
                 >
-                  {c.name}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <IngestButton
-              label={
-                pickedCountries.length === 0
-                  ? "Select at least one"
-                  : `Fetch ${pickedCountries.length} selected`
-              }
-              busy={running === "countries"}
-              disabled={running !== null || pickedCountries.length === 0}
-              onClick={() =>
-                void runIngest("countries", {
-                  mode: "country",
-                  countries: pickedCountries,
-                })
-              }
-            />
-            <button
-              onClick={() => setPickedCountries(COUNTRIES.map((c) => c.code))}
-              disabled={running !== null}
-              className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
-            >
-              Select all
-            </button>
-            <button
-              onClick={() => setPickedCountries([])}
-              disabled={running !== null}
-              className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
-            >
-              Clear
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Countries imported in the last 48 h are skipped as fresh. Clear the freshness cache
-            below to force a re-import.
-          </p>
+                  {m.status}
+                </span>
+                <IngestButton
+                  label="Apply"
+                  busy={running === m.id}
+                  disabled={running !== null}
+                  onClick={() => void applyMigration(m.id)}
+                />
+              </div>
+            </div>
+          ))}
         </div>
+      </Panel>
 
+      {tesla && (
+        <Panel
+          title="Go live with Tesla"
+          badge={tesla.nextStep ? `next: ${tesla.nextStep}` : "ready"}
+          tone={tesla.nextStep ? "warn" : "ok"}
+          open={open.tesla ?? false}
+          onToggle={() => toggle("tesla")}
+        >
+          <p className="text-xs text-muted-foreground">
+            Ordered — each step is useless without the ones above it. Full procedure in
+            <code className="ml-1">docs/VEHICLE-CONNECTION.md</code>.
+          </p>
+          <ol className="space-y-1.5">
+            {tesla.steps.map((s) => (
+              <li key={s.step} className="flex gap-2 text-xs">
+                {s.ok ? (
+                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-green-400" />
+                ) : (
+                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                )}
+                <span className={s.ok ? "text-muted-foreground" : ""}>
+                  <span className="font-mono">{s.step}</span>
+                  <span className="text-muted-foreground"> — blocks {s.blocks}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+      )}
+
+      <Panel
+        title="Configuration"
+        badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "all set"}
+        tone={unsetConfig.length > 0 ? "muted" : "ok"}
+        open={open.config ?? false}
+        onToggle={() => toggle("config")}
+      >
+        <p className="text-xs text-muted-foreground">
+          Presence only — no key values are ever sent to the browser.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(data.config).map(([k, v]) => {
+            const set = v === true || (typeof v === "string" && v.length > 0);
+            return (
+              <span
+                key={k}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
+                  set ? "bg-green-500/15 text-green-300" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {set ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
+                {k}
+                {typeof v === "string" && v.length > 0 && `: ${v}`}
+              </span>
+            );
+          })}
+        </div>
+      </Panel>
+
+      {/* ---- Run ---- */}
+      <Panel
+        title="Populate chargers"
+        badge="import"
+        open={open.populate ?? false}
+        onToggle={() => toggle("populate")}
+      >
+        <p className="text-xs text-muted-foreground">
+          Country mode fetches OCM plus the national registries. Region mode fetches every
+          source, including OpenStreetMap and TomTom. Countries imported in the last 48 h are
+          skipped as fresh — clear the cache below to force a re-import.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {COUNTRIES.map((country) => {
+            const on = pickedCountries.includes(country.code);
+            return (
+              <button
+                key={country.code}
+                onClick={() => toggleCountry(country.code)}
+                disabled={running !== null}
+                className={`min-h-11 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50 ${
+                  on
+                    ? "border-primary/50 bg-primary/15 font-semibold text-foreground"
+                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {country.name}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <IngestButton
+            label={
+              pickedCountries.length === 0
+                ? "Select at least one"
+                : `Fetch ${pickedCountries.length} selected`
+            }
+            busy={running === "countries"}
+            disabled={running !== null || pickedCountries.length === 0}
+            onClick={() =>
+              void runIngest("countries", { mode: "country", countries: pickedCountries })
+            }
+          />
+          <button
+            onClick={() => setPickedCountries(COUNTRIES.map((x) => x.code))}
+            disabled={running !== null}
+            className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
+          >
+            Select all
+          </button>
+          <button
+            onClick={() => setPickedCountries([])}
+            disabled={running !== null}
+            className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
+          >
+            Clear
+          </button>
+        </div>
         <div className="flex flex-wrap gap-2">
           {CORRIDOR.map((r) => (
             <IngestButton
@@ -569,127 +745,70 @@ export function DebugClient() {
             />
           ))}
         </div>
+      </Panel>
 
-        {running && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
-            Running {running}… this can take a few minutes. Leave the page open.
-          </p>
-        )}
-
-        {lastError && (
-          <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-            {lastError}
-          </pre>
-        )}
-
-        {lastResult && (
-          <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-xs">
-            {JSON.stringify(lastResult, null, 2)}
-          </pre>
-        )}
-      </section>
-
-      <section className="space-y-2 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Configuration</h2>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(data.config).map(([k, v]) => (
-            <span
-              key={k}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
-                v === true || (typeof v === "string" && v.length > 0)
-                  ? "bg-green-500/15 text-green-300"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {v === true || (typeof v === "string" && v.length > 0) ? (
-                <CheckCircle2 className="size-3" />
-              ) : (
-                <XCircle className="size-3" />
-              )}
-              {k}
-              {typeof v === "string" && v.length > 0 && `: ${v}`}
-            </span>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Presence only — no key values are ever sent to the browser.
-        </p>
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">Migrations</h2>
-          <button
-            onClick={() => void applyAllMigrations()}
-            disabled={running !== null}
-            className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm hover:bg-muted disabled:opacity-50"
-          >
-            {running === "all-migrations" ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Play className="size-4" />
-            )}
-            Apply all
-          </button>
-        </div>
-        {migrations.data && !migrations.data.bootstrapped && (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
-            Supabase SQL editor once; every migration below then applies from here.
-          </p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          &quot;Unknown&quot; means this panel has no record of applying it — a migration you ran by
-          hand in the SQL editor also shows as unknown. Re-applying is safe: all of them are
-          idempotent.
-        </p>
+      <Panel
+        title="Maintenance"
+        badge="dedupe · cache"
+        open={open.maintain ?? false}
+        onToggle={() => toggle("maintain")}
+      >
         <div className="space-y-2">
-          {(migrations.data?.migrations ?? []).map((m) => (
-            <div
-              key={m.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 p-3"
-            >
-              <div className="min-w-0">
-                <p className="font-mono text-xs">{m.id}</p>
-                <p className="text-xs text-muted-foreground">{m.description}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] ${
-                    m.status === "applied"
-                      ? "bg-green-500/15 text-green-300"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {m.status}
-                </span>
-                <button
-                  onClick={() => void applyMigration(m.id)}
-                  disabled={running !== null}
-                  className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm hover:bg-muted disabled:opacity-50"
-                >
-                  {running === m.id ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-                  Apply
-                </button>
-              </div>
-            </div>
-          ))}
+          <p className="text-xs text-muted-foreground">
+            Collapses duplicates until nothing is left to merge. New duplicates are prevented at
+            ingest, so this is for rows stored before that.
+          </p>
+          <IngestButton
+            label="Collapse duplicates"
+            busy={running === "dedupe"}
+            disabled={running !== null}
+            onClick={() => void runDedupe()}
+          />
         </div>
-      </section>
+        <div className="space-y-2 border-t border-border/60 pt-3">
+          <p className="text-xs text-muted-foreground">
+            Freshness cache — forgets that an area was imported so the next read re-ingests it
+            instead of waiting out the TTL (7 days per tile, 48 hours per country). Deletes no
+            stations.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {CORRIDOR.map((r) => (
+              <IngestButton
+                key={r.label}
+                label={`Clear ${r.label}`}
+                busy={running === `cache:${r.label}`}
+                disabled={running !== null}
+                onClick={() => void clearCache(r)}
+              />
+            ))}
+            <IngestButton
+              label="Clear everything"
+              busy={running === "cache:all"}
+              disabled={running !== null}
+              onClick={() => void clearCache()}
+            />
+          </div>
+        </div>
+      </Panel>
 
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Probe sources</h2>
+      {/* ---- Diagnose ---- */}
+      <Panel
+        title="Check the sources"
+        badge={deadSources > 0 ? `${deadSources} errors logged` : "probe"}
+        tone={deadSources > 0 ? "warn" : undefined}
+        open={open.sources ?? false}
+        onToggle={() => toggle("sources")}
+      >
         <p className="text-xs text-muted-foreground">
-          Queries each source separately for a small window and reports what it returned —
-          nothing is written. The combined ingest cannot tell a dead connector apart from an
-          area with no chargers.
+          Probe queries each source for a small window and counts what came back — the combined
+          ingest cannot tell a dead connector from an empty area. Raw shows the upstream
+          response verbatim, which is what identifies a format change. Neither writes anything.
         </p>
         <div className="flex flex-wrap gap-2">
           {CORRIDOR.map((r) => (
             <IngestButton
               key={r.label}
-              label={`Probe ${r.label}`}
+              label={r.label}
               busy={running === `probe:${r.label}`}
               disabled={running !== null}
               onClick={() => void runProbe(r)}
@@ -698,15 +817,12 @@ export function DebugClient() {
         </div>
         {probe && (
           <div className="-mx-4 overflow-x-auto px-4">
-            <table className="w-full min-w-[560px] text-xs">
+            <table className="w-full min-w-[420px] text-xs">
               <thead className="text-left text-muted-foreground">
                 <tr>
                   <th className="py-1.5 pr-3">Source</th>
                   <th className="py-1.5 pr-3">Rows</th>
                   <th className="py-1.5 pr-3">ms</th>
-                  <th className="py-1.5 pr-3">w/ operator</th>
-                  <th className="py-1.5 pr-3">w/ country</th>
-                  <th className="py-1.5 pr-3">w/ power</th>
                   <th className="py-1.5">Sample</th>
                 </tr>
               </thead>
@@ -714,13 +830,12 @@ export function DebugClient() {
                 {probe.map((r) => (
                   <tr key={r.source} className="border-t border-border/60">
                     <td className="py-1.5 pr-3 font-mono">{r.source}</td>
-                    <td className={`py-1.5 pr-3 tabular-nums ${r.count === 0 ? "text-amber-400" : ""}`}>
+                    <td
+                      className={`py-1.5 pr-3 tabular-nums ${r.count === 0 ? "text-amber-400" : ""}`}
+                    >
                       {r.count}
                     </td>
                     <td className="py-1.5 pr-3 tabular-nums text-muted-foreground">{r.ms}</td>
-                    <td className="py-1.5 pr-3 tabular-nums">{r.withOperator}</td>
-                    <td className="py-1.5 pr-3 tabular-nums">{r.withCountry}</td>
-                    <td className="py-1.5 pr-3 tabular-nums">{r.withPower}</td>
                     <td className="py-1.5 text-muted-foreground">
                       {r.error
                         ? `error: ${r.error}`
@@ -736,138 +851,100 @@ export function DebugClient() {
             </table>
           </div>
         )}
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Raw source response</h2>
-        <p className="text-xs text-muted-foreground">
-          Fetches a source&apos;s upstream URL and shows the status, content type and the first
-          4,000 characters verbatim. Use this when a connector is broken and the log only says
-          the response would not parse. Nothing is written, and the URLs are fixed server-side.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {["irve", "ndw", "ndw-nobbox", "austria", "bnetza", "bnetza-openapi"].map((id) => (
-            <IngestButton
-              key={id}
-              label={id}
-              busy={running === `raw:${id}`}
-              disabled={running !== null}
-              onClick={() => void runSourceProbe(id)}
-            />
-          ))}
+        <div className="space-y-2 border-t border-border/60 pt-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Raw upstream response
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {["irve", "ndw", "ndw-nobbox", "austria", "bnetza", "bnetza-openapi"].map((id) => (
+              <IngestButton
+                key={id}
+                label={id}
+                busy={running === `raw:${id}`}
+                disabled={running !== null}
+                onClick={() => void runSourceProbe(id)}
+              />
+            ))}
+          </div>
+          {rawProbe != null && (
+            <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed text-muted-foreground">
+              {JSON.stringify(rawProbe, null, 2)}
+            </pre>
+          )}
         </div>
-        {rawProbe != null && (
-          <pre className="-mx-4 max-h-80 overflow-auto px-4 text-2xs leading-relaxed text-muted-foreground">
-            {JSON.stringify(rawProbe, null, 2)}
-          </pre>
-        )}
-      </section>
+      </Panel>
 
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Collapse duplicates</h2>
+      <Panel
+        title="Call an API route"
+        badge="GET"
+        open={open.api ?? false}
+        onToggle={() => toggle("api")}
+      >
         <p className="text-xs text-muted-foreground">
-          Repeats the batched dedupe until nothing is left to merge. Needs migration 034. New
-          duplicates are prevented at ingest, so this is for rows stored before that fix.
+          Runs a GET against this app with your own session and shows the response. Useful when
+          a screen looks wrong and the question is whether the API or the UI is at fault — and
+          for answering &quot;what does <code>/api/…</code> return for you?&quot; without a laptop.
         </p>
-        <IngestButton
-          label="Run dedupe"
-          busy={running === "dedupe"}
-          disabled={running !== null}
-          onClick={() => void runDedupe()}
-        />
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Freshness cache</h2>
-        <p className="text-xs text-muted-foreground">
-          Forgets that an area was already imported, so the next read re-ingests it instead of
-          waiting out the TTL (7 days per tile, 48 hours per country). Deletes no stations.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {CORRIDOR.map((r) => (
-            <IngestButton
-              key={r.label}
-              label={`Clear ${r.label}`}
-              busy={running === `cache:${r.label}`}
-              disabled={running !== null}
-              onClick={() => void clearCache(r)}
-            />
-          ))}
-          <IngestButton
-            label="Clear everything"
-            busy={running === "cache:all"}
-            disabled={running !== null}
-            onClick={() => void clearCache()}
-          />
-        </div>
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Test OCR</h2>
-        <p className="text-xs text-muted-foreground">
-          Runs a photo or PDF through the extraction prompt and shows what Claude returned.
-          Nothing is saved — no document, no upload, no cost record. Each run costs tokens.
-        </p>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {(["energy", "car"] as const).map((v) => (
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            "/api/chargers/stats",
+            "/api/vehicles",
+            "/api/saved-routes",
+            "/api/tariffs/prices",
+          ].map((path) => (
             <button
-              key={v}
-              onClick={() => setOcrVariant(v)}
-              className={`min-h-11 rounded-lg border px-3 text-sm ${
-                ocrVariant === v
-                  ? "border-primary/50 bg-primary/15 font-semibold"
+              key={path}
+              onClick={() => setApiPath(path)}
+              className={`min-h-11 rounded-lg border px-3 font-mono text-xs ${
+                apiPath === path
+                  ? "border-primary/50 bg-primary/15"
                   : "border-border bg-muted/40 text-muted-foreground"
               }`}
             >
-              {v === "energy" ? "Energy receipt" : "Car document"}
+              {path.replace("/api/", "")}
             </button>
           ))}
         </div>
-
-        <label className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 text-sm hover:bg-muted">
-          {running === "ocr" ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Extracting…
-            </>
-          ) : (
-            <>
-              <Upload className="size-4" />
-              Choose a photo or PDF
-            </>
-          )}
+        <div className="flex flex-wrap gap-2">
           <input
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            disabled={running !== null}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              // Reset so picking the same file twice fires onChange again.
-              e.target.value = "";
-              if (file) void testOcr(file);
-            }}
+            value={apiPath}
+            onChange={(e) => setApiPath(e.target.value)}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            placeholder="/api/…"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3 font-mono text-xs"
           />
-        </label>
-
-        {ocrResult != null && (
-          <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-xs">
-            {JSON.stringify(ocrResult, null, 2)}
+          <IngestButton
+            label="Send"
+            busy={running === "api"}
+            disabled={running !== null}
+            onClick={() => void callApi()}
+          />
+        </div>
+        {apiResult != null && (
+          <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
+            {JSON.stringify(apiResult, null, 2)}
           </pre>
         )}
-      </section>
+      </Panel>
 
-      <section className="space-y-2 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Server logs</h2>
-        <p className="text-xs text-muted-foreground">
-          Warnings and errors recorded by the ingest pipeline, newest first. Needs migration
-          037.
+      <Panel
+        title="Activity"
+        badge={
+          deadSources > 0 ? `${deadSources} errors` : `${data.recentRuns.length} recent runs`
+        }
+        tone={deadSources > 0 ? "warn" : undefined}
+        open={open.activity ?? false}
+        onToggle={() => toggle("activity")}
+      >
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Logged errors and warnings
         </p>
         {data.logs.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing recorded.</p>
         ) : (
-          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          <div className="max-h-72 space-y-1.5 overflow-y-auto">
             {data.logs.map((l, i) => (
               <div key={i} className="rounded-lg bg-muted/40 p-2 text-xs">
                 <div className="flex flex-wrap items-center gap-2">
@@ -897,20 +974,18 @@ export function DebugClient() {
             ))}
           </div>
         )}
-      </section>
-
-      <section className="space-y-2 rounded-xl border border-border p-4">
-        <h2 className="text-sm font-semibold">Recent ingest runs</h2>
+        <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Ingest runs
+        </p>
         {data.recentRuns.length === 0 ? (
           <p className="text-sm text-muted-foreground">No runs recorded.</p>
         ) : (
-          <div className="-mx-4 overflow-x-auto px-4">
-            <table className="w-full min-w-[520px] text-xs">
+          <div className="-mx-4 max-h-72 overflow-auto px-4">
+            <table className="w-full min-w-[420px] text-xs">
               <thead className="text-left text-muted-foreground">
                 <tr>
                   <th className="py-1.5 pr-3">When</th>
                   <th className="py-1.5 pr-3">Source</th>
-                  <th className="py-1.5 pr-3">Status</th>
                   <th className="py-1.5 pr-3">Fetched</th>
                   <th className="py-1.5 pr-3">Upserted</th>
                   <th className="py-1.5">Error</th>
@@ -919,12 +994,13 @@ export function DebugClient() {
               <tbody>
                 {data.recentRuns.map((r, i) => (
                   <tr key={i} className="border-t border-border/60">
-                    <td className="py-1.5 pr-3 whitespace-nowrap text-muted-foreground">
-                      {r.finished_at ? new Date(r.finished_at).toLocaleString() : "—"}
+                    <td className="whitespace-nowrap py-1.5 pr-3 text-muted-foreground">
+                      {r.finished_at ? new Date(r.finished_at).toLocaleTimeString() : "—"}
                     </td>
-                    <td className="py-1.5 pr-3">{r.source ?? "—"}</td>
-                    <td className={`py-1.5 pr-3 ${r.status === "error" ? "text-destructive" : "text-green-400"}`}>
-                      {r.status ?? "—"}
+                    <td
+                      className={`py-1.5 pr-3 ${r.status === "error" ? "text-destructive" : ""}`}
+                    >
+                      {r.source ?? "—"}
                     </td>
                     <td className="py-1.5 pr-3 tabular-nums">{r.fetched ?? "—"}</td>
                     <td className="py-1.5 pr-3 tabular-nums">{r.upserted ?? "—"}</td>
@@ -935,14 +1011,135 @@ export function DebugClient() {
             </table>
           </div>
         )}
-      </section>
+      </Panel>
+
+      <Panel
+        title="Test OCR"
+        badge="costs tokens"
+        open={open.ocr ?? false}
+        onToggle={() => toggle("ocr")}
+      >
+        <p className="text-xs text-muted-foreground">
+          Runs a photo or PDF through the extraction prompt and shows what Claude returned.
+          Nothing is saved — no document, no upload, no cost record.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {(["energy", "car"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setOcrVariant(v)}
+              className={`min-h-11 rounded-lg border px-3 text-sm ${
+                ocrVariant === v
+                  ? "border-primary/50 bg-primary/15 font-semibold"
+                  : "border-border bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {v === "energy" ? "Energy receipt" : "Car document"}
+            </button>
+          ))}
+        </div>
+        <label className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 text-sm hover:bg-muted">
+          {running === "ocr" ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Extracting…
+            </>
+          ) : (
+            <>
+              <Upload className="size-4" />
+              Choose a photo or PDF
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            disabled={running !== null}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              // Reset so picking the same file twice fires onChange again.
+              e.target.value = "";
+              if (file) void testOcr(file);
+            }}
+          />
+        </label>
+        {ocrResult != null && (
+          <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px]">
+            {JSON.stringify(ocrResult, null, 2)}
+          </pre>
+        )}
+      </Panel>
+
+      {/* Results of whatever last ran, kept at the bottom so a long run does not
+          push the controls off screen. */}
+      {running && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Running {running}… this can take a few minutes. Leave the page open.
+        </p>
+      )}
+      {lastError && (
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          {lastError}
+        </pre>
+      )}
+      {lastResult && (
+        <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-xs">
+          {JSON.stringify(lastResult, null, 2)}
+        </pre>
+      )}
 
       <p className="text-xs text-muted-foreground">
-        Generated {new Date(data.generatedAt).toLocaleString()}. Server-side logs (source
-        failures such as <code>[ocm]</code>, <code>[tomtom]</code>, <code>[bnetza]</code>) appear
-        in the Vercel dashboard under Logs.
+        Generated {new Date(data.generatedAt).toLocaleString()}. Server-side logs also appear in
+        the Vercel dashboard under Logs.
       </p>
     </div>
+  );
+}
+
+function Panel({
+  title,
+  badge,
+  tone,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  badge?: string;
+  tone?: "ok" | "warn" | "muted";
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border">
+      <button
+        onClick={onToggle}
+        className="flex min-h-12 w-full items-center gap-2 px-4 py-3 text-left"
+      >
+        <ChevronRight
+          className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+        <span className="text-sm font-semibold">{title}</span>
+        {badge && (
+          <span
+            className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] ${
+              tone === "warn"
+                ? "bg-amber-500/15 text-amber-300"
+                : tone === "ok"
+                  ? "bg-green-500/15 text-green-300"
+                  : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {badge}
+          </span>
+        )}
+      </button>
+      {open && <div className="space-y-3 border-t border-border/60 p-4">{children}</div>}
+    </section>
   );
 }
 
