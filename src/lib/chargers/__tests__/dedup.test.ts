@@ -268,3 +268,53 @@ describe("clusterChargers", () => {
     expect(clusters[0].confidence).toBeLessThan(0.75);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Source-ref uniqueness — a cluster must never list the same (source, ref)
+// twice. The batch upsert writes charger_sources with ON CONFLICT DO UPDATE,
+// and a repeated conflict key inside one statement aborts the entire RPC.
+// ---------------------------------------------------------------------------
+
+describe("cluster source refs are unique", () => {
+  it("does not re-append the ref that matched an existing charger", () => {
+    const existing: Charger = {
+      id: "11111111-1111-4111-8111-111111111111",
+      lat: 44.4268,
+      lng: 26.1025,
+      name: "Existing",
+      operator: "Ionity",
+      operatorId: "ionity",
+      address: { street: null, city: null, region: null, country: "RO", postcode: null },
+      connectors: [],
+      maxPowerKw: 150,
+      pricing: null,
+      availability: "operational",
+      sources: [{ source: "ocm", ref: "abc" }],
+      confidence: 0.8,
+      sourceCount: 1,
+    } as unknown as Charger;
+
+    const clusters = clusterChargers(
+      [
+        {
+          source: "ocm",
+          sourceRef: "abc",
+          lat: 44.4268,
+          lng: 26.1025,
+          name: "Existing",
+          operator: "Ionity",
+          address: { street: null, city: null, region: null, country: "RO", postcode: null },
+          connectors: [],
+          pricing: null,
+          availability: "operational",
+        } as unknown as RawCharger,
+      ],
+      [existing],
+    );
+
+    expect(clusters).toHaveLength(1);
+    const keys = clusters[0].sources.map((s) => `${s.source}:${s.ref}`);
+    expect(keys).toEqual([...new Set(keys)]);
+    expect(keys).toEqual(["ocm:abc"]);
+  });
+});

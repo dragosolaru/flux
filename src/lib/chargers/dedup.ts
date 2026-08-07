@@ -317,6 +317,27 @@ function newClusterFromRaw(
   };
 }
 
+/**
+ * Record a source ref on a cluster, at most once.
+ *
+ * The definite-match path seeds a cluster from an existing charger — whose
+ * sources already contain the very ref that matched — and then merges that same
+ * raw in. Pushing unconditionally left the pair listed twice, and the batch
+ * upsert inserts sources with ON CONFLICT DO UPDATE: two identical rows in one
+ * statement raise "ON CONFLICT DO UPDATE command cannot affect row a second
+ * time", which aborts the whole RPC. Every chunk of up to 200 clusters was lost,
+ * surfacing as "all upserts failed" on re-ingest of an already-stored area
+ * while a first ingest of a cold area succeeded.
+ */
+function addSource(
+  cluster: ChargerCluster,
+  source: RawCharger["source"],
+  ref: string,
+): void {
+  if (cluster.sources.some((s) => s.source === source && s.ref === ref)) return;
+  cluster.sources.push({ source, ref });
+}
+
 function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
   const { cluster } = state;
   const priority = corePriority(raw.source);
@@ -353,7 +374,7 @@ function mergeRawIntoCluster(state: ClusterState, raw: RawCharger): void {
 
   cluster.availability = mergeAvailability(cluster.availability, raw.availability ?? "unknown");
 
-  cluster.sources.push({ source: raw.source, ref: raw.sourceRef });
+  addSource(cluster, raw.source, raw.sourceRef);
 
   const slug = slugify(raw.operator);
   if (slug) state.operatorSlugs.add(slug);

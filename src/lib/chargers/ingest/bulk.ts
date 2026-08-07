@@ -99,7 +99,7 @@ export async function bulkImportCountry(
 
       const existing = await findInBBox({ bbox: cell, limit: 5000 });
       const clusters = clusterChargers(cellRaws, existing);
-      const upserted = await persistClusters(clusters);
+      const { upserted } = await persistClusters(clusters);
       totalUpserted += upserted;
     }
   }

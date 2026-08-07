@@ -101,9 +101,12 @@ const BATCH_SIZE = 200;
  * Persist deduplicated clusters to the DB via batched RPC. Returns the total
  * count of rows processed across all successful chunks.
  */
-export async function persistClusters(clusters: ChargerCluster[]): Promise<number> {
+export async function persistClusters(
+  clusters: ChargerCluster[],
+): Promise<{ upserted: number; error: string | null }> {
   const supabase = createSupabaseAdminClient();
   let total = 0;
+  let firstError: string | null = null;
 
   for (let i = 0; i < clusters.length; i += BATCH_SIZE) {
     const chunk = clusters.slice(i, i + BATCH_SIZE);
@@ -130,12 +133,16 @@ export async function persistClusters(clusters: ChargerCluster[]): Promise<numbe
     });
     if (error) {
       console.error("[charger-repo] batch upsert failed:", error);
+      // Keep the first message: ingest_runs used to record only "all upserts
+      // failed", which cannot distinguish a constraint violation from a
+      // connection drop.
+      firstError ??= error.message;
     } else {
       total += chunk.length;
     }
   }
 
-  return total;
+  return { upserted: total, error: firstError };
 }
 
 /**
@@ -165,7 +172,7 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
   const existing = await findInBBox({ bbox, limit: 500 });
   const clusters = clusterChargers(raws, existing);
 
-  const upserted = await persistClusters(clusters);
+  const { upserted, error: upsertError } = await persistClusters(clusters);
 
   // Only mark tiles fresh when the ingest actually persisted data (or the area
   // is legitimately empty). If we had clusters but every upsert failed, this is
@@ -182,7 +189,7 @@ export async function ingestArea(bbox: BBox): Promise<{ upserted: number }> {
     status: ingestFailed ? "error" : "ok",
     fetched: raws.length,
     upserted,
-    error: ingestFailed ? "all upserts failed" : null,
+    error: ingestFailed ? (upsertError ?? "all upserts failed") : null,
     finished_at: new Date().toISOString(),
   });
 
