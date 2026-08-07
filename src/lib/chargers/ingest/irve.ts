@@ -1,103 +1,191 @@
-// French IRVE (Infrastructures de Recharge de Véhicules Électriques) open data.
-// Source: data.gouv.fr — consolidated daily CSV/GeoJSON, legally mandated under AFIR.
-// License: Open License v2.0 (≈ CC BY). ~90k+ charge points, operators required to report.
-// No API key required. Bbox-gated to FR bounds to avoid fetching on non-French tiles.
+// French IRVE open data (data.gouv.fr), legally mandated under AFIR.
+// License: Open License v2.0. No API key.
+//
+// Rewritten after the raw source probe showed what the resource actually is:
+//
+//   content-type: text/csv          (the connector parsed it as GeoJSON)
+//   162,965,758 characters          (~163 MB, 11.4 s just to transfer)
+//   consolidation-etalab-schema-irve-statique-v-2.3.1
+//
+// Two consequences, both structural rather than a parsing bug:
+//
+//  * There is no per-tile path any more. Answering one map tile cannot mean
+//    downloading 163 MB, and the previous module-level cache made that a cold
+//    start away from happening on a user request. IRVE now contributes through
+//    the scheduled bulk import only, like a national register should.
+//
+//  * Rows are per charge point (`id_pdc_itinerance`), not per station. One
+//    forecourt appears as many rows sharing `id_station_itinerance`. Emitting a
+//    row each would hand the dedup thousands of co-located points to collapse;
+//    they are aggregated here, where the station id makes it exact.
+//
+// Parsed as a stream: holding 163 MB as one string, then again as parsed rows,
+// is how a function runs out of memory rather than time.
 
-import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../types";
-import { canonicalConnectorType } from "../normalize";
+import type { BBox, ChargerConnector, ConnectorType, RawCharger, SourceConnector } from "../types";
 import { recordDebugLog } from "@/lib/debug-log";
 
-// Consolidated GeoJSON published daily by data.gouv.fr.
-// Using the stable resource URL from the IRVE national dataset.
 const IRVE_URL =
   "https://www.data.gouv.fr/fr/datasets/r/eb76d20a-8501-400e-b336-d85724de5435";
 
-// France bounding box (metropolitan)
-const FR_MIN_LAT = 41.3;
-const FR_MAX_LAT = 51.2;
-const FR_MIN_LNG = -5.2;
-const FR_MAX_LNG = 9.6;
+// Boolean connector columns → canonical type. `prise_type_ef` is a domestic
+// socket (prise renforcée); `autre` carries no type information.
+const CONNECTOR_COLUMNS: [string, ConnectorType][] = [
+  ["prise_type_2", "type2"],
+  ["prise_type_combo_ccs", "ccs2"],
+  ["prise_type_chademo", "chademo"],
+  ["prise_type_ef", "schuko"],
+];
 
-// Module-level cache: GeoJSON parsed once per cold-start, refreshed after 6 hours.
-let cachedFeatures: IrveFeature[] | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
-
-interface IrveProperties {
-  id_pdc_itinerance?: string | null;
-  nom_operateur?: string | null;
-  nom_enseigne?: string | null;
-  adresse_station?: string | null;
-  code_postal?: string | null;
-  commune?: string | null;
-  type_prise?: string | null;      // e.g. "T2,COMBO_CCS"
-  puissance_nominale?: number | string | null;
-  nbre_pdc?: number | string | null;
-  [key: string]: unknown;
+/**
+ * The file mixes `true`/`false` with `TRUE`/`FALSE` — the two publishers
+ * feeding the consolidation disagree, and both appear within a few rows of each
+ * other. Empty means "not stated", which is not the same as false but is
+ * treated as such here because a connector is only claimed when asserted.
+ */
+function isTrue(value: string | undefined): boolean {
+  return (value ?? "").trim().toLowerCase() === "true";
 }
 
-interface IrveFeature {
-  type: "Feature";
-  geometry: { type: "Point"; coordinates: [number, number] } | null;
-  properties: IrveProperties;
+function toNumber(value: string | undefined): number | null {
+  if (!value) return null;
+  const n = Number.parseFloat(value.trim());
+  return Number.isFinite(n) ? n : null;
 }
 
-function parseIrveConnectors(
-  typePrise: string | null | undefined,
-  powerKw: number | null,
-  count: number,
-): ChargerConnector[] {
-  const types = (typePrise ?? "")
-    .split(/[,;\s]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (types.length === 0) {
-    return [{ type: "other", powerKw, count: Math.max(count, 1) }];
+/**
+ * A single CSV record, honouring RFC 4180 quoting.
+ *
+ * Hand-rolled because the fields need it: `adresse_station` holds
+ * `"3 Rue Laurent Lavoisier, 80330 Longueau"` and `coordonneesXY` holds
+ * `"[2.36761800,49.87723700]"` — both commas inside quotes.
+ */
+export function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let field = "";
+  let quoted = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          quoted = false;
+        }
+      } else {
+        field += ch;
+      }
+    } else if (ch === '"') {
+      quoted = true;
+    } else if (ch === ",") {
+      out.push(field);
+      field = "";
+    } else {
+      field += ch;
+    }
   }
-  const perType = Math.max(1, Math.round(count / types.length));
-  return types.map((t) => ({
-    type: canonicalConnectorType(t),
-    powerKw,
-    count: perType,
-  }));
+  out.push(field);
+  return out;
 }
 
-function mapFeature(f: IrveFeature): RawCharger | null {
-  if (!f.geometry || f.geometry.type !== "Point") return null;
-  const [lng, lat] = f.geometry.coordinates;
-  if (typeof lat !== "number" || typeof lng !== "number") return null;
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+/** `"[2.36761800,49.87723700]"` → [lng, lat]. */
+function parseCoordinates(value: string | undefined): [number, number] | null {
+  if (!value) return null;
+  const m = /\[?\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]?/.exec(value);
+  if (!m) return null;
+  const lng = Number.parseFloat(m[1]!);
+  const lat = Number.parseFloat(m[2]!);
+  return Number.isFinite(lng) && Number.isFinite(lat) ? [lng, lat] : null;
+}
 
-  const p = f.properties;
-  const rawPower = p.puissance_nominale;
-  const powerKw =
-    typeof rawPower === "number"
-      ? rawPower
-      : rawPower
-        ? parseFloat(String(rawPower)) || null
-        : null;
-  const rawCount = p.nbre_pdc;
-  const count =
-    typeof rawCount === "number"
-      ? rawCount
-      : rawCount
-        ? parseInt(String(rawCount), 10) || 1
-        : 1;
-  const connectors = parseIrveConnectors(p.type_prise ?? null, powerKw, count);
-  const operator = p.nom_operateur ?? p.nom_enseigne ?? null;
+interface StationAccumulator {
+  ref: string;
+  lat: number;
+  lng: number;
+  name: string | null;
+  operator: string | null;
+  street: string | null;
+  postcode: string | null;
+  city: string | null;
+  /** type → highest power seen, and how many points carried it. */
+  connectors: Map<ConnectorType, { powerKw: number | null; count: number }>;
+}
+
+function accumulate(
+  stations: Map<string, StationAccumulator>,
+  row: Record<string, string>,
+): void {
+  // The consolidated columns are the cleaned ones; coordonneesXY is the raw
+  // publisher value and is sometimes swapped or empty.
+  const lat = toNumber(row.consolidated_latitude);
+  const lng = toNumber(row.consolidated_longitude);
+  const fallback = parseCoordinates(row.coordonneesXY);
+  const finalLng = lng ?? fallback?.[0] ?? null;
+  const finalLat = lat ?? fallback?.[1] ?? null;
+  if (finalLat == null || finalLng == null) return;
+  if (Math.abs(finalLat) > 90 || Math.abs(finalLng) > 180) return;
+
+  // Station id first; some rows carry "Non concerné" (not applicable) for
+  // non-roaming stations, which must not collapse into one giant station.
+  const stationId = (row.id_station_itinerance ?? "").trim();
+  const usableStationId =
+    stationId && !/^non concern/i.test(stationId) ? stationId : null;
+  const ref =
+    usableStationId ||
+    (row.id_station_local || "").trim() ||
+    `${finalLat.toFixed(5)},${finalLng.toFixed(5)}`;
+
+  let station = stations.get(ref);
+  if (!station) {
+    station = {
+      ref,
+      lat: finalLat,
+      lng: finalLng,
+      name: (row.nom_station || row.nom_enseigne || "").trim() || null,
+      operator: (row.nom_operateur || row.nom_enseigne || "").trim() || null,
+      street: (row.adresse_station || "").trim() || null,
+      postcode: (row.consolidated_code_postal || "").trim() || null,
+      city: (row.consolidated_commune || "").trim() || null,
+      connectors: new Map(),
+    };
+    stations.set(ref, station);
+  }
+
+  const powerKw = toNumber(row.puissance_nominale);
+  for (const [column, type] of CONNECTOR_COLUMNS) {
+    if (!isTrue(row[column])) continue;
+    const existing = station.connectors.get(type);
+    if (existing) {
+      existing.count += 1;
+      if (powerKw != null && (existing.powerKw == null || powerKw > existing.powerKw)) {
+        existing.powerKw = powerKw;
+      }
+    } else {
+      station.connectors.set(type, { powerKw, count: 1 });
+    }
+  }
+}
+
+function toRawCharger(s: StationAccumulator): RawCharger {
+  const connectors: ChargerConnector[] = [...s.connectors.entries()].map(
+    ([type, { powerKw, count }]) => ({ type, powerKw, count }),
+  );
 
   return {
     source: "irve",
-    sourceRef: p.id_pdc_itinerance ?? `${lat.toFixed(5)},${lng.toFixed(5)}`,
-    lat,
-    lng,
-    name: operator,
-    operator,
+    sourceRef: s.ref,
+    lat: s.lat,
+    lng: s.lng,
+    name: s.name,
+    operator: s.operator,
     address: {
-      street: p.adresse_station ?? null,
-      city: p.commune ?? null,
+      street: s.street,
+      city: s.city,
       region: null,
-      postcode: p.code_postal ? String(p.code_postal) : null,
+      postcode: s.postcode,
       country: "FR",
     },
     connectors,
@@ -105,74 +193,92 @@ function mapFeature(f: IrveFeature): RawCharger | null {
   };
 }
 
-async function loadFeatures(): Promise<IrveFeature[]> {
-  const now = Date.now();
-  if (cachedFeatures && now - cacheTimestamp < CACHE_TTL_MS) return cachedFeatures;
-
-  const res = await fetch(IRVE_URL, {
-    headers: { Accept: "application/geo+json,application/json" },
-    signal: AbortSignal.timeout(30000), // large file, allow 30s
-  });
-  if (!res.ok) throw new Error(`IRVE ${res.status}`);
-
-  const data = (await res.json()) as { features?: IrveFeature[] };
-  const features = data.features ?? [];
-  cachedFeatures = features;
-  cacheTimestamp = now;
-  return features;
-}
-
-async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
-  // Only query when the bbox overlaps metropolitan France
-  if (
-    bbox.maxLat < FR_MIN_LAT ||
-    bbox.minLat > FR_MAX_LAT ||
-    bbox.maxLng < FR_MIN_LNG ||
-    bbox.minLng > FR_MAX_LNG
-  ) {
-    return [];
-  }
+/**
+ * Fold the CSV into stations, one line at a time.
+ *
+ * Exported for the tests: it is the whole of the mapping, and feeding it a
+ * handful of real lines is far more useful than mocking a 163 MB download.
+ */
+export async function* csvLines(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {
+  const decoder = new TextDecoder();
+  const reader = stream.getReader();
+  let buffer = "";
 
   try {
-    const features = await loadFeatures();
-    const out: RawCharger[] = [];
-    for (const f of features) {
-      if (!f.geometry) continue;
-      const [lng, lat] = f.geometry.coordinates;
-      if (
-        typeof lat !== "number" ||
-        typeof lng !== "number" ||
-        lat < bbox.minLat ||
-        lat > bbox.maxLat ||
-        lng < bbox.minLng ||
-        lng > bbox.maxLng
-      ) {
-        continue;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let nl = buffer.indexOf("\n");
+      while (nl !== -1) {
+        yield buffer.slice(0, nl).replace(/\r$/, "");
+        buffer = buffer.slice(nl + 1);
+        nl = buffer.indexOf("\n");
       }
-      const mapped = mapFeature(f);
-      if (mapped) out.push(mapped);
     }
-    return out;
-  } catch (err) {
-    recordDebugLog("error", "irve", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
-    return [];
+  } finally {
+    reader.releaseLock();
   }
+
+  if (buffer.length > 0) yield buffer.replace(/\r$/, "");
+}
+
+export async function stationsFromCsv(
+  stream: ReadableStream<Uint8Array>,
+): Promise<RawCharger[]> {
+  const stations = new Map<string, StationAccumulator>();
+  let header: string[] | null = null;
+
+  for await (const line of csvLines(stream)) {
+    if (line.length === 0) continue;
+    const fields = parseCsvLine(line);
+    if (!header) {
+      header = fields;
+      continue;
+    }
+    // A quoted field containing a newline would split across lines; the
+    // consolidated export does not produce those, and a short row is skipped
+    // rather than mis-indexed.
+    if (fields.length < header.length) continue;
+
+    const row: Record<string, string> = {};
+    for (let i = 0; i < header.length; i++) row[header[i]!] = fields[i] ?? "";
+    accumulate(stations, row);
+  }
+
+  return [...stations.values()].map(toRawCharger);
+}
+
+// Per-tile fetching is deliberately not supported: see the note at the top.
+async function fetchTile(_bbox: BBox): Promise<RawCharger[]> {
+  return [];
 }
 
 export const irveConnector: SourceConnector = { id: "irve", fetchTile };
 
-/** Full-country fetch: loads the complete IRVE GeoJSON without any bbox filter. */
+/** Full-country import. Called by the scheduled bulk job, never by a page. */
 export async function fetchCountryFr(): Promise<RawCharger[]> {
   try {
-    const features = await loadFeatures();
-    const out: RawCharger[] = [];
-    for (const f of features) {
-      const mapped = mapFeature(f);
-      if (mapped) out.push(mapped);
+    const res = await fetch(IRVE_URL, {
+      headers: { Accept: "text/csv" },
+      // 163 MB took 11.4 s from Vercel; allow for a slow day.
+      signal: AbortSignal.timeout(120_000),
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      recordDebugLog("error", "irve", `fetch ${res.status}`);
+      return [];
     }
-    return out;
+    if (!res.body) {
+      recordDebugLog("error", "irve", "response had no body");
+      return [];
+    }
+    return await stationsFromCsv(res.body);
   } catch (err) {
-    recordDebugLog("error", "irve", `fetch failed:`, { detail: String(err instanceof Error ? err.message : err) });
+    recordDebugLog("error", "irve", "fetch failed:", {
+      detail: err instanceof Error ? err.message : String(err),
+    });
     return [];
   }
 }

@@ -7,8 +7,15 @@ import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../typ
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
 import { recordDebugLog } from "@/lib/debug-log";
 
-const AUSTRIA_URL =
-  "https://gis.bgld.gv.at/arcgis/rest/services/Oeffentlich/E_Tankstellen/MapServer/0/query";
+// The Burgenland ArcGIS host answers `{"reason":"No site configuration found."}`
+// with a 404 to every request — the whole service is gone, not just this layer,
+// confirmed by probing it directly. It was only ever one province rather than a
+// national register, so nothing national is lost.
+//
+// Disabled the same way as BNetzA rather than pointed at a guessed replacement:
+// a new URL has to be verified against the live service before it is trusted.
+// Set AUSTRIA_URL to re-enable once one is known.
+const AUSTRIA_URL = process.env.AUSTRIA_URL ?? "";
 
 // CAVEAT: this is the Burgenland state GIS endpoint (gis.bgld.gv.at), NOT a
 // national aggregator — coverage outside Burgenland is unverified. The bulk
@@ -142,6 +149,7 @@ const AUSTRIA_MAX_PAGES = 20;
  * Same ArcGIS endpoint as fetchTile but covering the whole AT bbox.
  */
 export async function fetchCountryAt(): Promise<RawCharger[]> {
+  if (AUSTRIA_URL.length === 0) return [];
   const out: RawCharger[] = [];
   for (let page = 0; page < AUSTRIA_MAX_PAGES; page++) {
     try {

@@ -41,6 +41,11 @@ const SOURCES: Record<string, { url: string; accept: string; note: string }> = {
     accept: "application/json",
     note: "BNetzA — 404 on every request since before this panel existed",
   },
+  "bnetza-openapi": {
+    url: "https://ladestationen.api.bund.dev/openapi.yaml",
+    accept: "text/yaml,application/yaml,text/plain",
+    note: "The bund.dev base URL serves Swagger UI, not data — this is the spec it loads, which names the real endpoint",
+  },
   austria: {
     url: "https://gis.bgld.gv.at/arcgis/rest/services/Fachdaten/Ladestationen/MapServer/0/query?where=1%3D1&outFields=*&f=json&resultRecordCount=1",
     accept: "application/json",

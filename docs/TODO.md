@@ -88,13 +88,16 @@ affordances for. Raise either if they turn out to be missed.
 
 Recorded so they are not lost — none block launch.
 
-- [ ] **IRVE (France) now serves CSV, not JSON.** The connector logs
-      `Unexpected token 'o', "nom_amenage"… is not valid JSON` — that is the CSV
-      header row. France therefore has OCM + OSM + TomTom only, like Germany.
-      Needs either the CSV parsed or the JSON export URL rediscovered.
-- [ ] **NDW (Netherlands) returns 400 on every request.** Same practical effect
-      as BNetzA: the source contributes nothing. Confirmed by the source counts
-      in the debug panel — only `ocm`, `osm` and `tomtom` have rows.
+- [x] **IRVE (France) rewritten for the CSV it actually serves.** The resource
+      is `text/csv`, 163 MB, schema `irve-statique-v2.3.1`, one row per charge
+      point. Now stream-parsed and aggregated per `id_station_itinerance` in the
+      scheduled bulk import; the per-tile path returns nothing, because
+      answering one map tile cannot mean downloading 163 MB.
+- [x] **NDW (Netherlands) rewritten.** The endpoint works; three faults hid it:
+      no geographic gate (so ingesting Greece queried a Dutch service), a
+      whole-country bbox the API rejects, and a mapping written against a schema
+      it does not return. Its `availabilities[]` carries live stall counts —
+      the first source in-tree that could feed real-time availability.
 - [x] **Chargers with no `charger_sources` row** — was 6,300, then 1,160 after
       the first dedupe, which confirmed the cause: the orphans were duplicate
       rows whose refs had been claimed by the survivor. Migration 043 makes the
@@ -103,11 +106,12 @@ Recorded so they are not lost — none block launch.
       Remaining gap: in a chain longer than the merge radius the best neighbour
       can itself be deleted in the same pass, and those refs still cascade —
       re-ingest recovers them.
-- [ ] **BNetzA source is disabled**, not fixed. `ladestationen.api.bund.dev`
-      returns 404 on every request; the connector is gated behind an optional
-      `BNETZA_URL` env var. Germany therefore has OCM + OSM + TomTom only.
-      A replacement endpoint has to be verified against the live service before
-      being trusted.
+- [ ] **BNetzA source is disabled**, not fixed — but there is a lead now. The
+      base URL answers **200 with Swagger UI HTML**, not 404: it is an API
+      documentation page whose spec is at `openapi.yaml`, and the connector was
+      pointed at the docs rather than the data. Probe `bnetza-openapi` in the
+      debug panel to read the spec and recover the real endpoint, then set
+      `BNETZA_URL`.
 - [ ] **TomTom never reaches bulk-imported countries.** It only contributes on
       the lazy tile path, which bulk-fresh countries skip; its categorySearch is
       a nearest-first radius query, so sweeping a country with it returns a
@@ -116,8 +120,11 @@ Recorded so they are not lost — none block launch.
       `compact=false` fix keep their old values until their area is ingested
       again, and OSM supplies no country at all. Cosmetic — country is not used
       by the map or the planner.
-- [ ] **Austria's official source is regional.** `gis.bgld.gv.at` is Burgenland's
-      ArcGIS, not a national register.
+- [ ] **Austria's source is gone.** `gis.bgld.gv.at` answers
+      `{"reason":"No site configuration found."}` to everything — the whole
+      ArcGIS service, not just the layer. Now gated behind `AUSTRIA_URL` like
+      BNetzA. It was only ever Burgenland, so no national register is lost;
+      finding a real Austrian one is still open.
 - [ ] **No real-time availability from any source.** Nothing tells a driver
       whether a stall is free. This is the single largest data gap for the trip
       planner; it needs Hubject/intercharge or Eco-Movement, both commercial.

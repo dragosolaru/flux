@@ -746,7 +746,7 @@ export function DebugClient() {
           the response would not parse. Nothing is written, and the URLs are fixed server-side.
         </p>
         <div className="flex flex-wrap gap-2">
-          {["irve", "ndw", "ndw-nobbox", "austria", "bnetza"].map((id) => (
+          {["irve", "ndw", "ndw-nobbox", "austria", "bnetza", "bnetza-openapi"].map((id) => (
             <IngestButton
               key={id}
               label={id}
