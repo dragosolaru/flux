@@ -39,6 +39,13 @@ export async function GET() {
   });
 }
 
+/** Names of the functions a migration's SQL replaces — the only thing it can clobber. */
+function definedFunctions(sql: string): string[] {
+  return [
+    ...sql.matchAll(/create\s+or\s+replace\s+function\s+(?:public\.)?([a-z0-9_]+)/gi),
+  ].map((m) => m[1].toLowerCase());
+}
+
 export async function POST(req: Request) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ message: "Not found" }, { status: 404 });
@@ -69,20 +76,39 @@ export async function POST(req: Request) {
   // dedupe_same_site_names back. The panel showed every migration as "applied"
   // while the dedupe kept timing out.
   //
+  // Only a migration that redefines a function a newer one also defines can do
+  // that damage. Blocking on id order alone was too blunt: it stopped
+  // 042_charger_sources_fk_index, which is a single `create index` and cannot
+  // overwrite anything, purely for being numbered lower.
+  //
   // MIGRATIONS is ordered by id and the ids are zero-padded, so a plain string
   // comparison gives the right order.
   const { data: appliedRows } = await supabase.from("applied_migrations").select("id");
   const applied = new Set((appliedRows ?? []).map((r) => r.id as string));
-  const newerApplied = MIGRATIONS.filter((m) => m.id > migration.id && applied.has(m.id));
 
-  if (newerApplied.length > 0 && !parsed.data.force) {
+  const conflicts = MIGRATIONS.filter(
+    (m) =>
+      m.id > migration.id &&
+      applied.has(m.id) &&
+      definedFunctions(m.sql).some((fn) => definedFunctions(migration.sql).includes(fn)),
+  );
+
+  if (conflicts.length > 0 && !parsed.data.force) {
+    const overwritten = [
+      ...new Set(
+        conflicts.flatMap((m) =>
+          definedFunctions(m.sql).filter((fn) => definedFunctions(migration.sql).includes(fn)),
+        ),
+      ),
+    ];
     return NextResponse.json(
       {
         message:
-          `${migration.id} is older than ${newerApplied.map((m) => m.id).join(", ")}, ` +
-          `already applied. Applying it now would overwrite the newer definitions. ` +
-          `Apply it first, then re-apply the newer ones — or send force to override.`,
-        newerApplied: newerApplied.map((m) => m.id),
+          `${migration.id} would overwrite ${overwritten.join(", ")}, redefined by ` +
+          `${conflicts.map((m) => m.id).join(", ")} which is already applied. ` +
+          `Re-apply the newer migration afterwards, or send force to override.`,
+        newerApplied: conflicts.map((m) => m.id),
+        overwrites: overwritten,
       },
       { status: 409 },
     );

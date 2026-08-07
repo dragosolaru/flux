@@ -29,15 +29,26 @@ export function canonicalConnectorType(input: string | number): ConnectorType {
   // Order matters: combo/CCS checks must precede the plain type2/type1 checks.
   // TomTom uses "IEC62196Type2CCS" (type token before "ccs"), so match ccs on
   // either side of the type token.
-  if (/ccs.*type\s*2|type\s*2.*ccs|type\s*2.*combo|ccs2|combo\s*2|combined.*type\s*2/.test(key)) {
+  // `t2.*combo` covers the OCPI identifiers (IEC_62196_T2_COMBO), which NDW and
+  // every other OCPI-derived feed use. Without it the `iec.*62196.*2` fallback
+  // below claimed them as plain Type 2 — a 175 kW DC CCS stall filed as 22 kW
+  // AC, which the planner would route around and the kW filter would hide.
+  if (
+    /ccs.*type\s*2|type\s*2.*ccs|type\s*2.*combo|ccs2|combo\s*2|combined.*type\s*2|t2.*combo|combo.*t2/.test(
+      key,
+    )
+  ) {
     return "ccs2";
   }
-  if (/ccs.*type\s*1|type\s*1.*ccs|ccs1|combo\s*1/.test(key)) return "ccs1";
+  if (/ccs.*type\s*1|type\s*1.*ccs|ccs1|combo\s*1|t1.*combo|combo.*t1/.test(key)) return "ccs1";
   if (/\bccs\b|combined charging/.test(key)) return "ccs2";
   if (/chademo/.test(key)) return "chademo";
   if (/tesla|supercharger/.test(key)) return "tesla";
-  if (/type\s*2|type2|mennekes|iec.*62196.*2/.test(key)) return "type2";
-  if (/type\s*1|type1|j1772|j-1772/.test(key)) return "type1";
+  // The OCPI spelling separates with underscores (IEC_62196_T2), which no
+  // `type 2` pattern reaches. The T1 form had no pattern at all and fell
+  // through to "other".
+  if (/type\s*2|type2|mennekes|iec[\s_-]*62196[\s_-]*t?2/.test(key)) return "type2";
+  if (/type\s*1|type1|j1772|j-1772|iec[\s_-]*62196[\s_-]*t?1/.test(key)) return "type1";
   if (/schuko|domestic|household|cee|wall.*outlet/.test(key)) return "schuko";
 
   return "other";
