@@ -284,9 +284,9 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 **UX:** map-first compressed form (origin/destination first; SOC + vehicle behind an "Options"/"Advanced" disclosure); recent destinations (`localStorage`, LIFO ×5); user-configurable petrol comparison (`localStorage["flux_fuel_comparison"]`); collapsible results panel; full keyboard nav + combobox ARIA on `GeocodingSearch`; desktop sidebar (lg+) with `StatStrip` results. `ModelSpec.supportedConnectors` is `["ccs2","tesla"]` for all Tesla models.
 
-**How to use:** UI `/trip`. API: `POST /api/trip-plan` (vehicle/origin/SOC/destination/`arrivalSocPct` → `planTripVariants`; `maxDuration = 30`), `GET /api/geocode`.
+**How to use:** UI `/map?mode=plan`. API: `POST /api/trip-plan` (vehicle/origin/SOC/destination/`arrivalSocPct` → `planTripVariants`; `maxDuration = 30`), `GET /api/geocode`.
 
-**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/{planner,corridor-stations,charge-curve,reliability,types}.ts`, `src/lib/external/routing/providers/{osrm-router,ors-router,tomtom-router}.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/{GeocodingSearch,TripMap,StopCard,CostSummary,StationDetailSheet,ReliabilityBadge}.tsx`, `src/app/(dashboard)/trip/trip-client.tsx`, `src/lib/{fuel-comparison,brands/models}.ts`.
+**Key files:** `src/app/api/trip-plan/route.ts`, `src/lib/external/routing/{planner,corridor-stations,charge-curve,reliability,types}.ts`, `src/lib/external/routing/providers/{osrm-router,ors-router,tomtom-router}.ts`, `src/app/api/geocode/route.ts`, `src/components/trip/{GeocodingSearch,TripMap,StopCard,CostSummary,StationDetailSheet,ReliabilityBadge}.tsx`, `src/app/(dashboard)/map/map-client.tsx`, `src/lib/{fuel-comparison,brands/models}.ts`.
 
 **Dependencies:** OSRM (`router.project-osrm.org`), ORS (`OPENROUTESERVICE_API_KEY`, optional), TomTom (`TOMTOM_API_KEY`, optional), Nominatim + Photon, Open-Meteo, the Charger Data Platform, Leaflet, sonner, tariff registry.
 

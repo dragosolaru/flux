@@ -294,7 +294,15 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     // Charge to either the strategy target or enough for the remaining leg
     // including the arrivalSocPct buffer at the next stop/destination.
     const remainingNeededPct = ((kmLeft + detourKm * 2) / deratedFullRangeKm) * 100 + arrivalSocPct;
-    const departSoc = Math.min(chargeTarget, Math.max(arriveSoc + 5, Math.min(95, Math.ceil(remainingNeededPct))));
+    // The strategy's charge target is a ceiling, but it is applied last, so a low
+  // target (economy is 55) combined with a high arrival SoC could clamp
+  // departure BELOW arrival — a stop that reported negative energy, negative
+  // cost and zero minutes. Leaving with less than you arrived with is not a
+  // charging stop, so never let the ceiling push below arrival.
+  const departSoc = Math.max(
+    arriveSoc,
+    Math.min(chargeTarget, Math.max(arriveSoc + 5, Math.min(95, Math.ceil(remainingNeededPct)))),
+  );
     const energyAddedKwh = ((departSoc - arriveSoc) / 100) * spec.batteryCapacityKwh;
     // SoC-dependent charge curve (ABRP-style) instead of a flat average rate —
     // fast when topping up from low, tapering past ~50–60%.
@@ -330,9 +338,14 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   }
 
   if (iter >= 30) {
-    // Show partial result with a warning rather than blocking the whole plan —
-    // a nearly-complete plan is still useful for the user to review.
+    // Show the partial result with a warning rather than blocking the whole
+    // plan — a nearly-complete route is still worth reviewing.
     warning = "Route planner reached stop limit; some legs near the destination may be approximate.";
+    // ...but hitting the limit means the destination was never reached, so the
+    // plan must not be handed to the UI as feasible. It was: a 2000 km route in
+    // a 100 km-range car ended nearly 200 km short and still rendered as a
+    // normal, drivable plan.
+    feasible = false;
   }
 
   // Second pass: re-route THROUGH the chosen charging stops so the polyline

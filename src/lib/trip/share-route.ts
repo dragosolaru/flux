@@ -24,9 +24,30 @@ function coord(p: RoutePoint): string {
   return `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
 }
 
+// Google Maps URLs documents a maximum of 9 waypoints; beyond that it drops or
+// rejects them silently. A long plan is thinned by keeping the first, the last,
+// and an even spread between, so the shared route still passes through the
+// corridor even when the exact stop list cannot survive.
+const MAX_WAYPOINTS = 9;
+
+function thinWaypoints(stops: RoutePoint[]): RoutePoint[] {
+  if (stops.length <= MAX_WAYPOINTS) return stops;
+  const step = (stops.length - 1) / (MAX_WAYPOINTS - 1);
+  const out: RoutePoint[] = [];
+  for (let i = 0; i < MAX_WAYPOINTS; i++) out.push(stops[Math.round(i * step)]);
+  return out;
+}
+
 /**
- * A Google Maps directions link carrying every stop as a waypoint — the one
- * route format the Tesla app and other navigation apps accept from a share.
+ * A Google Maps directions link carrying the charging stops as waypoints.
+ *
+ * Only Google Maps honours the stops. Verified against each target's documented
+ * scheme: Waze cannot parse a google.com/maps URL at all and takes a single
+ * destination (waze.com/ul?ll=…); Apple Maps does not claim these links and its
+ * own scheme is single-destination; Tesla's share-to-vehicle resolves whatever
+ * it receives down to one destination. So this is the richest link we can send,
+ * not a format they all understand — the others will navigate to the
+ * destination and ignore the rest.
  */
 export function buildRouteShareUrl(input: ShareRouteInput): string {
   const url = new URL("https://www.google.com/maps/dir/");
@@ -35,8 +56,10 @@ export function buildRouteShareUrl(input: ShareRouteInput): string {
   url.searchParams.set("destination", coord(input.destination));
   url.searchParams.set("travelmode", "driving");
   if (input.stops.length > 0) {
-    url.searchParams.set("waypoints", input.stops.map(coord).join("|"));
+    url.searchParams.set("waypoints", thinWaypoints(input.stops).map(coord).join("|"));
   }
+  // Start guidance rather than opening the preview.
+  url.searchParams.set("dir_action", "navigate");
   return url.toString();
 }
 
@@ -52,7 +75,9 @@ export async function shareRoute(input: ShareRouteInput): Promise<ShareRouteOutc
 
   try {
     if (typeof navigator !== "undefined" && navigator.share) {
-      await navigator.share({ title: input.title, text: input.title, url });
+      // No `text`: several iOS share targets take it and drop `url`, which
+      // would send the route's name instead of the route.
+      await navigator.share({ title: input.title, url });
       return "shared";
     }
   } catch (err) {

@@ -333,6 +333,9 @@ export function MapClient() {
         destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
       });
       setPlan(result);
+      setRouteSaved(false);
+      // Areas pulled in for the previous route are not "on the way" for this one.
+      setExtraStations([]);
       setActiveVariant(0);
       setSharedRoute(false);
       setSheetState("mid");
@@ -366,6 +369,12 @@ export function MapClient() {
     }));
   }, [variants, activeRoadIndex]);
 
+  // Saving stores one variant, so a different variant is a different route.
+  function handleVariantChange(index: number) {
+    setActiveVariant(index);
+    setRouteSaved(false);
+  }
+
   function handleRouteSelect(roadIndex: number) {
     const idx = variants.findIndex((v) => v.roadIndex === roadIndex);
     if (idx >= 0) {
@@ -375,7 +384,16 @@ export function MapClient() {
     }
   }
 
-  const teslaVehicle = plan?.vehicle?.brand === "tesla" ? plan.vehicle : null;
+  // Falls back to the first Tesla in the garage: a trip planned without picking
+  // a vehicle is the common case, and the button vanishing there reads as the
+  // feature being broken.
+  const teslaVehicle = useMemo(() => {
+    if (plan?.vehicle && plan.vehicle.brand === "tesla") {
+      return { id: plan.vehicle.id, displayName: plan.vehicle.displayName };
+    }
+    const v = (vehicles ?? []).find((x) => x.brand === "tesla");
+    return v ? { id: v.id, displayName: v.nickname ?? v.displayName } : null;
+  }, [plan, vehicles]);
   const canShare = teslaVehicle !== null && activePlan !== null && activePlan.feasible !== false;
 
   /**
@@ -400,6 +418,7 @@ export function MapClient() {
     setDestination({ name: r.destination_label, lat: r.destination_lat, lng: r.destination_lng });
     const snap = parseSnapshot(r.plan_snapshot);
     setActiveVariant(0);
+    setExtraStations([]);
     setSharedRoute(false);
     if (snap) {
       setPlan(snap as TripResponse);
@@ -457,13 +476,43 @@ export function MapClient() {
   const [loadingArea, setLoadingArea] = useState<{ lat: number; lng: number } | null>(null);
   const [extraStations, setExtraStations] = useState<Charger[]>([]);
 
+  // Chargers along the planned route. The Explore query is bound to the map
+  // viewport and disabled in Plan mode, so without its own query the corridor
+  // layer had nothing to draw — and visiting Explore first left it showing that
+  // viewport's chargers instead. Padded around the route's bounds and rounded so
+  // the key is stable across re-renders.
+  const routeBBox = useMemo(() => {
+    const coords = activePlan?.polyline?.coordinates;
+    const pts: { lat: number; lng: number }[] = coords?.length
+      ? coords.map(([lng, lat]) => ({ lat, lng }))
+      : [origin, destination].filter((p): p is GeoPoint => p !== null);
+    if (pts.length === 0) return null;
+    let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+    for (const p of pts) {
+      minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+      minLng = Math.min(minLng, p.lng); maxLng = Math.max(maxLng, p.lng);
+    }
+    const pad = 0.1;
+    return {
+      minLat: +(minLat - pad).toFixed(2), minLng: +(minLng - pad).toFixed(2),
+      maxLat: +(maxLat + pad).toFixed(2), maxLng: +(maxLng + pad).toFixed(2),
+    };
+  }, [activePlan?.polyline, origin, destination]);
+
+  const { data: corridorStations = [] } = useQuery({
+    queryKey: ["map-corridor-chargers", routeBBox],
+    queryFn: () => chargersApi.inBBox(routeBBox!, { limit: 1000 }),
+    enabled: mode === "plan" && routeBBox !== null && plan !== null,
+    staleTime: 300_000,
+  });
+
   // TripMap filters this to within 5 km of the driven line; areas the user
   // asked for explicitly are merged in and deliberately exempt from that.
   const planStations = useMemo(() => {
-    if (extraStations.length === 0) return stations;
-    const seen = new Set(stations.map((c) => c.id));
-    return [...stations, ...extraStations.filter((c) => !seen.has(c.id))];
-  }, [stations, extraStations]);
+    if (extraStations.length === 0) return corridorStations;
+    const seen = new Set(corridorStations.map((c) => c.id));
+    return [...corridorStations, ...extraStations.filter((c) => !seen.has(c.id))];
+  }, [corridorStations, extraStations]);
 
   const handleAreaRequest = useCallback(
     async (lat: number, lng: number) => {
@@ -504,9 +553,10 @@ export function MapClient() {
     setPlanError(null);
     setActiveVariant(0);
     setSharedRoute(false);
-    setEditingRoute(false);
     setPlanDisplayState("compact");
     setRouteSaved(false);
+    // No plan left to display, so the form is what should be on screen.
+    setEditingRoute(true);
     // Areas pulled in for the previous route are no longer "on the way".
     setExtraStations([]);
   }
@@ -744,7 +794,7 @@ export function MapClient() {
                 plan={plan}
                 variants={variants}
                 activeVariant={activeVariant}
-                setActiveVariant={setActiveVariant}
+                setActiveVariant={handleVariantChange}
                 variantsExpanded={variantsExpanded}
                 canShare={canShare}
                 sharing={sharing}
@@ -1021,7 +1071,7 @@ export function MapClient() {
               activePlan={activePlan}
               variants={variants}
               activeVariant={activeVariant}
-              setActiveVariant={setActiveVariant}
+              setActiveVariant={handleVariantChange}
               loading={loading}
               planError={planError}
               canPlan={canPlan}
@@ -1035,6 +1085,9 @@ export function MapClient() {
               onShareRoute={() => void handleShareRoute()}
                 onSaveRoute={() => void handleSaveRoute()}
                 routeSaved={routeSaved}
+                savingRoute={createSavedRoute.isPending}
+                onOpenSavedRoutes={() => setSavedSheetOpen(true)}
+                onClearPlan={handleClearPlan}
                 onManualPrecondition={() => void handleManualPrecondition()}
                 preconditioningManually={preconditioningManually}
                 hasTesla={teslaVehicle !== null}
@@ -1431,6 +1484,9 @@ interface PlanResultsProps {
   onShareRoute: () => void;
   onSaveRoute: () => void;
   routeSaved: boolean;
+  savingRoute: boolean;
+  onOpenSavedRoutes: () => void;
+  onClearPlan: () => void;
   onManualPrecondition: () => void;
   preconditioningManually: boolean;
   hasTesla: boolean;
@@ -1452,6 +1508,9 @@ function PlanResults({
   onShareRoute,
   onSaveRoute,
   routeSaved,
+  savingRoute,
+  onOpenSavedRoutes,
+  onClearPlan,
   onManualPrecondition,
   preconditioningManually,
   hasTesla,
@@ -1515,43 +1574,7 @@ function PlanResults({
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
             <div className="space-y-1.5">
               <p className="text-sm font-semibold text-amber-400">{tTrip("infeasible_title")}</p>
-              <button
-            onClick={onShareRoute}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Share2 className="size-4" />
-            {tTrip("share_route_btn")}
-          </button>
-
-          <button
-            onClick={onSaveRoute}
-            disabled={routeSaved}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
-          >
-            {routeSaved ? (
-              <CheckCircle2 className="size-4 text-green-400" />
-            ) : (
-              <Bookmark className="size-4" />
-            )}
-            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
-          </button>
-
-          {hasTesla && (
-            <button
-              onClick={onManualPrecondition}
-              disabled={preconditioningManually}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-            >
-              {preconditioningManually ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Zap className="size-4" />
-              )}
-              {tTrip("precondition_btn_manual")}
-            </button>
-          )}
-
-          {activePlan.warning && (
+              {activePlan.warning && (
                 <p className="text-xs text-amber-400/80">{activePlan.warning}</p>
               )}
               <p className="text-xs text-amber-500/70">{tTrip("infeasible_hint")}</p>
@@ -1580,6 +1603,61 @@ function PlanResults({
             >
               {sharing ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               {tTrip("share_to_tesla")}
+            </button>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={onOpenSavedRoutes}
+              className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Bookmark className="size-4" />
+              {tTrip("saved_routes_title")}
+            </button>
+            <button
+              onClick={onClearPlan}
+              className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="size-4" />
+              {tTrip("clear_plan")}
+            </button>
+          </div>
+
+          <button
+            onClick={onShareRoute}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Share2 className="size-4" />
+            {tTrip("share_route_btn")}
+          </button>
+
+          <button
+            onClick={onSaveRoute}
+            disabled={routeSaved || savingRoute}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+          >
+            {savingRoute ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : routeSaved ? (
+              <CheckCircle2 className="size-4 text-green-400" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+            {routeSaved ? tTrip("saved_route_saved") : tTrip("save_route_btn")}
+          </button>
+
+          {hasTesla && (
+            <button
+              onClick={onManualPrecondition}
+              disabled={preconditioningManually}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              {preconditioningManually ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Zap className="size-4" />
+              )}
+              {tTrip("precondition_btn_manual")}
             </button>
           )}
 
@@ -1701,6 +1779,9 @@ interface PlanContentProps {
   onShareRoute: () => void;
   onSaveRoute: () => void;
   routeSaved: boolean;
+  savingRoute: boolean;
+  onOpenSavedRoutes: () => void;
+  onClearPlan: () => void;
   onManualPrecondition: () => void;
   preconditioningManually: boolean;
   hasTesla: boolean;
@@ -1741,6 +1822,9 @@ function PlanContent({
   onShareRoute,
   onSaveRoute,
   routeSaved,
+  savingRoute,
+  onOpenSavedRoutes,
+  onClearPlan,
   onManualPrecondition,
   preconditioningManually,
   hasTesla,
@@ -1862,6 +1946,9 @@ function PlanContent({
             onShareRoute={onShareRoute}
             onSaveRoute={onSaveRoute}
             routeSaved={routeSaved}
+            savingRoute={savingRoute}
+            onOpenSavedRoutes={onOpenSavedRoutes}
+            onClearPlan={onClearPlan}
             onManualPrecondition={onManualPrecondition}
             preconditioningManually={preconditioningManually}
             hasTesla={hasTesla}
