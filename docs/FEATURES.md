@@ -94,6 +94,8 @@ Nav: desktop `Sidebar` (sections Vehicle / Costs / Planning + Settings/About); m
 
 **How to use:** UI `/login`, `/register`. API: `POST /api/auth/register` (creates Supabase auth user, IP rate-limited 5/hr), `GET/POST /api/auth/[...nextauth]` (NextAuth handlers).
 
+**Deep links:** the `(dashboard)` layout sends anonymous visitors to `/login?callbackUrl=<path>` (path read from the `x-pathname` header set in `src/proxy.ts`). `LoginForm` validates `callbackUrl.startsWith("/")` before `router.replace()`, so an off-origin value is ignored. This is what makes bookmarks into `/trip` and `/map?mode=plan` survive sign-in.
+
 **Key files:** `src/lib/auth.ts`, `src/app/api/auth/register/route.ts`, `src/lib/supabase/ensure-user.ts`, `src/components/auth/LoginForm.tsx`.
 
 **Dependencies:** NextAuth, Google OAuth, Supabase Auth.
@@ -391,6 +393,8 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 **Rule:** Every visible string must exist in all 5 locale files.
 
+**Page titles too:** a route's `metadata.title` is a visible string. Use `export async function generateMetadata()` with `getTranslations`, not a hardcoded literal — `/map` shipped a Romanian-only `"Hartă · Flux"` title that every locale saw in the browser tab. Covered by `e2e/i18n.spec.ts`.
+
 ---
 
 ## 20. PWA (installable app)
@@ -451,7 +455,8 @@ confirmation before firing, then notify the owner on success via
 
 - **Auth on every route** + Supabase UUID-scoped queries (`.eq("user_id", …)`); write routes resolve `ensureSupabaseUserId`.
 - **Webhook secrets** via `x-webhook-secret` header only (inbound-email, internal warm/ingest-stats); fail closed (503) when unconfigured.
-- **CSP:** `src/proxy.ts` (Next.js 16 Proxy convention) emits a per-request nonce CSP — `script-src 'self' 'nonce-…' 'strict-dynamic'`, `style-src 'self' 'unsafe-inline'` (framer-motion), `connect-src 'self' {SUPABASE_URL}`, `frame-ancestors 'none'`, `object-src 'none'`, etc.
+- **CSP:** `src/proxy.ts` (Next.js 16 Proxy convention) emits a per-request nonce CSP — `script-src 'self' 'nonce-…' 'strict-dynamic'`, `style-src 'self' 'unsafe-inline'` (framer-motion), `connect-src 'self' {SUPABASE_URL}`, `frame-ancestors 'none'`, `object-src 'none'`, etc. The nonce is published on the `x-nonce` request header and threaded `src/app/layout.tsx` → `Providers` → `ThemeProvider`; any component injecting an inline script must receive it or `strict-dynamic` blocks it.
+- **`x-pathname` request header:** also set in `src/proxy.ts`, because server components cannot read the current path. The `(dashboard)` layout uses it to build `?callbackUrl=` when bouncing an anonymous visitor to `/login`.
 - **IDOR fix:** `GET /api/documents` filters by `user_id` in addition to vehicle ownership.
 - **Rate limits** on Tesla vehicle route (60/window) and all `chargers` query routes.
 - **Charger tables** are shared reference data — the documented exception to the per-user RLS rule.
@@ -462,5 +467,10 @@ confirmation before firing, then notify the owner on success via
 
 ## 25. Testing
 
-- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine.
+- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine, trip share/snapshot/precondition helpers. Run: `npx vitest run` (178 tests).
 - **E2E (Playwright):** `playwright.config.ts` + `e2e/` (smoke, auth, garage, costs, trip, authed-flow). CI `e2e-smoke` runs `smoke.spec.ts` (no credentials); authenticated specs gated on `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`. Run: `npm run test:e2e` (`npx playwright install --with-deps chromium` once).
+- **Two projects:** `chromium` (Desktop Chrome) and `mobile` (Pixel 7). The mobile project is scoped to `public-pages.spec.ts` — only the a11y/layout specs need a narrow viewport.
+- **Offline-capable specs** (no credentials, no network): `public-pages`, `auth`, `i18n`, `trip-planner`. 101 assertions covering console errors, hydration mismatches, accessible names, nested interactives, WCAG 2.5.8 tap targets, all five locales, and planner auth gating.
+- **Helpers:** `e2e/helpers/a11y.ts` (`visibleControls`, `targetSizeViolations`, `unnamedControls`, `nestedInteractives`), `e2e/helpers/diagnostics.ts` (`collectDiagnostics`, `gotoSettled`), `e2e/helpers/auth.ts`.
+- **`test.fail()` convention:** open UI bugs get a spec marked `test.fail()`, so the suite stays green while the bug is open and turns red the moment it is fixed — that is the signal to drop the marker and keep the spec as a regression test. Currently open: the 44×44 AAA touch-target gap (`mobile tap targets`); the 24×24 AA floor is enforced for real.
+- **Sandbox escape hatch:** `PLAYWRIGHT_CHROMIUM_PATH` overrides the browser binary when the image ships a Chromium that does not match the managed download; `PLAYWRIGHT_BASE_URL` skips the managed `webServer`. Note `reuseExistingServer` is on outside CI — a server left running against a stale `.next` will produce phantom missing-chunk failures.

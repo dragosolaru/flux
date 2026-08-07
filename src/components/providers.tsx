@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes";
 
 import { Toaster } from "@/components/ui/sonner";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   const [client] = React.useState(
     () =>
       new QueryClient({
@@ -25,11 +25,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionProvider>
+      {/* nonce is required: the CSP in src/proxy.ts is nonce + 'strict-dynamic',
+          so without it the inline script next-themes injects is blocked and the
+          `dark` class only lands after hydration — a flash of the light palette
+          on every cold load. */}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
         forcedTheme="dark"
         disableTransitionOnChange
+        nonce={nonce}
       >
         <MotionConfig reducedMotion="user">
           <QueryClientProvider client={client}>

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import {
   describe,
   nestedInteractives,
-  undersized,
+  targetSizeViolations,
   unnamedControls,
   visibleControls,
 } from "./helpers/a11y";
@@ -74,26 +74,22 @@ test.describe("public pages", () => {
 
       test("all tap targets meet the WCAG 2.5.8 minimum (24x24)", async ({ page }) => {
         await gotoSettled(page, route.path);
-        const tooSmall = undersized(await visibleControls(page), 24).map(describe);
+        const tooSmall = targetSizeViolations(await visibleControls(page), 24).map(describe);
         expect(tooSmall, "controls below the 24x24 AA floor").toEqual([]);
       });
     });
   }
 });
 
-test.describe("known product bugs", () => {
+test.describe("regressions", () => {
   /**
-   * BUG: <ThemeProvider> (src/components/providers.tsx) is rendered without a
-   * `nonce`, so the inline script next-themes injects to set the theme before
-   * first paint is blocked by the CSP built in src/proxy.ts. The `dark` class
-   * therefore only lands after hydration, producing a flash of the light
-   * palette on every cold page load in production.
-   *
-   * Marked `fail` so the suite stays green while the bug is open AND turns red
-   * the moment it is fixed, which is the signal to delete this test.
+   * The CSP built in src/proxy.ts is nonce + 'strict-dynamic', so <ThemeProvider>
+   * must be passed the request nonce (threaded from src/app/layout.tsx through
+   * Providers). Without it the inline script next-themes injects to set the
+   * theme before first paint is blocked, the `dark` class only lands after
+   * hydration, and every cold page load flashes the light palette.
    */
   test("theme script is not blocked by the CSP", async ({ page }) => {
-    test.fail();
     const diagnostics = collectDiagnostics(page);
     await page.goto("/login", { waitUntil: "load" });
     await page.waitForTimeout(1_000);
@@ -105,13 +101,12 @@ test.describe("known product bugs", () => {
   });
 
   /**
-   * BUG: the (auth) layout renders the "Flux" wordmark as a <p>, so /login and
-   * /register contain no <h1> — in fact no heading at all. Screen-reader users
-   * get no document outline and heading navigation is dead on both pages.
+   * The (auth) layout renders the "Flux" wordmark as the page's <h1>. It was a
+   * <p>, which left /login and /register with no heading at all: no document
+   * outline for screen-reader users and dead heading navigation on both pages.
    */
   for (const path of ["/login", "/register"]) {
     test(`${path} has a top-level heading`, async ({ page }) => {
-      test.fail();
       await gotoSettled(page, path);
       await expect(page.locator("h1")).toHaveCount(1);
     });

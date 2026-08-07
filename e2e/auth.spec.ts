@@ -10,7 +10,10 @@ test.describe("login page", () => {
   test("renders the sign-in form", async ({ page }) => {
     await page.goto("/login");
 
-    await expect(page.getByRole("heading", { name: "flux" })).toBeVisible();
+    // The (auth) layout renders the wordmark as a <p> inside a link back to
+    // "/", not as a heading — see the "has a top-level heading" bug test in
+    // public-pages.spec.ts.
+    await expect(page.getByRole("link", { name: /^flux/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
@@ -37,7 +40,7 @@ test.describe("register page", () => {
   test("renders the registration form", async ({ page }) => {
     await page.goto("/register");
 
-    await expect(page.getByRole("heading", { name: "flux" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^flux/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /create account/i })).toBeVisible();

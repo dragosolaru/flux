@@ -32,7 +32,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
         <Link href="/" className="flex flex-col items-center gap-3">
           <FluxLogo size={48} />
           <div className="text-center">
-            <p className="text-2xl font-bold tracking-tight">Flux</p>
+            <h1 className="text-2xl font-bold tracking-tight">Flux</h1>
             <p className="text-sm text-muted-foreground">{t("tagline")}</p>
           </div>
         </Link>

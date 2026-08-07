@@ -7,6 +7,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
+import { headers } from "next/headers";
+
 import { auth } from "@/lib/auth";
 import { VehicleProvider } from "@/contexts/vehicle";
 
@@ -17,7 +19,13 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/login");
+    // Carry where they were headed. LoginForm already reads and validates
+    // callbackUrl; only this guard was dropping it, so a logged-out user
+    // opening a bookmark landed on the dashboard instead — which defeats the
+    // point of keeping /trip alive as a redirect.
+    const headerList = await headers();
+    const target = headerList.get("x-pathname");
+    redirect(target ? `/login?callbackUrl=${encodeURIComponent(target)}` : "/login");
   }
 
   return (

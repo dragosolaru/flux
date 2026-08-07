@@ -102,6 +102,8 @@ export async function visibleControls(page: Page): Promise<Control[]> {
           width: Math.round(rect.width),
           height: Math.round(rect.height),
           display: getComputedStyle(el).display,
+          centerX: rect.x + rect.width / 2,
+          centerY: rect.y + rect.height / 2,
         };
       });
   });
