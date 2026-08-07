@@ -114,10 +114,17 @@ export async function GET() {
     { step: "TESLA_CLIENT_SECRET", ok: config.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
     { step: "TESLA_REDIRECT_URI", ok: config.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
     { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: config.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
-    { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing" },
+    { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing — register AFTER this is served" },
     { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy, blocks: "every command on a post-2021 car (412 VCP_REQUIRED)" },
   ];
-  const teslaNextStep = teslaSteps.find((s) => !s.ok)?.step ?? null;
+
+  // Registration has no environment variable behind it, so it cannot be
+  // resolved here — but leaving it out entirely is how the checklist came to
+  // report every prerequisite met while linking still failed with an empty
+  // vehicle list. Named explicitly, with the panel's own button as the check.
+  const teslaNextStep =
+    teslaSteps.find((s) => !s.ok)?.step ??
+    "partner account registration — use the button below to check";
 
   if (!config.redis) {
     warnings.push(

@@ -161,6 +161,7 @@ export function DebugClient() {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [apiPath, setApiPath] = useState("/api/chargers/stats");
   const [apiResult, setApiResult] = useState<unknown>(null);
+  const [partnerResult, setPartnerResult] = useState<unknown>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Populated only when the clipboard write is refused, so the text can still
   // be selected by hand — some mobile browsers block the API outright.
@@ -340,6 +341,24 @@ export function DebugClient() {
     }
   }
 
+  async function teslaPartner(action: "status" | "register") {
+    setRunning(`partner:${action}`);
+    setLastError(null);
+    setPartnerResult(null);
+    try {
+      setPartnerResult(
+        await apiFetch<unknown>("/api/internal/debug/tesla-partner", {
+          method: "POST",
+          body: JSON.stringify({ action, region: "eu" }),
+        }),
+      );
+    } catch (err) {
+      setLastError(`Partner ${action} failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runDedupe() {
     setRunning("dedupe");
     setLastError(null);
@@ -386,6 +405,7 @@ export function DebugClient() {
         probe,
         rawProbe,
         apiResult,
+        partnerResult,
         ocrResult,
         lastResult,
         lastError,
@@ -678,6 +698,35 @@ export function DebugClient() {
               </li>
             ))}
           </ol>
+          <div className="space-y-2 border-t border-border/60 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Partner account (EU)
+            </p>
+            <p className="text-xs text-muted-foreground">
+              The one setup step with no environment variable behind it, so the list above
+              cannot see it. Tesla fetches the public key during registration — check status
+              first; register only once the key is being served.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <IngestButton
+                label="Check status"
+                busy={running === "partner:status"}
+                disabled={running !== null}
+                onClick={() => void teslaPartner("status")}
+              />
+              <IngestButton
+                label="Register"
+                busy={running === "partner:register"}
+                disabled={running !== null}
+                onClick={() => void teslaPartner("register")}
+              />
+            </div>
+            {partnerResult != null && (
+              <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
+                {JSON.stringify(partnerResult, null, 2)}
+              </pre>
+            )}
+          </div>
         </Panel>
       )}
 

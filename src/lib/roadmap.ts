@@ -33,7 +33,8 @@ export const ROADMAP: Milestone[] = [
   },
   {
     goal: "Tesla linked and commands working",
-    nextStep: "Set TESLA_PUBLIC_KEY, register the partner account on the EU host.",
+    nextStep:
+      "Register the partner account on the EU host — the Go live panel has a button. Then deploy tesla-proxy for commands.",
     check: (c) => c.teslaLive === true && c.teslaProxy === true,
   },
   {
