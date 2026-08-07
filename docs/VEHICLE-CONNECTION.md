@@ -157,10 +157,21 @@ because a blank 200 is the harder failure to notice.
 
 ### 2. App credentials
 
-From the Tesla developer portal: `TESLA_CLIENT_ID`, `TESLA_CLIENT_SECRET`. The
-redirect URI registered there must exactly match `https://<domain>/connect/tesla`.
+From the Tesla developer portal: `TESLA_CLIENT_ID`, `TESLA_CLIENT_SECRET`.
+
+`TESLA_REDIRECT_URI` must equal the **Allowed Redirect URI** registered in the
+portal, exactly — Tesla compares it as a string. That is
+`https://<domain>/api/tesla/callback`: the API route that exchanges the code.
+`/connect/tesla` is the page the callback redirects *back* to when it is done,
+and is not the OAuth endpoint. `src/app/api/tesla/connect/route.ts` returns 500
+"Tesla OAuth is not configured" when this variable is missing.
+
 Also set `TESLA_TOKEN_ENCRYPTION_KEY` (32 bytes, base64) — refresh tokens are
 AES-256-GCM encrypted at rest with it.
+
+Set `LIVE_INTEGRATIONS=tesla` *before* trying any of this: every `/api/tesla/*`
+route answers **410** until it is set, so the flow cannot start no matter what
+else is configured. Step 5 below is a formality if you did it here.
 
 ### 3. Register the partner account
 
@@ -182,6 +193,12 @@ curl -X POST https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/partner_accounts 
 
 Use the EU host — `TESLA_REGIONS` in `src/lib/tesla/constants.ts` maps regions,
 and a car registered in Europe is not visible from the NA host.
+
+The app needs both OAuth grant types enabled in the portal: `client-credentials`
+for this partner token, and `authorization-code` for linking a driver's account.
+Check the scopes too — `TESLA_SCOPES` requests `openid`, `offline_access`,
+`vehicle_device_data`, `vehicle_cmds` and `vehicle_charging_cmds`, and a scope
+the app was not granted is refused at the authorize step, not at build time.
 
 ### 4. Deploy the signing proxy
 

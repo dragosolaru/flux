@@ -101,18 +101,21 @@ export async function GET() {
     teslaClientSecret: !!process.env.TESLA_CLIENT_SECRET,
     teslaPublicKey: !!process.env.TESLA_PUBLIC_KEY,
     teslaTokenEncryptionKey: !!process.env.TESLA_TOKEN_ENCRYPTION_KEY,
+    teslaRedirectUri: !!process.env.TESLA_REDIRECT_URI,
     teslaLive: (process.env.LIVE_INTEGRATIONS ?? "").split(",").map((s) => s.trim()).includes("tesla"),
   };
 
-  // Ordered so the first unmet prerequisite is the one to act on: each step is
-  // useless without the ones above it.
+  // Ordered by what actually blocks first when you try to link a car, not by
+  // how the docs are written. LIVE_INTEGRATIONS is first because /api/tesla/*
+  // answers 410 without it — the flow cannot even start, whatever else is set.
   const teslaSteps: { step: string; ok: boolean; blocks: string }[] = [
+    { step: "LIVE_INTEGRATIONS=tesla", ok: config.teslaLive, blocks: "every /api/tesla/* route — they answer 410 until this is set" },
     { step: "TESLA_CLIENT_ID", ok: config.teslaClientId, blocks: "the OAuth redirect to Tesla" },
     { step: "TESLA_CLIENT_SECRET", ok: config.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
+    { step: "TESLA_REDIRECT_URI", ok: config.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
     { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: config.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
     { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing" },
     { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy, blocks: "every command on a post-2021 car (412 VCP_REQUIRED)" },
-    { step: "LIVE_INTEGRATIONS=tesla", ok: config.teslaLive, blocks: "using the real Fleet API instead of the simulator" },
   ];
   const teslaNextStep = teslaSteps.find((s) => !s.ok)?.step ?? null;
 
