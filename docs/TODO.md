@@ -36,6 +36,30 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1f. A live vehicle records no charging sessions
+`charging_sessions` rows are written in exactly two places: the simulator
+(`src/lib/mock/persistence.ts`, on a mock tick) and the Supercharger sync
+(`dx/charging/history`). The live state route records battery health and nothing
+else — so once a car is linked, home and third-party charging is never captured
+at all, and the only history it can ever show is Supercharger sessions.
+
+The empty state ("sessions appear here once the car has been connected while the
+dashboard was open") describes the simulator's behaviour and is simply wrong for
+a linked car. That is worse than an empty list: it tells the driver to do
+something that will not help.
+
+Two ways to close it, and they pull in opposite directions:
+  * Detect start/stop from the live poll, as the simulator does. Cheap to build,
+    but only sees what polling sees — and polling now stops after ten idle
+    minutes precisely so the car can sleep, so an overnight home charge is
+    invisible either way.
+  * **Fleet Telemetry** — the car pushes to an endpoint instead of being polled.
+    Continuous history AND no waking, which is the only option that solves both
+    at once. Needs its own configuration and a receiver.
+
+Until one of them exists, "istoricul de încărcare" is a promise the live
+integration does not keep.
+
 ### 1e. Fleet API data we do not fetch yet
 The integration currently asks for four `vehicle_data` sub-endpoints
 (`charge_state`, `climate_state`, `drive_state`, `vehicle_state`) and
