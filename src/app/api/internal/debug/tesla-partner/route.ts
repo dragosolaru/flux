@@ -13,9 +13,12 @@ import { logServer } from "@/lib/debug-log";
 // exactly what happened. It is also a curl with a client-credentials token,
 // i.e. the one step that cannot be done from a phone. Hence a button.
 //
-// Registration is idempotent at Tesla's end: re-registering the same domain
-// updates the stored key rather than erroring, which is what makes it safe to
-// offer as a button rather than a one-shot ritual.
+// Re-registering an already-registered domain returns the EXISTING record
+// unchanged — observed in the field: a POST made while a freshly generated key
+// was being served came back 200 with the key from two months earlier and an
+// untouched `updated_at`. So the button is safe to press twice, but pressing it
+// is NOT how you rotate the key. Use "Check status" to see which key Tesla
+// actually holds.
 export const maxDuration = 60;
 
 const BodySchema = z.object({
@@ -24,6 +27,30 @@ const BodySchema = z.object({
   // from the NA host, and the partner account is per-region.
   region: z.enum(["eu", "na", "cn"]).default("eu"),
 });
+
+/**
+ * The uncompressed EC point from a PEM public key, lowercase hex — the form
+ * Tesla reports. A P-256 SPKI is a fixed-length header followed by the 65-byte
+ * point, so the point is simply the DER's tail.
+ */
+function publicKeyPoint(pem: string | undefined): string | null {
+  const body = pem?.replace(/\\n/g, "\n").trim();
+  if (!body) return null;
+  const base64 = body
+    .split("\n")
+    .filter((l) => !l.startsWith("-----"))
+    .join("")
+    .trim();
+  if (base64.length === 0) return null;
+  try {
+    const der = Buffer.from(base64, "base64");
+    if (der.length < 65) return null;
+    const point = der.subarray(der.length - 65);
+    return point[0] === 0x04 ? point.toString("hex") : null;
+  } catch {
+    return null;
+  }
+}
 
 async function partnerToken(audience: string): Promise<
   { ok: true; token: string } | { ok: false; status: number; body: string }
@@ -122,14 +149,20 @@ export async function POST(req: Request) {
   }
 
   // Compare what Tesla holds against what we serve, so "registered" cannot mean
-  // "registered with a key we replaced two deploys ago".
+  // "registered with a key replaced two deploys ago" — which is exactly the
+  // state this found in the field.
+  //
+  // The two are different encodings of the same thing and comparing them as
+  // strings is always false: Tesla returns the raw uncompressed EC point as
+  // hex, TESLA_PUBLIC_KEY is a base64 SPKI wrapper. The point is the last 65
+  // bytes of the DER, so decode ours down to that before comparing.
   let servedKeyMatches: boolean | null = null;
-  if (parsed.data.action === "status" && res.ok) {
+  let servedKeyPoint: string | null = null;
+  if (res.ok) {
     const stored = (body as { response?: { public_key?: string } })?.response?.public_key;
-    const ours = process.env.TESLA_PUBLIC_KEY?.replace(/\\n/g, "\n").trim();
-    if (stored && ours) {
-      const normalise = (v: string) => v.replace(/\s+/g, "");
-      servedKeyMatches = normalise(stored) === normalise(ours);
+    servedKeyPoint = publicKeyPoint(process.env.TESLA_PUBLIC_KEY);
+    if (stored && servedKeyPoint) {
+      servedKeyMatches = stored.toLowerCase() === servedKeyPoint;
     }
   }
 
@@ -147,7 +180,18 @@ export async function POST(req: Request) {
     domain,
     region: parsed.data.region,
     status: res.status,
-    ...(servedKeyMatches !== null ? { servedKeyMatches } : {}),
+    ...(servedKeyMatches !== null
+      ? {
+          servedKeyMatches,
+          ...(servedKeyMatches
+            ? {}
+            : {
+                servedKeyPoint,
+                keyMismatchHint:
+                  "Tesla holds a different key than this deployment serves. Commands signed with the new private key will be rejected. Re-registering does NOT update it.",
+              }),
+        }
+      : {}),
     body,
     ...(res.ok
       ? {}

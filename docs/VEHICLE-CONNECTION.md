@@ -200,6 +200,18 @@ Check the scopes too — `TESLA_SCOPES` requests `openid`, `offline_access`,
 `vehicle_device_data`, `vehicle_cmds` and `vehicle_charging_cmds`, and a scope
 the app was not granted is refused at the authorize step, not at build time.
 
+> **Re-registering does not rotate the key.** A `POST` for a domain that is
+> already registered returns the existing record untouched — observed in the
+> field: a POST made while a freshly generated key was being served came back
+> `200` with the key from two months earlier and an unchanged `updated_at`. Use
+> the panel's "Check status", which decodes the served PEM to the raw EC point
+> and compares it with what Tesla reports; a mismatch means commands signed with
+> the new private key will be rejected, however correct everything else looks.
+>
+> Reading vehicle data does not involve the signing key at all, so a mismatch
+> blocks commands only — link the car first, reconcile the key when deploying
+> the proxy.
+
 ### 4. Deploy the signing proxy
 
 See `tesla-proxy/README.md`. Set `TESLA_PROXY_BASE_URL` to the Fly URL. Without
