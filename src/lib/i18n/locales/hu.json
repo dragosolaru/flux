@@ -447,7 +447,19 @@
     "error": "Parancs sikertelen",
     "error_rate_limit": "Túl sok parancs. Várj egy pillanatot, és próbáld újra.",
     "error_vcp_required": "Ehhez az autóhoz virtuális kulcsot kell beállítani, mielőtt a parancsok működnének.",
-    "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz."
+    "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz.",
+    "confirm": {
+      "unlock": {
+        "title": "Kinyitja az autót?",
+        "body": "Az ajtók ténylegesen kinyílnak. Bárki kinyithatja, aki a közelben van.",
+        "action": "Kinyitás"
+      },
+      "remote_start": {
+        "title": "Engedélyezi a távindítást?",
+        "body": "Az autó rövid ideig kulcs nélkül is vezethető lesz.",
+        "action": "Engedélyezés"
+      }
+    }
   },
   "garage": {
     "title": "Garázs",

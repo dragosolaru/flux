@@ -1,7 +1,7 @@
 "use client";
 
 import { Fan, Lock, Loader2, Megaphone, Sparkles, Unlock } from "lucide-react";
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
@@ -20,6 +20,7 @@ interface CommandPanelProps {
 
 export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const t = useTranslations("commands");
+  const tc = useTranslations("common");
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, isError, error } = useVehicleCommand();
   const MAPPED = ["error_rate_limit", "error_vcp_required", "error_not_supported"];
@@ -27,10 +28,25 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
     ? t(error && MAPPED.includes(error.message) ? error.message : "error")
     : null;
 
+  // Commands that physically open the car or let it be driven. A hijacked
+  // session could otherwise issue them with a single tap, and remote start on
+  // some models allows driving away. Everything else stays one tap.
+  const SENSITIVE: ReadonlySet<CommandName> = new Set(["unlock", "remote_start"]);
+
+  const [confirming, setConfirming] = useState<CommandName | null>(null);
+
   function send(command: CommandName, args?: Record<string, unknown>) {
     // Toasts + optimistic update are handled centrally in useVehicleCommand;
     // passing per-call onSuccess/onError here would double-fire the toast.
     mutate({ vehicleId, command, args });
+  }
+
+  function request(command: CommandName) {
+    if (SENSITIVE.has(command)) {
+      setConfirming(command);
+      return;
+    }
+    send(command);
   }
 
   const inFlight = (cmd: CommandName) =>
@@ -117,6 +133,44 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
 
   return (
     <div className="flex flex-col gap-2">
+    {confirming && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="fixed inset-0 z-[1200] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        onClick={() => setConfirming(null)}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-card p-4 shadow-2xl"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            {t(`confirm.${confirming}.title`)}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t(`confirm.${confirming}.body`)}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const cmd = confirming;
+                setConfirming(null);
+                send(cmd);
+              }}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-destructive px-3 text-sm font-semibold text-destructive-foreground"
+            >
+              {t(`confirm.${confirming}.action`)}
+            </button>
+            <button
+              onClick={() => setConfirming(null)}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm text-muted-foreground hover:bg-muted"
+            >
+              {tc("cancel")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <motion.div
       variants={staggerContainer}
       initial="hidden"
@@ -129,7 +183,7 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
           <motion.div key={cmd} variants={cardVariants}>
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => send(cmd)}
+              onClick={() => request(cmd)}
               disabled={isSending}
               title={label}
               aria-label={label}

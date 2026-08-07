@@ -447,7 +447,19 @@
     "error": "Command failed",
     "error_rate_limit": "Too many commands. Please wait a moment and try again.",
     "error_vcp_required": "This car needs a Virtual Key set up before commands work.",
-    "error_not_supported": "This command isn't available for this vehicle."
+    "error_not_supported": "This command isn't available for this vehicle.",
+    "confirm": {
+      "unlock": {
+        "title": "Unlock the car?",
+        "body": "This physically unlocks the doors. Anyone nearby can open it.",
+        "action": "Unlock"
+      },
+      "remote_start": {
+        "title": "Enable remote start?",
+        "body": "This lets the car be driven without a key for a short window.",
+        "action": "Enable"
+      }
+    }
   },
   "garage": {
     "title": "Garage",

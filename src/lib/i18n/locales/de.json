@@ -447,7 +447,19 @@
     "error": "Befehl fehlgeschlagen",
     "error_rate_limit": "Zu viele Befehle. Bitte warte einen Moment und versuche es erneut.",
     "error_vcp_required": "Für dieses Auto muss zuerst ein virtueller Schlüssel eingerichtet werden, damit Befehle funktionieren.",
-    "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar."
+    "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar.",
+    "confirm": {
+      "unlock": {
+        "title": "Auto entriegeln?",
+        "body": "Die Türen werden tatsächlich entriegelt. Jeder in der Nähe kann es öffnen.",
+        "action": "Entriegeln"
+      },
+      "remote_start": {
+        "title": "Fernstart aktivieren?",
+        "body": "Das Auto lässt sich dann kurzzeitig ohne Schlüssel fahren.",
+        "action": "Aktivieren"
+      }
+    }
   },
   "garage": {
     "title": "Garage",
