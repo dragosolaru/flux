@@ -74,36 +74,70 @@ export async function POST(req: Request) {
 
   const supabase = createSupabaseAdminClient();
 
-  const { count } = await supabase
+  // Saving a route the driver already has refreshes it instead of adding a row
+  // — re-saving is what happens after re-planning the same trip, and the newer
+  // plan is the one worth keeping. Migration 040 makes (user_id, route_key)
+  // unique, so this is also what stops a double tap from inserting twice: the
+  // second write resolves to the same key and updates.
+  //
+  // The key is computed by the database function that defines the generated
+  // column rather than being recomputed here, so the two cannot drift apart
+  // about what "the same route" means.
+  const { data: routeKey, error: keyError } = await supabase.rpc("saved_route_key", {
+    p_origin_lat: parsed.data.origin_lat,
+    p_origin_lng: parsed.data.origin_lng,
+    p_destination_lat: parsed.data.destination_lat,
+    p_destination_lng: parsed.data.destination_lng,
+  });
+
+  if (keyError || typeof routeKey !== "string") {
+    console.error("[saved-routes/POST:key]", keyError?.message ?? "No key");
+    return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
+  }
+
+  // One read serves both checks: the cap counts the rows, and finding this key
+  // among them means the save is a refresh. A refresh must stay possible for a
+  // driver already holding ten routes, so only a new key is capped. Bounded by
+  // the cap itself, so this stays a ten-row read.
+  const { data: mine, error: listError } = await supabase
     .from("saved_routes")
-    .select("id", { count: "exact", head: true })
+    .select("route_key")
     .eq("user_id", session.user.id);
 
-  if ((count ?? 0) >= 10) {
+  if (listError) {
+    console.error("[saved-routes/POST:list]", listError.message);
+    return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
+  }
+
+  const isRefresh = (mine ?? []).some((r) => r.route_key === routeKey);
+  if (!isRefresh && (mine?.length ?? 0) >= 10) {
     return NextResponse.json({ message: "saved_routes_limit" }, { status: 422 });
   }
 
   const { data, error } = await supabase
     .from("saved_routes")
-    .insert({
-      user_id: session.user.id,
-      name: parsed.data.name,
-      origin_label: parsed.data.origin_label,
-      origin_lat: parsed.data.origin_lat,
-      origin_lng: parsed.data.origin_lng,
-      destination_label: parsed.data.destination_label,
-      destination_lat: parsed.data.destination_lat,
-      destination_lng: parsed.data.destination_lng,
-      stops: parsed.data.stops,
-      plan_snapshot: parsed.data.plan_snapshot,
-    })
+    .upsert(
+      {
+        user_id: session.user.id,
+        name: parsed.data.name,
+        origin_label: parsed.data.origin_label,
+        origin_lat: parsed.data.origin_lat,
+        origin_lng: parsed.data.origin_lng,
+        destination_label: parsed.data.destination_label,
+        destination_lat: parsed.data.destination_lat,
+        destination_lng: parsed.data.destination_lng,
+        stops: parsed.data.stops,
+        plan_snapshot: parsed.data.plan_snapshot,
+      },
+      { onConflict: "user_id,route_key" },
+    )
     .select()
     .single();
 
   if (error || !data) {
-    console.error("[saved-routes/POST]", error?.message ?? "Insert failed");
+    console.error("[saved-routes/POST]", error?.message ?? "Upsert failed");
     return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
   }
 
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json(data, { status: isRefresh ? 200 : 201 });
 }

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { gotoSettled } from "./helpers/diagnostics";
+import { loginAs } from "./helpers/auth";
 
 /**
  * Offline coverage for the unified trip planner (fcabc98 — "/map absorbs
@@ -94,5 +95,74 @@ test.describe("sign-in redirect handling", () => {
   test("a deep link into the planner survives the login redirect", async ({ page }) => {
     await gotoSettled(page, "/map?mode=plan");
     await expect(page).toHaveURL(/callbackUrl=/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reported from the field: the same route saved twice.
+//
+// Two ways in, and the client guard only closed the first. `routeSaved` is set
+// after the POST resolves, so two taps inside the round-trip both saw it false;
+// and no client guard at all can see a retry, a second tab, or loading a saved
+// route and pressing save again. Migration 040 makes (user_id, route_key)
+// unique and POST upserts on it, so saving the same origin/destination twice
+// refreshes one row instead of adding a second.
+//
+// Gated on credentials: the invariant is server-side and needs a real session.
+// ---------------------------------------------------------------------------
+
+const authedEmail = process.env.E2E_TEST_EMAIL;
+const authedPassword = process.env.E2E_TEST_PASSWORD;
+
+test.describe("saving the same route twice", () => {
+  test.skip(!authedEmail || !authedPassword, "E2E_TEST_EMAIL/E2E_TEST_PASSWORD not configured");
+
+  const payload = {
+    name: "E2E dedupe probe",
+    origin_label: "Kavala",
+    origin_lat: 40.9397,
+    origin_lng: 24.4019,
+    destination_label: "Cluj-Napoca",
+    destination_lat: 46.7712,
+    destination_lng: 23.6236,
+    stops: [],
+    plan_snapshot: {},
+  };
+
+  test("POST twice leaves one row, and the second is a refresh", async ({ page, request }) => {
+    await loginAs(page, authedEmail!, authedPassword!);
+    const cookies = await page.context().cookies();
+    const headers = {
+      cookie: cookies.map((c) => `${c.name}=${c.value}`).join("; "),
+      "content-type": "application/json",
+    };
+
+    const before = await request.get("/api/saved-routes", { headers });
+    const beforeRows = (await before.json()) as { id: string; origin_lat: number }[];
+    const probeCount = (rows: { origin_lat: number }[]) =>
+      rows.filter((r) => Math.abs(r.origin_lat - payload.origin_lat) < 0.001).length;
+
+    const first = await request.post("/api/saved-routes", { headers, data: payload });
+    // 201 on a genuinely new route; 200 if a previous run left one behind.
+    expect([200, 201]).toContain(first.status());
+
+    // Jittered by ~2 m — re-geocoding the same place must not create a second
+    // route, which is why the key rounds to 4 decimals.
+    const second = await request.post("/api/saved-routes", {
+      headers,
+      data: { ...payload, origin_lat: 40.93972, stops: [{ probe: true }] },
+    });
+    expect(second.status(), "second save is a refresh, not a create").toBe(200);
+
+    const after = await request.get("/api/saved-routes", { headers });
+    const afterRows = (await after.json()) as { id: string; origin_lat: number }[];
+    expect(probeCount(afterRows), "exactly one row for the probe route").toBe(1);
+    expect(afterRows.length).toBe(beforeRows.length + (probeCount(beforeRows) === 0 ? 1 : 0));
+
+    // Clean up so re-runs start from the same state.
+    const probe = afterRows.find(
+      (r) => Math.abs(r.origin_lat - payload.origin_lat) < 0.001,
+    );
+    if (probe) await request.delete(`/api/saved-routes/${probe.id}`, { headers });
   });
 });

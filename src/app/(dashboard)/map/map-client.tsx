@@ -410,6 +410,7 @@ export function MapClient() {
   const createSavedRoute = useCreateSavedRoute();
   const deleteSavedRoute = useDeleteSavedRoute();
   const [routeSaved, setRouteSaved] = useState(false);
+  const savingRef = useRef(false);
   const [savedSheetOpen, setSavedSheetOpen] = useState(false);
   const [preconditioningManually, setPreconditioningManually] = useState(false);
 
@@ -449,6 +450,13 @@ export function MapClient() {
 
   async function handleSaveRoute() {
     if (!activePlan || !origin || !destination || routeSaved) return;
+    // `routeSaved` is only set once the POST resolves, and React state does not
+    // update mid-tick, so on a slow connection two taps inside the round-trip
+    // both read it as false and both saved. A ref flips synchronously and so
+    // actually closes the window. The unique index added in migration 040 is
+    // the durable guard — this just avoids the wasted request.
+    if (savingRef.current) return;
+    savingRef.current = true;
     try {
       await createSavedRoute.mutateAsync({
         name: `${origin.name.split(",")[0]} → ${destination.name.split(",")[0]}`,
@@ -470,6 +478,8 @@ export function MapClient() {
       toast.error(
         msg === "saved_routes_limit" ? tTrip("saved_route_limit") : tTrip("saved_route_error"),
       );
+    } finally {
+      savingRef.current = false;
     }
   }
 
@@ -803,6 +813,7 @@ export function MapClient() {
                 onShareRoute={() => void handleShareRoute()}
                 onSaveRoute={() => void handleSaveRoute()}
                 routeSaved={routeSaved}
+                savingRoute={createSavedRoute.isPending}
                 originShort={originShort}
                 destinationShort={destinationShort}
                 fromEUR={fromEUR}
@@ -1230,6 +1241,7 @@ interface RouteAccordionProps {
   onShareRoute: () => void;
   onSaveRoute: () => void;
   routeSaved: boolean;
+  savingRoute: boolean;
   originShort: string;
   destinationShort: string;
   fromEUR: (eur: number) => string;
@@ -1257,6 +1269,7 @@ function RouteAccordion({
   onShareRoute,
   onSaveRoute,
   routeSaved,
+  savingRoute,
   originShort,
   destinationShort,
   fromEUR,
@@ -1344,10 +1357,12 @@ function RouteAccordion({
                         {active && (
                           <button
                             onClick={onSaveRoute}
-                            disabled={routeSaved}
+                            disabled={routeSaved || savingRoute}
                             className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
                           >
-                            {routeSaved ? (
+                            {savingRoute ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : routeSaved ? (
                               <CheckCircle2 className="size-3.5 text-green-400" />
                             ) : (
                               <Bookmark className="size-3.5" />
@@ -1405,10 +1420,12 @@ function RouteAccordion({
                         {active && (
                           <button
                             onClick={onSaveRoute}
-                            disabled={routeSaved}
+                            disabled={routeSaved || savingRoute}
                             className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/40 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
                           >
-                            {routeSaved ? (
+                            {savingRoute ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : routeSaved ? (
                               <CheckCircle2 className="size-3.5 text-green-400" />
                             ) : (
                               <Bookmark className="size-3.5" />
@@ -1671,7 +1688,7 @@ function PlanResults({
 
           <button
             onClick={onSaveRoute}
-            disabled={routeSaved}
+            disabled={routeSaved || savingRoute}
             className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
           >
             {routeSaved ? (
