@@ -40,6 +40,12 @@ Agent(review,     subagent_type="claude")            # senior review after merge
 ## Commit rules
 
 - `npx tsc --noEmit` passes before commit.
+- `npm run lint` passes before commit.
 - Commit message: `type(scope): short description` — `fix`, `feat`, `docs`, `refactor`.
-- Never push to `main` directly — always use a feature branch.
+- **Current mode — commit straight to `main`.** Solo dev, field-testing on mobile, no reviewer available; a feature branch would only add a merge step nobody is waiting on. Commit and push to `main` directly.
 - Never `--no-verify`, never `--force-push` main.
+
+> Revert to feature branches once a second person is on the repo, or once
+> real customers are on the deploy and a bad `main` is a live outage rather
+> than a five-minute fix. The bar is "someone other than the author would
+> have to notice the breakage" — until then, `main` is the working branch.
