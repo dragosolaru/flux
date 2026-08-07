@@ -79,6 +79,21 @@ affordances for. Raise either if they turn out to be missed.
 
 Recorded so they are not lost — none block launch.
 
+- [ ] **IRVE (France) now serves CSV, not JSON.** The connector logs
+      `Unexpected token 'o', "nom_amenage"… is not valid JSON` — that is the CSV
+      header row. France therefore has OCM + OSM + TomTom only, like Germany.
+      Needs either the CSV parsed or the JSON export URL rediscovered.
+- [ ] **NDW (Netherlands) returns 400 on every request.** Same practical effect
+      as BNetzA: the source contributes nothing. Confirmed by the source counts
+      in the debug panel — only `ocm`, `osm` and `tomtom` have rows.
+- [ ] **~6,300 chargers have no `charger_sources` row.** 22,253 chargers against
+      15,953 source rows. Suspected cause: `upsert_chargers_batch` inserts
+      sources with `on conflict (source, source_ref) do update set charger_id =
+      excluded.charger_id`, so a ref claimed by a second charger *moves*, leaving
+      the first with none. `source_count` on `chargers` is written from the
+      payload rather than counted from the table, so it does not reveal this.
+      Confidence scoring reads source count, so this would understate it.
+      Needs confirming against the live table before changing the upsert.
 - [ ] **BNetzA source is disabled**, not fixed. `ladestationen.api.bund.dev`
       returns 404 on every request; the connector is gated behind an optional
       `BNETZA_URL` env var. Germany therefore has OCM + OSM + TomTom only.
