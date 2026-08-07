@@ -131,22 +131,14 @@ begin
 end;
 $$;
 
--- Run repeatedly until it reports 0.
-select public.dedupe_chargers_batch(2000) as deleted;
-
--- Per-country variant, kept for targeting a single country. See the note above:
--- on this dataset it only reaches the minority of rows that carry a country.
-select 'ro' as country, public.dedupe_chargers_by_site('RO') as deleted;
-select 'bg' as country, public.dedupe_chargers_by_site('BG') as deleted;
-select 'gr' as country, public.dedupe_chargers_by_site('GR') as deleted;
-select 'rs' as country, public.dedupe_chargers_by_site('RS') as deleted;
-select 'mk' as country, public.dedupe_chargers_by_site('MK') as deleted;
-select 'hu' as country, public.dedupe_chargers_by_site('HU') as deleted;
-select 'at' as country, public.dedupe_chargers_by_site('AT') as deleted;
-select 'hr' as country, public.dedupe_chargers_by_site('HR') as deleted;
-select 'si' as country, public.dedupe_chargers_by_site('SI') as deleted;
-select 'de' as country, public.dedupe_chargers_by_site('DE') as deleted;
-select 'fr' as country, public.dedupe_chargers_by_site('FR') as deleted;
-select 'nl' as country, public.dedupe_chargers_by_site('NL') as deleted;
--- Rows with no country are typically the largest group; run in batches until 0.
-select 'null' as country, public.dedupe_chargers_by_site(null, 2000) as deleted;
+-- Applying this migration only defines the helpers; it does not delete
+-- anything. Collapsing duplicates is an operational action, run deliberately:
+--
+--   select public.dedupe_chargers_batch(2000);   -- repeat until it returns 0
+--
+-- The per-country variant is for targeting one country on purpose. On this
+-- dataset most rows carry no country (Overpass/OSM does not tag one), so the
+-- batch form above is the one that actually reaches them:
+--
+--   select public.dedupe_chargers_by_site('RO');
+--   select public.dedupe_chargers_by_site(null, 2000);

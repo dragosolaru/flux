@@ -63,17 +63,15 @@ export async function POST(req: Request) {
   const { error } = await supabase.rpc("exec_sql", { p_sql: migration.sql });
 
   if (error) {
+    // The Postgres message goes in `message`, not a sibling field: apiFetch
+    // throws with `message` alone, so anything else is dropped before it can
+    // reach the panel — which defeats the point of running migrations here
+    // instead of in the SQL editor.
+    const hint = error.message.includes("exec_sql")
+      ? " — apply migration 037 in the Supabase SQL editor first; it creates the runner"
+      : "";
     return NextResponse.json(
-      {
-        message: "Migration failed",
-        // Surfaced verbatim: this is the whole point of running it from here
-        // instead of the SQL editor.
-        error: error.message,
-        hint:
-          error.message.includes("exec_sql")
-            ? "Apply migration 037 in the Supabase SQL editor first — it creates the runner."
-            : undefined,
-      },
+      { message: `${migration.id}: ${error.message}${hint}`, code: error.code ?? null },
       { status: 500 },
     );
   }
