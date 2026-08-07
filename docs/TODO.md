@@ -36,6 +36,19 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1d. Polling wakes a sleeping car every 30 s
+`useVehicle` polls `refetchInterval: 30_000`, and `fetchVehicleData` answers a
+408 by calling `wake_up` and retrying. So an open dashboard keeps a linked car
+awake indefinitely — a Tesla that never reaches deep sleep loses roughly ten
+times more charge per idle day. TanStack pauses the interval when the tab loses
+focus (`refetchIntervalInBackground` defaults false), so the exposure is bounded
+to "screen open and focused", but that is still the normal way someone watches a
+charge finish.
+
+Worth doing before real customers: back off the interval for live vehicles, and
+do not `wake_up` on a background refresh — only when the driver explicitly asks.
+The mock path is unaffected; this only matters once cars are real.
+
 ### 1c. Linking only imports the first vehicle
 `src/app/api/tesla/callback/route.ts` takes `list.response[0]` and stops, so an
 owner with two Teslas gets one and no way to add the other — the garage's "add
