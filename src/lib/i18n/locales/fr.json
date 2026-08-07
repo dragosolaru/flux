@@ -669,7 +669,8 @@
     "send_to_car_success": "Envoyé à votre voiture",
     "send_to_car_preconditioned": "Envoyé — votre voiture va y naviguer et préconditionner la batterie",
     "send_to_car_error": "Impossible d’envoyer à votre voiture",
-    "sending": "Envoi…"
+    "sending": "Envoi…",
+    "cluster_label": "SITES"
   },
   "auth": {
     "title_login": "Bon retour",
