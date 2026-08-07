@@ -55,22 +55,39 @@ describe("parseCsvLine", () => {
 });
 
 describe("IRVE CSV → stations", () => {
-  it("collapses charge points into one station per roaming id", async () => {
-    // The file is one row per charge point. Emitting a row each would hand the
-    // dedup thousands of co-located points; the station id makes it exact here.
+  it("collapses one forecourt's plugs when the publisher reuses the pdc id", async () => {
+    // Reported from the field as tripled stations. eco-movement writes the
+    // charge-point id into the station columns, so these three rows carry three
+    // different "station" ids for one forecourt. Grouping on that produced
+    // three pins at one coordinate.
     const rows = await stationsFromCsv(streamOf([HEADER, ...CHARGEPOINT_ROWS].join("\n")));
-    expect(rows).toHaveLength(3);
-    expect(new Set(rows.map((r) => r.sourceRef)).size).toBe(3);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.connectors.find((c) => c.type === "type2")!.count).toBe(3);
   });
 
-  it("aggregates several charge points that share a station id", async () => {
-    const shared = CHARGEPOINT_ROWS.map((r) =>
-      r.replace(/ATHTBE101206[123],ATHTBE101206[123],Asia/, "ATHTBE1012061,ATHTBE1012061,Asia"),
+  it("keeps a real station id when it is not just the pdc id", async () => {
+    // Publishers that do distinguish them must still group by the station id
+    // rather than by coordinate.
+    const proper = CHARGEPOINT_ROWS.map((r, i) =>
+      r.replace(
+        `ATHTBE101206${i + 1},ATHTBE101206${i + 1},Asia`,
+        `FRSTATION001,FRLOCAL001,Asia`,
+      ),
     );
-    const rows = await stationsFromCsv(streamOf([HEADER, ...shared].join("\n")));
+    const rows = await stationsFromCsv(streamOf([HEADER, ...proper].join("\n")));
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.sourceRef).toBe("ATHTBE1012061");
-    expect(rows[0]!.connectors.find((c) => c.type === "type2")!.count).toBe(3);
+    expect(rows[0]!.sourceRef).toBe("FRSTATION001");
+  });
+
+  it("does not merge two operators sharing one forecourt", async () => {
+    // Both fall back to the coordinate key, so the operator has to be part of
+    // it — otherwise a host and a network at one address become one station
+    // before the spatial dedup ever gets to judge them.
+    const rows = await stationsFromCsv(
+      streamOf([HEADER, CHARGEPOINT_ROWS[0]!, RAIDEN_ROW].join("\n")),
+    );
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((r) => r.operator))).toEqual(new Set(["ChargePoint", "RAIDEN"]));
   });
 
   it("reads connectors from the boolean columns, not a type_prise field", async () => {
@@ -136,7 +153,8 @@ describe("IRVE CSV → stations", () => {
     const rows = await stationsFromCsv(
       streamOf([HEADER, ...CHARGEPOINT_ROWS, RAIDEN_ROW].join("\n")),
     );
-    expect(rows).toHaveLength(4);
+    // One aggregated ChargePoint station plus RAIDEN's.
+    expect(rows).toHaveLength(2);
     expect(rows.every((r) => Number.isFinite(r.lat) && Number.isFinite(r.lng))).toBe(true);
   });
 });

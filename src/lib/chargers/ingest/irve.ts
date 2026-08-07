@@ -128,15 +128,35 @@ function accumulate(
   if (finalLat == null || finalLng == null) return;
   if (Math.abs(finalLat) > 90 || Math.abs(finalLng) > 180) return;
 
-  // Station id first; some rows carry "Non concerné" (not applicable) for
-  // non-roaming stations, which must not collapse into one giant station.
+  // Which id actually identifies the *station* varies by publisher, and getting
+  // this wrong is the difference between one pin and one pin per plug.
+  //
+  //  * "Non concerné" (not applicable) appears for non-roaming stations. Using
+  //    it would merge every such station in France into one.
+  //  * Some publishers write the charge-point id into the station columns —
+  //    eco-movement's rows read
+  //      id_station_itinerance=ATHTBE1012061, id_pdc_itinerance=ATHTBE1012061
+  //      id_station_itinerance=ATHTBE1012062, id_pdc_itinerance=ATHTBE1012062
+  //    for three plugs of one forecourt. Grouping on that yields three
+  //    stations at one coordinate, which is exactly the tripling reported from
+  //    the field. Equality with the pdc id is the tell.
   const stationId = (row.id_station_itinerance ?? "").trim();
-  const usableStationId =
-    stationId && !/^non concern/i.test(stationId) ? stationId : null;
+  const localId = (row.id_station_local ?? "").trim();
+  const pdcId = (row.id_pdc_itinerance ?? "").trim();
+  const isPerPoint = (id: string) => id.length === 0 || (pdcId.length > 0 && id === pdcId);
+
+  const usableStationId = !isPerPoint(stationId) && !/^non concern/i.test(stationId)
+    ? stationId
+    : !isPerPoint(localId)
+      ? localId
+      : null;
+
+  // No usable station id: fall back to the site itself. Rounded to ~11 m and
+  // keyed by operator, so two networks sharing a forecourt stay apart while one
+  // network's plugs collapse into the station they belong to.
   const ref =
     usableStationId ||
-    (row.id_station_local || "").trim() ||
-    `${finalLat.toFixed(5)},${finalLng.toFixed(5)}`;
+    `${(row.nom_operateur || row.nom_enseigne || "?").trim().toLowerCase()}@${finalLat.toFixed(4)},${finalLng.toFixed(4)}`;
 
   let station = stations.get(ref);
   if (!station) {
