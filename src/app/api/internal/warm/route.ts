@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 
 import { isBulkCountry } from "@/lib/chargers/countries";
 import { bulkImportCountry } from "@/lib/chargers/ingest/bulk";
-import { isCountryFresh } from "@/lib/chargers/repository";
+import { ingestArea, isCountryFresh } from "@/lib/chargers/repository";
 import { constantTimeEqual } from "@/lib/crypto/timing";
+import type { BBox } from "@/lib/chargers/types";
 
 // Full-country bulk import endpoint, invoked by the Vercel crons.
 // Protected by the x-webhook-secret header; fails closed (503) if unconfigured.
@@ -18,6 +19,61 @@ const MIN_COUNTRY_MS = 20_000;
 // Upper bound on the request's country list — the full BULK_COUNTRIES set is
 // well under this, so anything larger is a malformed or abusive call.
 const MAX_COUNTRIES = 24;
+
+// Region mode: cell edge in degrees (~55 km). One ingestArea call per cell keeps
+// each Overpass query and OCM page within their limits — a whole-country bbox
+// would blow past OCM's 2,000-result cap and time Overpass out.
+const REGION_CELL_DEG = 0.5;
+// Largest region accepted in one call, in square degrees. Bigger areas should be
+// requested as several calls so each stays inside the time budget.
+const MAX_REGION_SQ_DEG = 60;
+// Rough floor for one cell (7 sources fetched in parallel, then deduped).
+const MIN_CELL_MS = 12_000;
+
+function parseBBox(raw: string): BBox | null {
+  const parts = raw.split(",").map((v) => Number(v.trim()));
+  if (parts.length !== 4 || parts.some((v) => !Number.isFinite(v))) return null;
+  const [minLat, minLng, maxLat, maxLng] = parts;
+  if (minLat >= maxLat || minLng >= maxLng) return null;
+  if (minLat < -90 || maxLat > 90 || minLng < -180 || maxLng > 180) return null;
+  if ((maxLat - minLat) * (maxLng - minLng) > MAX_REGION_SQ_DEG) return null;
+  return { minLat, minLng, maxLat, maxLng };
+}
+
+/**
+ * Ingest a region from EVERY source (OCM, Overpass, TomTom and the national
+ * registries), unlike the country mode which runs OCM plus national sources
+ * only. Cells already covered are re-fetched — this is the deliberate
+ * "populate this area now" path, so it does not consult tile freshness.
+ */
+async function ingestRegion(bbox: BBox, deadline: number) {
+  const cells: BBox[] = [];
+  for (let lat = bbox.minLat; lat < bbox.maxLat; lat += REGION_CELL_DEG) {
+    for (let lng = bbox.minLng; lng < bbox.maxLng; lng += REGION_CELL_DEG) {
+      cells.push({
+        minLat: lat,
+        minLng: lng,
+        maxLat: Math.min(lat + REGION_CELL_DEG, bbox.maxLat),
+        maxLng: Math.min(lng + REGION_CELL_DEG, bbox.maxLng),
+      });
+    }
+  }
+
+  let upserted = 0;
+  let done = 0;
+  for (const cell of cells) {
+    if (Date.now() + MIN_CELL_MS > deadline) break;
+    try {
+      const res = await ingestArea(cell);
+      upserted += res.upserted;
+    } catch (err) {
+      console.error("[warm] cell failed:", err instanceof Error ? err.message : err);
+    }
+    done++;
+  }
+
+  return { cells: cells.length, cellsDone: done, upserted, complete: done === cells.length };
+}
 
 export async function GET(req: NextRequest) {
   // Vercel Cron attaches `Authorization: Bearer $CRON_SECRET`; manual triggers
@@ -34,9 +90,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const params = new URL(req.url).searchParams;
+
+  // Region mode — every source, on demand. Country mode below is the cron path.
+  const bboxParam = params.get("bbox");
+  if (bboxParam) {
+    const bbox = parseBBox(bboxParam);
+    if (!bbox) {
+      return NextResponse.json(
+        { message: "bad-bbox", expected: "minLat,minLng,maxLat,maxLng", maxSqDeg: MAX_REGION_SQ_DEG },
+        { status: 400 },
+      );
+    }
+    const startedAt = Date.now();
+    const result = await ingestRegion(bbox, startedAt + BUDGET_MS);
+    return NextResponse.json({ bbox, elapsedMs: Date.now() - startedAt, ...result });
+  }
+
   // Accepts one country or a comma-separated list, so a single cron entry can
   // cover a whole corridor (Vercel plans cap the number of cron jobs).
-  const requested = (new URL(req.url).searchParams.get("country") ?? "")
+  const requested = (params.get("country") ?? "")
     .split(",")
     .map((c) => c.trim().toLowerCase())
     .filter((c) => c.length > 0);
