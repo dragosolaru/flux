@@ -141,41 +141,33 @@ async function callClaude(contentBlocks: ContentBlock[]): Promise<string> {
   return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
 }
 
-export async function parseDocument(doc: Document): Promise<ParsedDocument> {
-  const { base64, mimeType } = await downloadDoc(doc);
+export type ParseVariant = "energy" | "car";
 
+/**
+ * Shared step: send the bytes with a prompt and return the parsed JSON. The
+ * two variants diverge only afterwards — the energy response validates
+ * straight into ParsedDocument, the car response has its own schema and is
+ * mapped across.
+ */
+async function extractJson(
+  base64: string,
+  mimeType: string,
+  prompt: string,
+): Promise<unknown> {
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(`Unsupported MIME type: ${mimeType}`);
   }
 
-  const jsonText = await callClaude(buildContentBlocks(base64, mimeType, DOCUMENT_EXTRACTION_PROMPT));
+  const jsonText = await callClaude(buildContentBlocks(base64, mimeType, prompt));
 
-  let raw: unknown;
   try {
-    raw = JSON.parse(jsonText);
+    return JSON.parse(jsonText);
   } catch {
     throw new Error(`Claude returned invalid JSON: ${jsonText.slice(0, 200)}`);
   }
-
-  return ParsedDocumentSchema.parse(raw);
 }
 
-export async function parseCarDocument(doc: Document): Promise<ParsedDocument> {
-  const { base64, mimeType } = await downloadDoc(doc);
-
-  if (!isSupportedMimeType(mimeType)) {
-    throw new Error(`Unsupported MIME type: ${mimeType}`);
-  }
-
-  const jsonText = await callClaude(buildContentBlocks(base64, mimeType, CAR_DOCUMENT_EXTRACTION_PROMPT));
-
-  let raw: unknown;
-  try {
-    raw = JSON.parse(jsonText);
-  } catch {
-    throw new Error(`Claude returned invalid JSON: ${jsonText.slice(0, 200)}`);
-  }
-
+function mapCarDoc(raw: unknown): ParsedDocument {
   const carDoc = CarDocSchema.parse(raw);
 
   return {
@@ -207,4 +199,35 @@ export async function parseCarDocument(doc: Document): Promise<ParsedDocument> {
       valid_until: carDoc.confidence.valid_until,
     },
   };
+}
+
+/**
+ * Parse bytes already in hand, skipping the storage download.
+ *
+ * The stored-document entry points below wrap this. Kept separate so a caller
+ * can extract from an upload without persisting it first — the debug panel
+ * tries a photo against the prompts without creating a document row or writing
+ * to the bucket.
+ */
+export async function parseDocumentBytes(
+  base64: string,
+  mimeType: string,
+  variant: ParseVariant = "energy",
+): Promise<ParsedDocument> {
+  if (variant === "car") {
+    return mapCarDoc(await extractJson(base64, mimeType, CAR_DOCUMENT_EXTRACTION_PROMPT));
+  }
+  return ParsedDocumentSchema.parse(
+    await extractJson(base64, mimeType, DOCUMENT_EXTRACTION_PROMPT),
+  );
+}
+
+export async function parseDocument(doc: Document): Promise<ParsedDocument> {
+  const { base64, mimeType } = await downloadDoc(doc);
+  return parseDocumentBytes(base64, mimeType, "energy");
+}
+
+export async function parseCarDocument(doc: Document): Promise<ParsedDocument> {
+  const { base64, mimeType } = await downloadDoc(doc);
+  return parseDocumentBytes(base64, mimeType, "car");
 }

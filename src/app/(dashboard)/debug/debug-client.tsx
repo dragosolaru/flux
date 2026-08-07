@@ -14,6 +14,7 @@ import {
   Loader2,
   Play,
   RefreshCw,
+  Upload,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -129,6 +130,66 @@ export function DebugClient() {
   }
 
   const [probe, setProbe] = useState<ProbeRow[] | null>(null);
+  const [ocrResult, setOcrResult] = useState<unknown>(null);
+  const [ocrVariant, setOcrVariant] = useState<"energy" | "car">("energy");
+
+  async function clearCache(region?: (typeof CORRIDOR)[number]) {
+    const label = region ? `cache:${region.label}` : "cache:all";
+    setRunning(label);
+    setLastError(null);
+    try {
+      const res = await apiFetch<{ cleared: number; backend: string }>(
+        "/api/internal/debug/cache",
+        {
+          method: "POST",
+          body: JSON.stringify(
+            region
+              ? {
+                  minLat: region.minLat,
+                  minLng: region.minLng,
+                  maxLat: region.maxLat,
+                  maxLng: region.maxLng,
+                }
+              : {},
+          ),
+        },
+      );
+      toast.success(`Cleared ${res.cleared} key(s) from ${res.backend}`);
+    } catch (err) {
+      setLastError(`Clear cache failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error("Clear cache failed");
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function testOcr(file: File) {
+    setRunning("ocr");
+    setLastError(null);
+    setOcrResult(null);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        // readAsDataURL gives "data:<mime>;base64,<payload>" — the API wants
+        // the payload alone.
+        reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+        reader.onerror = () => reject(new Error("Could not read file"));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await apiFetch<unknown>("/api/internal/debug/ocr", {
+        method: "POST",
+        body: JSON.stringify({ base64, mimeType: file.type, variant: ocrVariant }),
+      });
+      setOcrResult(res);
+      toast.success("Extraction finished");
+    } catch (err) {
+      setLastError(`OCR failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error("OCR failed");
+    } finally {
+      setRunning(null);
+    }
+  }
 
   async function applyAllMigrations() {
     const list = migrations.data?.migrations ?? [];
@@ -222,7 +283,14 @@ export function DebugClient() {
 
   function copyAll() {
     const blob = JSON.stringify(
-      { diagnostics: data ?? null, migrations: migrations.data ?? null, probe, lastResult, lastError },
+      {
+        diagnostics: data ?? null,
+        migrations: migrations.data ?? null,
+        probe,
+        ocrResult,
+        lastResult,
+        lastError,
+      },
       null,
       2,
     );
@@ -556,6 +624,87 @@ export function DebugClient() {
           disabled={running !== null}
           onClick={() => void runDedupe()}
         />
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Freshness cache</h2>
+        <p className="text-xs text-muted-foreground">
+          Forgets that an area was already imported, so the next read re-ingests it instead of
+          waiting out the TTL (7 days per tile, 48 hours per country). Deletes no stations.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {CORRIDOR.map((r) => (
+            <IngestButton
+              key={r.label}
+              label={`Clear ${r.label}`}
+              busy={running === `cache:${r.label}`}
+              disabled={running !== null}
+              onClick={() => void clearCache(r)}
+            />
+          ))}
+          <IngestButton
+            label="Clear everything"
+            busy={running === "cache:all"}
+            disabled={running !== null}
+            onClick={() => void clearCache()}
+          />
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold">Test OCR</h2>
+        <p className="text-xs text-muted-foreground">
+          Runs a photo or PDF through the extraction prompt and shows what Claude returned.
+          Nothing is saved — no document, no upload, no cost record. Each run costs tokens.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {(["energy", "car"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setOcrVariant(v)}
+              className={`min-h-11 rounded-lg border px-3 text-sm ${
+                ocrVariant === v
+                  ? "border-primary/50 bg-primary/15 font-semibold"
+                  : "border-border bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {v === "energy" ? "Energy receipt" : "Car document"}
+            </button>
+          ))}
+        </div>
+
+        <label className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 text-sm hover:bg-muted">
+          {running === "ocr" ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Extracting…
+            </>
+          ) : (
+            <>
+              <Upload className="size-4" />
+              Choose a photo or PDF
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            disabled={running !== null}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              // Reset so picking the same file twice fires onChange again.
+              e.target.value = "";
+              if (file) void testOcr(file);
+            }}
+          />
+        </label>
+
+        {ocrResult != null && (
+          <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-xs">
+            {JSON.stringify(ocrResult, null, 2)}
+          </pre>
+        )}
       </section>
 
       <section className="space-y-2 rounded-xl border border-border p-4">

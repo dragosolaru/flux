@@ -251,3 +251,44 @@ export async function ensureAreaFresh(bbox: BBox): Promise<void> {
   // Ingest the whole requested bbox once (covers all stale tiles in one pass).
   await ingestArea(bbox);
 }
+
+/**
+ * Drop freshness markers so an area is re-ingested on the next read instead of
+ * waiting out its TTL (7 days for a tile, 48 hours for a country).
+ *
+ * With a bbox this deletes exactly the covering tile keys plus the containing
+ * country key — no scan needed. Without one it sweeps every charger freshness
+ * key, which is the "re-import everything" case.
+ */
+export async function clearFreshness(
+  bbox?: BBox,
+): Promise<{ cleared: number; scope: "region" | "all"; backend: "redis" | "memory" }> {
+  const scope = bbox ? "region" : "all";
+
+  if (!redis) {
+    const cleared = memoryFreshness.size;
+    memoryFreshness.clear();
+    return { cleared, scope, backend: "memory" };
+  }
+
+  memoryFreshness.clear();
+
+  if (bbox) {
+    const keys = tilesForBBox(bbox).map(freshnessKey);
+    const cc = bulkCountryContaining(bbox);
+    if (cc) keys.push(countryKey(cc));
+    if (keys.length === 0) return { cleared: 0, scope, backend: "redis" };
+    const cleared = await redis.del(...keys);
+    return { cleared, scope, backend: "redis" };
+  }
+
+  let cursor = 0;
+  let cleared = 0;
+  do {
+    const [next, keys] = await redis.scan(cursor, { match: "chargers:*", count: 500 });
+    cursor = Number(next);
+    if (keys.length > 0) cleared += await redis.del(...keys);
+  } while (cursor !== 0);
+
+  return { cleared, scope, backend: "redis" };
+}
