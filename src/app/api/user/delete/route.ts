@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 export async function DELETE() {
   const session = await auth();
@@ -50,7 +51,7 @@ export async function DELETE() {
       .filter(Boolean);
     if (paths.length > 0) {
       const { error: storageErr } = await supabase.storage.from("documents").remove(paths);
-      if (storageErr) console.error("[storage.remove]", paths, storageErr.message);
+      if (storageErr) logServer("error", "storage.remove", storageErr.message, { paths: paths });
     }
   }
 
@@ -64,7 +65,7 @@ export async function DELETE() {
       (f: { name: string }) => `${userId}/${f.name}`,
     );
     const { error: orphanErr } = await supabase.storage.from("documents").remove(orphanPaths);
-    if (orphanErr) console.error("[storage.remove orphans]", orphanPaths, orphanErr.message);
+    if (orphanErr) logServer("error", "storage.remove orphans", orphanErr.message, { paths: orphanPaths });
   }
 
   await supabase.from("documents").delete().eq("user_id", userId);

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import type { MonthlyBucket, CostAggregation } from "@/types/costs";
+import { logServer } from "@/lib/debug-log";
 
 // Static reference price (~Romanian national average). BNR does not provide fuel
 // prices, so this is a fixed approximation used only for the petrol-vs-EV savings
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
 
   const { data: rows, error } = await query;
   if (error) {
-    console.error("[costs]", error.message);
+    logServer("error", "costs", error.message);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 

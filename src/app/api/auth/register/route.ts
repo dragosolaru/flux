@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error || !data.user) {
-    console.error("[auth/register]", error?.message ?? "no user returned");
+    logServer("error", "auth/register", error?.message ?? "no user returned");
     return NextResponse.json(
       { message: "Could not create user" },
       { status: 400 },

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
+import { GOAL, resolveRoadmap } from "@/lib/roadmap";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -135,6 +136,7 @@ export async function GET() {
     recentRuns: runs ?? [],
     config,
     tesla: { steps: teslaSteps, nextStep: teslaNextStep },
+    roadmap: { goal: GOAL, milestones: resolveRoadmap(config) },
     warnings,
   });
 }

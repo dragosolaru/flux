@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { constantTimeEqual } from "@/lib/crypto/timing";
+import { logServer } from "@/lib/debug-log";
 
 // M7 observability: recent ingest_runs rows + an aggregate summary so operators
 // can see ingestion health. Same secret-auth shape as the warm route; fails
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
     .limit(RECENT_LIMIT);
 
   if (error) {
-    console.error("[internal/ingest-stats]", error.message);
+    logServer("error", "internal/ingest-stats", error.message);
     return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
   }
 

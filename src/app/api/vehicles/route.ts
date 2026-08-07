@@ -10,6 +10,7 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { listScenarios } from "@/lib/mock/scenarios";
 import { canAddVehicle } from "@/lib/subscription";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 // GET /api/vehicles — list vehicles for the current user
 // ?include_inactive=true returns all vehicles regardless of is_active
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    console.error("[vehicles/GET]", error.message);
+    logServer("error", "vehicles/GET", error.message);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 
@@ -157,7 +158,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertErr || !vehicle) {
-    console.error("[vehicles/POST]", insertErr?.message ?? "no vehicle returned");
+    logServer("error", "vehicles/POST", insertErr?.message ?? "no vehicle returned");
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 

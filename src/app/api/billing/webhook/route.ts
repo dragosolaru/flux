@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type Stripe from "stripe";
+import { logServer } from "@/lib/debug-log";
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error("[billing/webhook] STRIPE_WEBHOOK_SECRET not configured");
+    logServer("error", "billing/webhook", "STRIPE_WEBHOOK_SECRET not configured");
     return NextResponse.json({ message: "Webhook not configured" }, { status: 503 });
   }
 

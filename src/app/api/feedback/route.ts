@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 const bodySchema = z.object({
   category: z.enum(["feature", "bug", "general"]).optional(),
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    console.error("[feedback]", error.message);
+    logServer("error", "feedback", error.message);
     return NextResponse.json({ error: "Failed to save" }, { status: 500 });
   }
   return NextResponse.json({ ok: true });

@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   Copy,
   ChevronRight,
+  Circle,
+  CircleDashed,
   Database,
   Loader2,
   Play,
@@ -66,6 +68,10 @@ interface DebugPayload {
   recentRuns: IngestRun[];
   config: Record<string, boolean | string>;
   tesla?: { steps: { step: string; ok: boolean; blocks: string }[]; nextStep: string | null };
+  roadmap?: {
+    goal: string;
+    milestones: { goal: string; nextStep: string; state: "done" | "todo" | "manual" }[];
+  };
   warnings: string[];
 }
 
@@ -498,6 +504,43 @@ export function DebugClient() {
         <section className="rounded-xl border border-primary/40 bg-primary/10 p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-primary">Next step</p>
           <p className="mt-1 text-sm">{nextAction}</p>
+        </section>
+      )}
+
+      {data.roadmap && (
+        <section className="space-y-3 rounded-xl border border-border p-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Where we are
+            </p>
+            <p className="mt-0.5 text-sm font-semibold">{data.roadmap.goal}</p>
+          </div>
+          <ul className="space-y-2.5">
+            {data.roadmap.milestones.map((m) => (
+              <li key={m.goal} className="flex gap-2.5">
+                {m.state === "done" ? (
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-400" />
+                ) : m.state === "manual" ? (
+                  <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                ) : (
+                  <Circle className="mt-0.5 size-4 shrink-0 text-amber-400" />
+                )}
+                <div className="min-w-0">
+                  <p className={`text-sm ${m.state === "done" ? "text-muted-foreground" : ""}`}>
+                    {m.goal}
+                  </p>
+                  {m.state !== "done" && (
+                    <p className="text-xs text-muted-foreground">{m.nextStep}</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">
+            Checked against this deployment where it can be. A dashed circle means it cannot be
+            verified from outside and needs a look — see <code>docs/TODO.md</code> for the long
+            form.
+          </p>
         </section>
       )}
 

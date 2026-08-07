@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { logServer } from "@/lib/debug-log";
 
 const RenameSchema = z.object({
   name: z.string().min(1).max(100),
@@ -63,7 +64,7 @@ export async function PATCH(
     .single();
 
   if (error || !data) {
-    console.error("[saved-routes/PATCH]", error?.message ?? "Update failed");
+    logServer("error", "saved-routes/PATCH", error?.message ?? "Update failed");
     return NextResponse.json({ message: "Failed to rename route" }, { status: 500 });
   }
 
@@ -111,7 +112,7 @@ export async function DELETE(
     .eq("user_id", session.user.id);
 
   if (error) {
-    console.error("[saved-routes/DELETE]", error.message);
+    logServer("error", "saved-routes/DELETE", error.message);
     return NextResponse.json({ message: "Failed to delete route" }, { status: 500 });
   }
 

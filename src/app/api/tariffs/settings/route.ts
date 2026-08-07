@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { DEFAULT_PROVIDER_ID, listProviders } from "@/lib/external/tariffs/registry";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 export async function GET() {
   const session = await auth();
@@ -64,7 +65,7 @@ export async function PUT(req: NextRequest) {
   });
 
   if (error) {
-    console.error("[tariffs/settings/PUT]", error.message);
+    logServer("error", "tariffs/settings/PUT", error.message);
     return NextResponse.json({ message: "Failed to save settings" }, { status: 500 });
   }
 

@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { VaultDocument, DocumentCategory } from "@/types/costs";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
+import { logServer } from "@/lib/debug-log";
 
 const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
@@ -265,7 +266,7 @@ export async function POST(
     .single();
 
   if (insertErr || !doc) {
-    console.error("[vault/POST]", insertErr?.message ?? "Insert failed");
+    logServer("error", "vault/POST", insertErr?.message ?? "Insert failed");
     return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 
@@ -280,7 +281,7 @@ export async function POST(
       amount_ron: amount_ron ?? null,
     });
     if (metaErr) {
-      console.error("[vault/POST meta]", metaErr.message);
+      logServer("error", "vault/POST meta", metaErr.message);
     }
   }
 

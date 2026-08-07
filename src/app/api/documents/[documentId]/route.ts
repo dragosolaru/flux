@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getExchangeRate } from "@/lib/external/bnr/client";
+import { logServer } from "@/lib/debug-log";
 
 const uuidSchema = z.string().uuid();
 
@@ -200,7 +201,7 @@ export async function DELETE(
   const storagePath = (doc as { storage_path: string | null }).storage_path;
   if (storagePath) {
     const { error: storageErr } = await supabase.storage.from("documents").remove([storagePath]);
-    if (storageErr) console.error("[storage.remove]", storagePath, storageErr.message);
+    if (storageErr) logServer("error", "storage.remove", storageErr.message, { paths: storagePath });
   }
 
   // Delete document — energy_costs cascade via FK (on delete cascade)

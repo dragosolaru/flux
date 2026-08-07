@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { logServer } from "@/lib/debug-log";
 
 const PatchSchema = z.object({
   amount_ron: z.number().positive().nullable().optional(),
@@ -77,7 +78,7 @@ export async function PATCH(
     );
 
   if (error) {
-    console.error("[vault/PATCH]", error.message);
+    logServer("error", "vault/PATCH", error.message);
     return NextResponse.json({ message: "Update failed" }, { status: 500 });
   }
 

@@ -17,6 +17,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 import { processDocument } from "@/lib/costs/processor";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logServer } from "@/lib/debug-log";
 
 const UNMATCHED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -94,12 +95,12 @@ export async function POST() {
     if (updateErr) {
       // Roll back the new file so we don't leak storage.
       const { error: rollbackErr } = await supabase.storage.from("documents").remove([newPath]);
-      if (rollbackErr) console.error("[storage.remove]", newPath, rollbackErr.message);
+      if (rollbackErr) logServer("error", "storage.remove", rollbackErr.message, { paths: newPath });
       continue;
     }
 
     const { error: cleanupErr } = await supabase.storage.from("documents").remove([oldPath]);
-    if (cleanupErr) console.error("[storage.remove]", oldPath, cleanupErr.message);
+    if (cleanupErr) logServer("error", "storage.remove", cleanupErr.message, { paths: oldPath });
 
     recovered.push(doc.id);
     processDocument(doc.id).catch((err: unknown) => {

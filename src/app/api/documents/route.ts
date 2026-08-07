@@ -10,6 +10,7 @@ import { processDocument } from "@/lib/costs/processor";
 import { isSupportedMimeType } from "@/lib/ai/prompts/document-extraction";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 import { canUploadDocument, canUploadVaultDocument } from "@/lib/subscription";
+import { logServer } from "@/lib/debug-log";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
     .limit(50);
 
   if (error) {
-    console.error("[documents/GET]", error.message);
+    logServer("error", "documents/GET", error.message);
     return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
   }
 
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
     .upload(storagePath, buffer, { contentType: file.type, upsert: false });
 
   if (uploadErr) {
-    console.error("[documents/POST]", uploadErr.message);
+    logServer("error", "documents/POST", uploadErr.message);
     return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 
@@ -174,7 +175,7 @@ export async function POST(request: Request) {
     .single();
 
   if (insertErr || !doc) {
-    console.error("[documents/POST]", insertErr?.message ?? "Insert failed");
+    logServer("error", "documents/POST", insertErr?.message ?? "Insert failed");
     return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 

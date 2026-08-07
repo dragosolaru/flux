@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { logServer } from "@/lib/debug-log";
 
 // Dismiss an energy receipt that was parked in the vault (status "needs_review", source
 // "vault-upload"). Changes the source to "upload" so the doc no longer appears in the
@@ -46,7 +47,7 @@ export async function POST(
     .eq("user_id", session.user.id);
 
   if (error) {
-    console.error("[vault/dismiss]", error.message);
+    logServer("error", "vault/dismiss", error.message);
     return NextResponse.json({ message: "Failed to dismiss" }, { status: 500 });
   }
 

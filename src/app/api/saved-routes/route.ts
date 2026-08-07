@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { logServer } from "@/lib/debug-log";
 
 // Serialized payload cap — stops/plan_snapshot are free-form JSONB; without a
 // cap a client could persist multi-MB blobs replayed on every GET.
@@ -35,7 +36,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("[saved-routes/GET]", error.message);
+    logServer("error", "saved-routes/GET", error.message);
     return NextResponse.json({ message: "Failed to fetch saved routes" }, { status: 500 });
   }
 
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
   });
 
   if (keyError || typeof routeKey !== "string") {
-    console.error("[saved-routes/POST:key]", keyError?.message ?? "No key");
+    logServer("error", "saved-routes/POST:key", keyError?.message ?? "No key");
     return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
   }
 
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
     .eq("user_id", session.user.id);
 
   if (listError) {
-    console.error("[saved-routes/POST:list]", listError.message);
+    logServer("error", "saved-routes/POST:list", listError.message);
     return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
   }
 
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !data) {
-    console.error("[saved-routes/POST]", error?.message ?? "Upsert failed");
+    logServer("error", "saved-routes/POST", error?.message ?? "Upsert failed");
     return NextResponse.json({ message: "Failed to save route" }, { status: 500 });
   }
 
