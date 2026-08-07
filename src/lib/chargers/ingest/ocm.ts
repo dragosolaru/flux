@@ -135,12 +135,13 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
   try {
     const url = new URL("https://api.openchargemap.io/v3/poi/");
     url.searchParams.set("output", "json");
-    // compact strips null fields; verbose must stay ON because it is what
-    // expands the reference objects. With verbose=false OCM returns
-    // OperatorID/CountryID integers instead of OperatorInfo/Country objects,
-    // and mapOcmPoi reads the objects — so every row landed with a null
-    // operator and null country.
-    url.searchParams.set("compact", "true");
+    // compact=true is what replaces the reference objects with bare IDs —
+    // OperatorID/CountryID instead of OperatorInfo/Country — and mapOcmPoi
+    // reads the objects, so every row landed with a null operator and a null
+    // country. The StatusTypeID fallback above already named this ("absent
+    // under compact mode"); flipping `verbose` alone did not help, because
+    // `compact` is the flag that strips the expansion.
+    url.searchParams.set("compact", "false");
     url.searchParams.set("verbose", "true");
     url.searchParams.set("maxresults", "2000");
     // OCM boundingbox: (lat1,lng1),(lat2,lng2).
@@ -192,12 +193,13 @@ export async function fetchCountryOcm(
   try {
     const url = new URL("https://api.openchargemap.io/v3/poi/");
     url.searchParams.set("output", "json");
-    // compact strips null fields; verbose must stay ON because it is what
-    // expands the reference objects. With verbose=false OCM returns
-    // OperatorID/CountryID integers instead of OperatorInfo/Country objects,
-    // and mapOcmPoi reads the objects — so every row landed with a null
-    // operator and null country.
-    url.searchParams.set("compact", "true");
+    // compact=true is what replaces the reference objects with bare IDs —
+    // OperatorID/CountryID instead of OperatorInfo/Country — and mapOcmPoi
+    // reads the objects, so every row landed with a null operator and a null
+    // country. The StatusTypeID fallback above already named this ("absent
+    // under compact mode"); flipping `verbose` alone did not help, because
+    // `compact` is the flag that strips the expansion.
+    url.searchParams.set("compact", "false");
     url.searchParams.set("verbose", "true");
     url.searchParams.set("maxresults", "5000");
     url.searchParams.set("countrycode", countryCode);

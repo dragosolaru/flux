@@ -131,6 +131,9 @@ export function DebugClient() {
 
   const [probe, setProbe] = useState<ProbeRow[] | null>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
+  // Populated only when the clipboard write is refused, so the text can still
+  // be selected by hand — some mobile browsers block the API outright.
+  const [copyFallback, setCopyFallback] = useState<string | null>(null);
   const [ocrVariant, setOcrVariant] = useState<"energy" | "car">("energy");
 
   async function clearCache(region?: (typeof CORRIDOR)[number]) {
@@ -294,10 +297,19 @@ export function DebugClient() {
       null,
       2,
     );
+    setCopyFallback(null);
     navigator.clipboard
-      .writeText(blob)
-      .then(() => toast.success("Diagnostics copied — paste them into the chat"))
-      .catch(() => toast.error("Could not copy"));
+      ?.writeText(blob)
+      .then(() => toast.success("Copied — paste it into the chat"))
+      .catch(() => {
+        setCopyFallback(blob);
+        toast.error("Clipboard blocked — select the text below instead");
+      });
+
+    if (!navigator.clipboard) {
+      setCopyFallback(blob);
+      toast.error("Clipboard unavailable — select the text below instead");
+    }
   }
 
   if (isLoading) {
@@ -348,6 +360,28 @@ export function DebugClient() {
           </button>
         </div>
       </div>
+
+      {copyFallback && (
+        <section className="space-y-2 rounded-xl border border-border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              Tap inside, select all, copy.
+            </p>
+            <button
+              onClick={() => setCopyFallback(null)}
+              className="flex min-h-11 items-center px-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
+          <textarea
+            readOnly
+            value={copyFallback}
+            onFocus={(e) => e.currentTarget.select()}
+            className="h-48 w-full rounded-lg border border-border bg-muted/40 p-2 font-mono text-[11px]"
+          />
+        </section>
+      )}
 
       {data.warnings.length > 0 && (
         <section className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">

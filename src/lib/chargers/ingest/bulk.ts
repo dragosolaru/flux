@@ -35,7 +35,12 @@ async function fetchOfficialSource(cc: BulkCountry) {
 // OCM must be fetched in full — an incremental-only import would otherwise
 // mark the country fresh while most of it was never ingested, suppressing
 // lazy tile ingest for cold areas for the whole country TTL.
-const FULL_OFFICIAL_SOURCE: ReadonlySet<BulkCountry> = new Set(["fr", "de", "nl"]);
+//
+// "de" was removed after the BNetzA endpoint was found to be returning 404:
+// Germany was fetching OCM incrementally on the assumption that an official
+// source supplied the baseline, and that source supplied nothing — which is
+// why a full German import produced 5 rows.
+const FULL_OFFICIAL_SOURCE: ReadonlySet<BulkCountry> = new Set(["fr", "nl"]);
 
 /**
  * Import all chargers for a bulk country.

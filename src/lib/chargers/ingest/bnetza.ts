@@ -6,7 +6,16 @@ import type { BBox, ChargerConnector, RawCharger, SourceConnector } from "../typ
 import { canonicalConnectorType, parsePowerKw } from "../normalize";
 import { recordDebugLog } from "@/lib/debug-log";
 
-const BNETZA_URL = "https://ladestationen.api.bund.dev/api/query";
+// DEAD ENDPOINT. Probed 2026-08-07: every request returns 404, so this
+// connector has been contributing nothing while looking healthy — Germany's
+// bulk import fetched 5 rows because it leaned on this source and OCM was
+// queried incrementally on that assumption.
+//
+// Disabled rather than pointed at a guessed replacement: bund.dev is a
+// community catalogue and the Bundesnetzagentur has moved its Ladesäulen-
+// register more than once, so a new URL has to be verified against the live
+// service before it is trusted. Set BNETZA_URL to re-enable once one is known.
+const BNETZA_URL = process.env.BNETZA_URL ?? "";
 
 interface BNetzAAttributes {
   ObjectID?: number | null;
@@ -81,7 +90,12 @@ function mapFeature(f: BNetzAFeature): RawCharger | null {
   };
 }
 
+function disabled(): boolean {
+  return BNETZA_URL.length === 0;
+}
+
 async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
+  if (disabled()) return [];
   try {
     const params = new URLSearchParams({
       geometry: `${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}`,
@@ -128,6 +142,7 @@ const BNETZA_MAX_PAGES = 50;
  * The same ArcGIS endpoint used by fetchTile but covering the whole DE bbox.
  */
 export async function fetchCountryDe(): Promise<RawCharger[]> {
+  if (disabled()) return [];
   const out: RawCharger[] = [];
   for (let page = 0; page < BNETZA_MAX_PAGES; page++) {
     try {
