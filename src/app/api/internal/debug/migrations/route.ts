@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   }
 
   const parsed = z
-    .object({ id: z.string().min(1).max(120) })
+    .object({ id: z.string().min(1).max(120), force: z.boolean().optional() })
     .safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ message: "Invalid body" }, { status: 422 });
@@ -60,6 +60,34 @@ export async function POST(req: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+
+  // Applying an older migration after a newer one silently undoes work. Most of
+  // these files are `create or replace function`, so an older body overwrites
+  // the newer definition and nothing reports it — which is exactly what
+  // happened in the field: 041 rewrote four dedupe functions to use the spatial
+  // index, then 038 was applied a few seconds later and put its slow version of
+  // dedupe_same_site_names back. The panel showed every migration as "applied"
+  // while the dedupe kept timing out.
+  //
+  // MIGRATIONS is ordered by id and the ids are zero-padded, so a plain string
+  // comparison gives the right order.
+  const { data: appliedRows } = await supabase.from("applied_migrations").select("id");
+  const applied = new Set((appliedRows ?? []).map((r) => r.id as string));
+  const newerApplied = MIGRATIONS.filter((m) => m.id > migration.id && applied.has(m.id));
+
+  if (newerApplied.length > 0 && !parsed.data.force) {
+    return NextResponse.json(
+      {
+        message:
+          `${migration.id} is older than ${newerApplied.map((m) => m.id).join(", ")}, ` +
+          `already applied. Applying it now would overwrite the newer definitions. ` +
+          `Apply it first, then re-apply the newer ones — or send force to override.`,
+        newerApplied: newerApplied.map((m) => m.id),
+      },
+      { status: 409 },
+    );
+  }
+
   const { error } = await supabase.rpc("exec_sql", { p_sql: migration.sql });
 
   if (error) {

@@ -262,6 +262,10 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 **Migration 041 is required for any of them to finish.** Each pass carries an equality predicate — `operator_id` for 034, `round(max_power_kw)` for 038/039 — and the planner preferred a hash join on it over `chargers_geo_gix`, pushing `ST_DWithin` into the join filter. On 22k rows that measured 57 s / 36 s / 381 s, all past the statement timeout, surfacing as *"canceling statement due to statement timeout"*. Rewriting the correlated `EXISTS` as `CROSS JOIN LATERAL (… LIMIT 1)` makes the subquery non-flattenable, so the planner uses the nested loop and the spatial index; 039 additionally reads the brand tokens from `operator_brand` / `site_brand` generated columns instead of calling `charger_brand_tokens()` per pair. Same rows deleted, 381 s → 0.22 s. If you add a spatial dedupe pass, use the LATERAL shape — a correlated `EXISTS` next to an equality predicate will silently lose the index.
 
+**Migration 042** indexes `charger_sources.charger_id`. Migration 017 indexed the `(source, source_ref)` uniqueness constraint but never the foreign key, and `charger_connectors` got its index while this table was missed — so every `ON DELETE CASCADE` sequentially scanned the table. Deleting a 2,000-row dedupe batch: **1,716 ms → 25 ms**.
+
+**Apply migrations in id order.** Most of these files are `create or replace function`, so applying an older one afterwards silently overwrites a newer definition. This happened in the field: 041 rewrote four dedupe functions, 038 was applied eight seconds later, and its slow `dedupe_same_site_names` came back — the panel showed everything "applied" while the dedupe kept timing out. `POST /api/internal/debug/migrations` now returns **409** when a newer migration is already applied, listing which ones; pass `force: true` to override deliberately.
+
 > Legacy live-aggregation routes `GET /api/charging-map` and `GET /api/charging-stations` still exist (auth + rate-limited) but are no longer consumed by the charging-map UI; the latter is kept only for its re-exported `ChargingStation` type.
 
 ---
