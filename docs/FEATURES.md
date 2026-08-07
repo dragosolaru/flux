@@ -247,6 +247,19 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 **Dependencies:** Supabase (PostGIS + pg_trgm; apply migrations 017–022), Upstash Redis, official open-data APIs. Env: `OPEN_CHARGE_MAP_API_KEY` (recommended), `TOMTOM_API_KEY` / `CHARGEPRICE_API_KEY` (optional), `CRON_SECRET` and/or `INGEST_WEBHOOK_SECRET`.
 
+**Deduplication — four mechanisms, kept disjoint so they compose.** OCM is effectively the only source along the Greece → Bulgaria → Romania corridor, and its community submissions describe one site several ways. Clustering only ever matches an *incoming* record against stored ones — it never reconciles two stored rows with each other — so every runtime rule needs a SQL counterpart to clean up rows already saved.
+
+| Pass | Runtime rule (`dedup.ts`) | SQL cleanup | Radius |
+|---|---|---|---|
+| Same operator | operator similarity ≥ 0.5 | `dedupe_chargers_batch` (034) | 40 m |
+| Same bay, different names | hardware agreement overrides the name conflict | `dedupe_same_site_names` (038) | 15 m |
+| Brand split across fields | one row's operator appears in the other's name/operator, plus hardware agreement | `dedupe_same_site_brand` (039) | 40 m |
+| Coincident coordinates | force-merge | `021` grid pass | ~11 m |
+
+The brand rule exists because sources disagree about *which field* holds the network: OCM had one Shell forecourt as `name: "SHELL Nea Kerdilia" / operator: "NRGincharge"` and `name: "nrg - Shell" / operator: "Shell ΠΑΡΑΣΚΕΥΟΠΟΥΛΟΣ"`. Operator-to-operator similarity reads ~0.09 there, so the pair looked like two networks. Guards: only tokens ≥5 chars count, generic words (`charging`, `station`, …) are stoplisted, the shared token must be somebody's declared **operator** (a shared place name is not a brand claim), and the hardware must agree — so a 350 kW Ionity bay on a Shell forecourt is never absorbed by the host's 60 kW one. Non-Latin operator names yield no tokens in either implementation and so can never merge on this rule.
+
+**Running a cleanup:** the debug panel's dedupe button runs 034 + 038 + 039 in a loop until they stop finding duplicates (`POST /api/internal/debug/dedupe`). All three are idempotent.
+
 > Legacy live-aggregation routes `GET /api/charging-map` and `GET /api/charging-stations` still exist (auth + rate-limited) but are no longer consumed by the charging-map UI; the latter is kept only for its re-exported `ChargingStation` type.
 
 ---

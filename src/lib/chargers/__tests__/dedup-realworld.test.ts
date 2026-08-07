@@ -229,3 +229,126 @@ describe("one site, several operator names", () => {
     ).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Reported from the field (Nea Kerdilia, GR): one Shell forecourt drawn as two
+// pins. OCM holds it twice with the brand in opposite fields — the network in
+// `operator` on one submission, the host business in `operator` on the other —
+// so operator-to-operator similarity is ~0.09 and the pair read as two
+// networks. The Greek host name slugifies to "shell", nothing like
+// "nrgincharge".
+// ---------------------------------------------------------------------------
+
+describe("one site, brand split across name and operator", () => {
+  const NEA_KERDILIA = { lat: 40.7893, lng: 23.8021 };
+
+  // Verbatim from the two station cards: 4 connectors on one submission, 3 on
+  // the other, agreeing on everything the smaller one lists.
+  const nrgConnectors: ChargerConnector[] = [
+    { type: "ccs2", powerKw: 60, count: 1 },
+    { type: "chademo", powerKw: 60, count: 1 },
+    { type: "type2", powerKw: 22, count: 1 },
+    { type: "type1", powerKw: 60, count: 1 },
+  ];
+  const shellConnectors: ChargerConnector[] = [
+    { type: "chademo", powerKw: 60, count: 1 },
+    { type: "type2", powerKw: 22, count: 1 },
+    { type: "ccs2", powerKw: 60, count: 1 },
+  ];
+
+  const shellSubmission = {
+    operator: "Shell ΠΑΡΑΣΚΕΥΟΠΟΥΛΟΣ",
+    name: "nrg - Shell",
+    connectors: shellConnectors,
+  };
+
+  for (const metres of [0, 15, 30, 40]) {
+    it(`merges the two submissions ${metres} m apart`, () => {
+      const a = raw({
+        ...NEA_KERDILIA,
+        operator: "NRGincharge",
+        name: "SHELL Nea Kerdilia",
+        connectors: nrgConnectors,
+      });
+      expect(
+        matchScore(a, {
+          lat: NEA_KERDILIA.lat + latOffset(metres),
+          lng: NEA_KERDILIA.lng,
+          ...shellSubmission,
+        }),
+      ).toBe(1);
+    });
+  }
+
+  it("still merges past the same-site radius, where the veto used to bite", () => {
+    // The distance between the two pins is not knowable from the screenshots,
+    // so the fix must not depend on them being within SAME_SITE_M. Retracting
+    // the phantom conflict lets the ordinary weighted score decide out here.
+    const a = raw({
+      ...NEA_KERDILIA,
+      operator: "NRGincharge",
+      name: "SHELL Nea Kerdilia",
+      connectors: nrgConnectors,
+    });
+    expect(
+      matchScore(a, {
+        lat: NEA_KERDILIA.lat + latOffset(55),
+        lng: NEA_KERDILIA.lng,
+        ...shellSubmission,
+      }),
+    ).toBeGreaterThanOrEqual(0.6);
+  });
+
+  it("does not merge two networks that merely share a host forecourt", () => {
+    // Same Shell site, but Ionity's bay runs 350 kW CCS against the host's
+    // 60 kW. Both records carry "shell", so only the hardware keeps them apart.
+    const ionity = raw({
+      ...NEA_KERDILIA,
+      operator: "Ionity",
+      name: "Ionity Shell Nea Kerdilia",
+      connectors: [{ type: "ccs2", powerKw: 350, count: 4 }],
+    });
+    expect(matchScore(ionity, { ...NEA_KERDILIA, ...shellSubmission })).toBe(0);
+  });
+
+  it("does not merge two operators that only share a place name", () => {
+    // "kerdilia" is in both names but is nobody's operator, so it is not a
+    // brand claim and must not retract the veto.
+    const a = raw({
+      ...NEA_KERDILIA,
+      operator: "Ionity",
+      name: "Nea Kerdilia Charging",
+      connectors: shellConnectors,
+    });
+    expect(
+      matchScore(a, {
+        lat: NEA_KERDILIA.lat + latOffset(30),
+        lng: NEA_KERDILIA.lng,
+        operator: "Blink",
+        name: "Nea Kerdilia Park",
+        connectors: shellConnectors,
+      }),
+    ).toBe(0);
+  });
+
+  it("does not let a generic word act as a shared brand", () => {
+    // "charging" is longer than "shell", so length alone cannot filter it —
+    // hence the stoplist. Identical hardware on both sides, so the stoplist is
+    // the only thing keeping these two networks apart.
+    const a = raw({
+      ...NEA_KERDILIA,
+      operator: "Ionity Charging",
+      name: "Ionity Hub",
+      connectors: shellConnectors,
+    });
+    expect(
+      matchScore(a, {
+        lat: NEA_KERDILIA.lat + latOffset(30),
+        lng: NEA_KERDILIA.lng,
+        operator: "Blink",
+        name: "Fast Charging Point",
+        connectors: shellConnectors,
+      }),
+    ).toBe(0);
+  });
+});

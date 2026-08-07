@@ -29,23 +29,29 @@ export async function POST() {
   for (let i = 0; i < MAX_PASSES; i++) {
     if (Date.now() - startedAt > BUDGET_MS) break;
 
-    // Two passes with different rules: same-operator duplicates (034) and one
-    // site under several operator names (038). Running both here means the
-    // button means "collapse duplicates", not "collapse one kind of duplicate".
-    const [byOperator, byName] = await Promise.all([
+    // Three passes with different rules: same-operator duplicates (034), one
+    // site under several operator names within one bay (038), and one site
+    // whose brand is split across the name and operator fields (039). Running
+    // all of them here means the button means "collapse duplicates", not
+    // "collapse one kind of duplicate".
+    const [byOperator, byName, byBrand] = await Promise.all([
       supabase.rpc("dedupe_chargers_batch", { p_limit: BATCH }),
       supabase.rpc("dedupe_same_site_names", { p_limit: BATCH }),
+      supabase.rpc("dedupe_same_site_brand", { p_limit: BATCH }),
     ]);
-    const error = byOperator.error ?? byName.error;
+    const error = byOperator.error ?? byName.error ?? byBrand.error;
     const data =
       (typeof byOperator.data === "number" ? byOperator.data : 0) +
-      (typeof byName.data === "number" ? byName.data : 0);
+      (typeof byName.data === "number" ? byName.data : 0) +
+      (typeof byBrand.data === "number" ? byBrand.data : 0);
     if (error) {
       const hint = error.message.includes("dedupe_chargers_batch")
         ? " — apply migration 034 first"
         : error.message.includes("dedupe_same_site_names")
           ? " — apply migration 038 first"
-          : "";
+          : error.message.includes("dedupe_same_site_brand")
+            ? " — apply migration 039 first"
+            : "";
       return NextResponse.json(
         { message: `${error.message}${hint}`, deletedBefore: total, passes },
         { status: 500 },

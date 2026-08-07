@@ -152,6 +152,78 @@ function operatorContained(a: string | null, b: string | null): boolean {
   return true;
 }
 
+/**
+ * Words that describe a charger rather than name a business. A shared brand
+ * token is treated as evidence two records are the same site, so a token that
+ * half the chargers in Europe carry must not count as one.
+ *
+ * Length alone does not filter these: "charging" and "station" are longer than
+ * "shell" and "tesla".
+ */
+const GENERIC_BRAND_TOKENS = new Set([
+  "charge", "charger", "chargers", "charging", "chargepoint", "charhing",
+  "station", "stations", "point", "points", "plug", "socket", "outlet",
+  "power", "energy", "electric", "electrical", "mobility", "emobility",
+  "public", "private", "parking", "garage", "hotel", "restaurant", "market",
+  "supermarket", "center", "centre", "centrum", "plaza", "mall", "store",
+  "petrol", "fuel", "service", "services", "motorway", "highway", "north",
+  "south", "east", "west", "rapid", "fast", "ultra", "super", "recharge",
+  "network", "group", "limited", "gmbh", "srl", "sa", "bv", "ltd",
+]);
+
+/**
+ * Brand-ish tokens of a record, drawn from BOTH its name and its operator.
+ *
+ * Sources disagree about which field holds what: OCM submissions put the
+ * network in `operator` and the host business in `name` about as often as the
+ * reverse. Reading only one field is what makes two records of one site look
+ * like two networks.
+ *
+ * ≥5 chars, matching operatorContained's rule and for the same reason: a short
+ * generic fragment is not a brand, while real short brands (Shell, Tesla,
+ * Enel, PlugQ) reach 5.
+ */
+function brandTokens(name: string | null, operator: string | null): Set<string> {
+  const out = new Set<string>();
+  for (const t of [...tokens(name), ...tokens(operator)]) {
+    if (t.length >= 5 && !GENERIC_BRAND_TOKENS.has(t)) out.add(t);
+  }
+  return out;
+}
+
+function intersects(a: Set<string>, b: Set<string>): boolean {
+  for (const t of a) if (b.has(t)) return true;
+  return false;
+}
+
+/**
+ * True when one record's declared OPERATOR appears in the other's name or
+ * operator — the same business written into different fields.
+ *
+ * Deliberately not a plain name↔name overlap: two unrelated stations in one
+ * village both carry the village in their name ("… Nea Kerdilia"), and merging
+ * on that would collapse genuinely separate sites. Requiring the shared token
+ * to be somebody's declared operator makes it a claim about the network, which
+ * a place name is not.
+ *
+ * Reported from the field (Nea Kerdilia, GR): OCM holds the same site as
+ * `name: "SHELL Nea Kerdilia" / operator: "NRGincharge"` and
+ * `name: "nrg - Shell" / operator: "Shell ΠΑΡΑΣΚΕΥΟΠΟΥΛΟΣ"`. Operator-to-operator
+ * similarity is ~0.09 — the Greek host name slugifies to "shell", nothing like
+ * "nrgincharge" — so the pair read as two networks and drew two pins. Both
+ * records name Shell; only the field differs.
+ */
+function sharesOperatorBrand(
+  a: { name: string | null; operator: string | null },
+  b: { name: string | null; operator: string | null },
+): boolean {
+  const aOperator = brandTokens(null, a.operator);
+  const bOperator = brandTokens(null, b.operator);
+  const aAll = brandTokens(a.name, a.operator);
+  const bAll = brandTokens(b.name, b.operator);
+  return intersects(aOperator, bAll) || intersects(bOperator, aAll);
+}
+
 /** Operator similarity: exact slug match is strong; otherwise normalized edit distance. */
 function operatorSimilarity(a: string | null, b: string | null): number {
   const sa = slugify(a);
@@ -216,7 +288,6 @@ export function matchScore(
   // null, and treating that as "unknown operator" would let a Greek- or
   // Cyrillic-named station merge into any co-located one.
   const bothNamed = raw.operator != null && candidate.operator != null;
-  const namesConflict = bothNamed && operator < 0.5;
 
   // Standing on one site, a disagreement about the operator's NAME is weaker
   // evidence than agreement about the hardware. Sources routinely attribute the
@@ -235,6 +306,17 @@ export function matchScore(
     const b = maxPowerOf(candidate.connectors);
     return a != null && b != null && Math.round(a) === Math.round(b);
   };
+
+  // A cross-field brand agreement retracts the veto rather than overriding it
+  // at close range: the two records were never claiming different networks, so
+  // there is no conflict to override and the ordinary scoring applies at every
+  // distance. Corroborated by the hardware, because the brand token alone would
+  // let a Shell-hosted Ionity bay absorb the Shell Recharge bay beside it —
+  // same host, genuinely different networks, and they run different kit.
+  const namesConflict =
+    bothNamed &&
+    operator < 0.5 &&
+    !(sharesOperatorBrand(raw, candidate) && sameHardware());
 
   if (distanceM <= SAME_SITE_M) {
     if (!namesConflict) return 1;

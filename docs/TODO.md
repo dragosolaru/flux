@@ -99,6 +99,16 @@ Recorded so they are not lost — none block launch.
       planner; it needs Hubject/intercharge or Eco-Movement, both commercial.
 - [ ] **Overpass is slow.** 15 s timeout after 9 s proved too short; it still
       returns nothing for some windows.
+- [ ] **A shared generic suffix inflates operator similarity.** `operatorSimilarity`
+      is normalized edit distance over the whole slug, so "Ionity Charging" vs
+      "Enel X Charging" scores ~0.67 — above the 0.5 conflict threshold — and
+      the two merge at same-site range. This is the *opposite* failure to the
+      duplicates reported from the field: it hides a station rather than
+      doubling one, which is why it is not urgent, but it is the same root
+      cause (generic words treated as identity). The fix is to strip
+      `GENERIC_BRAND_TOKENS` before measuring distance. Found while writing the
+      Nea Kerdilia guard tests, not from field data — worth confirming against
+      real rows before changing the threshold behaviour for every operator.
 
 ## 🟡 High Priority — Next Sprint
 
