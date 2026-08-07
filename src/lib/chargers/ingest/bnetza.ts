@@ -95,7 +95,10 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(12000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[bnetza] fetch ${res.status}`);
+      return [];
+    }
 
     const data = (await res.json()) as { features?: BNetzAFeature[] };
     const features = data.features;
@@ -107,7 +110,8 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[bnetza] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }

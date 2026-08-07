@@ -110,7 +110,10 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(12000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[austria] fetch ${res.status}`);
+      return [];
+    }
 
     const data = (await res.json()) as { features?: AustriaFeature[] };
     if (!Array.isArray(data.features)) return [];
@@ -121,7 +124,8 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[austria] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }

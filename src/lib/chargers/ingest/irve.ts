@@ -152,7 +152,8 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[irve] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }
@@ -169,7 +170,8 @@ export async function fetchCountryFr(): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[irve] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }

@@ -113,7 +113,10 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(12000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[ndw] fetch ${res.status}`);
+      return [];
+    }
 
     const data = (await res.json()) as { features?: NdwFeature[] };
     const features = data.features;
@@ -125,7 +128,8 @@ async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[ndw] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }
@@ -148,7 +152,10 @@ export async function fetchCountryNl(): Promise<RawCharger[]> {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(60000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[ndw] fetch ${res.status}`);
+      return [];
+    }
 
     const data = (await res.json()) as { features?: NdwFeature[] };
     const features = data.features;
@@ -160,7 +167,8 @@ export async function fetchCountryNl(): Promise<RawCharger[]> {
       if (mapped) out.push(mapped);
     }
     return out;
-  } catch {
+  } catch (err) {
+    console.error(`[ndw] fetch failed:`, err instanceof Error ? err.message : err);
     return [];
   }
 }
