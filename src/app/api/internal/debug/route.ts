@@ -1,0 +1,103 @@
+import { NextResponse } from "next/server";
+
+import { requireAdmin } from "@/lib/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+
+// Development diagnostics: charger-pipeline health, recent ingest runs, and
+// which integrations are configured. Admin-only (ADMIN_EMAILS).
+//
+// Configuration is reported as booleans only — never a key, a prefix, or a
+// length, so the payload stays safe to paste into a chat or an issue.
+export const dynamic = "force-dynamic";
+
+interface SourceCount {
+  source: string;
+  rows: number;
+}
+
+export async function GET() {
+  const admin = await requireAdmin();
+  // 404, not 403: an unauthorised caller should not learn this route exists.
+  if (!admin) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  const supabase = createSupabaseAdminClient();
+  const warnings: string[] = [];
+
+  const [{ data: chargerStats }, { data: runs }, { data: sources }] = await Promise.all([
+    supabase.rpc("debug_charger_stats").single(),
+    supabase
+      .from("ingest_runs")
+      .select("source, status, fetched, upserted, error, finished_at")
+      .order("finished_at", { ascending: false })
+      .limit(25),
+    supabase.rpc("debug_source_counts"),
+  ]);
+
+  const stats = (chargerStats ?? null) as {
+    total: number;
+    no_country: number;
+    operators: number;
+    no_operator: number;
+  } | null;
+
+  if (stats) {
+    if (stats.total === 0) {
+      warnings.push("Charger table is empty — run an ingest.");
+    } else {
+      if (stats.operators === 0) {
+        warnings.push(
+          "No charger has an operator. OCM returns operator only with verbose=true; check the OCM mapping.",
+        );
+      }
+      if (stats.no_country / Math.max(stats.total, 1) > 0.5) {
+        warnings.push(
+          `${stats.no_country} of ${stats.total} chargers have no country — likely an OCM mapping or source-mix problem.`,
+        );
+      }
+    }
+  }
+
+  const sourceCounts = (sources ?? []) as SourceCount[];
+  const seen = new Set(sourceCounts.map((s) => s.source));
+  for (const expected of ["ocm", "osm", "tomtom"]) {
+    if (!seen.has(expected)) {
+      warnings.push(`Source "${expected}" has contributed nothing.`);
+    }
+  }
+
+  const recentErrors = (runs ?? []).filter((r) => r.status === "error");
+  if (recentErrors.length > 0) {
+    warnings.push(`${recentErrors.length} of the last 25 ingest runs failed.`);
+  }
+
+  const config = {
+    tomtomKey: !!process.env.TOMTOM_API_KEY,
+    openChargeMapKey: !!process.env.OPEN_CHARGE_MAP_API_KEY,
+    redis: !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
+    anthropicKey: !!process.env.ANTHROPIC_API_KEY,
+    cronSecret: !!process.env.CRON_SECRET,
+    ingestWebhookSecret: !!process.env.INGEST_WEBHOOK_SECRET,
+    teslaProxy: !!process.env.TESLA_PROXY_BASE_URL,
+    liveIntegrations: process.env.LIVE_INTEGRATIONS ?? "",
+    openRouteServiceKey: !!process.env.OPENROUTESERVICE_API_KEY,
+    stripe: !!process.env.STRIPE_SECRET_KEY,
+  };
+
+  if (!config.redis) {
+    warnings.push(
+      "Upstash Redis is not configured — rate limiting falls back to per-instance memory and every map read re-ingests.",
+    );
+  }
+  if (!config.tomtomKey) {
+    warnings.push("TOMTOM_API_KEY is unset — the TomTom connector is a silent no-op.");
+  }
+
+  return NextResponse.json({
+    generatedAt: new Date().toISOString(),
+    chargers: stats,
+    sources: sourceCounts,
+    recentRuns: runs ?? [],
+    config,
+    warnings,
+  });
+}
