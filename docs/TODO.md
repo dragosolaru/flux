@@ -68,13 +68,21 @@ and therefore lock it in as specification:
   * The second pass re-routes via the chosen stops but never back-fills
     per-stop `arriveSoc` / `departSoc` / `distanceFromStartKm`, so stop numbers
     stay first-pass estimates.
-  * One hardcoded Tesla NMC charge curve is applied to every vehicle.
-  * Cost is 0 when a station price is unknown, so `totalChargingCostEur`
-    systematically under-reports and the "Cheapest" variant compares a figure
-    derived from distance alone.
-  * `ChargingStop` has no arrival time. Nothing in the plan says when the driver
-    reaches a stop, which is the prerequisite for any "you are N minutes away"
-    feature.
+  * ~~One hardcoded Tesla NMC charge curve for every vehicle~~ — FIXED.
+    `chargeMinutes` takes the model's own `chargeCurve`, which ModelSpec had
+    carried unused since it was defined.
+  * ~~Cost is 0 when a station price is unknown~~ — the 0 stays (inventing a
+    tariff would be worse) but `TripPlan.chargingCostPartial` now says the total
+    is a lower bound. **No UI reads it yet** — the cost is not displayed
+    anywhere, so this is correct data waiting for a consumer.
+  * ~~`ChargingStop` has no arrival time~~ — FIXED. `drivingMinutesFromStart`
+    and `etaMinutesFromStart` are populated and rescaled onto the via-route.
+    Still nothing *renders* them, and the proximity feature they unblock is
+    unbuilt.
+  * The "Cheapest" variant still compares `tripEnergyCostEur`, which is derived
+    from distance and the home tariff — not from charging cost. Two strategies
+    on one road therefore tie, and `variant.strategy` is rendered nowhere, so
+    same-road variants can look identical.
 
 ### 1f. A live vehicle records no charging sessions
 `charging_sessions` rows are written in exactly two places: the simulator

@@ -30,6 +30,16 @@ export interface TripPlan {
   totalMinutes: number;
   totalEnergyKwh: number;
   totalChargingCostEur: number;
+  /**
+   * True when at least one stop had no published price, so the total above is a
+   * lower bound rather than the trip's charging cost.
+   *
+   * The planner prices an unknown station at 0 — deliberately, since inventing
+   * a tariff would be worse — but the sum was then presented as if it were
+   * complete, and a route through unpriced chargers could read as costing
+   * almost nothing.
+   */
+  chargingCostPartial: boolean;
   // Total energy the car consumes to cover the whole route (distance × derated
   // consumption — accounts for weather/temperature). This is what the trip
   // costs you in energy even when no mid-trip charging is needed.

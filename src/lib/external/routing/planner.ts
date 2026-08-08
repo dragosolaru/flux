@@ -289,6 +289,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   // pace is the only per-stop timing signal available before the second pass
   // re-routes through the stops.
   let drivenKm = 0;
+  let chargingCostPartial = false;
   const minutesPerKm = distanceKm > 0 ? drivingMinutes / distanceKm : 0;
 
   while (kmLeft > 0 && iter++ < 30) {
@@ -390,6 +391,10 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
       spec.batteryCapacityKwh,
       chosen.maxKw,
       spec.maxDcChargingRateKw,
+      // The model's own curve. Every vehicle was charged against Tesla's NMC
+      // shape regardless of chemistry, which flatters an LFP pack at high SoC
+      // and understates one that tapers earlier.
+      spec.chargeCurve,
     );
     // Rounding to whole minutes can imply a power the hardware cannot deliver:
     // a 4.5 kWh top-up taking 1.08 minutes rounds to 1, which reads back as
@@ -400,9 +405,13 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
       Math.round(rawChargingMinutes),
       Math.ceil(floorMinutes),
     );
-    // Use the station's real price when available; otherwise 0 (no assumed cost shown to user)
-    const costEur = chosen.priceEurKwh != null
-      ? Math.round(energyAddedKwh * chosen.priceEurKwh * 100) / 100
+    // Use the station's real price when available; otherwise 0 — inventing a
+    // tariff would be worse than admitting we do not know. But the total has to
+    // admit it too, or a route through unpriced chargers reads as nearly free.
+    const priceKnown = chosen.priceEurKwh != null;
+    if (!priceKnown) chargingCostPartial = true;
+    const costEur = priceKnown
+      ? Math.round(energyAddedKwh * chosen.priceEurKwh! * 100) / 100
       : 0;
 
     stops.push({
@@ -506,6 +515,7 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     totalMinutes: finalDrivingMinutes + totalChargingMinutes,
     totalEnergyKwh: Math.round(totalEnergyKwh * 10) / 10,
     totalChargingCostEur: Math.round(totalChargingCostEur * 100) / 100,
+    chargingCostPartial,
     tripEnergyKwh: Math.round(tripEnergyKwh * 10) / 10,
     tripEnergyCostEur: Math.round(tripEnergyCostEur * 100) / 100,
     stops,

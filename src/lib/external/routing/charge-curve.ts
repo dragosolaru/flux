@@ -29,18 +29,31 @@ export const TESLA_NMC_CURVE: ChargeCurvePoint[] = [
   { soc: 100, fraction: 0.12 },
 ];
 
-/** Linear-interpolated fraction of peak power at a given SoC (0–100). */
-export function chargeCurveFraction(socPct: number): number {
+/**
+ * Linear-interpolated fraction of peak power at a given SoC (0–100).
+ *
+ * `curve` defaults to the Tesla NMC shape. It was not a parameter at all until
+ * now: every vehicle was integrated against that one curve even though
+ * ModelSpec has carried a per-model `chargeCurve` since it was defined — its
+ * own comment called it "future per-vehicle chargeMinutes support". The data
+ * was there; nothing read it.
+ */
+export function chargeCurveFraction(
+  socPct: number,
+  curve: ChargeCurvePoint[] = TESLA_NMC_CURVE,
+): number {
+  const points = curve.length >= 2 ? curve : TESLA_NMC_CURVE;
   const s = Math.max(0, Math.min(100, socPct));
-  for (let i = 1; i < TESLA_NMC_CURVE.length; i++) {
-    const a = TESLA_NMC_CURVE[i - 1]!;
-    const b = TESLA_NMC_CURVE[i]!;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]!;
+    const b = points[i]!;
     if (s <= b.soc) {
-      const t = (s - a.soc) / (b.soc - a.soc);
+      const span = b.soc - a.soc;
+      const t = span > 0 ? (s - a.soc) / span : 0;
       return a.fraction + (b.fraction - a.fraction) * t;
     }
   }
-  return TESLA_NMC_CURVE[TESLA_NMC_CURVE.length - 1]!.fraction;
+  return points[points.length - 1]!.fraction;
 }
 
 /**
@@ -56,6 +69,7 @@ export function chargeMinutes(
   batteryKwh: number,
   stationMaxKw: number,
   vehiclePeakDcKw: number,
+  curve: ChargeCurvePoint[] = TESLA_NMC_CURVE,
 ): number {
   if (toSoc <= fromSoc || batteryKwh <= 0) return 0;
   const peak = vehiclePeakDcKw > 0 ? vehiclePeakDcKw : stationMaxKw;
@@ -71,7 +85,7 @@ export function chargeMinutes(
     const slice = hi - lo;
     if (slice <= 0) continue;
     const midSoc = (lo + hi) / 2;
-    const curveKw = peak * chargeCurveFraction(midSoc);
+    const curveKw = peak * chargeCurveFraction(midSoc, curve);
     const powerKw = stationMaxKw > 0 ? Math.min(stationMaxKw, curveKw) : curveKw;
     if (powerKw <= 0) continue;
     const energyKwh = energyPerPct * slice;
