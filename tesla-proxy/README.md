@@ -38,7 +38,10 @@ healthcheck and the hostname, so there is almost nothing to fill in by hand:
 4. Deploy. `SERVICE_FQDN_PROXY_8080` makes Coolify generate the hostname, route
    it to container port 8080 and issue the Let's Encrypt certificate; the result
    shows up in the UI and can be swapped for your own hostname.
-5. Set `TESLA_PROXY_BASE_URL` in Vercel to that hostname and redeploy Flux.
+5. Set `TESLA_PROXY_BASE_URL` in Vercel to that hostname — **`https://`, not
+   `http://`** — and redeploy Flux. Coolify shows the generated hostname as
+   `http://` until TLS is enabled for it; the app refuses a plaintext value
+   rather than sending the driver's Tesla access token over it in the clear.
 
 Prefer the click-through route? **Application** → Build Pack **Dockerfile**,
 Base Directory `/tesla-proxy`, Ports Exposes `8080`, the same environment

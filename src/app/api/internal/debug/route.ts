@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
 import { GOAL, resolveRoadmap } from "@/lib/roadmap";
-import { TESLA_SCOPES, teslaVirtualKeyUrl } from "@/lib/tesla/constants";
+import { TESLA_SCOPES, teslaProxyBaseUrl, teslaVirtualKeyUrl } from "@/lib/tesla/constants";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -106,6 +106,16 @@ export async function GET() {
     teslaLive: (process.env.LIVE_INTEGRATIONS ?? "").split(",").map((s) => s.trim()).includes("tesla"),
   };
 
+  // A plaintext proxy URL is refused at command time, which is the right place
+  // to enforce it but a poor place to discover it. Say so here instead.
+  let teslaProxyProblem: string | null = null;
+  try {
+    teslaProxyBaseUrl();
+  } catch (err) {
+    teslaProxyProblem = err instanceof Error ? err.message : String(err);
+    warnings.push(teslaProxyProblem);
+  }
+
   // Ordered by what actually blocks first when you try to link a car, not by
   // how the docs are written. LIVE_INTEGRATIONS is first because /api/tesla/*
   // answers 410 without it — the flow cannot even start, whatever else is set.
@@ -116,7 +126,7 @@ export async function GET() {
     { step: "TESLA_REDIRECT_URI", ok: config.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
     { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: config.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
     { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing — register AFTER this is served" },
-    { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy, blocks: "every command on a post-2021 car (412 VCP_REQUIRED)" },
+    { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy && !teslaProxyProblem, blocks: "every command on a post-2021 car — unset means nothing signs them, http means we refuse to send the access token over plaintext" },
   ];
 
   // Registration has no environment variable behind it, so it cannot be

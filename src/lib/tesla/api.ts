@@ -2,6 +2,7 @@ import {
   MILES_TO_KM,
   TESLA_REGIONS,
   TESLA_VEHICLE_DATA_ENDPOINTS,
+  teslaProxyBaseUrl,
 } from "./constants";
 import { getValidAccessToken } from "./tokens";
 import type {
@@ -256,8 +257,9 @@ export async function sendVehicleCommand(params: {
   // (the tesla-http-proxy Go binary). When TESLA_PROXY_BASE_URL is set,
   // route through the proxy; otherwise hit Tesla directly (works for
   // pre-2021 Model S/X and for cars where REST commands still pass).
-  const proxyBase = process.env.TESLA_PROXY_BASE_URL?.replace(/\/$/, "");
-  const apiBase = proxyBase || baseUrl(region);
+  // Throws on a plaintext proxy URL rather than sending the access token over
+  // it — see teslaProxyBaseUrl.
+  const apiBase = teslaProxyBaseUrl() || baseUrl(region);
 
   const url = `${apiBase}/api/1/vehicles/${params.teslaVehicleId}/command/${params.command}`;
   const res = await fetch(url, {

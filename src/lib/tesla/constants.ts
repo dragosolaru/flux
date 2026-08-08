@@ -10,6 +10,47 @@ export const TESLA_AUTH_URL = "https://auth.tesla.com/oauth2/v3/authorize";
 export const TESLA_TOKEN_URL = "https://auth.tesla.com/oauth2/v3/token";
 
 /**
+ * The signing proxy's base URL, or null when it is not configured.
+ *
+ * Throws on a plaintext one. Every command carries the driver's live Tesla
+ * access token in an Authorization header, and that token can unlock the car
+ * and start it — over http it crosses the public internet in the clear, for
+ * anyone on the path to take and replay. Coolify and Fly both hand out an
+ * https hostname; a http:// value means TLS was never switched on for it.
+ *
+ * Refusing costs working commands, which is the smaller loss: an unsigned
+ * command fails visibly, a leaked token fails silently and much later.
+ * Loopback is exempt so the proxy can be run locally during development.
+ */
+export function teslaProxyBaseUrl(): string | null {
+  const raw = process.env.TESLA_PROXY_BASE_URL?.trim().replace(/\/$/, "");
+  if (!raw) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(`TESLA_PROXY_BASE_URL is not a URL: ${raw}`);
+  }
+
+  const isLoopback =
+    parsed.hostname === "localhost" ||
+    parsed.hostname === "127.0.0.1" ||
+    parsed.hostname === "::1";
+
+  if (parsed.protocol !== "https:" && !isLoopback) {
+    throw new Error(
+      `TESLA_PROXY_BASE_URL must be https — got ${parsed.protocol}//${parsed.host}. ` +
+        "Commands send the driver's Tesla access token in an Authorization header; " +
+        "over plaintext it is readable by anything on the path. Enable TLS for the " +
+        "proxy's domain and use the https URL.",
+    );
+  }
+
+  return raw;
+}
+
+/**
  * Where an owner pairs the Virtual Key. Opening it on a phone with the Tesla
  * app installed hands the app our public key to store in the car; from then on
  * the car accepts commands signed with the matching private key.

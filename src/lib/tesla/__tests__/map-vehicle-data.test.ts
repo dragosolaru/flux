@@ -274,3 +274,46 @@ describe("teslaVirtualKeyUrl", () => {
     expect(teslaVirtualKeyUrl()).toBeNull();
   });
 });
+
+// Every command carries the driver's live Tesla access token in an
+// Authorization header, and that token can unlock the car and start it. Over
+// http it crosses the public internet in the clear. Coolify's generated
+// hostname arrives as http:// until TLS is switched on for it, so this is the
+// realistic mistake, not a theoretical one.
+describe("teslaProxyBaseUrl", () => {
+  const original = process.env.TESLA_PROXY_BASE_URL;
+  afterEach(() => {
+    if (original == null) delete process.env.TESLA_PROXY_BASE_URL;
+    else process.env.TESLA_PROXY_BASE_URL = original;
+  });
+
+  async function subject() {
+    return (await import("../constants")).teslaProxyBaseUrl;
+  }
+
+  it("is null when unset, so commands fall back to calling Tesla directly", async () => {
+    delete process.env.TESLA_PROXY_BASE_URL;
+    expect((await subject())()).toBeNull();
+  });
+
+  it("accepts https and strips a trailing slash", async () => {
+    process.env.TESLA_PROXY_BASE_URL = "https://proxy.example.com/";
+    expect((await subject())()).toBe("https://proxy.example.com");
+  });
+
+  it("refuses plaintext rather than sending the access token over it", async () => {
+    process.env.TESLA_PROXY_BASE_URL =
+      "http://cvrwkbtfsya3ydi3e8ni7yyw.167.233.162.78.sslip.io";
+    expect(await subject().then((f) => () => f())).toThrow(/must be https/);
+  });
+
+  it("allows loopback over http, for running the proxy locally", async () => {
+    process.env.TESLA_PROXY_BASE_URL = "http://localhost:8080";
+    expect((await subject())()).toBe("http://localhost:8080");
+  });
+
+  it("rejects a value that is not a URL at all", async () => {
+    process.env.TESLA_PROXY_BASE_URL = "flux-tesla-proxy.fly.dev";
+    expect(await subject().then((f) => () => f())).toThrow(/not a URL/);
+  });
+});
