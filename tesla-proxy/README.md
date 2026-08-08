@@ -12,10 +12,52 @@ Key on the user's vehicle, and forwards them to the Tesla Fleet API as
 authenticated `signed_command` protobufs.
 
 The proxy is **stateless** — the only secret it holds is the command-signing
-private key (a Fly secret, not in the image). Flux passes the user's Tesla
-access token in the `Authorization` header on every request.
+private key, injected as an environment secret and never baked into the image.
+Flux passes the user's Tesla access token in the `Authorization` header on every
+request.
 
-## Deploying from a phone
+Deploy it anywhere that runs a container and can give it a real certificate:
+**Coolify** (below) and **Fly** (below that) are both covered. Coolify keeps the
+signing key on your own hardware, which is the better default if you already
+have it running.
+
+## Deploying on Coolify
+
+Works, and keeps the command-signing key on hardware you own instead of a third
+party's. Coolify's Traefik terminates the public certificate and forwards plain
+HTTP, which is exactly what this image expects.
+
+1. **New Resource** → **Application** → your Git repository.
+2. Build Pack **Dockerfile**, Base Directory **`/tesla-proxy`**.
+3. **Environment Variables** → `TESLA_PRIVATE_KEY`, marked as a secret. The EC
+   private key PEM, raw or base64 — `entrypoint.sh` accepts either. Tick "Build
+   Variable? No"; it is only needed at runtime.
+4. **Ports Exposes**: `8080`.
+5. **Domains**: a real hostname, e.g. `https://tesla-proxy.example.com`. It must
+   be a hostname with a valid certificate, not an IP and not a self-signed one —
+   Vercel's `fetch` verifies the chain and will refuse anything else. Let Coolify
+   issue the Let's Encrypt certificate.
+6. Deploy, then set `TESLA_PROXY_BASE_URL=https://tesla-proxy.example.com` in
+   Vercel and redeploy Flux.
+
+Two requirements that are easy to miss: the host must be reachable from the
+public internet, because the callers are Vercel's serverless functions with no
+fixed egress addresses; and no custom Traefik labels are needed — if you find
+yourself setting `loadbalancer.server.scheme=https`, something is wrong, since
+the container publishes plain HTTP on purpose.
+
+Health check: `GET /api/1/vehicles` with no token should return **403** from
+Tesla. A **400**, a **502**, or a TLS error means the request never made it
+through the two hops inside the container.
+
+> **The published URL is an open relay.** Tesla's own binary warns about this:
+> anyone who can reach it can forward requests to Tesla's API. They still need a
+> valid Tesla token for an account that paired this app's Virtual Key — so the
+> practical exposure is a Flux user bypassing Flux's own rate limiting and the
+> `command_events` audit trail, not an outsider driving your car. Tracked in
+> `docs/TODO.md`; a shared secret between Vercel and Caddy is the fix.
+
+## Deploying on Fly from a phone
 
 `fly deploy` needs flyctl, which needs a machine. `.github/workflows/deploy-tesla-proxy.yml`
 runs it on Actions instead, so the whole setup is reachable from a browser:
@@ -55,6 +97,23 @@ fly deploy
 
 The app URL will be `https://flux-tesla-proxy.fly.dev`. Set
 `TESLA_PROXY_BASE_URL` to that value in the Flux Vercel env vars.
+
+## Why there are two processes in the container
+
+`tesla-http-proxy` only ever calls `ListenAndServeTLS` — upstream deliberately
+omitted an `--insecure` flag, with a comment in `cmd/tesla-http-proxy/main.go`
+explaining they did not want DIY users exposing cars over cleartext.
+
+Every managed platform, Fly and Coolify included, terminates the public
+certificate at its edge and speaks **plain HTTP** to the container. Point one at
+the other and Go's TLS server answers `400 Bad Request` — verified against the
+real binary, not assumed. So the container runs `tesla-http-proxy` on loopback
+`127.0.0.1:8443` behind a self-signed certificate, with Caddy on `$PORT`
+translating plain HTTP into that TLS hop.
+
+Caddy skips certificate verification on that hop, which is safe here and only
+here: it never leaves the container's loopback interface, so nothing can sit in
+the middle of it.
 
 ## How Flux uses it
 

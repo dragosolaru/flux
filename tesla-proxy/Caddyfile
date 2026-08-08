@@ -1,0 +1,25 @@
+{
+	admin off
+	# The public certificate is terminated upstream — by Coolify's Traefik, Fly's
+	# edge, or whatever sits in front. This listener must not try to obtain one
+	# of its own, or it will fight for port 443 and fail an ACME challenge it was
+	# never meant to answer.
+	auto_https off
+}
+
+:{$PORT:8080} {
+	# tesla-http-proxy refuses to serve plain HTTP — deliberately, upstream: the
+	# Tesla source carries a comment explaining they omitted an --insecure flag
+	# so nobody accidentally exposes a car over cleartext. So the only way to put
+	# it behind a normal reverse proxy is to speak TLS to it.
+	#
+	# Verification is skipped because the certificate is the self-signed one
+	# entrypoint.sh generates at boot. That is safe here and only here: this hop
+	# never leaves the container's loopback interface, so there is no network
+	# path for anything to sit in the middle of.
+	reverse_proxy https://127.0.0.1:8443 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}

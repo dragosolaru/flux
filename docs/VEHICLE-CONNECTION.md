@@ -233,10 +233,26 @@ granted scopes per car and warns when this one is absent.
 
 ### 4. Deploy the signing proxy
 
-See `tesla-proxy/README.md`. Set `TESLA_PROXY_BASE_URL` to the Fly URL. Without
-it, every command on a Model 3/Y/S/X built after mid-2021 fails with
-`VCP_REQUIRED` (412) — read-only vehicle data still works, so this is the step
-whose absence looks like "the app works but no button does anything".
+See `tesla-proxy/README.md` — **Coolify** and **Fly** are both documented, and
+Coolify has the edge of keeping the signing key on your own hardware. Set
+`TESLA_PROXY_BASE_URL` to the resulting URL. Without it, every command on a
+Model 3/Y/S/X built after mid-2021 fails — read-only vehicle data still works,
+so this is the step whose absence looks like "the app works but no button does
+anything".
+
+Whatever hosts it needs a **publicly reachable hostname with a valid
+certificate**: the callers are Vercel serverless functions with no fixed egress
+addresses, and their `fetch` verifies the chain, so an IP or a self-signed cert
+is refused.
+
+> The container runs two processes, and that is load-bearing rather than
+> incidental. `tesla-http-proxy` only calls `ListenAndServeTLS` — upstream
+> omitted an `--insecure` flag on purpose — while Coolify and Fly both terminate
+> the public certificate at their edge and forward plain HTTP. Pointed straight
+> at each other, Go's TLS server answers a flat `400 Bad Request`. So the signing
+> proxy binds loopback `127.0.0.1:8443` with a self-signed certificate and Caddy
+> publishes plain HTTP on `$PORT` in front of it. Verified against the real
+> binaries; see the README for the detail.
 
 ### 5. Flip the switch
 

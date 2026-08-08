@@ -1,15 +1,20 @@
 #!/bin/sh
-# Tesla HTTP Proxy entrypoint
-# Reads the EC P-256 private key from $TESLA_PRIVATE_KEY (PEM, optionally
-# base64 encoded), writes it to disk, generates a self-signed TLS cert
-# (Fly terminates the real TLS at the edge, so this cert is internal-only),
-# and launches the proxy on $PORT.
+# Tesla HTTP Proxy entrypoint.
+#
+# Reads the EC P-256 command-signing key from $TESLA_PRIVATE_KEY (PEM, raw or
+# base64), starts tesla-http-proxy on loopback with a self-signed certificate,
+# and puts Caddy in front of it on $PORT speaking plain HTTP.
+#
+# See the Dockerfile for why the second process exists.
 
 set -e
 
 KEY_PATH=/app/private.pem
 CERT_PATH=/app/tls.crt
 TLS_KEY_PATH=/app/tls.key
+# Loopback only. Nothing outside the container can reach this, which is what
+# makes the self-signed certificate acceptable.
+PROXY_PORT=8443
 
 if [ -z "$TESLA_PRIVATE_KEY" ]; then
   echo "ERROR: TESLA_PRIVATE_KEY env var is required" >&2
@@ -24,16 +29,37 @@ else
 fi
 chmod 600 "$KEY_PATH"
 
-# Self-signed cert for the internal HTTPS port — Fly terminates real TLS
-# upstream, so the cert is never user-facing.
+# A fresh TLS key every boot, and never the command-signing key: the proxy
+# refuses to start if the two match, on the grounds that a TLS key is exposed
+# to every client while a command-signing key must not be.
 openssl req -x509 -newkey rsa:2048 -nodes \
   -keyout "$TLS_KEY_PATH" -out "$CERT_PATH" \
   -days 3650 -subj "/CN=tesla-proxy-internal" >/dev/null 2>&1
 
-exec tesla-http-proxy \
+tesla-http-proxy \
   -tls-key "$TLS_KEY_PATH" \
   -cert "$CERT_PATH" \
   -key-file "$KEY_PATH" \
-  -host 0.0.0.0 \
-  -port "${PORT:-8080}" \
-  -verbose
+  -host 127.0.0.1 \
+  -port "$PROXY_PORT" \
+  -verbose &
+PROXY_PID=$!
+
+caddy run --config /app/Caddyfile --adapter caddyfile &
+CADDY_PID=$!
+
+shutdown() {
+  kill -TERM "$PROXY_PID" "$CADDY_PID" 2>/dev/null || true
+}
+trap shutdown TERM INT
+
+# Exit as soon as either half dies. Without this the container stays "healthy"
+# while serving a port that can only 502 — the platform would never restart it,
+# and the failure would look like a Tesla problem rather than a crashed process.
+while kill -0 "$PROXY_PID" 2>/dev/null && kill -0 "$CADDY_PID" 2>/dev/null; do
+  sleep 2
+done
+
+echo "ERROR: tesla-http-proxy or caddy exited; stopping the container" >&2
+shutdown
+exit 1

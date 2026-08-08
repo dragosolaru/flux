@@ -1,5 +1,14 @@
-# Tesla HTTP Proxy — builds the official Go binary from teslamotors/vehicle-command
-# and runs it as a small Alpine container suitable for Fly.io.
+# Tesla HTTP Proxy — the official Go binary from teslamotors/vehicle-command,
+# with Caddy in front of it.
+#
+# The second process is not decoration. tesla-http-proxy only ever calls
+# ListenAndServeTLS, and every managed platform worth deploying this on
+# (Coolify/Traefik, Fly, Render) terminates the public certificate at its edge
+# and forwards plain HTTP to the container. Those two facts are incompatible:
+# Go's TLS server answers a plain HTTP request with a flat `400 Bad Request`,
+# so every command would have failed with a 400 that mentions nothing about
+# TLS. Measured, not assumed. Caddy bridges the gap inside the container, so
+# the published port is ordinary HTTP and the platform is on its happy path.
 
 FROM golang:1.23-alpine AS build
 RUN apk add --no-cache git
@@ -7,14 +16,19 @@ WORKDIR /src
 RUN git clone --depth 1 https://github.com/teslamotors/vehicle-command.git . \
   && CGO_ENABLED=0 GOOS=linux go build -o /out/tesla-http-proxy ./cmd/tesla-http-proxy
 
+FROM caddy:2.8-alpine AS caddy
+
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates openssl
 WORKDIR /app
 COPY --from=build /out/tesla-http-proxy /usr/local/bin/tesla-http-proxy
+COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
+COPY Caddyfile /app/Caddyfile
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Fly listens on $PORT (default 8080) and terminates TLS at the edge.
+# Plain HTTP, for the platform's reverse proxy. The signing proxy itself listens
+# on loopback 8443 and is never published.
 ENV PORT=8080
 EXPOSE 8080
 ENTRYPOINT ["/app/entrypoint.sh"]

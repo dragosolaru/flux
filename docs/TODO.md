@@ -23,9 +23,18 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       procedure in `docs/VEHICLE-CONNECTION.md` ("Going live with the Fleet
       API"). The debug panel reports the same checklist as `tesla.steps` and
       names the first unmet one.
-- [ ] **Deploy `tesla-proxy` on Fly.io** and set `TESLA_PROXY_BASE_URL`. Without
-      it every command on a Model 3/Y/S/X built after 2021 fails with
-      `VCP_REQUIRED` (412). See `tesla-proxy/README.md`.
+- [ ] **Deploy `tesla-proxy`** (Coolify or Fly) and set `TESLA_PROXY_BASE_URL`.
+      Without it every command on a Model 3/Y/S/X built after 2021 fails — now
+      reported as `PROXY_NOT_CONFIGURED` rather than blamed on the Virtual Key.
+      See `tesla-proxy/README.md`.
+- [ ] **Shared secret between Flux and the proxy.** The proxy's published URL is
+      an open relay: anyone who reaches it can forward requests to Tesla's API.
+      A valid Tesla token for an account that paired our Virtual Key is still
+      required, so the realistic abuse is a Flux user bypassing our rate limits
+      and the `command_events` audit trail — not an outsider driving the car.
+      Fix is a header Caddy checks and `sendVehicleCommand` sends; deliberately
+      not done in the same change as the first deploy, because it needs both
+      sides to ship together and would otherwise brick commands mid-rollout.
 - [ ] **Set `LIVE_INTEGRATIONS=tesla`** — the switch from the mock simulator to
       the real Fleet API. Everything else Tesla-side is already in-tree.
 - [ ] **Re-enable subscription limits** in `src/lib/subscription.ts`
