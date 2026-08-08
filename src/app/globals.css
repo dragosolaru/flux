@@ -155,6 +155,28 @@
 .auth-input::placeholder {
   color: oklch(1 0 0 / 0.25);
 }
+
+/* A <select> keeps drawing its own arrow next to the custom ChevronDown, so a
+   picker shows two. Tailwind's `appearance-none` emits the unprefixed property
+   only; WebKit — every browser on iOS, not just Safari — still needs the
+   prefixed one, and iOS is where this was reported.
+
+   Scoped to selects that already carry `appearance-none`, i.e. the ones that
+   asked for their own arrow. Applying it to every .auth-input select would
+   strip the native arrow from the two in AddVehicleModal that have no custom
+   chevron, leaving a dropdown with no affordance at all. */
+select.auth-input.appearance-none {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Options inherit the transparent input background, which renders unreadable
+   in the native picker on some Android builds. */
+select.auth-input option {
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
 /* Force custom rendering on iOS Safari for <select> — native styling overrides CSS */
 select.auth-input {
   appearance: none;

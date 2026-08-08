@@ -956,6 +956,9 @@ export function MapClient() {
                       <label className="mb-1 block text-xs text-muted-foreground">
                         {tTrip("vehicle_label")}
                       </label>
+                      {/* One wrapper per select. Nesting both in a single
+                          `relative` left the one chevron floating between
+                          them, belonging to neither. */}
                       <div className="relative">
                         <select
                           value={vehicleId}
@@ -969,12 +972,15 @@ export function MapClient() {
                             </option>
                           ))}
                         </select>
-                        {!vehicleId && (
+                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                      </div>
+                      {!vehicleId && (
+                        <div className="relative mt-1.5">
                           <select
                             value={assumedModel}
                             onChange={(e) => setAssumedModel(e.target.value)}
                             aria-label={tTrip("assumed_model_label")}
-                            className="auth-input mt-1.5 w-full appearance-none pr-5"
+                            className="auth-input w-full appearance-none pr-5"
                           >
                             {PLANNABLE_MODELS.map((m) => (
                               <option key={m} value={m}>
@@ -982,9 +988,9 @@ export function MapClient() {
                               </option>
                             ))}
                           </select>
-                        )}
-                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
-                      </div>
+                          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -2031,18 +2037,21 @@ function PlanContent({
             still needs to know which model to assume, and the block used to
             disappear entirely — leaving no way to say. */}
         {!vehicleId && (
-          <select
-            value={assumedModel}
-            onChange={(e) => setAssumedModel(e.target.value)}
-            aria-label={tTrip("assumed_model_label")}
-            className="auth-input mb-1.5 w-full appearance-none pr-5"
-          >
-            {PLANNABLE_MODELS.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <div className="relative mb-1.5">
+            <select
+              value={assumedModel}
+              onChange={(e) => setAssumedModel(e.target.value)}
+              aria-label={tTrip("assumed_model_label")}
+              className="auth-input w-full appearance-none pr-5"
+            >
+              {PLANNABLE_MODELS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+          </div>
         )}
       </div>
 
