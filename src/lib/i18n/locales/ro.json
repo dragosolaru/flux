@@ -403,7 +403,11 @@
     "polling_paused_idle": "Oprite după 10 minute de inactivitate, ca mașina să poată dormi.",
     "polling_paused": "Oprite — mașina poate dormi.",
     "let_it_sleep": "Las-o să doarmă",
-    "resume_polling": "Reia"
+    "resume_polling": "Reia",
+    "reauth_title": "Accesul Tesla a fost revocat",
+    "reauth_subtitle": "Aplicația nu mai are permisiunea să contacteze mașina. Reconectează ca să o restabilești.",
+    "reauth_action": "Reconectează Tesla",
+    "contacting_car": "Contactăm mașina…"
   },
   "charging": {
     "page_title": "Încărcare",

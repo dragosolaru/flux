@@ -71,6 +71,22 @@ export function decryptToken(encrypted: string): string {
  * Updates the DB in place when a refresh occurs.
  * userId is required for ownership verification (defense-in-depth).
  */
+/**
+ * The driver's Tesla authorisation is gone — revoked from their Tesla account,
+ * expired beyond refresh, or never stored.
+ *
+ * Distinct from "the car did not answer", because the remedies are opposite:
+ * an unreachable car is worth retrying, a revoked token never will be. They
+ * were indistinguishable, so revoking access from tesla.com produced "check
+ * your connection and try again" — advice that cannot work.
+ */
+export class TeslaAuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TeslaAuthError";
+  }
+}
+
 export async function getValidAccessToken(
   vehicleId: string,
   userId: string,
@@ -90,7 +106,7 @@ export async function getValidAccessToken(
     .select("access_token_enc, refresh_token_enc, expires_at")
     .eq("vehicle_id", vehicleId)
     .single();
-  if (tokErr || !tokenRow) throw new Error("No Tesla token for vehicle");
+  if (tokErr || !tokenRow) throw new TeslaAuthError("No Tesla token for vehicle");
 
   const expiresAt = new Date(tokenRow.expires_at).getTime();
   // Refresh if expiring in the next 60s.
@@ -101,10 +117,23 @@ export async function getValidAccessToken(
     const refreshPromise = (async () => {
       try {
         const refreshToken = decryptToken(tokenRow.refresh_token_enc);
-        const fresh = await refreshTeslaTokens({
-          refreshToken,
-          clientId: process.env.TESLA_CLIENT_ID!,
-        });
+        let fresh;
+        try {
+          fresh = await refreshTeslaTokens({
+            refreshToken,
+            clientId: process.env.TESLA_CLIENT_ID!,
+          });
+        } catch (err) {
+          // Tesla answers a revoked or expired refresh token with 400
+          // invalid_grant. That is not a transient failure: no amount of
+          // retrying brings it back, only the driver re-authorising. Everything
+          // upstream treated it as "the car did not answer".
+          const msg = err instanceof Error ? err.message : String(err);
+          if (/\b(400|401)\b/.test(msg) || /invalid_grant|login_required/i.test(msg)) {
+            throw new TeslaAuthError(`Tesla authorisation is no longer valid: ${msg}`);
+          }
+          throw err;
+        }
 
         const newAccessEnc = encryptToken(fresh.access_token);
         const newRefreshEnc = encryptToken(fresh.refresh_token);

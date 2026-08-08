@@ -34,6 +34,8 @@ import type { BrandKey } from "@/lib/brands/types";
 import { mockLocationLabel } from "@/lib/mock/location-label";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
+import Link from "next/link";
+import { ApiError } from "@/lib/api-fetch";
 
 interface DashboardClientProps {
   checklist: ChecklistData;
@@ -109,7 +111,13 @@ function HeroCard({
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-36 rounded-xl" />
-            <Skeleton className="h-6 w-24 rounded-xl" />
+            {/* Grey rectangles alone read as a car that is present but broken —
+                especially beside live-looking controls. Saying what is
+                happening costs one line. */}
+            <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              {td("contacting_car")}
+            </p>
           </>
         ) : (
           <>
@@ -532,10 +540,13 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
   const brand = (vehicle?.brand ?? "tesla") as BrandKey;
 
   const isLive = vehicle?.dataSource === "live";
-  const { data, isLoading, isFetching, isError, refetch, polling } = useVehicle(
+  const { data, isLoading, isFetching, isError, error, refetch, polling } = useVehicle(
     vehicleId,
     isLive,
   );
+  // Tesla revoked us, as opposed to the car simply not answering.
+  const needsTeslaReauth =
+    error instanceof ApiError && error.code === "TESLA_REAUTH_REQUIRED";
   const td = useTranslations("dashboard");
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
 
@@ -614,7 +625,11 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
           // keeps the car awake" printed directly above "we couldn't contact
           // the car" claimed something untrue. The error card's Retry is the
           // control that makes sense there.
-          isLive && !isError ? (
+          // Also hidden while the first read is in flight: before anything has
+          // come back there is nothing being kept awake, and asserting there is
+          // — beside a screen of empty placeholders — reads as a car that is
+          // present but broken.
+          isLive && !isError && !isLoading ? (
             <div className="mt-5">
               <SleepControl
                 active={polling.active}
@@ -631,7 +646,24 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
         }
       />
 
-      {isError ? (
+      {isError && needsTeslaReauth ? (
+        // Revoking access from a Tesla account is not a connectivity problem,
+        // and "check your connection and try again" is advice that can never
+        // work for it. The only way back is re-authorising.
+        <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
+          <AlertTriangle className="size-8 text-amber-400" />
+          <div>
+            <div className="font-medium">{td("reauth_title")}</div>
+            <p className="mt-1 text-sm text-muted-foreground">{td("reauth_subtitle")}</p>
+          </div>
+          <Link
+            href="/connect/tesla"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            {td("reauth_action")}
+          </Link>
+        </Card>
+      ) : isError ? (
         <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
           <AlertTriangle className="size-8 text-destructive" />
           <div>

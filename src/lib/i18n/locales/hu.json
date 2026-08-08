@@ -403,7 +403,11 @@
     "polling_paused_idle": "10 perc tétlenség után szüneteltetve, hogy az autó alhasson.",
     "polling_paused": "Szüneteltetve — az autó alhat.",
     "let_it_sleep": "Hagyd aludni",
-    "resume_polling": "Folytatás"
+    "resume_polling": "Folytatás",
+    "reauth_title": "A Tesla-hozzáférés visszavonva",
+    "reauth_subtitle": "Az alkalmazás már nem érheti el az autót. Csatlakoztasd újra a helyreállításhoz.",
+    "reauth_action": "Tesla újracsatlakoztatása",
+    "contacting_car": "Kapcsolódás az autóhoz…"
   },
   "charging": {
     "page_title": "Töltés",

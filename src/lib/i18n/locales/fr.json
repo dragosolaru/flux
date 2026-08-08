@@ -403,7 +403,11 @@
     "polling_paused_idle": "En pause après 10 minutes d'inactivité, pour que la voiture dorme.",
     "polling_paused": "En pause — la voiture peut dormir.",
     "let_it_sleep": "La laisser dormir",
-    "resume_polling": "Reprendre"
+    "resume_polling": "Reprendre",
+    "reauth_title": "L'accès Tesla a été révoqué",
+    "reauth_subtitle": "Cette application n'a plus l'autorisation de joindre votre voiture. Reconnectez-vous pour la rétablir.",
+    "reauth_action": "Reconnecter Tesla",
+    "contacting_car": "Connexion à la voiture…"
   },
   "charging": {
     "page_title": "Recharge",

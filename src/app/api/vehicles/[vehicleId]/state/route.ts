@@ -12,6 +12,8 @@ import { createInitialSnapshot } from "@/lib/mock/seed";
 import { seedMockHistory } from "@/lib/mock/seed-history";
 import { recordBatteryHealth } from "@/lib/battery-health";
 import { fetchVehicleData } from "@/lib/tesla/api";
+import { TeslaAuthError } from "@/lib/tesla/tokens";
+import { errorContext, logServer } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BrandKey } from "@/lib/brands/types";
 
@@ -73,6 +75,24 @@ export async function GET(
         return NextResponse.json(state);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Live fetch failed";
+        // A revoked authorisation and an unreachable car both used to return
+        // 502 "Live fetch failed", so the app told someone who had revoked
+        // access from their Tesla account to check their connection and retry
+        // — advice that can never work. They need to re-link, and nothing else.
+        if (err instanceof TeslaAuthError) {
+          logServer("warn", "vehicles/state", "Tesla authorisation is gone", {
+            vehicleId: vehicle.id,
+          });
+          // 409, not 401: apiFetch redirects to /login on any 401, so returning
+          // one here would sign the driver out of Flux entirely because their
+          // TESLA authorisation lapsed. Two unrelated identities, one status
+          // code.
+          return NextResponse.json(
+            { message: msg, code: "TESLA_REAUTH_REQUIRED" },
+            { status: 409 },
+          );
+        }
+        logServer("error", "vehicles/state", "live fetch failed", errorContext(err));
         return NextResponse.json({ message: msg }, { status: 502 });
       }
     }

@@ -403,7 +403,11 @@
     "polling_paused_idle": "Nach 10 Minuten Inaktivität pausiert, damit das Auto schlafen kann.",
     "polling_paused": "Pausiert — das Auto kann schlafen.",
     "let_it_sleep": "Schlafen lassen",
-    "resume_polling": "Fortsetzen"
+    "resume_polling": "Fortsetzen",
+    "reauth_title": "Tesla-Zugriff wurde widerrufen",
+    "reauth_subtitle": "Diese App darf dein Auto nicht mehr erreichen. Verbinde erneut, um das zu ändern.",
+    "reauth_action": "Tesla neu verbinden",
+    "contacting_car": "Verbindung zum Auto…"
   },
   "charging": {
     "page_title": "Laden",
