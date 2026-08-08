@@ -44,8 +44,11 @@ healthcheck and the hostname, so there is almost nothing to fill in by hand:
    rather than sending the driver's Tesla access token over it in the clear.
 
 Prefer the click-through route? **Application** → Build Pack **Dockerfile**,
-Base Directory `/tesla-proxy`, Ports Exposes `8080`, the same environment
-variable, and a domain of your own. Same result, more steps.
+Base Directory `/tesla-proxy`, the same environment variable, a domain of your
+own, and **Ports Exposes `8080`** — that field defaults to `3000`, and Traefik
+targets whatever it says. Get it wrong and the container reports healthy while
+the domain answers `no available server`, because the healthcheck runs inside
+the container and Traefik knocks on the outside.
 
 ### Without Git at all
 
@@ -152,6 +155,25 @@ proxy rejects the missing token itself rather than asking Tesla — measured at
 Caddy is up but the loopback TLS hop behind it is not; **400** means something
 is speaking plain HTTP straight at the signing proxy; a TLS error means the
 public certificate is wrong. `docker-compose.yml` encodes exactly this check.
+
+### "no available server" while the container is healthy
+
+That string is Traefik's, returned as a `503` when a router matches the domain
+but the service behind it has no reachable backend. A healthy container plus
+this message points at the port, not the app.
+
+In the **Application** flow, Coolify's **Ports Exposes** is what Traefik targets,
+and it defaults to `3000`. This image publishes **8080**. Traefik then forwards
+to a port nothing listens on, while the container's own healthcheck — which
+reads `$PORT` from inside — keeps passing. Healthy and unreachable at the same
+time, which is why the two readings look contradictory.
+
+Set **Ports Exposes** to `8080`. The Docker Compose flow does not have this
+problem: `SERVICE_FQDN_PROXY_8080` names the port explicitly.
+
+Two rarer causes, if the port is already right: the container is not on the
+`coolify` network, or Traefik has not reloaded — restarting the Coolify proxy
+settles both.
 
 ### "not an EC private key"
 
