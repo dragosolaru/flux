@@ -906,7 +906,9 @@
     "share_route_btn": "Útvonal megosztása",
     "share_link_copied": "Útvonal-hivatkozás másolva",
     "clear_plan": "Útvonal törlése",
-    "assumed_model_label": "Feltételezett modell"
+    "assumed_model_label": "Feltételezett modell",
+    "plan_timeout": "A tervezés túl sokáig tartott és időtúllépés történt. Ezt általában hosszú nemzetközi útvonalak okozzák — próbálj közelebbi célt, vagy próbáld újra.",
+    "plan_failed": "Nem sikerült megtervezni az útvonalat. Próbáld újra."
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

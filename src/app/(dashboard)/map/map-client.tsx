@@ -380,7 +380,19 @@ export function MapClient() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isNetworkError = !navigator.onLine || msg === "Failed to fetch";
-      setPlanError(isNetworkError ? tTrip("network_error") : msg || tTrip("infeasible_hint"));
+      // Not `msg || infeasible_hint`. That hint is advice about a route the car
+      // cannot complete; a request that failed is a different thing entirely,
+      // and offering "try a higher battery percentage" for a 504 sends people
+      // to adjust a slider that was never the problem. A long international
+      // route is the case that times out, so name that.
+      const isTimeout = err instanceof ApiError && (err.status === 504 || err.status === 408);
+      setPlanError(
+        isNetworkError
+          ? tTrip("network_error")
+          : isTimeout
+            ? tTrip("plan_timeout")
+            : msg || tTrip("plan_failed"),
+      );
     } finally {
       setLoading(false);
     }

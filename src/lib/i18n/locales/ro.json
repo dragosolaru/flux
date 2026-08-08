@@ -906,7 +906,9 @@
     "share_route_btn": "Trimite traseul",
     "share_link_copied": "Link-ul traseului a fost copiat",
     "clear_plan": "Șterge traseul",
-    "assumed_model_label": "Model presupus"
+    "assumed_model_label": "Model presupus",
+    "plan_timeout": "Planificarea a durat prea mult și a expirat. De obicei se întâmplă la trasee internaționale lungi — încearcă o destinație mai apropiată sau reîncearcă.",
+    "plan_failed": "Nu am putut planifica traseul. Încearcă din nou."
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

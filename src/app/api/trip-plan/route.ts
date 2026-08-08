@@ -78,7 +78,15 @@ async function getPersonalEfficiency(vehicleId: string): Promise<number | undefi
 }
 
 // Allow time for OSRM alternatives + per-variant routing + Overpass corridor.
-export const maxDuration = 30;
+//
+// 60 rather than 30: the cost scales with route length, and a ~1000 km
+// international route (northern Greece → Cluj) fans out into a corridor fetch,
+// several road alternatives and a via-route per surviving variant. At 30 s that
+// timed out, and a timeout is the worst failure this route has — it returns no
+// body, so the client had nothing to report and fell back to guessing.
+// 60 s is the ceiling on Vercel's Hobby plan, so this is as much headroom as
+// there is without moving the work off the request path.
+export const maxDuration = 60;
 
 const coordSchema = z.object({
   lat: z.number(),

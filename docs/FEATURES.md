@@ -477,6 +477,7 @@ The brand rule exists because sources disagree about *which field* holds the net
 ## 23. Platform endpoints & infra
 
 - **Tesla Fleet API (dormant):** `GET /api/tesla/connect`, `GET /api/tesla/callback`, `POST /api/tesla/refresh`, `POST /api/tesla/command`, `GET /api/tesla/vehicle` — all return **410** unless `isLiveEnabled("tesla")`. `GET /api/tesla-public-key` serves the command-signing public key (proxied to `/.well-known/appspecific/com.tesla.3p.public-key.pem` via `next.config.ts` rewrites). Tesla token refresh is single-flighted per vehicle (`src/lib/tesla/tokens.ts`).
+- **`apiFetch` error messages:** HTTP/2 carries no reason phrase, so `res.statusText` is `""` for everything Vercel serves. The fallback chain used `??`, which skips only null/undefined — the empty string won, and any error without a JSON body (a 504 from an exceeded `maxDuration`, above all) reached the UI as an empty message. Callers written `msg || t("some_hint")` then rendered their hint as if it were a diagnosis: a planner timeout surfaced as "try a higher battery percentage". Now `||`, with the status appended (`"Request failed (504)"`). Pinned by `src/lib/__tests__/api-fetch.test.ts`.
 - **Typed API client layer (`src/lib/api/`):** all client HTTP calls go through one typed module per resource (`vehicles`, `chargers`, `documents`, `me`, `tariffs`, `costs`, `trip`); `apiFetch` (`src/lib/api-fetch.ts`) is imported only here. `apiFetch` redirects to `/login` on client 401.
 - **Rate limiting:** `checkRateLimit(userId, bucket, max)` in `src/lib/rate-limit.ts` (Upstash Redis).
 

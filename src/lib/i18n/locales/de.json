@@ -906,7 +906,9 @@
     "share_route_btn": "Route teilen",
     "share_link_copied": "Routenlink kopiert",
     "clear_plan": "Route löschen",
-    "assumed_model_label": "Angenommenes Modell"
+    "assumed_model_label": "Angenommenes Modell",
+    "plan_timeout": "Die Planung hat zu lange gedauert und wurde abgebrochen. Meist liegt es an langen internationalen Routen — versuche ein näheres Ziel oder erneut.",
+    "plan_failed": "Route konnte nicht geplant werden. Bitte erneut versuchen."
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

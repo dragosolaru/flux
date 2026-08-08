@@ -906,7 +906,9 @@
     "share_route_btn": "Partager l’itinéraire",
     "share_link_copied": "Lien de l’itinéraire copié",
     "clear_plan": "Effacer l’itinéraire",
-    "assumed_model_label": "Modèle supposé"
+    "assumed_model_label": "Modèle supposé",
+    "plan_timeout": "La planification a expiré. Les longs trajets internationaux en sont la cause habituelle — essayez une destination plus proche, ou réessayez.",
+    "plan_failed": "Impossible de planifier l'itinéraire. Réessayez."
   },
   "notFoundPage": {
     "heading": "Page introuvable",

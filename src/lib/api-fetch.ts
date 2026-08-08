@@ -51,8 +51,17 @@ export async function apiFetch<T>(
       code?: string;
     };
     // `result` as a fallback: the command routes report their failure there.
+    //
+    // `||` rather than `??`, and the status appended, because HTTP/2 carries no
+    // reason phrase — `statusText` is the empty string for every response Vercel
+    // serves. With `??` that empty string won a coalescing chain whose only
+    // purpose was to avoid an empty message, so any error without a JSON body
+    // (a 504 from an exceeded function timeout, most of all) arrived at the UI
+    // as "". Callers doing `msg || t("some_guess")` then displayed a guess as
+    // though it were a diagnosis.
+    const detail = error.message || error.result || res.statusText;
     throw new ApiError(
-      error.message ?? error.result ?? res.statusText ?? "API error",
+      detail ? `${detail} (${res.status})` : `Request failed (${res.status})`,
       res.status,
       error.code,
     );

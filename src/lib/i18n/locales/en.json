@@ -906,7 +906,9 @@
     "share_route_btn": "Share route",
     "share_link_copied": "Route link copied",
     "clear_plan": "Clear route",
-    "assumed_model_label": "Assumed model"
+    "assumed_model_label": "Assumed model",
+    "plan_timeout": "Planning took too long and timed out. Long international routes are the usual cause — try a nearer destination, or retry.",
+    "plan_failed": "Could not plan the route. Please try again."
   },
   "notFoundPage": {
     "heading": "Page not found",
