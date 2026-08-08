@@ -89,7 +89,17 @@ export function useVehicle(vehicleId: string, live = false, poll = true) {
   const query = useQuery({
     queryKey: ["vehicle", vehicleId],
     queryFn: () => vehiclesApi.getState(vehicleId),
-    refetchInterval: !poll || (live && !active) ? false : 30_000,
+    refetchInterval: (q) => {
+      if (!poll) return false;
+      if (live && !active) return false;
+      // Stop after a failure instead of retrying every 30 s forever. A car we
+      // cannot reach is asleep, out of signal, or unlinked — none of which a
+      // timer fixes, and each attempt still tries to wake it. The error card's
+      // Retry is the way back, which also makes resuming a decision rather
+      // than something that happens silently in the background.
+      if (q.state.status === "error") return false;
+      return 30_000;
+    },
     staleTime: 20_000,
     enabled: !!vehicleId,
   });

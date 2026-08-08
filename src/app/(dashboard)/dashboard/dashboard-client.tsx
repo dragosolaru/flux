@@ -61,7 +61,22 @@ function getSocColor(level: number): string {
 // --------------------------------------------------------------------------
 // Hero card — floats directly on the page background (no card chrome)
 // --------------------------------------------------------------------------
-function HeroCard({ state, isLoading, isFetching, vehicleName, simulated }: { state: VehicleState | undefined; isLoading: boolean; isFetching: boolean; vehicleName: string; simulated: boolean }) {
+function HeroCard({
+  state,
+  isLoading,
+  isFetching,
+  vehicleName,
+  simulated,
+  footer,
+}: {
+  state: VehicleState | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  vehicleName: string;
+  simulated: boolean;
+  /** Rendered inside the card — the sleep control belongs to this car. */
+  footer?: React.ReactNode;
+}) {
   const td = useTranslations("dashboard");
   const rawSoc = state?.batteryLevel;
   const displayBattery =
@@ -145,6 +160,8 @@ function HeroCard({ state, isLoading, isFetching, vehicleName, simulated }: { st
           {td("charging_active")} · {state?.chargingRateKw?.toFixed(1) ?? "—"} kW
         </motion.div>
       )}
+
+      {footer}
     </div>
   );
 }
@@ -178,7 +195,7 @@ function SleepControl({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="mx-4 mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/60 px-4 py-3 md:mx-6">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5">
       <span
         className={`size-2 shrink-0 rounded-full ${active ? "animate-pulse bg-chart-2" : "bg-muted-foreground"}`}
       />
@@ -588,20 +605,31 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
         isFetching={isFetching}
         vehicleName={vehicleName}
         simulated={!isLive}
+        footer={
+          // Inside the card, because it is a property of this car — it sat
+          // beside it as a sibling panel, reading like an app-wide setting.
+          //
+          // Hidden when the car cannot be reached: polling has stopped anyway
+          // (useVehicle drops the interval on error), so "live updates on, this
+          // keeps the car awake" printed directly above "we couldn't contact
+          // the car" claimed something untrue. The error card's Retry is the
+          // control that makes sense there.
+          isLive && !isError ? (
+            <div className="mt-5">
+              <SleepControl
+                active={polling.active}
+                pausedByIdle={polling.pausedByIdle}
+                onPause={polling.pause}
+                onResume={() => {
+                  polling.resume();
+                  void refetch();
+                }}
+                t={td}
+              />
+            </div>
+          ) : undefined
+        }
       />
-
-      {isLive && (
-        <SleepControl
-          active={polling.active}
-          pausedByIdle={polling.pausedByIdle}
-          onPause={polling.pause}
-          onResume={() => {
-            polling.resume();
-            void refetch();
-          }}
-          t={td}
-        />
-      )}
 
       {isError ? (
         <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
