@@ -394,7 +394,7 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 **Status:** Ships dark behind `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`. When unset/false the settings card is hidden, notification API routes return 404, and the cron no-ops. **Known gap:** live Tesla telemetry returns `windowsOpen = null`, so the rain+windows alert only fires for mock vehicles.
 
-**How to use:** Settings → *Notificări* card (toggle channels + alert types; Test button sends an instant push). Ops: set `NEXT_PUBLIC_NOTIFICATIONS_ENABLED=true`, `CRON_SECRET`, VAPID keys, `RESEND_API_KEY`, Twilio creds. Cron `POST /api/cron/poll-vehicles` runs `*/15 * * * *` with `Authorization: Bearer <CRON_SECRET>`. Push management: `POST /api/push/subscribe`, `POST /api/push/test`, `GET /api/push/vapid-public-key`. Prefs: `GET/PATCH /api/me/notification-preferences`.
+**How to use:** Settings → *Notificări* card (toggle channels + alert types; Test button sends an instant push). Ops: set `NEXT_PUBLIC_NOTIFICATIONS_ENABLED=true`, `CRON_SECRET`, VAPID keys, `RESEND_API_KEY`, Twilio creds. Cron `POST /api/cron/poll-vehicles` runs `0 6 * * *` (daily; `vercel.json` is the truth — this said `*/15` for a long time and was simply wrong) with `Authorization: Bearer <CRON_SECRET>`. Push management: `POST /api/push/subscribe`, `POST /api/push/test`, `GET /api/push/vapid-public-key`. Prefs: `GET/PATCH /api/me/notification-preferences`.
 
 **Key files:** `src/lib/feature-flags.ts`, `src/types/notifications.ts`, `src/lib/notifications/{alert-engine,dispatch,email,whatsapp,preferences}.ts`, `src/lib/push/send.ts`, `src/lib/i18n/notify.ts`, `src/app/api/cron/poll-vehicles/route.ts`, `src/app/api/push/*/route.ts`, `src/app/api/me/notification-preferences/route.ts`, `src/hooks/{usePushNotifications,useNotificationPreferences}.ts`, `src/components/settings/NotificationsCard.tsx`, `public/sw.js`, `supabase/migrations/026`–`028`, `vercel.json`.
 
@@ -498,7 +498,7 @@ confirmation before firing, then notify the owner on success via
 
 ## 25. Testing
 
-- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine, trip share/snapshot/precondition helpers. Run: `npx vitest run` (178 tests).
+- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine, trip share/snapshot helpers. Run: `npx vitest run` (215 tests). `routeNeedsPreconditioning` has NO test — this line claimed otherwise until an audit checked.
 - **E2E (Playwright):** `playwright.config.ts` + `e2e/` (smoke, auth, garage, costs, trip, authed-flow). CI `e2e-smoke` runs `smoke.spec.ts` (no credentials); authenticated specs gated on `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`. Run: `npm run test:e2e` (`npx playwright install --with-deps chromium` once).
 - **Two projects:** `chromium` (Desktop Chrome) and `mobile` (Pixel 7). The mobile project is scoped to `public-pages.spec.ts` — only the a11y/layout specs need a narrow viewport.
 - **Offline-capable specs** (no credentials, no network): `public-pages`, `auth`, `i18n`, `trip-planner`. 101 assertions covering console errors, hydration mismatches, accessible names, nested interactives, WCAG 2.5.8 tap targets, all five locales, and planner auth gating.

@@ -36,6 +36,35 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1g. The planner does not know the car's actual battery
+`map-client.tsx:264` is `useState(80)` — a slider. `POST /api/trip-plan` prefers
+the body's `startSoc` and its only fallback reads `mock_vehicle_state`, so a
+genuinely linked Tesla's SoC is never consulted on the planning path even though
+`/api/vehicles/[id]/state` has branched on live since the integration landed.
+
+This is the single largest gap against ABRP, whose entire value is planning from
+the real battery. It is also the cheapest to close, and only possible at all
+because the car is now linked — the clearest answer to whether the Tesla
+integration earns its keep.
+
+Related accuracy defects, all with tests that currently assert the WRONG number
+and therefore lock it in as specification:
+  * `planner-arithmetic.test.ts:218` — a station ON the route is billed a
+    round-trip straight-line detour. The test computes the truth (~26% arrival
+    SoC) and asserts we report ~14%. A 12-point error, passing.
+  * `planner-arithmetic.test.ts:238` — a 100 km detour still reports arrival at
+    the SoC floor, and the plan stays `feasible`.
+  * The second pass re-routes via the chosen stops but never back-fills
+    per-stop `arriveSoc` / `departSoc` / `distanceFromStartKm`, so stop numbers
+    stay first-pass estimates.
+  * One hardcoded Tesla NMC charge curve is applied to every vehicle.
+  * Cost is 0 when a station price is unknown, so `totalChargingCostEur`
+    systematically under-reports and the "Cheapest" variant compares a figure
+    derived from distance alone.
+  * `ChargingStop` has no arrival time. Nothing in the plan says when the driver
+    reaches a stop, which is the prerequisite for any "you are N minutes away"
+    feature.
+
 ### 1f. A live vehicle records no charging sessions
 `charging_sessions` rows are written in exactly two places: the simulator
 (`src/lib/mock/persistence.ts`, on a mock tick) and the Supercharger sync
