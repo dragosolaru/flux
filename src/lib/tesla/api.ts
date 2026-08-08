@@ -86,7 +86,7 @@ export async function fetchVehicleData(params: {
   return mapVehicleData(json, params);
 }
 
-function mapVehicleData(
+export function mapVehicleData(
   json: TeslaVehicleDataResponse,
   params: { vehicleId: string; displayName: string },
 ): VehicleState {
@@ -122,9 +122,9 @@ function mapVehicleData(
     batteryHealthPct: estimateSoH(charge, r.vin),
     cellVoltages: null,
     // drive / motion
-    motionState: null,
+    motionState: mapMotionState(drive?.shift_state, charge?.charging_state),
     odometerKm: veh?.odometer != null ? veh.odometer * MILES_TO_KM : null,
-    speedKmh: null,
+    speedKmh: drive?.speed != null ? Math.round(drive.speed * MILES_TO_KM) : null,
     headingDeg: drive?.heading ?? null,
     // location
     latitude: drive?.latitude ?? null,
@@ -134,18 +134,25 @@ function mapVehicleData(
     exteriorTempC: climate?.outside_temp ?? null,
     isClimateOn: climate?.is_climate_on ?? null,
     driverTempC: climate?.driver_temp_setting ?? null,
-    passengerTempC: null,
-    hvacMode: null,
-    seatHeatingLevel: null,
-    steeringHeating: null,
+    passengerTempC: climate?.passenger_temp_setting ?? null,
+    hvacMode: climate?.climate_keeper_mode ?? null,
+    seatHeatingLevel: climate?.seat_heater_left ?? null,
+    steeringHeating: climate?.steering_wheel_heater ?? null,
     // body / security
     isLocked: veh?.locked ?? null,
-    doorsOpen: null,
-    windowsOpen: null,
-    isTrunkOpen: null,
-    isFrunkOpen: null,
+    doorsOpen: mapOpenings(veh, ["df", "pf", "dr", "pr"]),
+    windowsOpen: mapOpenings(veh, [
+      "fd_window",
+      "fp_window",
+      "rd_window",
+      "rp_window",
+    ]),
+    isTrunkOpen: isOpen(veh?.rt),
+    isFrunkOpen: isOpen(veh?.ft),
     isSentryMode: veh?.sentry_mode ?? null,
-    isDashcamRecording: null,
+    isDashcamRecording: veh?.dashcam_state != null
+      ? veh.dashcam_state === "Recording"
+      : null,
     // Read from the car rather than hardcoded null. Flux could send
     // precondition_max but never show whether it took effect — the field was
     // written only by the simulator, so a linked car reported "unknown"
@@ -154,17 +161,85 @@ function mapVehicleData(
     isBatteryPreconditioning: climate?.battery_heater ?? climate?.battery_heater_on ?? null,
     // software
     softwareVersion: veh?.car_version ?? null,
-    updateAvailable: null,
-    updateVersionLabel: null,
+    // Tesla reports "available", "downloading", "downloading_wifi_wait",
+    // "scheduled" and "installing" here; anything other than an empty status
+    // means there is an update the driver has not taken yet.
+    updateAvailable: veh?.software_update
+      ? !!veh.software_update.status
+      : null,
+    updateVersionLabel: veh?.software_update?.version || null,
     serviceDueAt: null,
     // tpms
-    tirePressures: null,
+    tirePressures: mapTirePressures(veh),
     // scores
     safetyScore: null,
     efficiencyScore: null,
     // metadata
     recordedAt: new Date().toISOString(),
   };
+}
+
+type VehStateFields = NonNullable<
+  NonNullable<TeslaVehicleDataResponse["response"]>["vehicle_state"]
+>;
+
+/** Tesla sends openings as numbers where 0 is closed, not booleans. */
+function isOpen(v: number | null | undefined): boolean | null {
+  return v == null ? null : v !== 0;
+}
+
+/**
+ * Doors and windows in Flux's left/right order, from Tesla's driver/passenger
+ * naming. Right-hand-drive cars would mirror, but Tesla reports the physical
+ * side regardless of the wheel, so no swap is needed.
+ *
+ * All four have to be present: a half-asleep car that reports two of them
+ * would otherwise render "closed" for the two it never mentioned.
+ */
+function mapOpenings(
+  veh: VehStateFields | null,
+  [fl, fr, rl, rr]: (keyof VehStateFields)[],
+) {
+  if (!veh) return null;
+  const vals = [fl, fr, rl, rr].map((k) => isOpen(veh[k] as number | null | undefined));
+  if (vals.some((v) => v === null)) return null;
+  return {
+    frontLeft: vals[0]!,
+    frontRight: vals[1]!,
+    rearLeft: vals[2]!,
+    rearRight: vals[3]!,
+  };
+}
+
+/** Tesla reports tyre pressure in bar; the rest of Flux works in kPa. */
+function mapTirePressures(veh: VehStateFields | null) {
+  if (!veh) return null;
+  const bar = [
+    veh.tpms_pressure_fl,
+    veh.tpms_pressure_fr,
+    veh.tpms_pressure_rl,
+    veh.tpms_pressure_rr,
+  ];
+  if (bar.some((v) => v == null)) return null;
+  const [fl, fr, rl, rr] = bar.map((v) => Math.round(v! * 100));
+  return {
+    frontLeftKpa: fl,
+    frontRightKpa: fr,
+    rearLeftKpa: rl,
+    rearRightKpa: rr,
+  };
+}
+
+function mapMotionState(
+  shift: string | null | undefined,
+  charging: string | null | undefined,
+): VehicleState["motionState"] {
+  if (charging === "Charging") return "charging";
+  // Plugged in but not drawing power — "Complete" and "Stopped" both mean the
+  // cable is still attached.
+  if (charging === "Complete" || charging === "Stopped") return "plugged-idle";
+  if (shift == null) return null;
+  return shift === "P" ? "parked" : "driving";
 }
 
 export async function sendVehicleCommand(params: {
@@ -232,7 +307,7 @@ const DEFAULT_RATED_RANGE_MILES = 330;
  * Result is clamped to [50, 105] and rounded to 1 decimal.
  */
 function estimateSoH(
-  charge: import("@/types/tesla").TeslaChargeState | null,
+  charge: Partial<import("@/types/tesla").TeslaChargeState> | null,
   vin: string | undefined,
 ): number | null {
   if (!charge) return null;

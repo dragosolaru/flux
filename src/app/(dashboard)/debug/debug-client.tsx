@@ -67,7 +67,16 @@ interface DebugPayload {
   sources: { source: string; rows: number }[];
   recentRuns: IngestRun[];
   config: Record<string, boolean | string>;
-  tesla?: { steps: { step: string; ok: boolean; blocks: string }[]; nextStep: string | null };
+  tesla?: {
+    steps: { step: string; ok: boolean; blocks: string }[];
+    nextStep: string | null;
+    grants?: {
+      vehicle: string;
+      granted: string[];
+      missing: string[];
+      updatedAt: string | null;
+    }[];
+  };
   roadmap?: {
     goal: string;
     milestones: { goal: string; nextStep: string; state: "done" | "todo" | "manual" }[];
@@ -698,6 +707,42 @@ export function DebugClient() {
               </li>
             ))}
           </ol>
+          {tesla.grants && tesla.grants.length > 0 && (
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Granted permissions
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tesla&apos;s consent screen is a tickbox per permission, so a grant can come
+                back narrower than what was asked for. Anything missing here was unticked
+                during sign-in — reconnect and use &quot;Select all&quot;.
+              </p>
+              {tesla.grants.map((g) => (
+                <div key={g.vehicle} className="space-y-1">
+                  <div className="text-xs font-medium">{g.vehicle}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {g.granted.map((s) => (
+                      <span
+                        key={s}
+                        className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-[10px] text-green-400"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                    {g.missing.map((s) => (
+                      <span
+                        key={s}
+                        className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-400 line-through"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-2 border-t border-border/60 pt-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Partner account (EU)

@@ -153,10 +153,13 @@
     },
     "connectTesla": {
       "permission": [
-        "Fahrzeugstatus, Standort und Ladezustand lesen",
-        "Fahrzeugbefehle senden (Verriegeln, Klima, Hupe, Blinken)",
-        "Laden verwalten — Ladelimit setzen, Sitzungen starten/stoppen",
-        "Zugriffstokens in deinem Namen im Hintergrund erneuern"
+        "Fahrzeuginformationen — Ladung, Klima, Türen, Reifen, Software",
+        "Fahrzeugstandort — nötig für Karte, Routenplanung und Ladesäulen in der Nähe",
+        "Fahrzeugbefehle — verriegeln, Klima, Hupe, Lichthupe, Fernstart",
+        "Ladeverwaltung — Ladelimit, Start/Stopp, Ladeverlauf",
+        "Profilinformationen — die Kontaktdaten deines Tesla-Kontos",
+        "Energieprodukte — Powerwall und Solar, sofern im Konto vorhanden",
+        "Zugriffstoken in deinem Namen im Hintergrund erneuern"
       ],
       "title": "Verbinde deinen Tesla",
       "description": "Flux nutzt die offizielle Tesla Fleet API. Wir sehen niemals dein Passwort — du meldest dich direkt bei Tesla an.",

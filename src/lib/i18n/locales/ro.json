@@ -153,10 +153,13 @@
     },
     "connectTesla": {
       "permission": [
-        "Citește starea vehiculului, locația și starea de încărcare",
-        "Trimite comenzi vehiculului (blocare, climatizare, claxon, semnalizare)",
-        "Gestionează încărcarea — setează limita, pornește/oprește sesiuni",
-        "Reîmprospătează tokenurile de acces în numele tău, în fundal"
+        "Informații despre vehicul — încărcare, climatizare, uși, anvelope, software",
+        "Locația vehiculului — necesară pentru hartă, planificarea traseului și stațiile din apropiere",
+        "Comenzile vehiculului — blocare, climatizare, claxon, semnalizare, pornire de la distanță",
+        "Gestionarea încărcării — limită, pornire/oprire, istoricul încărcărilor",
+        "Informații de profil — datele de contact din contul tău Tesla",
+        "Produse energetice — Powerwall și solar, dacă există în cont",
+        "Reîmprospătarea token-urilor de acces în fundal, în numele tău"
       ],
       "title": "Conectează-ți Tesla",
       "description": "Flux folosește API-ul oficial Tesla Fleet. Nu îți vedem niciodată parola — te autentifici direct cu Tesla.",

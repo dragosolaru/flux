@@ -196,9 +196,28 @@ and a car registered in Europe is not visible from the NA host.
 
 The app needs both OAuth grant types enabled in the portal: `client-credentials`
 for this partner token, and `authorization-code` for linking a driver's account.
-Check the scopes too — `TESLA_SCOPES` requests `openid`, `offline_access`,
-`vehicle_device_data`, `vehicle_cmds` and `vehicle_charging_cmds`, and a scope
-the app was not granted is refused at the authorize step, not at build time.
+Check the scopes too. There are **two** lists in `src/lib/tesla/constants.ts`,
+deliberately different:
+
+- `TESLA_SCOPES` — the driver flow. Every scope Tesla offers: `openid`,
+  `offline_access`, `user_data`, `vehicle_device_data`, `vehicle_location`,
+  `vehicle_cmds`, `vehicle_charging_cmds`, `energy_device_data`, `energy_cmds`.
+- `TESLA_PARTNER_SCOPES` — the `client_credentials` token above, kept to the
+  original four. It authenticates the app, not a driver, and widening it would
+  make the registration check fail whenever the portal app lacks one of the
+  newer scopes.
+
+**Every scope in `TESLA_SCOPES` must be ticked on the app in the developer
+portal.** A scope the app was not granted is refused at the authorize step, not
+at build time — the driver gets a Tesla error page instead of the consent screen.
+
+**`vehicle_location` is not optional.** Tesla split location out of
+`vehicle_device_data` in November 2024 and cut off grants without it in January
+2025. It also needs `location_data` naming in the `vehicle_data?endpoints=`
+query (firmware 2023.38+ omits position otherwise). Miss either half and the car
+answers every poll normally with `latitude`/`longitude` null — which reads as a
+broken map, not a missing permission. `/debug` → "Go live with Tesla" lists the
+granted scopes per car and warns when this one is absent.
 
 > **Re-registering does not rotate the key.** A `POST` for a domain that is
 > already registered returns the existing record untouched — observed in the
@@ -231,6 +250,11 @@ Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla
 app installed and approves. Without pairing, signed commands are rejected even
 with everything above correct.
 
-> Scope note: `TESLA_SCOPES` requests `vehicle_cmds`, which grants unlock and
-> remote start. `docs/TODO.md` item 1b tracks offering a read-only link for
-> owners who only want cost and trip tracking.
+> Scope note: `TESLA_SCOPES` requests everything, including `vehicle_cmds`
+> (unlock, remote start), `vehicle_location` and `user_data`. `docs/TODO.md`
+> item 1b tracks offering a read-only link for owners who only want cost and
+> trip tracking. The consent screen has a tickbox per permission, so a driver
+> can already hand back a subset — the refresh call sends no `scope` for exactly
+> that reason (OAuth forbids widening a grant on refresh, so pinning the full
+> list would have broken every refresh for a partial grant), and the granted set
+> is stored on the `tesla_tokens` row as Tesla reported it.

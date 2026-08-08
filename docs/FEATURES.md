@@ -396,7 +396,7 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 **What:** Background-aware alerts that reach the user when the app is closed. The poll-vehicles cron checks each stationary vehicle every 15 min, fetches weather at its location, runs a pure alert engine (rain + open windows, freeze/snow, heat ≥35°C, hail/severe storm), and dispatches matching alerts through every enabled channel: **Web Push**, **Email** (Resend), **WhatsApp** (Twilio). A per-(vehicle, alert-type) session key prevents re-firing within one parking session.
 
-**Status:** Ships dark behind `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`. When unset/false the settings card is hidden, notification API routes return 404, and the cron no-ops. **Known gap:** live Tesla telemetry returns `windowsOpen = null`, so the rain+windows alert only fires for mock vehicles.
+**Status:** Ships dark behind `NEXT_PUBLIC_NOTIFICATIONS_ENABLED`. When unset/false the settings card is hidden, notification API routes return 404, and the cron no-ops. The rain+windows alert now works on live cars too — `mapVehicleData` reads `fd_window`/`fp_window`/`rd_window`/`rp_window` (it returned `windowsOpen = null` regardless of what Tesla sent), so the alert is no longer mock-only. It still needs all four reported: a half-asleep car yields `null` and the alert holds rather than guessing.
 
 **How to use:** Settings → *Notificări* card (toggle channels + alert types; Test button sends an instant push). Ops: set `NEXT_PUBLIC_NOTIFICATIONS_ENABLED=true`, `CRON_SECRET`, VAPID keys, `RESEND_API_KEY`, Twilio creds. Cron `POST /api/cron/poll-vehicles` runs `0 6 * * *` (daily; `vercel.json` is the truth — this said `*/15` for a long time and was simply wrong) with `Authorization: Bearer <CRON_SECRET>`. Push management: `POST /api/push/subscribe`, `POST /api/push/test`, `GET /api/push/vapid-public-key`. Prefs: `GET/PATCH /api/me/notification-preferences`.
 
@@ -503,8 +503,41 @@ all five locales; unknown codes fall back to the generic `error` message.
 
 **Dependencies:** Tesla Fleet API, Supabase, `LIVE_INTEGRATIONS=tesla`.
 
-**Tesla account safety:** linking grants `vehicle_device_data`, `vehicle_cmds`
-and `vehicle_charging_cmds`, so a linked account exposes live location plus
+### Scopes and what a linked car actually reports
+
+**What:** `TESLA_SCOPES` requests every scope the Fleet API offers — `openid`,
+`offline_access`, `user_data`, `vehicle_device_data`, **`vehicle_location`**,
+`vehicle_cmds`, `vehicle_charging_cmds`, `energy_device_data`, `energy_cmds`.
+`TESLA_PARTNER_SCOPES` stays at the original four for the `client_credentials`
+partner token (see `docs/VEHICLE-CONNECTION.md` for why they differ).
+
+**Location needs both halves:** the `vehicle_location` scope *and* `location_data`
+in the `vehicle_data?endpoints=` list. Tesla split location out of
+`vehicle_device_data` in Nov 2024; firmware 2023.38+ omits position unless the
+endpoint is named. Missing either, the car answers normally with null coordinates.
+
+**Grants can be narrower than the request.** Tesla's consent screen is a tickbox
+per permission, so the granted set is read from the token response and stored on
+`tesla_tokens.scopes` (it used to be a hardcoded list that did not even match the
+request). The refresh call sends no `scope` at all — OAuth forbids widening a
+grant on refresh, so pinning the full list would reject every refresh for a
+partial grant. `/debug` → "Go live with Tesla" shows granted vs missing per car
+and warns when `vehicle_location` is absent.
+
+**`mapVehicleData` now maps what it receives.** Doors, windows, frunk/boot, tyre
+pressures, speed, shift-derived motion state, pending software update, dashcam,
+passenger temp, seat/steering heating — all previously hardcoded `null` while
+Tesla was sending them. Three conversions are pinned by tests: `tpms_pressure_*`
+is **bar** (×100 → kPa), `drive_state.speed` is **mph**, and openings are
+**numbers where 0 is closed**, not booleans. Partial reports map to `null` rather
+than a confident "closed" — a half-asleep car naming two of four doors says
+nothing about the other two.
+
+**Key files:** `src/lib/tesla/constants.ts`, `src/lib/tesla/api.ts`,
+`src/types/tesla.ts`, `src/lib/tesla/__tests__/map-vehicle-data.test.ts`.
+
+**Tesla account safety:** linking grants the full scope set, so a linked account
+exposes live location and profile details plus
 unlock, climate, charge port and remote start. Tokens are encrypted at rest
 (AES-256-GCM). Three controls sit on top: `DELETE /api/tesla/connection` revokes
 each refresh token at Tesla and deletes the stored rows (Settings → Advanced →

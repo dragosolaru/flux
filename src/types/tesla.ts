@@ -9,6 +9,12 @@ export interface TeslaTokenResponse {
   expires_in: number;
   token_type: "Bearer";
   state?: string;
+  /**
+   * What was actually granted, space-separated. The consent screen lets the
+   * driver untick individual permissions, so this can be narrower than what we
+   * asked for — never assume the request list came back.
+   */
+  scope?: string;
 }
 
 export interface TeslaVehicleListResponse {
@@ -38,6 +44,13 @@ export interface TeslaClimateState {
   outside_temp: number;
   is_climate_on: boolean;
   driver_temp_setting: number;
+  passenger_temp_setting?: number | null;
+  /** 0–3. Tesla numbers the seats; index 0 is the driver. */
+  seat_heater_left?: number | null;
+  steering_wheel_heater?: boolean | null;
+  /** "off" | "on" | "dog" | "camp" */
+  climate_keeper_mode?: string | null;
+  defrost_mode?: number | null;
   /**
    * Whether the battery heater is running — i.e. the car is preconditioning.
    *
@@ -53,7 +66,16 @@ export interface TeslaDriveState {
   latitude: number;
   longitude: number;
   heading: number;
-  speed: number | null;
+  speed: number | null; // mph, null when parked
+  /** "P" | "D" | "R" | "N", null when the car is asleep. */
+  shift_state?: string | null;
+}
+
+export interface TeslaSoftwareUpdate {
+  status?: string | null;
+  version?: string | null;
+  download_perc?: number | null;
+  install_perc?: number | null;
 }
 
 export interface TeslaVehicleState {
@@ -61,6 +83,29 @@ export interface TeslaVehicleState {
   odometer: number; // miles
   sentry_mode: boolean;
   car_version: string;
+  /**
+   * Openings. Tesla reports these as numbers where 0 is closed, not booleans,
+   * and names them by side: d = driver, p = passenger, f = front, r = rear.
+   * `ft`/`rt` are the frunk and the boot.
+   */
+  df?: number | null;
+  dr?: number | null;
+  pf?: number | null;
+  pr?: number | null;
+  ft?: number | null;
+  rt?: number | null;
+  fd_window?: number | null;
+  fp_window?: number | null;
+  rd_window?: number | null;
+  rp_window?: number | null;
+  /** Bar, not kPa — around 2.9 on a correctly inflated tyre. */
+  tpms_pressure_fl?: number | null;
+  tpms_pressure_fr?: number | null;
+  tpms_pressure_rl?: number | null;
+  tpms_pressure_rr?: number | null;
+  /** "Recording" | "Unavailable" */
+  dashcam_state?: string | null;
+  software_update?: TeslaSoftwareUpdate | null;
 }
 
 export interface TeslaVehicleDataResponse {
@@ -71,10 +116,10 @@ export interface TeslaVehicleDataResponse {
     display_name: string;
     state: TeslaVehicleSummary["state"];
     // Sub-objects can be omitted when the car is asleep or partly responsive.
-    charge_state?: TeslaChargeState | null;
-    climate_state?: TeslaClimateState | null;
+    charge_state?: Partial<TeslaChargeState> | null;
+    climate_state?: Partial<TeslaClimateState> | null;
     drive_state?: Partial<TeslaDriveState> | null;
-    vehicle_state?: TeslaVehicleState | null;
+    vehicle_state?: Partial<TeslaVehicleState> | null;
   };
 }
 

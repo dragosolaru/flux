@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { errorContext, logServer } from "@/lib/debug-log";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { exchangeCodeForTokens, verifyState } from "@/lib/tesla/auth";
+import { TESLA_SCOPES } from "@/lib/tesla/constants";
 import { fetchVehicleList } from "@/lib/tesla/api";
 import { encryptToken } from "@/lib/tesla/tokens";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -187,7 +188,12 @@ export async function GET(req: NextRequest) {
       access_token_enc: encryptToken(tokens.access_token),
       refresh_token_enc: encryptToken(tokens.refresh_token),
       expires_at: expiresAt,
-      scopes: ["openid", "offline_access", "vehicle_device_data", "vehicle_cmds"],
+      // What Tesla granted, not what we asked for. The consent screen has a
+      // tickbox per permission, so a driver can hand back less than the
+      // request — and this column was a hardcoded list that did not even match
+      // the request (it omitted vehicle_charging_cmds), so it described
+      // nothing real. Falls back to the request only if Tesla omits the field.
+      scopes: (tokens.scope ?? TESLA_SCOPES).split(" ").filter(Boolean),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "vehicle_id" },

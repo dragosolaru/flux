@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireAdmin } from "@/lib/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { TESLA_REGIONS, TESLA_SCOPES, TESLA_TOKEN_URL } from "@/lib/tesla/constants";
+import { TESLA_PARTNER_SCOPES, TESLA_REGIONS, TESLA_TOKEN_URL } from "@/lib/tesla/constants";
 import { logServer } from "@/lib/debug-log";
 
 // Registers the Tesla partner account, and reports whether it is registered.
@@ -69,7 +69,7 @@ async function partnerToken(audience: string): Promise<
       client_id: clientId,
       client_secret: clientSecret,
       // The partner token carries the app's scopes, not a driver's.
-      scope: TESLA_SCOPES,
+      scope: TESLA_PARTNER_SCOPES,
       audience,
     }),
     signal: AbortSignal.timeout(20_000),

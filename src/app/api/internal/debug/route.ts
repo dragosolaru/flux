@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
 import { GOAL, resolveRoadmap } from "@/lib/roadmap";
+import { TESLA_SCOPES } from "@/lib/tesla/constants";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -126,6 +127,35 @@ export async function GET() {
     teslaSteps.find((s) => !s.ok)?.step ??
     "partner account registration — use the button below to check";
 
+  // What the driver actually granted, per linked car. Worth surfacing because
+  // Tesla's consent screen is a set of tickboxes, so a grant can come back
+  // narrower than the request — and the failure is silent. Without
+  // vehicle_location in particular the car answers every poll normally and
+  // just never has a position, which looks like a bug in the map.
+  const { data: grantRows } = await supabase
+    .from("tesla_tokens")
+    .select("scopes, updated_at, vehicles!inner(display_name, user_id)")
+    .eq("user_id", admin.userId);
+
+  const teslaGrants = (grantRows ?? []).map((row) => {
+    const granted: string[] = Array.isArray(row.scopes) ? row.scopes : [];
+    const vehicle = row.vehicles as unknown as { display_name?: string } | null;
+    return {
+      vehicle: vehicle?.display_name ?? "unknown",
+      granted,
+      missing: TESLA_SCOPES.split(" ").filter((s) => !granted.includes(s)),
+      updatedAt: row.updated_at as string | null,
+    };
+  });
+
+  for (const g of teslaGrants) {
+    if (g.missing.includes("vehicle_location")) {
+      warnings.push(
+        `${g.vehicle}: vehicle_location was not granted — the car will never report a position. Reconnect and tick every box.`,
+      );
+    }
+  }
+
   if (!config.redis) {
     warnings.push(
       "Upstash Redis is not configured — rate limiting falls back to per-instance memory and every map read re-ingests.",
@@ -145,7 +175,7 @@ export async function GET() {
     sources: sourceCounts,
     recentRuns: runs ?? [],
     config,
-    tesla: { steps: teslaSteps, nextStep: teslaNextStep },
+    tesla: { steps: teslaSteps, nextStep: teslaNextStep, grants: teslaGrants },
     roadmap: { goal: GOAL, milestones: resolveRoadmap(config) },
     warnings,
   });

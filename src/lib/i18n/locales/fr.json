@@ -153,10 +153,13 @@
     },
     "connectTesla": {
       "permission": [
-        "Lire l'état du véhicule, la localisation et l'état de charge",
-        "Envoyer des commandes au véhicule (verrouillage, climatisation, klaxon, appels de phares)",
-        "Gérer la recharge — définir la limite, démarrer/arrêter les sessions",
-        "Renouveler les jetons d'accès en votre nom en arrière-plan"
+        "Informations du véhicule — charge, climatisation, portes, pneus, logiciel",
+        "Position du véhicule — nécessaire à la carte, à la planification et aux bornes proches",
+        "Commandes du véhicule — verrouillage, climatisation, klaxon, appels de phares, démarrage à distance",
+        "Gestion de la charge — limite, démarrage/arrêt, historique de charge",
+        "Informations de profil — les coordonnées de votre compte Tesla",
+        "Produits énergétiques — Powerwall et solaire, si votre compte en possède",
+        "Renouveler les jetons d'accès en arrière-plan, en votre nom"
       ],
       "title": "Connectez votre Tesla",
       "description": "Flux utilise l'API officielle Tesla Fleet. Nous ne voyons jamais votre mot de passe — vous vous connectez directement avec Tesla.",

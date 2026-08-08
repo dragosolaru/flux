@@ -103,11 +103,14 @@ export async function refreshTeslaTokens(params: {
   refreshToken: string;
   clientId: string;
 }): Promise<TeslaTokenResponse> {
+  // No `scope` here on purpose. OAuth lets a refresh narrow the grant but never
+  // widen it, and the consent screen lets the driver untick any permission —
+  // so pinning the full TESLA_SCOPES list meant that anyone who granted a
+  // subset had every refresh rejected. Omitted, the grant refreshes as issued.
   const body = new URLSearchParams({
     grant_type: "refresh_token",
     client_id: params.clientId,
     refresh_token: params.refreshToken,
-    scope: TESLA_SCOPES,
   });
 
   const res = await fetch(TESLA_TOKEN_URL, {

@@ -153,9 +153,12 @@
     },
     "connectTesla": {
       "permission": [
-        "Read vehicle status, location, and charge state",
-        "Send vehicle commands (lock, climate, horn, flash)",
-        "Manage charging — set charge limit, start/stop sessions",
+        "Vehicle information — charge, climate, doors, tyres, software",
+        "Vehicle location — needed for the map, trip planning and nearby chargers",
+        "Vehicle commands — lock, climate, horn, flash, remote start",
+        "Charging management — charge limit, start/stop, charging history",
+        "Profile information — the contact details on your Tesla account",
+        "Energy products — Powerwall and solar, if your account has any",
         "Refresh access tokens on your behalf in the background"
       ],
       "title": "Connect your Tesla",

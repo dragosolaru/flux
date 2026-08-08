@@ -153,10 +153,13 @@
     },
     "connectTesla": {
       "permission": [
-        "Jármű állapotának, helyének és töltöttségének olvasása",
-        "Járműparancsok küldése (zárás, klíma, duda, villogás)",
-        "Töltés kezelése — töltési limit beállítása, munkamenetek indítása/leállítása",
-        "Hozzáférési tokenek megújítása a nevedben a háttérben"
+        "Járműinformációk — töltés, klíma, ajtók, gumiabroncsok, szoftver",
+        "Jármű helyzete — a térképhez, útvonaltervezéshez és a közeli töltőkhöz szükséges",
+        "Járműparancsok — zárás, klíma, duda, fényjelzés, távindítás",
+        "Töltéskezelés — töltési limit, indítás/leállítás, töltési előzmények",
+        "Profiladatok — a Tesla-fiókod elérhetőségi adatai",
+        "Energiatermékek — Powerwall és napelem, ha van a fiókban",
+        "Hozzáférési tokenek frissítése a nevedben, a háttérben"
       ],
       "title": "Csatlakoztasd a Teslát",
       "description": "A Flux a hivatalos Tesla Fleet API-t használja. Soha nem látjuk a jelszavadat — közvetlenül a Teslánál jelentkezel be.",
