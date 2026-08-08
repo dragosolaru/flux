@@ -887,7 +887,8 @@
     "area_hint": "Long-press the map to load chargers there",
     "share_route_btn": "Share route",
     "share_link_copied": "Route link copied",
-    "clear_plan": "Clear route"
+    "clear_plan": "Clear route",
+    "assumed_model_label": "Assumed model"
   },
   "notFoundPage": {
     "heading": "Page not found",

@@ -92,6 +92,10 @@ const bodySchema = z.object({
   startSoc: z.number().min(1).max(100).optional(),
   arrivalSocPct: z.number().min(0).max(50).optional(),
   destination: coordSchema,
+  // Which model to assume when no vehicle is selected. Without it the planner
+  // used a Model 3 for everyone, so someone planning for a Model X — or with no
+  // car in the app at all — got the range and charge curve of a different one.
+  model: z.string().max(60).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -222,8 +226,10 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // No vehicleId: use defaults (Model 3 LR spec, startSoc 80)
-  const spec = getModelSpec("tesla", "Model 3");
+  // No vehicleId: use the requested model, or a Model 3 when none was named.
+  // getModelSpec falls back to the first model for an unknown name, so a stale
+  // or misspelled value degrades instead of throwing.
+  const spec = getModelSpec("tesla", parsed.data.model ?? "Model 3");
   const origin = bodyOrigin ?? { lat: 44.4268, lng: 26.1025, label: "Bucharest" };
   const currentSocPct = bodyStartSoc ?? 80;
   const weather = await getWeatherAsync(origin.lat, origin.lng);

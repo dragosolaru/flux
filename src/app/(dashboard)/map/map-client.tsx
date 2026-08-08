@@ -142,6 +142,11 @@ const DEFAULT_BBOX: ViewportBBox = {
   maxLng: DEFAULT_LNG + 8,
 };
 
+// Models the planner has real specs for (src/lib/brands/models.ts). Listed here
+// rather than derived so the picker cannot silently offer a model the API would
+// then fall back to a Model 3 for.
+const PLANNABLE_MODELS = ["Model 3", "Model Y", "Model S", "Model X"] as const;
+
 function toBBox(lat: number, lng: number): ViewportBBox {
   return { minLat: lat - 0.5, minLng: lng - 0.7, maxLat: lat + 0.5, maxLng: lng + 0.7 };
 }
@@ -262,6 +267,10 @@ export function MapClient() {
   const { data: vehicles } = useVehicles();
   const { selectedVehicleId } = useVehicleContext();
   const [vehicleId, setVehicleId] = useState(() => selectedVehicleId ?? "");
+  // Which model to plan for when no vehicle is selected. The planner used a
+  // Model 3 for everyone, so a Model X owner — or anyone with no car in the app
+  // — was quoted the range and charge curve of a different vehicle.
+  const [assumedModel, setAssumedModel] = useState<string>(PLANNABLE_MODELS[0]);
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);
   // The planner starts from the car's real battery. It used to start from a
@@ -354,6 +363,7 @@ export function MapClient() {
         ...(vehicleId ? { vehicleId } : {}),
         origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
         startSoc,
+        ...(vehicleId ? {} : { model: assumedModel }),
         arrivalSocPct: arrivalSoc,
         destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
       });
@@ -959,6 +969,20 @@ export function MapClient() {
                             </option>
                           ))}
                         </select>
+                        {!vehicleId && (
+                          <select
+                            value={assumedModel}
+                            onChange={(e) => setAssumedModel(e.target.value)}
+                            aria-label={tTrip("assumed_model_label")}
+                            className="auth-input mt-1.5 w-full appearance-none pr-5"
+                          >
+                            {PLANNABLE_MODELS.map((m) => (
+                              <option key={m} value={m}>
+                                {m}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
                       </div>
                     </div>
@@ -1146,6 +1170,8 @@ export function MapClient() {
               vehicles={vehicles ?? []}
               vehicleId={vehicleId}
               setVehicleId={setVehicleId}
+              assumedModel={assumedModel}
+              setAssumedModel={setAssumedModel}
               origin={origin}
               setOrigin={setOrigin}
               destination={destination}
@@ -1861,6 +1887,8 @@ interface PlanContentProps {
   vehicles: Vehicle[];
   vehicleId: string;
   setVehicleId: (v: string) => void;
+  assumedModel: string;
+  setAssumedModel: (v: string) => void;
   origin: GeoPoint | null;
   setOrigin: (p: GeoPoint | null) => void;
   destination: GeoPoint | null;
@@ -1904,6 +1932,8 @@ function PlanContent({
   vehicles,
   vehicleId,
   setVehicleId,
+  assumedModel,
+  setAssumedModel,
   origin,
   setOrigin,
   destination,
@@ -1995,9 +2025,29 @@ function PlanContent({
         </div>
       </div>
 
+      <div>
+        <label className="mb-1 block text-xs text-muted-foreground">{tTrip("vehicle_label")}</label>
+        {/* Rendered even with an empty garage: without a vehicle the planner
+            still needs to know which model to assume, and the block used to
+            disappear entirely — leaving no way to say. */}
+        {!vehicleId && (
+          <select
+            value={assumedModel}
+            onChange={(e) => setAssumedModel(e.target.value)}
+            aria-label={tTrip("assumed_model_label")}
+            className="auth-input mb-1.5 w-full appearance-none pr-5"
+          >
+            {PLANNABLE_MODELS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
       {vehicles.length > 0 && (
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">{tTrip("vehicle_label")}</label>
           <div className="relative">
             <select
               value={vehicleId}

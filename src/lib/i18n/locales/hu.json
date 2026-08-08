@@ -887,7 +887,8 @@
     "area_hint": "Nyomja hosszan a térképet a töltők betöltéséhez",
     "share_route_btn": "Útvonal megosztása",
     "share_link_copied": "Útvonal-hivatkozás másolva",
-    "clear_plan": "Útvonal törlése"
+    "clear_plan": "Útvonal törlése",
+    "assumed_model_label": "Feltételezett modell"
   },
   "notFoundPage": {
     "heading": "Az oldal nem található",

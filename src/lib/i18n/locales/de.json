@@ -887,7 +887,8 @@
     "area_hint": "Karte lange drücken, um dort Ladepunkte zu laden",
     "share_route_btn": "Route teilen",
     "share_link_copied": "Routenlink kopiert",
-    "clear_plan": "Route löschen"
+    "clear_plan": "Route löschen",
+    "assumed_model_label": "Angenommenes Modell"
   },
   "notFoundPage": {
     "heading": "Seite nicht gefunden",

@@ -887,7 +887,8 @@
     "area_hint": "Ține apăsat pe hartă ca să aduci stațiile de acolo",
     "share_route_btn": "Trimite traseul",
     "share_link_copied": "Link-ul traseului a fost copiat",
-    "clear_plan": "Șterge traseul"
+    "clear_plan": "Șterge traseul",
+    "assumed_model_label": "Model presupus"
   },
   "notFoundPage": {
     "heading": "Pagina nu a fost găsită",

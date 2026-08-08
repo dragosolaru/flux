@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -37,6 +38,21 @@ export function InactiveVehiclesList({
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  /**
+   * Reactivating or deleting a vehicle has to reach BOTH caches.
+   *
+   * router.refresh() alone re-renders the server components on this page, but
+   * every screen that lists vehicles reads the TanStack query, which has a 60 s
+   * staleTime and no idea anything changed. So a vehicle deleted here kept
+   * appearing in the trip planner's picker — the report that found this — and
+   * in the garage, until the cache happened to go stale.
+   */
+  async function refreshVehicles() {
+    await queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+    router.refresh();
+  }
   const [open, setOpen] = useState(false);
   const [pendingReactivate, setPendingReactivate] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -49,7 +65,7 @@ export function InactiveVehiclesList({
     setPendingReactivate(vehicleId);
     try {
       await vehiclesApi.update(vehicleId, { is_active: true });
-      router.refresh();
+      await refreshVehicles();
     } catch {
       // Network error — UI unchanged; user can retry
     } finally {
@@ -64,7 +80,7 @@ export function InactiveVehiclesList({
       await vehiclesApi.remove(pendingDelete);
       setPendingDelete(null);
       setDeleteChecked(false);
-      router.refresh();
+      await refreshVehicles();
     } catch {
       // Network error — UI unchanged; user can retry
     } finally {
