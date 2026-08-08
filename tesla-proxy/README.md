@@ -27,28 +27,49 @@ Works, and keeps the command-signing key on hardware you own instead of a third
 party's. Coolify's Traefik terminates the public certificate and forwards plain
 HTTP, which is exactly what this image expects.
 
-1. **New Resource** → **Application** → your Git repository.
-2. Build Pack **Dockerfile**, Base Directory **`/tesla-proxy`**.
-3. **Environment Variables** → `TESLA_PRIVATE_KEY`, marked as a secret. The EC
-   private key PEM, raw or base64 — `entrypoint.sh` accepts either. Tick "Build
-   Variable? No"; it is only needed at runtime.
-4. **Ports Exposes**: `8080`.
-5. **Domains**: a real hostname, e.g. `https://tesla-proxy.example.com`. It must
-   be a hostname with a valid certificate, not an IP and not a self-signed one —
-   Vercel's `fetch` verifies the chain and will refuse anything else. Let Coolify
-   issue the Let's Encrypt certificate.
-6. Deploy, then set `TESLA_PROXY_BASE_URL=https://tesla-proxy.example.com` in
-   Vercel and redeploy Flux.
+`docker-compose.yml` declares the build, the port, the restart policy, the
+healthcheck and the hostname, so there is almost nothing to fill in by hand:
 
-Two requirements that are easy to miss: the host must be reachable from the
-public internet, because the callers are Vercel's serverless functions with no
-fixed egress addresses; and no custom Traefik labels are needed — if you find
-yourself setting `loadbalancer.server.scheme=https`, something is wrong, since
-the container publishes plain HTTP on purpose.
+1. **New Resource** → **Docker Compose** → your Git repository.
+2. Base Directory **`/tesla-proxy`**. Coolify finds `docker-compose.yml` there.
+3. **Environment Variables** → set `TESLA_PRIVATE_KEY`. It is the one value the
+   compose file deliberately leaves empty. EC private key PEM, raw or base64 —
+   `entrypoint.sh` takes either.
+4. Deploy. `SERVICE_FQDN_PROXY_8080` makes Coolify generate the hostname, route
+   it to container port 8080 and issue the Let's Encrypt certificate; the result
+   shows up in the UI and can be swapped for your own hostname.
+5. Set `TESLA_PROXY_BASE_URL` in Vercel to that hostname and redeploy Flux.
 
-Health check: `GET /api/1/vehicles` with no token should return **403** from
-Tesla. A **400**, a **502**, or a TLS error means the request never made it
-through the two hops inside the container.
+Prefer the click-through route? **Application** → Build Pack **Dockerfile**,
+Base Directory `/tesla-proxy`, Ports Exposes `8080`, the same environment
+variable, and a domain of your own. Same result, more steps.
+
+### The one thing that must not go in the file
+
+**Never put `TESLA_PRIVATE_KEY` in `docker-compose.yml`, the Dockerfile, or a
+committed `.env`.** That key signs unlock and remote-start commands. In git
+history it is compromised the moment the repo is cloned, and the only remedy is
+generating a new pair, re-registering the partner account, redeploying the
+public key and re-pairing the Virtual Key on every car. Coolify stores it
+encrypted and injects it at runtime; that is the whole point of the placeholder.
+
+### Two requirements that are easy to miss
+
+The host must be reachable from the **public internet** — the callers are
+Vercel's serverless functions, which have no fixed egress addresses — and it
+needs a real certificate for a real hostname, because their `fetch` verifies the
+chain and refuses an IP or a self-signed cert.
+
+No custom Traefik labels are needed. If you find yourself setting
+`loadbalancer.server.scheme=https`, something is wrong: the container publishes
+plain HTTP on purpose.
+
+Health check: `GET /api/1/vehicles` with no token should return **403**. The
+proxy rejects the missing token itself rather than asking Tesla — measured at
+1.5 ms — so this is free to poll and costs no Fleet API quota. **502** means
+Caddy is up but the loopback TLS hop behind it is not; **400** means something
+is speaking plain HTTP straight at the signing proxy; a TLS error means the
+public certificate is wrong. `docker-compose.yml` encodes exactly this check.
 
 > **The published URL is an open relay.** Tesla's own binary warns about this:
 > anyone who can reach it can forward requests to Tesla's API. They still need a

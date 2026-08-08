@@ -19,7 +19,10 @@ RUN git clone --depth 1 https://github.com/teslamotors/vehicle-command.git . \
 FROM caddy:2.8-alpine AS caddy
 
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates openssl
+# curl is for the healthcheck, which has to tell a 403 (alive, no token) from a
+# 502 (the loopback TLS hop is dead) — busybox wget collapses both into
+# "non-zero" and cannot.
+RUN apk add --no-cache ca-certificates openssl curl
 WORKDIR /app
 COPY --from=build /out/tesla-http-proxy /usr/local/bin/tesla-http-proxy
 COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy

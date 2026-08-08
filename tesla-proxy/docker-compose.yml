@@ -1,0 +1,48 @@
+# Coolify: New Resource → Docker Compose → point it at this repository with
+# Base Directory /tesla-proxy. Coolify reads this file, builds the image, asks
+# for the one secret below, and issues the certificate itself.
+#
+# The signing key is NOT in here and must never be. Committing it would put a
+# key that can unlock and drive cars into git history, and the only remedy then
+# is generating a new pair, re-registering the partner account and re-pairing
+# the Virtual Key on every vehicle. Coolify stores it encrypted; paste it there.
+
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    environment:
+      # Coolify's magic variable: it generates the public hostname for this
+      # service, points it at container port 8080, and gets the Let's Encrypt
+      # certificate. Leave it valueless — Coolify fills it in and shows the
+      # result in the UI, where it can be replaced with your own hostname.
+      #
+      # That hostname is what TESLA_PROXY_BASE_URL must be set to in Vercel.
+      - SERVICE_FQDN_PROXY_8080
+
+      # The EC P-256 command-signing key, raw PEM or base64 — entrypoint.sh
+      # takes either. Set the value in Coolify, not here. Left unset, the
+      # container exits at boot saying so, which is the intended failure: a
+      # proxy running without a key can only sign nothing.
+      - TESLA_PRIVATE_KEY=${TESLA_PRIVATE_KEY}
+
+    expose:
+      - "8080"
+
+    restart: unless-stopped
+
+    # 403 means the proxy answered and only lacked a token — healthy. 502 means
+    # Caddy is up but the loopback TLS hop behind it is not, and 000 means
+    # nothing answered at all. Both are unhealthy. The request never leaves the
+    # container: the proxy rejects a missing token itself rather than asking
+    # Tesla, so this costs no Fleet API quota.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/1/vehicles | grep -q '^[24]'
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

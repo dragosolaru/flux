@@ -234,8 +234,16 @@ granted scopes per car and warns when this one is absent.
 ### 4. Deploy the signing proxy
 
 See `tesla-proxy/README.md` — **Coolify** and **Fly** are both documented, and
-Coolify has the edge of keeping the signing key on your own hardware. Set
-`TESLA_PROXY_BASE_URL` to the resulting URL. Without it, every command on a
+Coolify has the edge of keeping the signing key on your own hardware.
+`tesla-proxy/docker-compose.yml` declares the build, port, restart policy,
+healthcheck and hostname, so a Coolify Docker Compose resource pointed at
+`/tesla-proxy` needs only `TESLA_PRIVATE_KEY` filled in. Set
+`TESLA_PROXY_BASE_URL` to the resulting URL.
+
+> The signing key never belongs in the compose file, the Dockerfile or a
+> committed `.env`. It signs unlock and remote-start; in git history it is
+> compromised on the first clone, and recovery means a new keypair, a new
+> partner registration and re-pairing the Virtual Key on every car. Without it, every command on a
 Model 3/Y/S/X built after mid-2021 fails — read-only vehicle data still works,
 so this is the step whose absence looks like "the app works but no button does
 anything".
