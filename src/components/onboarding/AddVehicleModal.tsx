@@ -172,10 +172,20 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
           role="dialog"
           aria-modal="true"
           aria-label={t("add_vehicle.title")}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
           onClick={(e: MouseEvent<HTMLDivElement>) => { if (e.target === e.currentTarget) close(); }}
         >
-          <div ref={dialogRef} className="w-full max-w-lg animate-in fade-in-0 slide-in-from-bottom-4 duration-200 max-h-[90dvh] overflow-y-auto rounded-[14px] bg-muted/40 px-5 py-4">
+          {/* Opaque, per the app's dialog convention (see ui/alert-dialog:
+              `rounded-xl border bg-background shadow-lg`). This was
+              `bg-muted/40` with no backdrop blur, so the page behind showed
+              straight through the form and both were unreadable. SlideUpMenu
+              gets away with `bg-background/85` only because it pairs it with
+              backdrop-blur-3xl — translucency needs the blur to read as
+              frosted rather than broken. */}
+          <div
+            ref={dialogRef}
+            className="max-h-[90dvh] w-full max-w-lg animate-in overflow-y-auto rounded-[14px] border border-border bg-background px-5 py-4 shadow-2xl fade-in-0 slide-in-from-bottom-4 duration-200"
+          >
             <div className="relative pb-3">
               <div className="mb-2 flex items-center gap-2">
                 <BrandLogo brand="tesla" className="size-6 text-red-400" />
