@@ -215,9 +215,12 @@ describe("planner arithmetic — failure modes", () => {
     }
   });
 
-  it("BUG: a station sitting ON the route is billed a round-trip detour, overstating distance and understating arrival SoC", async () => {
+  it("a station sitting ON the route costs no detour", async () => {
+    // Was asserted the other way round: the test computed the truth and then
+    // required the planner to be wrong about it. The planner measured the
+    // distance from the point the battery would run out to the station and
+    // billed it twice, so a stop at 300 km reported 356 km and 14% arrival.
     const r = meridianRoute(400);
-    // One station, exactly on the polyline at 300 km from the start.
     const st = stationsAlong(400, 300)[0]!;
     const plan = await planTrip({
       ...r,
@@ -227,32 +230,38 @@ describe("planner arithmetic — failure modes", () => {
       skipCorridorFetch: true,
     });
     const stop = plan.stops[0]!;
-    // Truth: 300 km at 16 kWh/100 km from 90% of a 75 kWh pack → ~26% on arrival.
     const trueArriveSoc = 90 - (300 / IDEAL_RANGE_KM) * 100;
-    expect(trueArriveSoc).toBeGreaterThan(25); // ~26%
-    // Reported: the run-out point (319 km) plus 2× the 19 km "detour" = 356 km.
-    expect(stop.distanceFromStartKm).toBeGreaterThan(310); // station is at 300 km
-    expect(stop.arriveSoc).toBeLessThan(trueArriveSoc - 10); // ~14% vs ~26%
+
+    // On the route means no off-route leg: the driven distance IS the distance
+    // along the route.
+    expect(stop.distanceFromStartKm).toBeLessThanOrEqual(305);
+    expect(stop.distanceFromStartKm).toBeGreaterThanOrEqual(295);
+    // Arrival SoC within a point of the truth, not twelve below it.
+    expect(Math.abs(stop.arriveSoc - trueArriveSoc)).toBeLessThan(2);
   });
 
-  it("BUG: a station reachable only via a 100 km detour is still reported as arriving at the SoC floor", async () => {
+  it("a station reachable only via a 100 km detour is not chosen", async () => {
+    // Also inverted. A 200 km round trip off a 500 km route is not a charging
+    // stop, but the planner offered it and still called the plan feasible
+    // because the detour never entered the range arithmetic.
     const r = meridianRoute(500);
     const far = stationsAlong(500, 250).map((s) => ({
       ...s,
-      lng: s.lng + 100 / (111.195 * Math.cos((s.lat * Math.PI) / 180)), // ~100 km off-route
+      lng: s.lng + 100 / (111 * Math.cos((s.lat * Math.PI) / 180)),
     }));
     const plan = await planTrip({
       ...r,
       spec: SPEC,
-      currentSocPct: 60,
+      currentSocPct: 90,
       stations: far,
       skipCorridorFetch: true,
     });
-    expect(plan.stops.length).toBeGreaterThan(0);
-    // The car cannot physically make a 200 km round-trip detour on this leg, yet
-    // the plan reports a healthy arrival SoC and stays "feasible".
-    expect(plan.stops[0]!.arriveSoc).toBeGreaterThanOrEqual(10);
-    expect(plan.feasible).toBe(true);
+
+    // Nothing within reach of the road, so there is no plan to offer — and the
+    // planner must say so rather than inventing a stop it cannot reach.
+    expect(plan.stops).toHaveLength(0);
+    expect(plan.feasible).toBe(false);
+    expect(plan.warning).toBeTruthy();
   });
 
   it("hitting the stop limit reports the plan as not feasible", async () => {

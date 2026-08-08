@@ -13,7 +13,12 @@ export interface ChargingStop {
   energyAddedKwh: number;
   chargingMinutes: number;
   costEur: number;
+  /** Distance actually driven to reach this stop, detours included. */
   distanceFromStartKm: number;
+  /** Driving time to reach it, excluding charging at earlier stops. */
+  drivingMinutesFromStart: number;
+  /** When the driver physically arrives: driving plus every earlier charge. */
+  etaMinutesFromStart: number;
 }
 
 export interface TripPlan {

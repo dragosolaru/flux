@@ -13,6 +13,11 @@ import { chargeMinutes } from "./charge-curve";
 
 const DEFAULT_ARRIVAL_SOC_PCT = 10; // Default minimum SoC at destination/waypoint
 const DEFAULT_CHARGE_TARGET = 80; // Default SoC to charge up to mid-trip
+// How far off the route a stop may sit. Replaces a 150 km radius measured from
+// the point the battery would run out — which, being anchored to a moving
+// sample point rather than to the road, also admitted stations already behind
+// the car.
+const MAX_OFF_ROUTE_KM = 25;
 // Fallback home electricity price (EUR/kWh) when no tariff is configured.
 // ~1 RON/kWh ≈ €0.20. Used to price the energy a trip consumes so the cost is
 // never shown as €0 just because no public charging stop was needed.
@@ -37,46 +42,79 @@ const CONNECTOR_TYPE_TO_PLUG: Record<ConnectorType, PlugType | null> = {
 type Polyline = { type: "LineString"; coordinates: [number, number][] } | null;
 
 /**
- * Find the lat/lng at `targetKm` along the actual road polyline by walking
- * segment-by-segment and accumulating haversine distance. Falls back to
- * straight-line interpolation when the polyline is null (OSRM fell back).
+ * Where a station sits relative to the route.
+ *
+ * `alongKm` is how far along the route its nearest point is; `offRouteKm` is how
+ * far the station is from that point. Together they answer the only two
+ * questions the planner has: how much further do I drive to get level with it,
+ * and how far do I leave the road.
+ *
+ * The planner used to substitute the haversine distance from the *search
+ * centre* — the point where the battery would run out — for both. A station
+ * sitting exactly on the road 19 km beyond that point was therefore billed a
+ * 19 km detour, doubled for the return, on top of the distance already driven.
+ * `planner-arithmetic.test.ts` recorded the result: a stop at 300 km reported
+ * at 356 km, arriving at 14% instead of 26%.
+ *
+ * Projection is planar with longitude scaled by cos(latitude). Over a polyline
+ * segment — hundreds of metres to a few km — the error against a true geodesic
+ * is far below the precision of anything downstream.
  */
-function pointAlongRoute(
+interface RouteProjection {
+  alongKm: number;
+  offRouteKm: number;
+}
+
+function projectOntoRoute(
   polyline: Polyline,
-  targetKm: number,
+  point: RoutePoint,
   origin: RoutePoint,
   destination: RoutePoint,
   totalDistanceKm: number,
-): RoutePoint {
+): RouteProjection {
   const coords = polyline?.coordinates;
-  if (!coords || coords.length < 2) {
-    const t = totalDistanceKm > 0 ? Math.min(1, Math.max(0, targetKm / totalDistanceKm)) : 0;
-    return {
-      lat: origin.lat + (destination.lat - origin.lat) * t,
-      lng: origin.lng + (destination.lng - origin.lng) * t,
-    };
-  }
+  const hasPolyline = !!coords && coords.length >= 2;
+  const pts: RoutePoint[] = hasPolyline
+    ? coords!.map(([lng, lat]) => ({ lat, lng }))
+    : [origin, destination];
 
   let acc = 0;
-  for (let i = 1; i < coords.length; i++) {
-    const [prevLng, prevLat] = coords[i - 1]!;
-    const [lng, lat] = coords[i]!;
-    const a = { lat: prevLat, lng: prevLng };
-    const b = { lat, lng };
+  let bestAlong = 0;
+  let bestOff = Infinity;
+
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
     const segKm = haversine(a, b);
     if (segKm <= 0) continue;
-    if (acc + segKm >= targetKm) {
-      const f = (targetKm - acc) / segKm;
-      return {
-        lat: a.lat + (b.lat - a.lat) * f,
-        lng: a.lng + (b.lng - a.lng) * f,
-      };
+
+    const kx = Math.cos((a.lat * Math.PI) / 180) || 1;
+    const ax = a.lng * kx;
+    const ay = a.lat;
+    const dx = b.lng * kx - ax;
+    const dy = b.lat - ay;
+    const len2 = dx * dx + dy * dy;
+    const t =
+      len2 > 0
+        ? Math.max(0, Math.min(1, ((point.lng * kx - ax) * dx + (point.lat - ay) * dy) / len2))
+        : 0;
+    const nearest = { lat: ay + dy * t, lng: (ax + dx * t) / kx };
+    const off = haversine(point, nearest);
+
+    if (off < bestOff) {
+      bestOff = off;
+      bestAlong = acc + segKm * t;
     }
     acc += segKm;
   }
 
-  const [lastLng, lastLat] = coords[coords.length - 1]!;
-  return { lat: lastLat, lng: lastLng };
+  // With no polyline, `acc` is the straight origin→destination length. Rescale
+  // so alongKm shares an axis with totalDistanceKm, which follows the road.
+  if (!hasPolyline && acc > 0 && totalDistanceKm > 0) {
+    bestAlong *= totalDistanceKm / acc;
+  }
+
+  return { alongKm: bestAlong, offRouteKm: bestOff === Infinity ? 0 : bestOff };
 }
 
 function mergeStations(a: ChargingStation[], b: ChargingStation[]): ChargingStation[] {
@@ -247,27 +285,62 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
   let warning: string | null = null;
   let iter = 0;
 
+  // Driven distance including detours, and the base route's average pace. The
+  // pace is the only per-stop timing signal available before the second pass
+  // re-routes through the stops.
+  let drivenKm = 0;
+  const minutesPerKm = distanceKm > 0 ? drivingMinutes / distanceKm : 0;
+
   while (kmLeft > 0 && iter++ < 30) {
     if (kmLeft <= rangeNow) {
-      // Can reach destination with at least arrivalSocPct remaining
+      // Can reach destination with at least arrivalSocPct remaining.
+      // The final leg counts: drivenKm is the denominator when the per-stop
+      // numbers are rescaled onto the via-route, and leaving it out made the
+      // scale factor larger than 1 — pushing a stop at 300 km out to 400.
+      drivenKm += kmLeft;
       kmFromStart += kmLeft;
       kmLeft = 0;
       break;
     }
 
-    // Need to charge. Find a station near the point where we'd run out.
-    // Sample the search center on the actual road polyline (not a straight line).
+    // Need to charge. `targetKm` is where the battery would run low — not a
+    // place to search around any more (candidates are now judged against the
+    // whole route), but still the distance a good stop should get close to.
     const targetKm = kmFromStart + rangeNow * 0.85;
-    const searchCenter = pointAlongRoute(polyline, targetKm, origin, destination, distanceKm);
 
-    // Find compatible station within 150km detour, scored by power/price/detour.
-    // 150km radius covers sparse corridor areas in Eastern/Southern Europe.
+    // Candidates are judged by where they sit relative to the ROUTE, not by how
+    // far they are from the search centre. Three conditions, each of which the
+    // old distance-from-centre test could not express:
+    //
+    //   ahead      — a station behind us is not a stop, it is a U-turn. The old
+    //                filter accepted anything within 150 km of the centre,
+    //                including stations already passed.
+    //   near       — off-route distance under MAX_OFF_ROUTE_KM.
+    //   reachable  — driving level with it and then leaving the road must fit
+    //                inside the range we actually have.
     const candidates = allStations
-      .map((st) => ({ st, dist: haversine(searchCenter, st) }))
-      .filter((c) => c.dist < 150 && (c.st.maxKw ?? 0) > 0)
+      .map((st) => {
+        const proj = projectOntoRoute(polyline, st, origin, destination, distanceKm);
+        return { st, alongKm: proj.alongKm, offRouteKm: proj.offRouteKm };
+      })
+      .filter(
+        (c) =>
+          (c.st.maxKw ?? 0) > 0 &&
+          c.alongKm > kmFromStart &&
+          c.offRouteKm < MAX_OFF_ROUTE_KM &&
+          c.alongKm - kmFromStart + c.offRouteKm <= rangeNow,
+      )
       .map((c) => ({
         ...c,
-        score: scoreStation(c.st, c.dist, spec.maxDcChargingRateKw),
+        // Power and price decide between comparable stations; how far along the
+        // route the station sits decides whether this is one stop or three.
+        // Without the progress term the highest-powered charger 50 km ahead
+        // always wins and a 1400 km route collapses into sixteen short hops —
+        // the old code got this for free by only ever searching near the range
+        // limit, which is also why it could not see stations behind it.
+        score:
+          scoreStation(c.st, c.offRouteKm, spec.maxDcChargingRateKw) -
+          Math.abs(c.alongKm - targetKm) * 0.01,
       }))
       .sort((a, b) => b.score - a.score);
 
@@ -279,21 +352,26 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
       break;
     }
 
-    const chosen = candidates[0]!.st;
-    const detourKm = candidates[0]!.dist;
+    const best = candidates[0]!;
+    const chosen = best.st;
+    const { alongKm, offRouteKm } = best;
 
-    // Drive to station: consume range for route segment plus round-trip detour
-    // (detour to the station and back to the route = 2× the off-route distance).
-    const segmentKm = (targetKm - kmFromStart) + detourKm * 2;
-    socNow -= (segmentKm / deratedFullRangeKm) * 100;
-    kmFromStart = targetKm;
-    kmLeft = distanceKm - kmFromStart;
+    // Getting there costs the run along the route plus ONE off-route leg. The
+    // return leg is not spent yet — it is charged after leaving, so it belongs
+    // to the next segment's requirement, not this arrival. Counting it twice
+    // here (once out, once back, before arriving) is what understated every
+    // arrival SoC.
+    const toStationKm = alongKm - kmFromStart + offRouteKm;
+    socNow -= (toStationKm / deratedFullRangeKm) * 100;
+    drivenKm += toStationKm;
+    kmFromStart = alongKm;
+    kmLeft = distanceKm - alongKm;
 
     const arriveSoc = Math.max(arrivalSocPct, Math.round(socNow));
 
-    // Charge to either the strategy target or enough for the remaining leg
-    // including the arrivalSocPct buffer at the next stop/destination.
-    const remainingNeededPct = ((kmLeft + detourKm * 2) / deratedFullRangeKm) * 100 + arrivalSocPct;
+    // Leaving costs the way back onto the route, then the rest of the trip.
+    const remainingNeededPct =
+      ((kmLeft + offRouteKm) / deratedFullRangeKm) * 100 + arrivalSocPct;
     // The strategy's charge target is a ceiling, but it is applied last, so a low
   // target (economy is 55) combined with a high arrival SoC could clamp
   // departure BELOW arrival — a stop that reported negative energy, negative
@@ -306,14 +384,21 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
     const energyAddedKwh = ((departSoc - arriveSoc) / 100) * spec.batteryCapacityKwh;
     // SoC-dependent charge curve (ABRP-style) instead of a flat average rate —
     // fast when topping up from low, tapering past ~50–60%.
-    const chargingMinutes = Math.round(
-      chargeMinutes(
-        arriveSoc,
-        departSoc,
-        spec.batteryCapacityKwh,
-        chosen.maxKw,
-        spec.maxDcChargingRateKw,
-      ),
+    const rawChargingMinutes = chargeMinutes(
+      arriveSoc,
+      departSoc,
+      spec.batteryCapacityKwh,
+      chosen.maxKw,
+      spec.maxDcChargingRateKw,
+    );
+    // Rounding to whole minutes can imply a power the hardware cannot deliver:
+    // a 4.5 kWh top-up taking 1.08 minutes rounds to 1, which reads back as
+    // 270 kW on a 250 kW cap. Never round below the physical floor.
+    const capKw = Math.min(chosen.maxKw, spec.maxDcChargingRateKw);
+    const floorMinutes = capKw > 0 ? (energyAddedKwh / capKw) * 60 : 0;
+    const chargingMinutes = Math.max(
+      Math.round(rawChargingMinutes),
+      Math.ceil(floorMinutes),
     );
     // Use the station's real price when available; otherwise 0 (no assumed cost shown to user)
     const costEur = chosen.priceEurKwh != null
@@ -327,9 +412,17 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
       energyAddedKwh: Math.round(energyAddedKwh * 10) / 10,
       chargingMinutes,
       costEur,
-      distanceFromStartKm: Math.round(kmFromStart),
+      // What the odometer will read: distance actually driven, detours included.
+      distanceFromStartKm: Math.round(drivenKm),
+      drivingMinutesFromStart: Math.round(drivenKm * minutesPerKm),
+      // Driving so far plus every charge before this one — when the driver
+      // physically arrives. Nothing downstream could answer "how far away is
+      // the next stop" without it.
+      etaMinutesFromStart: Math.round(drivenKm * minutesPerKm + totalChargingMinutes),
     });
 
+    // The return leg onto the route is driven after charging.
+    drivenKm += offRouteKm;
     socNow = departSoc;
     rangeNow = ((socNow - arrivalSocPct) / 100) * deratedFullRangeKm;
     totalChargingMinutes += chargingMinutes;
@@ -369,6 +462,28 @@ export async function planTrip(input: PlanInput): Promise<TripPlan> {
       // Keep the base-route polyline when via-routing fails (OSRM down) —
       // better to show the correct road without stop-detours than a straight line.
       finalPolyline = via.polyline ?? polyline;
+
+      // Rescale the per-stop numbers onto the route that will actually be
+      // reported. They were computed against the base route plus straight-line
+      // detours; the via-route knows the real roads, and until now only the
+      // TOTALS were updated. That left a stop claiming 270 km on a route
+      // reported as 251 km — a stop further from the start than the trip is
+      // long, which is what `distanceFromStartKm <= totalDistanceKm` caught.
+      //
+      // Proportional, not exact: OsrmResult carries no per-leg breakdown, so
+      // this preserves the ordering and the ratios rather than inventing leg
+      // distances. Exact per-stop legs need the provider to return them.
+      if (drivenKm > 0) {
+        const scale = finalDistanceKm / drivenKm;
+        const paceAfter = finalDistanceKm > 0 ? finalDrivingMinutes / finalDistanceKm : 0;
+        let chargedBefore = 0;
+        for (const stop of stops) {
+          stop.distanceFromStartKm = Math.round(stop.distanceFromStartKm * scale);
+          stop.drivingMinutesFromStart = Math.round(stop.distanceFromStartKm * paceAfter);
+          stop.etaMinutesFromStart = stop.drivingMinutesFromStart + chargedBefore;
+          chargedBefore += stop.chargingMinutes;
+        }
+      }
     }
   }
 
