@@ -47,7 +47,7 @@ jobs:
           else
             echo "::error::TESLA_PRIVATE_KEY is not set on flux-tesla-proxy."
             echo "Set it in the Fly dashboard under Secrets, or with:"
-            echo '  fly secrets set TESLA_PRIVATE_KEY="<base64 of the EC private key PEM>"'
+            echo '  fly secrets set TESLA_PRIVATE_KEY="$(base64 -w0 < private.pem)"'
             echo "The proxy exits on startup without it, so deploying now would just fail."
             exit 1
           fi

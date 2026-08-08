@@ -22,10 +22,12 @@ services:
       # That hostname is what TESLA_PROXY_BASE_URL must be set to in Vercel.
       - SERVICE_FQDN_PROXY_8080
 
-      # The EC P-256 command-signing key, raw PEM or base64 — the entrypoint
-      # takes either. Set the value in Coolify, not here. Left unset, the
-      # container exits at boot saying so, which is the intended failure: a
-      # proxy running without a key can only sign nothing.
+      # The EC P-256 command-signing key, as SINGLE-LINE base64:
+      #   base64 -w0 < private.pem
+      # A raw PEM is five lines and a .env file cannot hold one, so pasting it
+      # into a control panel yields an empty value — the container then reports
+      # the variable as missing while the UI shows it filled. Plain `base64`
+      # wraps at 76 columns, hence -w0. Set the value in Coolify, not here.
       - TESLA_PRIVATE_KEY=${TESLA_PRIVATE_KEY}
 
     expose:

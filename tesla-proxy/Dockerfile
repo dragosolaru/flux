@@ -75,8 +75,23 @@ TLS_KEY_PATH=/app/tls.key
 # makes the self-signed certificate acceptable.
 PROXY_PORT=8443
 
+> "$KEY_PATH"
+chmod 600 "$KEY_PATH"
+
+# The two failure modes here are worth separating, because "env var is required"
+# sent people to check a variable that was set all along.
+#
+# A PEM is five lines. Most control panels write environment variables into a
+# single-line .env, so pasting one in produces an EMPTY value, not a truncated
+# one — the container then reports the variable as missing while the UI clearly
+# shows it filled. Single-line base64 is the way past that, and note that plain
+# `base64` wraps at 76 columns, so it needs -w0 (or `| tr -d '\n'`).
 if [ -z "$TESLA_PRIVATE_KEY" ]; then
-  echo "ERROR: TESLA_PRIVATE_KEY env var is required" >&2
+  echo "ERROR: TESLA_PRIVATE_KEY is empty or unset." >&2
+  echo "  If the panel shows it set, the value was almost certainly a multi-line" >&2
+  echo "  PEM: a .env file cannot hold one, so it arrives empty." >&2
+  echo "  Re-paste it as single-line base64:  base64 -w0 < private.pem" >&2
+  echo "  Also confirm it is a RUNTIME variable, not a build argument." >&2
   exit 1
 fi
 
@@ -84,9 +99,18 @@ fi
 if echo "$TESLA_PRIVATE_KEY" | grep -q "BEGIN EC PRIVATE KEY"; then
   printf "%s\n" "$TESLA_PRIVATE_KEY" > "$KEY_PATH"
 else
-  echo "$TESLA_PRIVATE_KEY" | base64 -d > "$KEY_PATH"
+  echo "$TESLA_PRIVATE_KEY" | base64 -d > "$KEY_PATH" 2>/dev/null || true
 fi
-chmod 600 "$KEY_PATH"
+
+# Fail here rather than letting tesla-http-proxy die on it, so the log says what
+# is wrong with the value instead of that there is something wrong with the key.
+if ! openssl ec -in "$KEY_PATH" -noout 2>/dev/null; then
+  echo "ERROR: TESLA_PRIVATE_KEY is set but did not yield an EC private key." >&2
+  echo "  Most likely a partial paste, or base64 that lost its tail." >&2
+  echo "  Regenerate the value with:  base64 -w0 < private.pem" >&2
+  echo "  It must be one unbroken line, ending in '=' or a base64 character." >&2
+  exit 1
+fi
 
 # A fresh TLS key every boot, and never the command-signing key: the proxy
 # refuses to start if the two match, on the grounds that a TLS key is exposed

@@ -33,8 +33,8 @@ healthcheck and the hostname, so there is almost nothing to fill in by hand:
 1. **New Resource** → **Docker Compose** → your Git repository.
 2. Base Directory **`/tesla-proxy`**. Coolify finds `docker-compose.yml` there.
 3. **Environment Variables** → set `TESLA_PRIVATE_KEY`. It is the one value the
-   compose file deliberately leaves empty. EC private key PEM, raw or base64 —
-   the entrypoint takes either.
+   compose file deliberately leaves empty. **Use single-line base64** —
+   `base64 -w0 < private.pem` (`base64 < private.pem | tr -d '\n'` on macOS).
 4. Deploy. `SERVICE_FQDN_PROXY_8080` makes Coolify generate the hostname, route
    it to container port 8080 and issue the Let's Encrypt certificate; the result
    shows up in the UI and can be swapped for your own hostname.
@@ -104,6 +104,27 @@ Caddy is up but the loopback TLS hop behind it is not; **400** means something
 is speaking plain HTTP straight at the signing proxy; a TLS error means the
 public certificate is wrong. `docker-compose.yml` encodes exactly this check.
 
+### "TESLA_PRIVATE_KEY env var is required" while the panel shows it set
+
+The value arrived empty, and a multi-line PEM is almost always why. A `.env`
+file holds one line per variable, so a five-line PEM pasted into a control panel
+does not arrive truncated — it arrives **empty**, which is why the container
+reports the variable as missing while the UI clearly shows it filled.
+
+Re-paste it as one unbroken line:
+
+```bash
+base64 -w0 < private.pem          # GNU
+base64 < private.pem | tr -d '\n' # macOS
+```
+
+Plain `base64` wraps at 76 columns, so `-w0` is not optional here. The entrypoint
+now names this case directly, and separately reports a value that is set but does
+not decode to an EC key.
+
+If the value really is single-line base64 and it still arrives empty, check the
+variable is a **runtime** variable rather than build-only.
+
 > **The published URL is an open relay.** Tesla's own binary warns about this:
 > anyone who can reach it can forward requests to Tesla's API. They still need a
 > valid Tesla token for an account that paired this app's Virtual Key — so the
@@ -122,8 +143,9 @@ runs it on Actions instead, so the whole setup is reachable from a browser:
 2. **GitHub** → repo Settings → Secrets and variables → Actions → new secret
    `FLY_API_TOKEN`, paste the token.
 3. **Fly dashboard** → the app → Secrets → add `TESLA_PRIVATE_KEY`. The value is
-   the EC private key PEM, raw or base64 — the entrypoint accepts either. This
-   is a Fly secret, never a file in the image and never a Vercel variable.
+   the EC private key. Fly secrets handle multi-line values, so a raw PEM works
+   here; single-line base64 works everywhere and is the safer habit. This is a
+   Fly secret, never a file in the image and never a Vercel variable.
 4. **GitHub** → Actions → "Deploy Tesla proxy" → Run workflow.
 5. Set `TESLA_PROXY_BASE_URL=https://flux-tesla-proxy.fly.dev` in Vercel and
    redeploy.
@@ -143,7 +165,7 @@ fly launch --copy-config --no-deploy
 
 # Set the private signing key (same one whose public half is published at
 # https://flux-alpha-three.vercel.app/.well-known/appspecific/com.tesla.3p.public-key.pem):
-fly secrets set TESLA_PRIVATE_KEY="$(base64 < /path/to/private.pem)"
+fly secrets set TESLA_PRIVATE_KEY="$(base64 -w0 < /path/to/private.pem)"
 
 # Deploy:
 fly deploy
