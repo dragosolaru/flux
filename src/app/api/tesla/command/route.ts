@@ -83,13 +83,17 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : "Command failed";
 
     // Tesla deprecated REST commands on Model 3/Y/S/X built after 2021.
-    // Surface this as a structured error so the UI can guide the user.
+    // Surface this as a structured error so the UI can guide the user — and
+    // separate "nothing is signing our commands" from "signed, but this car
+    // has not paired the key", because they have different fixes.
     if (message.includes("Vehicle Command Protocol required")) {
       return NextResponse.json(
         {
           success: false,
           result: "Tesla Vehicle Command Protocol required",
-          code: "VCP_REQUIRED",
+          code: process.env.TESLA_PROXY_BASE_URL
+            ? "VCP_REQUIRED"
+            : "PROXY_NOT_CONFIGURED",
         },
         { status: 412 },
       );

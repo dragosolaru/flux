@@ -478,7 +478,7 @@
     "success": "Command sent",
     "error": "Command failed",
     "error_rate_limit": "Too many commands. Please wait a moment and try again.",
-    "error_vcp_required": "This car needs a Virtual Key set up before commands work.",
+    "error_vcp_required": "This car has not paired its Virtual Key yet. Open the pairing link on your phone with the Tesla app installed, then approve.",
     "error_not_supported": "This command isn't available for this vehicle.",
     "confirm": {
       "unlock": {
@@ -499,7 +499,8 @@
       "empty": "No commands issued yet.",
       "sensitive": "sensitive",
       "footer": "If you see a command you did not issue, disconnect Tesla in Settings and change your password."
-    }
+    },
+    "error_proxy_missing": "Commands are not being signed yet — the signing proxy is not deployed. This one is on us, not you."
   },
   "garage": {
     "title": "Garage",

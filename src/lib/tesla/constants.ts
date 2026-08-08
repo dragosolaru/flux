@@ -10,6 +10,26 @@ export const TESLA_AUTH_URL = "https://auth.tesla.com/oauth2/v3/authorize";
 export const TESLA_TOKEN_URL = "https://auth.tesla.com/oauth2/v3/token";
 
 /**
+ * Where an owner pairs the Virtual Key. Opening it on a phone with the Tesla
+ * app installed hands the app our public key to store in the car; from then on
+ * the car accepts commands signed with the matching private key.
+ *
+ * The domain has to be the one registered as the partner account, which is
+ * also the host of the OAuth redirect — deriving it from TESLA_REDIRECT_URI
+ * keeps the two from drifting apart. Null when unset, because a guessed domain
+ * produces a Tesla page that fails with no explanation.
+ */
+export function teslaVirtualKeyUrl(): string | null {
+  const redirect = process.env.TESLA_REDIRECT_URI;
+  if (!redirect) return null;
+  try {
+    return `https://tesla.com/_ak/${new URL(redirect).host}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Every scope the Fleet API offers.
  *
  * `vehicle_location` is the one that matters and the one that was missing.

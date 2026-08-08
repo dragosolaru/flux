@@ -478,7 +478,7 @@
     "success": "Parancs elküldve",
     "error": "Parancs sikertelen",
     "error_rate_limit": "Túl sok parancs. Várj egy pillanatot, és próbáld újra.",
-    "error_vcp_required": "Ehhez az autóhoz virtuális kulcsot kell beállítani, mielőtt a parancsok működnének.",
+    "error_vcp_required": "Ez az autó még nem párosította a virtuális kulcsot. Nyisd meg a párosítási linket a telefonodon a Tesla alkalmazással, majd hagyd jóvá.",
     "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz.",
     "confirm": {
       "unlock": {
@@ -499,7 +499,8 @@
       "empty": "Még nem küldött parancsot.",
       "sensitive": "érzékeny",
       "footer": "Ha olyan parancsot lát, amelyet nem Ön adott ki, válassza le a Teslát a Beállításokban és változtasson jelszót."
-    }
+    },
+    "error_proxy_missing": "A parancsokat még nem írjuk alá — az aláíró proxy nem fut. Ez rajtunk múlik, nem rajtad."
   },
   "garage": {
     "title": "Garázs",

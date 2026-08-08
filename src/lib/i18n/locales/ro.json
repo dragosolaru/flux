@@ -478,7 +478,7 @@
     "success": "Comandă trimisă",
     "error": "Comandă eșuată",
     "error_rate_limit": "Prea multe comenzi. Așteaptă puțin și încearcă din nou.",
-    "error_vcp_required": "Mașina necesită o Cheie Virtuală configurată înainte ca comenzile să funcționeze.",
+    "error_vcp_required": "Mașina nu are încă Cheia Virtuală împerecheată. Deschide linkul de împerechere pe telefon, cu aplicația Tesla instalată, și aprobă.",
     "error_not_supported": "Această comandă nu este disponibilă pentru acest vehicul.",
     "confirm": {
       "unlock": {
@@ -499,7 +499,8 @@
       "empty": "Nicio comandă trimisă încă.",
       "sensitive": "sensibilă",
       "footer": "Dacă vezi o comandă pe care nu ai dat-o tu, deconectează Tesla din Setări și schimbă-ți parola."
-    }
+    },
+    "error_proxy_missing": "Comenzile nu sunt încă semnate — proxy-ul de semnare nu este pornit. Asta ține de noi, nu de tine."
   },
   "garage": {
     "title": "Garaj",

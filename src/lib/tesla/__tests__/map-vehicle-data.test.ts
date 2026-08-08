@@ -11,7 +11,7 @@
 // and one rule: a half-asleep car that reports two of four doors must produce
 // null, not a confident "the other two are shut".
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 
 import { mapVehicleData } from "../api";
 import type { TeslaVehicleDataResponse } from "@/types/tesla";
@@ -239,5 +239,38 @@ describe("mapVehicleData — software and dashcam", () => {
     expect(on.isDashcamRecording).toBe(true);
     expect(off.isDashcamRecording).toBe(false);
     expect(unknown.isDashcamRecording).toBeNull();
+  });
+});
+
+// The Virtual Key pairing URL has to carry the domain Tesla has registered as
+// the partner account, and that is the same host as the OAuth redirect. A
+// guessed or stale domain gives the owner a Tesla page that fails with no
+// explanation, so a wrong URL is worse than none.
+describe("teslaVirtualKeyUrl", () => {
+  const original = process.env.TESLA_REDIRECT_URI;
+  afterEach(() => {
+    if (original == null) delete process.env.TESLA_REDIRECT_URI;
+    else process.env.TESLA_REDIRECT_URI = original;
+  });
+
+  it("uses the redirect URI's host", async () => {
+    process.env.TESLA_REDIRECT_URI =
+      "https://flux-alpha-three.vercel.app/api/tesla/callback";
+    const { teslaVirtualKeyUrl } = await import("../constants");
+    expect(teslaVirtualKeyUrl()).toBe(
+      "https://tesla.com/_ak/flux-alpha-three.vercel.app",
+    );
+  });
+
+  it("is null rather than a guess when the redirect URI is unset", async () => {
+    delete process.env.TESLA_REDIRECT_URI;
+    const { teslaVirtualKeyUrl } = await import("../constants");
+    expect(teslaVirtualKeyUrl()).toBeNull();
+  });
+
+  it("is null when the redirect URI is not a URL", async () => {
+    process.env.TESLA_REDIRECT_URI = "not-a-url";
+    const { teslaVirtualKeyUrl } = await import("../constants");
+    expect(teslaVirtualKeyUrl()).toBeNull();
   });
 });

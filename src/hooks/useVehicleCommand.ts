@@ -20,13 +20,19 @@ interface CommandResult {
   code?: string;
 }
 
-const MAPPED_ERROR_KEYS = ["error_rate_limit", "error_vcp_required", "error_not_supported"] as const;
+const MAPPED_ERROR_KEYS = [
+  "error_rate_limit",
+  "error_vcp_required",
+  "error_proxy_missing",
+  "error_not_supported",
+] as const;
 
 // Translate a non-OK command response to a stable i18n key token. Raw upstream
 // (Tesla Fleet API) error text is never surfaced — unknown failures fall back to
 // the generic "error" key so we don't leak internal detail.
 function commandErrorKey(status: number, data: CommandResult): string {
   if (status === 429) return "error_rate_limit";
+  if (data.code === "PROXY_NOT_CONFIGURED") return "error_proxy_missing";
   if (status === 412 || data.code === "VCP_REQUIRED") return "error_vcp_required";
   if (data.message === "command-not-supported" || data.message === "command-not-supported-live") {
     return "error_not_supported";

@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
 import { GOAL, resolveRoadmap } from "@/lib/roadmap";
-import { TESLA_SCOPES } from "@/lib/tesla/constants";
+import { TESLA_SCOPES, teslaVirtualKeyUrl } from "@/lib/tesla/constants";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -175,7 +175,15 @@ export async function GET() {
     sources: sourceCounts,
     recentRuns: runs ?? [],
     config,
-    tesla: { steps: teslaSteps, nextStep: teslaNextStep, grants: teslaGrants },
+    tesla: {
+      steps: teslaSteps,
+      nextStep: teslaNextStep,
+      grants: teslaGrants,
+      // Deliberately not a checklist step: nothing on the server can observe
+      // whether a car has accepted the key, so it would sit unticked forever
+      // and pin nextStep to itself.
+      virtualKeyUrl: teslaVirtualKeyUrl(),
+    },
     roadmap: { goal: GOAL, milestones: resolveRoadmap(config) },
     warnings,
   });

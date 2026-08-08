@@ -250,6 +250,29 @@ Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla
 app installed and approves. Without pairing, signed commands are rejected even
 with everything above correct.
 
+`/debug` → "Go live with Tesla" → **Pair Virtual Key** builds that link from
+`TESLA_REDIRECT_URI`'s host (`teslaVirtualKeyUrl()`), so the domain cannot drift
+from the registered one. It is not a checklist step: nothing on the server can
+see whether a car accepted the key, so it would sit unticked forever and pin
+`nextStep` to itself.
+
+**Order matters — pairing before step 4 achieves nothing.** The key is only
+useful once something signs with its private half. With no proxy the request
+reaches Tesla unsigned and is refused whether or not the key is paired.
+
+> **`412 Vehicle Command Protocol required` has two causes and they are not
+> interchangeable.** The routes now separate them by whether
+> `TESLA_PROXY_BASE_URL` is set:
+>
+> | code | meaning | who fixes it |
+> |---|---|---|
+> | `PROXY_NOT_CONFIGURED` | nothing is signing commands — the proxy is not deployed | operator (steps 4–5) |
+> | `VCP_REQUIRED` | signed, but this car has not paired the key | owner, on their phone (step 6) |
+>
+> They used to share one message — "this car needs a Virtual Key set up" — which
+> is wrong for the first and by far the more common case. It sent the owner to
+> pair a key that would have changed nothing.
+
 > Scope note: `TESLA_SCOPES` requests everything, including `vehicle_cmds`
 > (unlock, remote start), `vehicle_location` and `user_data`. `docs/TODO.md`
 > item 1b tracks offering a read-only link for owners who only want cost and

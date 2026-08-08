@@ -478,7 +478,7 @@
     "success": "Commande envoyée",
     "error": "Commande échouée",
     "error_rate_limit": "Trop de commandes. Patientez un instant et réessayez.",
-    "error_vcp_required": "Cette voiture nécessite une clé virtuelle configurée avant que les commandes fonctionnent.",
+    "error_vcp_required": "Cette voiture n'a pas encore associé sa clé virtuelle. Ouvrez le lien d'association sur votre téléphone avec l'app Tesla installée, puis approuvez.",
     "error_not_supported": "Cette commande n'est pas disponible pour ce véhicule.",
     "confirm": {
       "unlock": {
@@ -499,7 +499,8 @@
       "empty": "Aucune commande envoyée.",
       "sensitive": "sensible",
       "footer": "Si vous voyez une commande que vous n’avez pas envoyée, déconnectez Tesla dans les Réglages et changez votre mot de passe."
-    }
+    },
+    "error_proxy_missing": "Les commandes ne sont pas encore signées — le proxy de signature n'est pas déployé. Cela vient de nous."
   },
   "garage": {
     "title": "Garage",

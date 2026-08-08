@@ -23,7 +23,12 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const tc = useTranslations("common");
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, isError, error } = useVehicleCommand();
-  const MAPPED = ["error_rate_limit", "error_vcp_required", "error_not_supported"];
+  const MAPPED = [
+    "error_rate_limit",
+    "error_vcp_required",
+    "error_proxy_missing",
+    "error_not_supported",
+  ];
   const errorText = isError
     ? t(error && MAPPED.includes(error.message) ? error.message : "error")
     : null;

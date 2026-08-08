@@ -113,8 +113,21 @@ export async function POST(
       const msg = err instanceof Error ? err.message : "Command failed";
       await recordCommandEvent(vehicleId, command, args, false, msg).catch(() => null);
       if (msg.includes("Vehicle Command Protocol required")) {
+        // Two different problems produce the same Tesla error, and telling the
+        // driver to pair a Virtual Key is useless advice for the first one:
+        //
+        //   no proxy   — the request reached Tesla unsigned, because there is
+        //                nothing deployed to sign it. An operator fixes this.
+        //   proxy set  — signing happened and the car still refused, so the
+        //                key is not paired to this vehicle. The owner fixes it
+        //                on their phone.
+        const signed = !!process.env.TESLA_PROXY_BASE_URL;
         return NextResponse.json(
-          { success: false, result: "Tesla Vehicle Command Protocol required", code: "VCP_REQUIRED" },
+          {
+            success: false,
+            result: "Tesla Vehicle Command Protocol required",
+            code: signed ? "VCP_REQUIRED" : "PROXY_NOT_CONFIGURED",
+          },
           { status: 412 },
         );
       }

@@ -76,6 +76,7 @@ interface DebugPayload {
       missing: string[];
       updatedAt: string | null;
     }[];
+    virtualKeyUrl?: string | null;
   };
   roadmap?: {
     goal: string;
@@ -707,6 +708,32 @@ export function DebugClient() {
               </li>
             ))}
           </ol>
+          {tesla.virtualKeyUrl && (
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Virtual Key
+              </p>
+              <p className="text-xs text-muted-foreground">
+                The last step, and the only one that happens on the car rather than a
+                server. Open this on a phone that has the Tesla app installed and approve —
+                it hands our public key to the car, which then accepts signed commands.
+                Pointless until the proxy is deployed: without it nothing signs the
+                commands, so the car never sees a signature to check.
+              </p>
+              <a
+                href={tesla.virtualKeyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block break-all rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+              >
+                Pair Virtual Key →
+              </a>
+              <p className="break-all font-mono text-[10px] text-muted-foreground">
+                {tesla.virtualKeyUrl}
+              </p>
+            </div>
+          )}
+
           {tesla.grants && tesla.grants.length > 0 && (
             <div className="space-y-2 border-t border-border/60 pt-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

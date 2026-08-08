@@ -479,6 +479,9 @@ export function MapClient() {
    * network blip.
    */
   function commandErrorMessage(err: unknown): string {
+    if (err instanceof ApiError && err.code === "PROXY_NOT_CONFIGURED") {
+      return tCommands("error_proxy_missing");
+    }
     if (err instanceof ApiError && (err.status === 412 || err.code === "VCP_REQUIRED")) {
       return tCommands("error_vcp_required");
     }

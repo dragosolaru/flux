@@ -478,7 +478,7 @@
     "success": "Befehl gesendet",
     "error": "Befehl fehlgeschlagen",
     "error_rate_limit": "Zu viele Befehle. Bitte warte einen Moment und versuche es erneut.",
-    "error_vcp_required": "Für dieses Auto muss zuerst ein virtueller Schlüssel eingerichtet werden, damit Befehle funktionieren.",
+    "error_vcp_required": "Dieses Auto hat seinen Virtual Key noch nicht gekoppelt. Öffne den Kopplungslink auf dem Handy mit installierter Tesla-App und bestätige.",
     "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar.",
     "confirm": {
       "unlock": {
@@ -499,7 +499,8 @@
       "empty": "Noch keine Befehle gesendet.",
       "sensitive": "sensibel",
       "footer": "Sehen Sie einen Befehl, den Sie nicht gesendet haben? Trennen Sie Tesla in den Einstellungen und ändern Sie Ihr Passwort."
-    }
+    },
+    "error_proxy_missing": "Befehle werden noch nicht signiert — der Signatur-Proxy läuft nicht. Das liegt an uns, nicht an dir."
   },
   "garage": {
     "title": "Garage",
