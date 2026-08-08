@@ -82,9 +82,12 @@ openssl ecparam -genkey -name prime256v1 -noout -out private.pem
 openssl ec -in private.pem -pubout -out public.pem
 ```
 
-**Generate once.** Tesla keeps the first public key it saw for a domain;
-re-registering returns that record untouched. A second pair generated later has
-every signed command rejected while everything else looks correct.
+**Both halves must come from the same generation**, and if you regenerate you
+have to redo both places. Tesla re-fetches the public key from `/.well-known` on
+every registration call, so rotating is: new pair → `TESLA_PUBLIC_KEY` deployed
+and confirmed being served → press Register → Check status. Skip the "confirmed
+being served" step and Tesla re-registers the old key over itself, which looks
+exactly like registration being ignored.
 
 ### Preferred: mount the key as a file
 
@@ -159,12 +162,18 @@ MHcCAQEEIEMy...
 -----END EC PRIVATE KEY-----
 ```
 
-It must be **the key whose public half Tesla already has**. Generating a fresh
-pair is not a fix: re-registering a domain that is already registered returns
-Tesla's existing record untouched, so a new key means every signed command is
-rejected while everything else looks correct. Check what Tesla holds with
-`/debug` → "Go live with Tesla" → **Check status**, which decodes the served PEM
-and compares it. Only if nothing is registered yet:
+It must be **the key whose public half Tesla holds**. Check with `/debug` → "Go
+live with Tesla" → **Check status**, which decodes the served PEM to a raw EC
+point and compares it against Tesla's record.
+
+Losing the private half is recoverable: generate a new pair, put the public half
+in `TESLA_PUBLIC_KEY`, redeploy, confirm the domain serves it, then **Register**.
+Tesla re-fetches `/.well-known` during registration and replaces its record. The
+confirm step is the one people skip — register while the old key is still being
+served and Tesla dutifully re-registers the old key, which reads as the call
+being ignored.
+
+Generating without a machine: use the panel's **Generate keypair**. With one:
 
 ```bash
 openssl ecparam -genkey -name prime256v1 -noout -out private.pem

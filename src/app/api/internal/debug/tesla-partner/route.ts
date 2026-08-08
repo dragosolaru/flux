@@ -13,12 +13,20 @@ import { logServer } from "@/lib/debug-log";
 // exactly what happened. It is also a curl with a client-credentials token,
 // i.e. the one step that cannot be done from a phone. Hence a button.
 //
-// Re-registering an already-registered domain returns the EXISTING record
-// unchanged — observed in the field: a POST made while a freshly generated key
-// was being served came back 200 with the key from two months earlier and an
-// untouched `updated_at`. So the button is safe to press twice, but pressing it
-// is NOT how you rotate the key. Use "Check status" to see which key Tesla
-// actually holds.
+// Re-registering IS how the key is rotated. Tesla re-fetches
+// /.well-known/appspecific/com.tesla.3p.public-key.pem on every registration
+// call and replaces its record with whatever it finds.
+//
+// This comment previously said the opposite, on the strength of one field
+// observation: a POST came back 200 with a two-month-old key and an untouched
+// `updated_at`. The reading was wrong. Tesla did re-fetch — the deployment was
+// still serving the old key at that moment, so the "unchanged" record was
+// simply the old key being re-registered over itself. Whether the record moves
+// depends entirely on what the domain serves when the button is pressed, which
+// is why "Check status" reports `servedKeyPoint` alongside Tesla's.
+//
+// Order therefore matters: deploy the new TESLA_PUBLIC_KEY first, confirm the
+// domain is serving it, then register.
 export const maxDuration = 60;
 
 const BodySchema = z.object({
@@ -187,8 +195,12 @@ export async function POST(req: Request) {
             ? {}
             : {
                 servedKeyPoint,
-                keyMismatchHint:
-                  "Tesla holds a different key than this deployment serves. Commands signed with the new private key will be rejected. Re-registering does NOT update it.",
+                // The fix depends on which side is stale, and the two need
+                // opposite actions — so say which one applies rather than
+                // stating the problem and leaving the operator to guess.
+                keyMismatchHint: servedKeyPoint
+                  ? "Tesla holds a different key than this domain serves, so commands signed with the matching private key are rejected. This domain is serving a valid key, so press Register: Tesla re-fetches /.well-known during registration and replaces its record. Then Check status again to confirm."
+                  : "Tesla holds a key but this domain serves none — TESLA_PUBLIC_KEY is unset or malformed. Fix and redeploy the app first; registering now would only re-register the key Tesla already has.",
               }),
         }
       : {}),

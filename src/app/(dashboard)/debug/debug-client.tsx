@@ -759,11 +759,11 @@ export function DebugClient() {
 
             {tesla.grants && tesla.grants.length > 0 && (
               <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-300">
-                A car is already linked. If a partner account is registered,
-                Tesla keeps the <strong>first</strong> public key it saw —
-                re-registering returns the old record untouched. A new pair then
-                has every signed command rejected while everything else looks
-                right. Use &quot;Check status&quot; below first.
+                A car is already linked. Replacing the pair means redoing{" "}
+                <strong>both</strong> halves in order: public key deployed and
+                confirmed served, <em>then</em> Register. Tesla re-fetches
+                /.well-known during registration, so registering while the old
+                key is still being served just re-registers the old one.
               </p>
             )}
 

@@ -219,13 +219,23 @@ answers every poll normally with `latitude`/`longitude` null — which reads as 
 broken map, not a missing permission. `/debug` → "Go live with Tesla" lists the
 granted scopes per car and warns when this one is absent.
 
-> **Re-registering does not rotate the key.** A `POST` for a domain that is
-> already registered returns the existing record untouched — observed in the
-> field: a POST made while a freshly generated key was being served came back
-> `200` with the key from two months earlier and an unchanged `updated_at`. Use
-> the panel's "Check status", which decodes the served PEM to the raw EC point
-> and compares it with what Tesla reports; a mismatch means commands signed with
-> the new private key will be rejected, however correct everything else looks.
+> **Re-registering is how the key is rotated — deploy the new one first.**
+> Tesla re-fetches `/.well-known/appspecific/com.tesla.3p.public-key.pem` on
+> every registration call and replaces its record with whatever the domain
+> serves at that moment. So the order is: set `TESLA_PUBLIC_KEY`, redeploy the
+> app, confirm the domain is serving the new key, *then* press Register.
+>
+> An earlier version of this note claimed the opposite, from one observation: a
+> `POST` returned `200` with a two-month-old key and an unchanged `updated_at`.
+> That reading was wrong. Tesla did re-fetch; the deployment was still serving
+> the old key, so the record was the old key being written over itself. The
+> record only looks frozen when the domain has not actually changed.
+>
+> Use the panel's "Check status", which decodes the served PEM to the raw EC
+> point and compares it with what Tesla reports. A mismatch tells you which side
+> is stale: `servedKeyPoint` present means the domain is fine and registering
+> will fix it; `servedKeyPoint` null means `TESLA_PUBLIC_KEY` is unset or
+> malformed and registering would achieve nothing.
 >
 > Reading vehicle data does not involve the signing key at all, so a mismatch
 > blocks commands only — link the car first, reconcile the key when deploying
