@@ -34,7 +34,7 @@ healthcheck and the hostname, so there is almost nothing to fill in by hand:
 2. Base Directory **`/tesla-proxy`**. Coolify finds `docker-compose.yml` there.
 3. **Environment Variables** → set `TESLA_PRIVATE_KEY`. It is the one value the
    compose file deliberately leaves empty. EC private key PEM, raw or base64 —
-   `entrypoint.sh` takes either.
+   the entrypoint takes either.
 4. Deploy. `SERVICE_FQDN_PROXY_8080` makes Coolify generate the hostname, route
    it to container port 8080 and issue the Let's Encrypt certificate; the result
    shows up in the UI and can be swapped for your own hostname.
@@ -43,6 +43,23 @@ healthcheck and the hostname, so there is almost nothing to fill in by hand:
 Prefer the click-through route? **Application** → Build Pack **Dockerfile**,
 Base Directory `/tesla-proxy`, Ports Exposes `8080`, the same environment
 variable, and a domain of your own. Same result, more steps.
+
+### Without Git at all
+
+Coolify's **Create a new Application → "deploy a simple Dockerfile, without
+Git"** works too: paste the contents of `Dockerfile` into the box. It is
+self-contained — no `COPY` of local files — precisely so that this works, since
+that mode gives the build no context to copy from. Everything the container
+needs is either fetched during the build or written inline.
+
+Then set **`TESLA_PRIVATE_KEY`** in Environment Variables, expose port **8080**,
+and give it a domain. There is no compose file in this mode, so the hostname is
+not generated for you and the healthcheck comes from the Dockerfile's own
+`HEALTHCHECK` instruction rather than from compose.
+
+Trade-off worth knowing: a pasted Dockerfile has no version history and no
+redeploy-on-push. Fine for getting the proxy up today; the Git route is better
+once it matters.
 
 ### The one thing that must not go in the file
 
@@ -89,7 +106,7 @@ runs it on Actions instead, so the whole setup is reachable from a browser:
 2. **GitHub** → repo Settings → Secrets and variables → Actions → new secret
    `FLY_API_TOKEN`, paste the token.
 3. **Fly dashboard** → the app → Secrets → add `TESLA_PRIVATE_KEY`. The value is
-   the EC private key PEM, raw or base64 — `entrypoint.sh` accepts either. This
+   the EC private key PEM, raw or base64 — the entrypoint accepts either. This
    is a Fly secret, never a file in the image and never a Vercel variable.
 4. **GitHub** → Actions → "Deploy Tesla proxy" → Run workflow.
 5. Set `TESLA_PROXY_BASE_URL=https://flux-tesla-proxy.fly.dev` in Vercel and

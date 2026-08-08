@@ -20,7 +20,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # Fly rejects a deploy with no signing key rather than starting a proxy that
-    # cannot sign anything — entrypoint.sh exits 1 on a missing
+    # cannot sign anything — the entrypoint exits 1 on a missing
     # TESLA_PRIVATE_KEY, so a bad deploy fails fast rather than half-working.
     steps:
       - uses: actions/checkout@v4
