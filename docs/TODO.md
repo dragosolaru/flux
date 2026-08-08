@@ -36,6 +36,17 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       panel reports `stripe: false` today.
 - [ ] **Tesla security hardening before linking real accounts** — see item 1b.
 
+### 1h. Viewport truncation is invisible to the caller
+Migration 044 raised the cap from 500 to 2000, but a bbox holding more than
+that still loses rows silently — `GET /api/chargers` returns a bare array with
+nowhere to say "there were more". The client cannot tell a complete answer from
+a truncated one, so the map cannot warn the driver either.
+
+Worth doing when the response shape is next touched: return
+`{ chargers, truncated }` and show a "zoom in to see all" hint. Until then the
+2000 ceiling is above any realistic viewport, so this is latent rather than
+live.
+
 ### 1g. The planner does not know the car's actual battery
 `map-client.tsx:264` is `useState(80)` — a slider. `POST /api/trip-plan` prefers
 the body's `startSoc` and its only fallback reads `mock_vehicle_state`, so a
