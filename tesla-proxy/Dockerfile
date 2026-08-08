@@ -134,7 +134,13 @@ EXPOSE 8080
 # 403 means the proxy answered and only lacked a token — healthy. 502 means
 # Caddy is up but the loopback TLS hop behind it is not. The request never
 # leaves the container, so this costs no Fleet API quota.
+#
+# ${PORT:-8080} rather than a literal: Caddy listens on $PORT, so a host that
+# sets it to anything else would leave the healthcheck probing a dead port and
+# restart-looping a container that was working. HEALTHCHECK is not one of the
+# instructions Docker expands at build time, so this reaches the runtime shell
+# intact and resolves against the container's own environment.
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
-  CMD curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/1/vehicles | grep -q '^[24]'
+  CMD curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT:-8080}/api/1/vehicles" | grep -q '^[24]'
 
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -61,6 +61,22 @@ Trade-off worth knowing: a pasted Dockerfile has no version history and no
 redeploy-on-push. Fine for getting the proxy up today; the Git route is better
 once it matters.
 
+### Keep the key out of the build
+
+Coolify inserts an `ARG` for every environment variable after each `FROM`, so a
+build log will show:
+
+```
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data
+  (ARG "TESLA_PRIVATE_KEY")
+```
+
+That warning is worth acting on. Nothing in this Dockerfile reads the key at
+build time — it is only ever needed at runtime — so in **Environment Variables**
+leave **Build Variable?** off for `TESLA_PRIVATE_KEY`. A build argument is
+recorded in image metadata and shared with anyone who can pull the image, which
+is the wrong place entirely for a key that signs `unlock` and `remote_start`.
+
 ### The one thing that must not go in the file
 
 **Never put `TESLA_PRIVATE_KEY` in `docker-compose.yml`, the Dockerfile, or a
