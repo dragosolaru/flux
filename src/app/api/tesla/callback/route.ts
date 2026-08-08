@@ -175,16 +175,28 @@ export async function GET(req: NextRequest) {
     Date.now() + tokens.expires_in * 1000,
   ).toISOString();
 
-  const { error: tokErr } = await supabase.from("tesla_tokens").insert({
-    vehicle_id: createdVehicle.id,
-    user_id: session.user.id,
-    access_token_enc: encryptToken(tokens.access_token),
-    refresh_token_enc: encryptToken(tokens.refresh_token),
-    expires_at: expiresAt,
-    scopes: ["openid", "offline_access", "vehicle_device_data", "vehicle_cmds"],
-  });
+  // Upsert, not insert. tesla_tokens has a unique index on vehicle_id, so a
+  // second link of the same car — which is exactly what re-authorising after
+  // revoking access in the Tesla account is — hit a unique violation and sent
+  // the driver back with `token_save`. The car was already relinked by then;
+  // only the fresh tokens were thrown away, so access could never be restored.
+  const { error: tokErr } = await supabase.from("tesla_tokens").upsert(
+    {
+      vehicle_id: createdVehicle.id,
+      user_id: session.user.id,
+      access_token_enc: encryptToken(tokens.access_token),
+      refresh_token_enc: encryptToken(tokens.refresh_token),
+      expires_at: expiresAt,
+      scopes: ["openid", "offline_access", "vehicle_device_data", "vehicle_cmds"],
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "vehicle_id" },
+  );
 
   if (tokErr) {
+    logServer("error", "tesla/callback", "token save failed", {
+      detail: tokErr.message,
+    });
     return NextResponse.redirect(
       new URL("/connect/tesla?error=token_save", req.url),
     );

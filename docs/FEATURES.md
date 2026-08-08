@@ -475,6 +475,34 @@ The brand rule exists because sources disagree about *which field* holds the net
 ---
 
 
+### Linking, re-authorising, and OAuth errors
+
+**What:** `GET /api/tesla/connect` starts the PKCE flow; `GET /api/tesla/callback`
+finds the car's region, upserts the `vehicles` row (matched on `tesla_vehicle_id`,
+so linking twice never creates a duplicate) and **upserts** `tesla_tokens` on
+`vehicle_id` — that table has a unique index there, so re-linking an existing car
+would otherwise fail on the last step and throw the fresh tokens away.
+
+**Re-authorising:** revoking Flux in the Tesla account makes token refresh fail;
+`getValidAccessToken` raises `TeslaAuthError`, `/api/vehicles/[id]/state` answers
+**409 `TESLA_REAUTH_REQUIRED`** (not 401 — `apiFetch` logs the user out of Flux on
+401), and the dashboard swaps its error card for "reconnect". That link carries
+`?reauth=1`, which is what lets `/connect/tesla` skip its "you already have a
+vehicle → /dashboard" guard; the same exemption applies to `?error=`, so callback
+failures are now visible instead of being redirected away. With `reauth` set the
+page shows its own title/description/CTA rather than the onboarding copy.
+
+**Error copy:** each of the seven callback failures (`missing_params`,
+`state_mismatch`, `token_exchange`, `fleet_api_rejected`, `no_vehicles`,
+`vehicle_save`, `token_save`) has an `onboarding.connectTesla.err_<code>` string in
+all five locales; unknown codes fall back to the generic `error` message.
+
+**Key files:** `src/app/api/tesla/{connect,callback}/route.ts`,
+`src/app/connect/tesla/page.tsx`, `src/components/onboarding/ConnectTeslaStep.tsx`,
+`src/lib/tesla/{auth,tokens}.ts`, `src/app/(dashboard)/dashboard/dashboard-client.tsx`.
+
+**Dependencies:** Tesla Fleet API, Supabase, `LIVE_INTEGRATIONS=tesla`.
+
 **Tesla account safety:** linking grants `vehicle_device_data`, `vehicle_cmds`
 and `vehicle_charging_cmds`, so a linked account exposes live location plus
 unlock, climate, charge port and remote start. Tokens are encrypted at rest

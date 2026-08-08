@@ -161,7 +161,17 @@
       "title": "Conectează-ți Tesla",
       "description": "Flux folosește API-ul oficial Tesla Fleet. Nu îți vedem niciodată parola — te autentifici direct cu Tesla.",
       "error": "Nu am putut finaliza încercarea anterioară ({code}). Te rugăm să încerci din nou.",
-      "cta": "Conectează contul Tesla"
+      "cta": "Conectează contul Tesla",
+      "err_no_vehicles": "Contul tău Tesla nu are mașini vizibile pentru noi. Verifică dacă ai aprobat contul corect.",
+      "err_fleet_api_rejected": "Tesla a refuzat cererea. Înregistrarea aplicației poate fi incompletă — asta ține de noi, nu de tine.",
+      "err_token_exchange": "Tesla nu a acceptat autentificarea. Încearcă din nou.",
+      "err_state_mismatch": "Linkul de autentificare a expirat sau a fost deschis în alt browser. Reia de aici.",
+      "err_missing_params": "Tesla ne-a trimis înapoi fără datele necesare. Încearcă din nou.",
+      "err_vehicle_save": "Am ajuns la mașină, dar nu am putut să o salvăm. Încearcă din nou.",
+      "err_token_save": "Nu am putut stoca în siguranță conexiunea. Încearcă din nou.",
+      "reauthTitle": "Reconectează-ți mașina Tesla",
+      "reauthDescription": "Flux nu mai are acces la mașina ta. Se întâmplă când accesul este revocat din contul Tesla. O nouă autentificare îl restabilește — mașina, traseele și setările rămân exact cum sunt.",
+      "reauthCta": "Acordă din nou accesul"
     }
   },
   "scenarios": {

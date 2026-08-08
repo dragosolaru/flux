@@ -161,7 +161,17 @@
       "title": "Connectez votre Tesla",
       "description": "Flux utilise l'API officielle Tesla Fleet. Nous ne voyons jamais votre mot de passe — vous vous connectez directement avec Tesla.",
       "error": "Nous n'avons pas pu terminer la tentative précédente ({code}). Veuillez réessayer.",
-      "cta": "Connecter le compte Tesla"
+      "cta": "Connecter le compte Tesla",
+      "err_no_vehicles": "Votre compte Tesla ne présente aucun véhicule visible. Vérifiez que vous avez approuvé le bon compte.",
+      "err_fleet_api_rejected": "Tesla a refusé la demande. L'enregistrement partenaire de l'application est peut-être incomplet — cela vient de nous.",
+      "err_token_exchange": "Tesla n'a pas accepté la connexion. Réessayez.",
+      "err_state_mismatch": "Ce lien de connexion a expiré ou a été ouvert dans un autre navigateur. Recommencez ici.",
+      "err_missing_params": "Tesla nous a renvoyés sans les informations nécessaires. Réessayez.",
+      "err_vehicle_save": "Nous avons joint votre voiture mais n'avons pas pu l'enregistrer. Réessayez.",
+      "err_token_save": "Impossible d'enregistrer la connexion de façon sécurisée. Réessayez.",
+      "reauthTitle": "Reconnecter votre Tesla",
+      "reauthDescription": "Flux n'a plus accès à votre voiture. Cela arrive lorsque l'accès est révoqué dans votre compte Tesla. Une nouvelle connexion le rétablit — votre voiture, vos trajets et vos réglages restent inchangés.",
+      "reauthCta": "Autoriser à nouveau"
     }
   },
   "scenarios": {

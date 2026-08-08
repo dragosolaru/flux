@@ -161,7 +161,17 @@
       "title": "Csatlakoztasd a Teslát",
       "description": "A Flux a hivatalos Tesla Fleet API-t használja. Soha nem látjuk a jelszavadat — közvetlenül a Teslánál jelentkezel be.",
       "error": "Nem sikerült befejezni az előző próbálkozást ({code}). Kérjük, próbáld újra.",
-      "cta": "Tesla-fiók csatlakoztatása"
+      "cta": "Tesla-fiók csatlakoztatása",
+      "err_no_vehicles": "A Tesla-fiókodban nem látunk járművet. Ellenőrizd, hogy a megfelelő fiókot hagytad jóvá.",
+      "err_fleet_api_rejected": "A Tesla elutasította a kérést. Az alkalmazás partner-regisztrációja hiányos lehet — ez rajtunk múlik.",
+      "err_token_exchange": "A Tesla nem fogadta el a bejelentkezést. Próbáld újra.",
+      "err_state_mismatch": "A bejelentkezési link lejárt, vagy másik böngészőben nyílt meg. Kezdd újra innen.",
+      "err_missing_params": "A Tesla a szükséges adatok nélkül küldött vissza. Próbáld újra.",
+      "err_vehicle_save": "Elértük az autót, de nem tudtuk elmenteni. Próbáld újra.",
+      "err_token_save": "Nem sikerült biztonságosan tárolni a kapcsolatot. Próbáld újra.",
+      "reauthTitle": "Csatlakoztasd újra a Teslát",
+      "reauthDescription": "A Flux már nem fér hozzá az autódhoz. Ez akkor történik, ha a hozzáférést visszavontad a Tesla-fiókodban. Az újbóli bejelentkezés helyreállítja — az autó, az utak és a beállítások változatlanok maradnak.",
+      "reauthCta": "Hozzáférés újbóli megadása"
     }
   },
   "scenarios": {

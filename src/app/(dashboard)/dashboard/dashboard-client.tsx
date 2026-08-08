@@ -657,7 +657,9 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
             <p className="mt-1 text-sm text-muted-foreground">{td("reauth_subtitle")}</p>
           </div>
           <Link
-            href="/connect/tesla"
+            // ?reauth: this car already exists, so the page's "you already
+            // have a vehicle" guard would otherwise bounce straight back here.
+            href="/connect/tesla?reauth=1"
             className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
             {td("reauth_action")}
