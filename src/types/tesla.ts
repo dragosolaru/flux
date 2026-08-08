@@ -38,6 +38,15 @@ export interface TeslaClimateState {
   outside_temp: number;
   is_climate_on: boolean;
   driver_temp_setting: number;
+  /**
+   * Whether the battery heater is running — i.e. the car is preconditioning.
+   *
+   * Optional because Tesla omits it on some firmware and on a half-asleep
+   * response. `battery_heater_on` is the older spelling and still appears;
+   * both are read so a missing one is "unknown", never "off".
+   */
+  battery_heater?: boolean | null;
+  battery_heater_on?: boolean | null;
 }
 
 export interface TeslaDriveState {

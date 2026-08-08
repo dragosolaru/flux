@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
-import { StopCard, needsPreconditioning, isSuperchargerNetwork } from "@/components/trip/StopCard";
+import { StopCard } from "@/components/trip/StopCard";
 import { CostSummary } from "@/components/trip/CostSummary";
 import { SegmentedControl, DesktopSidebar, LIST_ROW, SECTION_TITLE } from "@/components/map/map-ui";
 import { Compass } from "lucide-react";
@@ -37,6 +37,7 @@ import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet
 import * as chargersApi from "@/lib/api/chargers";
 import * as tripApi from "@/lib/api/trip";
 import * as vehiclesApi from "@/lib/api/vehicles";
+import { ApiError } from "@/lib/api-fetch";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -50,7 +51,7 @@ import {
 import { SavedRoutesSheet } from "@/components/trip/SavedRoutesSheet";
 import { compactSnapshot, parseSnapshot } from "@/lib/trip/snapshot";
 import { shareRoute } from "@/lib/trip/share-route";
-import { routeNeedsPreconditioning } from "@/lib/trip/precondition";
+import { routeNeedsPreconditioning, needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
@@ -153,6 +154,7 @@ export function MapClient() {
   const tMap = useTranslations("map");
   const tTrip = useTranslations("trip");
   const tCharging = useTranslations("chargingMap");
+  const tCommands = useTranslations("commands");
   const { fromEUR } = useCurrency();
 
   const searchParams = useSearchParams();
@@ -458,14 +460,32 @@ export function MapClient() {
     setSavedSheetOpen(false);
   }
 
+  /**
+   * The reason a command failed, not just that it did.
+   *
+   * A post-2021 car without the signing proxy answers 412 VCP_REQUIRED, and
+   * every precondition path here reported that as the generic "share failed"
+   * toast — so the one failure with an actionable cause looked identical to a
+   * network blip.
+   */
+  function commandErrorMessage(err: unknown): string {
+    if (err instanceof ApiError && (err.status === 412 || err.code === "VCP_REQUIRED")) {
+      return tCommands("error_vcp_required");
+    }
+    if (err instanceof ApiError && err.status === 429) {
+      return tCommands("error_rate_limit");
+    }
+    return tTrip("share_error");
+  }
+
   async function handleManualPrecondition() {
     if (!teslaVehicle) return;
     setPreconditioningManually(true);
     try {
       await vehiclesApi.sendCommand(teslaVehicle.id, "precondition_max", { on: true });
       toast.success(tTrip("precondition_started"));
-    } catch {
-      toast.error(tTrip("share_error"));
+    } catch (err) {
+      toast.error(commandErrorMessage(err));
     } finally {
       setPreconditioningManually(false);
     }
@@ -599,9 +619,15 @@ export function MapClient() {
 
     // The battery cares about the route, not about which app receives the link.
     if (teslaVehicle && routeNeedsPreconditioning(activePlan.stops)) {
+      // Fire-and-forget, but not silent: the share must not be blocked on the
+      // car, yet a driver told nothing will stand at a cold charger wondering
+      // why. `.catch(() => undefined)` swallowed even the 412 that says the
+      // signing proxy is missing.
       void vehiclesApi
         .sendCommand(teslaVehicle.id, "precondition_max", { on: true })
-        .catch(() => undefined);
+        .catch((err: unknown) => {
+          toast.error(commandErrorMessage(err));
+        });
     }
 
     const outcome = await shareRoute({
@@ -1472,11 +1498,16 @@ function RouteAccordion({
                                 stop={stop}
                                 index={si}
                                 preconditioned={
+                                  // Every stop, not just the first. The command
+                                  // is sent for the route as a whole
+                                  // (routeNeedsPreconditioning checks all
+                                  // stops), so pinning the badge to si === 0
+                                  // left stops 2+ that WERE preconditioned
+                                  // showing the amber "manual" badge.
                                   sharedRoute &&
                                   active &&
-                                  si === 0 &&
                                   needsPreconditioning(stop.station.maxKw) &&
-                                  !isSuperchargerNetwork(stop.station.networkId)
+                                  !isTeslaOwnNetwork({ networkId: stop.station.networkId })
                                 }
                               />
                             ))}
@@ -1752,10 +1783,10 @@ function PlanResults({
                   stop={stop}
                   index={i}
                   preconditioned={
+                    // All stops — see the note on the other StopCard.
                     sharedRoute &&
-                    i === 0 &&
                     needsPreconditioning(stop.station.maxKw) &&
-                    !isSuperchargerNetwork(stop.station.networkId)
+                    !isTeslaOwnNetwork({ networkId: stop.station.networkId })
                   }
                 />
               ))}

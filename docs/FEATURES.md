@@ -498,7 +498,7 @@ confirmation before firing, then notify the owner on success via
 
 ## 25. Testing
 
-- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine, trip share/snapshot helpers. Run: `npx vitest run` (215 tests). `routeNeedsPreconditioning` has NO test — this line claimed otherwise until an audit checked.
+- **Unit:** charger pipeline (`src/lib/chargers/__tests__/`: normalize, ingest, dedup, confidence, query), charge curve, mock engine, trip share/snapshot/precondition helpers. Run: `npx vitest run` (226 tests).
 - **E2E (Playwright):** `playwright.config.ts` + `e2e/` (smoke, auth, garage, costs, trip, authed-flow). CI `e2e-smoke` runs `smoke.spec.ts` (no credentials); authenticated specs gated on `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`. Run: `npm run test:e2e` (`npx playwright install --with-deps chromium` once).
 - **Two projects:** `chromium` (Desktop Chrome) and `mobile` (Pixel 7). The mobile project is scoped to `public-pages.spec.ts` — only the a11y/layout specs need a narrow viewport.
 - **Offline-capable specs** (no credentials, no network): `public-pages`, `auth`, `i18n`, `trip-planner`. 101 assertions covering console errors, hydration mismatches, accessible names, nested interactives, WCAG 2.5.8 tap targets, all five locales, and planner auth gating.

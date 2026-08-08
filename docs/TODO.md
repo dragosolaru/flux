@@ -47,7 +47,7 @@ Worth doing when the response shape is next touched: return
 2000 ceiling is above any realistic viewport, so this is latent rather than
 live.
 
-### 1g. The planner does not know the car's actual battery
+### 1g. ~~The planner does not know the car's actual battery~~ — FIXED
 `map-client.tsx:264` is `useState(80)` — a slider. `POST /api/trip-plan` prefers
 the body's `startSoc` and its only fallback reads `mock_vehicle_state`, so a
 genuinely linked Tesla's SoC is never consulted on the planning path even though
@@ -124,7 +124,7 @@ product with its own setup). `dx/charging/history` covers Supercharger sessions
 only — home and third-party charging never appears there, which is worth saying
 in the UI rather than leaving an empty list that looks broken.
 
-### 1d. Polling wakes a sleeping car every 30 s
+### 1d. ~~Polling wakes a sleeping car every 30 s~~ — MITIGATED (idle pause + sleep button; planner reads without polling)
 `useVehicle` polls `refetchInterval: 30_000`, and `fetchVehicleData` answers a
 408 by calling `wake_up` and retrying. So an open dashboard keeps a linked car
 awake indefinitely — a Tesla that never reaches deep sleep loses roughly ten

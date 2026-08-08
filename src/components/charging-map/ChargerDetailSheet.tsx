@@ -9,6 +9,7 @@ import type { Charger } from "@/lib/chargers/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useVehicles } from "@/hooks/useVehicles";
 import * as vehiclesApi from "@/lib/api/vehicles";
+import { needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 
 interface ChargerDetailSheetProps {
   charger: Charger;
@@ -30,11 +31,6 @@ const STATUS_META: Record<
   stale: { color: "#f59e0b", labelKey: "status_stale" },
   unknown: { color: "#9ca3af", labelKey: "status_unknown" },
 };
-
-// Battery preconditioning is worth it from fast charging up; Tesla auto-
-// preconditions only for its own Superchargers, so we trigger it ourselves
-// for third-party fast chargers.
-const PRECONDITION_MIN_KW = 50;
 
 const container = {
   hidden: {},
@@ -75,9 +71,9 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
     if (!teslaVehicle) return;
     setSending(true);
     try {
-      const isSupercharger = charger.operatorId === "tesla";
+      const isSupercharger = isTeslaOwnNetwork({ operatorId: charger.operatorId });
       const willPrecondition =
-        (charger.maxPowerKw ?? 0) >= PRECONDITION_MIN_KW && !isSupercharger;
+        needsPreconditioning(charger.maxPowerKw ?? 0) && !isSupercharger;
 
       await vehiclesApi.shareNavigation(
         teslaVehicle.id,

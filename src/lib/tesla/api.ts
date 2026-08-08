@@ -146,7 +146,12 @@ function mapVehicleData(
     isFrunkOpen: null,
     isSentryMode: veh?.sentry_mode ?? null,
     isDashcamRecording: null,
-    isBatteryPreconditioning: null,
+    // Read from the car rather than hardcoded null. Flux could send
+    // precondition_max but never show whether it took effect — the field was
+    // written only by the simulator, so a linked car reported "unknown"
+    // forever and the driver had no way to tell a working command from a
+    // silently rejected one.
+    isBatteryPreconditioning: climate?.battery_heater ?? climate?.battery_heater_on ?? null,
     // software
     softwareVersion: veh?.car_version ?? null,
     updateAvailable: null,

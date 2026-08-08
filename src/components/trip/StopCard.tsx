@@ -4,16 +4,10 @@ import { Thermometer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ReliabilityBadge } from "./ReliabilityBadge";
 import { useCurrency } from "@/hooks/useCurrency";
+import { needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 
-const PRECONDITION_MIN_KW = 50;
-
-export function needsPreconditioning(maxKw: number): boolean {
-  return maxKw >= PRECONDITION_MIN_KW;
-}
-
-export function isSuperchargerNetwork(networkId: string): boolean {
-  return networkId === "tesla-sc";
-}
+// Both rules live in @/lib/trip/precondition — a component is the wrong owner
+// for a rule the planner and the charger sheet also apply.
 
 interface StopCardProps {
   stop: {
@@ -43,7 +37,7 @@ export function StopCard({ stop, index, preconditioned = false }: StopCardProps)
   const { fromEUR } = useCurrency();
   const { station, arriveSoc, departSoc, energyAddedKwh, chargingMinutes, costEur, distanceFromStartKm } = stop;
   const precondition = needsPreconditioning(station.maxKw);
-  const autoPrecondition = isSuperchargerNetwork(station.networkId) || preconditioned;
+  const autoPrecondition = isTeslaOwnNetwork({ networkId: station.networkId }) || preconditioned;
 
   return (
     <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/40 px-2.5 py-2 backdrop-blur-sm">
