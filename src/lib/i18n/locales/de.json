@@ -670,6 +670,7 @@
     "unknown_error": "Unbekannter Fehler",
     "stations_in_view": "{count} Stationen im Blickfeld",
     "updating": "{count} Stationen · wird aktualisiert…",
+    "loading_stations": "Ladestationen werden geladen…",
     "ingesting_area": "Stationen in diesem Gebiet werden gesucht…",
     "max_power": "Maximale Leistung",
     "unknown_power": "Unbekannt",

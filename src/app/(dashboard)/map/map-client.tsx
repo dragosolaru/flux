@@ -552,7 +552,7 @@ export function MapClient() {
     };
   }, [activePlan?.polyline, origin, destination]);
 
-  const { data: corridorStations = [] } = useQuery({
+  const { data: corridorStations = [], isFetching: corridorFetching } = useQuery({
     queryKey: ["map-corridor-chargers", routeBBox],
     queryFn: () => chargersApi.inBBox(routeBBox!, { limit: 1000 }),
     enabled: mode === "plan" && routeBBox !== null && plan !== null,
@@ -714,7 +714,12 @@ export function MapClient() {
   // top-card route accordion, and the station list opens only on request so
   // the map stays uncluttered.
   const showSheet = mode === "explore" && stationListOpen && stations.length > 0;
-  const showListPill = mode === "explore" && !stationListOpen && stations.length > 0;
+  // Visible while fetching too, not only once there is something to count.
+  // Requiring stations.length > 0 meant the very first load — the one time you
+  // genuinely cannot tell whether anything is happening — showed nothing at
+  // all: no pill, no spinner, an empty map that looks finished.
+  const showListPill =
+    mode === "explore" && !stationListOpen && (stations.length > 0 || isFetching);
 
   // ---- Render ----
   return (
@@ -1019,9 +1024,12 @@ export function MapClient() {
                 <div className="h-1 w-9 rounded-full bg-border transition-colors active:bg-muted-foreground/40" />
               </button>
               <div className="flex items-center justify-between gap-2 px-4 pb-2">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  {isFetching && <Loader2 className="size-3 animate-spin text-primary" />}
                   {isFetching
-                    ? tCharging("updating", { count: stations.length })
+                    ? stations.length === 0
+                      ? tCharging("loading_stations")
+                      : tCharging("updating", { count: stations.length })
                     : tCharging("stations_count", { count: stations.length })}
                 </span>
                 <button
@@ -1052,6 +1060,19 @@ export function MapClient() {
       {/* Floating "show list" pill (explore, mobile) — opens the station list on
           demand so the map stays uncluttered. */}
       <AnimatePresence>
+        {mode === "plan" && corridorFetching && (
+          <motion.div
+            key="corridor-loading"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="absolute bottom-[calc(env(safe-area-inset-bottom)+84px)] left-1/2 z-[900] flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3.5 py-2 text-xs font-semibold text-foreground shadow-xl backdrop-blur-xl"
+          >
+            <Loader2 className="size-3.5 animate-spin text-primary" />
+            {tCharging("loading_stations")}
+          </motion.div>
+        )}
+
         {showListPill && (
           <motion.button
             key="list-pill"
@@ -1061,8 +1082,16 @@ export function MapClient() {
             onClick={openStationList}
             className="absolute bottom-[calc(env(safe-area-inset-bottom)+84px)] left-1/2 z-[900] flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3.5 py-2 text-xs font-semibold text-foreground shadow-xl backdrop-blur-xl lg:hidden"
           >
-            <List className="size-3.5 text-primary" />
-            {tCharging("stations_count", { count: stations.length })}
+            {isFetching ? (
+              <Loader2 className="size-3.5 animate-spin text-primary" />
+            ) : (
+              <List className="size-3.5 text-primary" />
+            )}
+            {isFetching
+              ? stations.length === 0
+                ? tCharging("loading_stations")
+                : tCharging("updating", { count: stations.length })
+              : tCharging("stations_count", { count: stations.length })}
           </motion.button>
         )}
       </AnimatePresence>
@@ -1205,12 +1234,22 @@ function ExploreContent({ stations, isFetching, onStationSelect, tCharging, tMap
     <div className="space-y-2.5 pt-1">
       {!hideHeader && (
         <div className="flex items-center justify-between">
-          <span className={SECTION_TITLE}>
+          <span className={`${SECTION_TITLE} flex items-center gap-1.5`}>
+            {isFetching && <Loader2 className="size-3 animate-spin text-primary" />}
             {isFetching
-              ? tCharging("updating", { count: stations.length })
+              ? stations.length === 0
+                ? tCharging("loading_stations")
+                : tCharging("updating", { count: stations.length })
               : tCharging("stations_count", { count: stations.length })}
           </span>
         </div>
+      )}
+
+      {list.length === 0 && isFetching && (
+        <p className="flex items-center justify-center gap-2 py-6 text-center text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          {tCharging("loading_stations")}
+        </p>
       )}
 
       {list.length === 0 && !isFetching && (
