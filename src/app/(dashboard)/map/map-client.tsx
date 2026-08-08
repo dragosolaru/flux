@@ -37,6 +37,7 @@ import { ChargerDetailSheet } from "@/components/charging-map/ChargerDetailSheet
 import * as chargersApi from "@/lib/api/chargers";
 import * as tripApi from "@/lib/api/trip";
 import * as vehiclesApi from "@/lib/api/vehicles";
+import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -261,7 +262,29 @@ export function MapClient() {
   const [vehicleId, setVehicleId] = useState(() => selectedVehicleId ?? "");
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);
-  const [startSoc, setStartSoc] = useState(80);
+  // The planner starts from the car's real battery. It used to start from a
+  // fixed 80% — a route planner that does not know your state of charge is
+  // guessing, and reading it is the one thing linking the car makes possible.
+  //
+  // `poll: false` deliberately: the planner needs the value, not a stream, and
+  // an interval here would keep a linked car awake for as long as the map is
+  // open.
+  const planningVehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+  const { data: liveState } = useVehicle(
+    vehicleId,
+    planningVehicle?.dataSource === "live",
+    false,
+  );
+  // Derived, not synced. An effect copying the live value into state would
+  // overwrite the driver mid-plan every time the car reported; expressing "the
+  // driver's number wins, otherwise the car's, otherwise 80" as a fallback
+  // chain makes that impossible rather than merely unlikely.
+  const [startSocOverride, setStartSocOverride] = useState<number | null>(null);
+  const liveSoc = liveState?.batteryLevel;
+  const startSoc =
+    startSocOverride ??
+    (typeof liveSoc === "number" && liveSoc > 0 ? Math.round(liveSoc) : 80);
+  const handleStartSocChange = setStartSocOverride;
   const [arrivalSoc, setArrivalSoc] = useState(10);
   const [plan, setPlan] = useState<TripResponse | null>(null);
   const [activeVariant, setActiveVariant] = useState(0);
@@ -868,7 +891,7 @@ export function MapClient() {
                       max={100}
                       step={5}
                       value={startSoc}
-                      onChange={(e) => setStartSoc(Number(e.target.value))}
+                      onChange={(e) => handleStartSocChange(Number(e.target.value))}
                       className="mt-1 h-1 w-full appearance-none rounded-full bg-muted [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
                     />
                   </div>
@@ -1075,7 +1098,7 @@ export function MapClient() {
               originBias={originBias}
               destinationBias={destinationBias}
               startSoc={startSoc}
-              setStartSoc={setStartSoc}
+              setStartSoc={handleStartSocChange}
               arrivalSoc={arrivalSoc}
               setArrivalSoc={setArrivalSoc}
               plan={plan}

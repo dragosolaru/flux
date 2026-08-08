@@ -32,7 +32,14 @@ export interface VehiclePolling {
   resume: () => void;
 }
 
-export function useVehicle(vehicleId: string, live = false) {
+/**
+ * @param live  the vehicle is a linked car, so polling wakes it
+ * @param poll  keep refreshing. Screens that only need the current value once
+ *              — the trip planner reading the battery to plan from — pass
+ *              false: they get the cached value, or one fetch, and never start
+ *              an interval that keeps the car awake while someone plans.
+ */
+export function useVehicle(vehicleId: string, live = false, poll = true) {
   // Only a linked car can be kept awake; the simulator has nothing to disturb,
   // so mock vehicles keep polling exactly as before.
   const [active, setActive] = useState(true);
@@ -82,7 +89,7 @@ export function useVehicle(vehicleId: string, live = false) {
   const query = useQuery({
     queryKey: ["vehicle", vehicleId],
     queryFn: () => vehiclesApi.getState(vehicleId),
-    refetchInterval: live && !active ? false : 30_000,
+    refetchInterval: !poll || (live && !active) ? false : 30_000,
     staleTime: 20_000,
     enabled: !!vehicleId,
   });
