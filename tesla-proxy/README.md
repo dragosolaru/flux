@@ -61,6 +61,31 @@ Trade-off worth knowing: a pasted Dockerfile has no version history and no
 redeploy-on-push. Fine for getting the proxy up today; the Git route is better
 once it matters.
 
+### Where the key comes from
+
+`/debug` → "Go live with Tesla" → **Generate keypair** mints the EC P-256 pair
+and hands back the private half as single-line base64 and the public half as
+PEM. Admin-only, rate limited, generated on an explicit press and stored
+nowhere — not in the database, not in a log, and deliberately excluded from
+"Copy all", which exists to be pasted into a chat. Close the page and it is
+gone.
+
+It exists because the two halves belong in two different places, neither of
+which is a shell: the private half on the proxy host, the public half in
+`TESLA_PUBLIC_KEY` on the app. From a phone the alternative is finding a machine
+with `openssl`.
+
+With a machine to hand, the equivalent is:
+
+```bash
+openssl ecparam -genkey -name prime256v1 -noout -out private.pem
+openssl ec -in private.pem -pubout -out public.pem
+```
+
+**Generate once.** Tesla keeps the first public key it saw for a domain;
+re-registering returns that record untouched. A second pair generated later has
+every signed command rejected while everything else looks correct.
+
 ### Preferred: mount the key as a file
 
 `TESLA_PRIVATE_KEY_FILE` points the entrypoint at a file instead of an

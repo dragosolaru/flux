@@ -173,6 +173,13 @@ export function DebugClient() {
   const [apiResult, setApiResult] = useState<unknown>(null);
   const [partnerResult, setPartnerResult] = useState<unknown>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
+  // Held in memory for exactly as long as this page stays open, and never put
+  // anywhere else — see the deliberate omission from copyAll below.
+  const [keypair, setKeypair] = useState<{
+    privateKeyPem: string;
+    privateKeyBase64: string;
+    publicKeyPem: string;
+  } | null>(null);
   // Populated only when the clipboard write is refused, so the text can still
   // be selected by hand — some mobile browsers block the API outright.
   const [copyFallback, setCopyFallback] = useState<string | null>(null);
@@ -407,7 +414,38 @@ export function DebugClient() {
     }
   }
 
+  async function generateKeypair() {
+    setRunning("keypair");
+    setLastError(null);
+    setKeypair(null);
+    try {
+      setKeypair(
+        await apiFetch<{
+          privateKeyPem: string;
+          privateKeyBase64: string;
+          publicKeyPem: string;
+        }>("/api/internal/debug/tesla-keypair", { method: "POST" }),
+      );
+    } catch (err) {
+      setLastError(
+        `Keypair generation failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  function copyText(text: string, label: string) {
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => toast.success(`${label} copied`))
+      .catch(() => toast.error("Clipboard blocked — select the text instead"));
+  }
+
   function copyAll() {
+    // The keypair is deliberately absent. This blob exists to be pasted into a
+    // chat or an issue, which is the last place a signing key should turn up,
+    // and a diagnostics dump that quietly swept one along would be a trap.
     const blob = JSON.stringify(
       {
         diagnostics: data ?? null,
@@ -708,6 +746,83 @@ export function DebugClient() {
               </li>
             ))}
           </ol>
+          <div className="space-y-2 border-t border-border/60 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Command-signing keypair
+            </p>
+            <p className="text-xs text-muted-foreground">
+              EC P-256, the curve Tesla requires. Generated here because the two
+              halves belong in two different places and neither is a shell. Shown
+              once and stored nowhere — not in the database, not in a log, not in
+              &quot;Copy all&quot;. Close this page and it is gone.
+            </p>
+
+            {tesla.grants && tesla.grants.length > 0 && (
+              <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-300">
+                A car is already linked. If a partner account is registered,
+                Tesla keeps the <strong>first</strong> public key it saw —
+                re-registering returns the old record untouched. A new pair then
+                has every signed command rejected while everything else looks
+                right. Use &quot;Check status&quot; below first.
+              </p>
+            )}
+
+            <IngestButton
+              label="Generate keypair"
+              busy={running === "keypair"}
+              disabled={running !== null}
+              onClick={() => void generateKeypair()}
+            />
+
+            {keypair && (
+              <div className="space-y-3 rounded-md border border-border/60 p-3">
+                <div className="space-y-1">
+                  <div className="text-xs font-medium">
+                    1. Private half → the proxy host
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Single-line base64, the form that survives a control panel
+                    storing one line per variable. Set it as{" "}
+                    <code>TESLA_PRIVATE_KEY</code>, and make sure it is a runtime
+                    variable — a build argument gets printed in the deploy log.
+                  </p>
+                  <button
+                    onClick={() => copyText(keypair.privateKeyBase64, "Private key")}
+                    className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+                  >
+                    Copy private key (base64)
+                  </button>
+                </div>
+
+                <div className="space-y-1 border-t border-border/60 pt-2">
+                  <div className="text-xs font-medium">
+                    2. Public half → <code>TESLA_PUBLIC_KEY</code> in Vercel
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Served at /.well-known/appspecific/com.tesla.3p.public-key.pem.
+                    Deploy this before registering the partner account — Tesla
+                    fetches it during registration.
+                  </p>
+                  <button
+                    onClick={() => copyText(keypair.publicKeyPem, "Public key")}
+                    className="rounded-lg bg-secondary px-3 py-2 text-xs font-medium"
+                  >
+                    Copy public key (PEM)
+                  </button>
+                  <pre className="-mx-1 mt-1 max-h-40 overflow-auto rounded bg-muted/40 p-2 text-[10px] leading-relaxed">
+                    {keypair.publicKeyPem}
+                  </pre>
+                </div>
+
+                <p className="text-xs text-amber-300">
+                  Both halves must come from this same generation. A private key
+                  paired with someone else&apos;s public half signs commands the
+                  car will refuse.
+                </p>
+              </div>
+            )}
+          </div>
+
           {tesla.virtualKeyUrl && (
             <div className="space-y-2 border-t border-border/60 pt-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
