@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getSubscriptionTier } from "@/lib/subscription";
+
 import { auth } from "@/lib/auth";
 import type { CapabilityContext } from "@/lib/capabilities";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -22,7 +24,7 @@ export async function GET() {
 
   const supabase = createSupabaseAdminClient();
 
-  const [{ data: vehicles }, { data: settings }, { data: profile }] = await Promise.all([
+  const [{ data: vehicles }, { data: settings }, subscriptionTier] = await Promise.all([
     supabase
       .from("vehicles")
       .select("id, data_source, virtual_key_paired")
@@ -33,11 +35,12 @@ export async function GET() {
       .select("tariff_provider")
       .eq("user_id", userId)
       .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("subscription_tier")
-      .eq("id", userId)
-      .maybeSingle(),
+    // Not a raw `profiles.subscription_tier` read. That was a second source of
+    // truth for "is this user pro", and it disagreed with the first: the
+    // ADMIN_EMAILS override in getSubscriptionTier lifted the vehicle cap while
+    // every capability here still reported free, so the same account was pro
+    // and not pro depending on which code asked.
+    getSubscriptionTier(userId),
   ]);
 
   const vehicleRows = (vehicles ?? []) as Array<{
@@ -53,7 +56,7 @@ export async function GET() {
     ?.tariff_provider ?? null;
   const hasRealTariff = tariffProvider != null && !tariffProvider.endsWith("-mock");
 
-  const subscriptionTier = (profile as { subscription_tier?: string } | null)?.subscription_tier ?? "free";
+
 
   const ctx: CapabilityContext = {
     hasVehicle: vehicleRows.length > 0,

@@ -373,6 +373,10 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 ## 16. Billing / subscription
 
+**One answer to "is this user pro".** `getSubscriptionTier(userId)` is it: the stored `profiles.subscription_tier`, or `pro` when the account's email is in `ADMIN_EMAILS` — the maintainer needs a mock vehicle to develop against plus a real linked car, and paying themselves through Stripe for the second slot is silly. Reuses the allowlist that already gates the debug surface rather than adding a second notion of "the owner".
+
+`GET /api/me/capabilities` read the column directly and so disagreed with it: the same account was pro for the vehicle cap and free for every capability the UI renders from — Settings' plan row, the free-slot check, the document limit, the add-vehicle modal. It now calls the function. If you add a third caller, call the function too.
+
 **What:** Stripe-backed Free/Pro tiers. Free: 1 vehicle, 3 documents/month. Pro lifts both. Tier read from `profiles.subscription_tier`.
 
 **How to use:** UI in `/settings` and `/pricing` (`UpgradeButton`, `ManageSubscriptionButton`, both i18n + toast on error). API:
