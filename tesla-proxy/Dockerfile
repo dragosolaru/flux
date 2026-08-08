@@ -78,37 +78,48 @@ PROXY_PORT=8443
 > "$KEY_PATH"
 chmod 600 "$KEY_PATH"
 
-# The two failure modes here are worth separating, because "env var is required"
-# sent people to check a variable that was set all along.
-#
-# A PEM is five lines. Most control panels write environment variables into a
-# single-line .env, so pasting one in produces an EMPTY value, not a truncated
-# one — the container then reports the variable as missing while the UI clearly
-# shows it filled. Single-line base64 is the way past that, and note that plain
-# `base64` wraps at 76 columns, so it needs -w0 (or `| tr -d '\n'`).
-if [ -z "$TESLA_PRIVATE_KEY" ]; then
-  echo "ERROR: TESLA_PRIVATE_KEY is empty or unset." >&2
-  echo "  If the panel shows it set, the value was almost certainly a multi-line" >&2
-  echo "  PEM: a .env file cannot hold one, so it arrives empty." >&2
-  echo "  Re-paste it as single-line base64:  base64 -w0 < private.pem" >&2
-  echo "  Also confirm it is a RUNTIME variable, not a build argument." >&2
-  exit 1
-fi
-
-# Accept either raw PEM or base64-encoded PEM.
-if echo "$TESLA_PRIVATE_KEY" | grep -q "BEGIN EC PRIVATE KEY"; then
-  printf "%s\n" "$TESLA_PRIVATE_KEY" > "$KEY_PATH"
+# A mounted file is the preferred way in, and TESLA_PRIVATE_KEY_FILE is how you
+# ask for it. It sidesteps both traps the environment variable walks into: a
+# file holds the five lines of a PEM without ceremony, and it never passes
+# through a build argument, which some platforms print in the deployment log
+# and bake into the image as an ARG default.
+if [ -n "$TESLA_PRIVATE_KEY_FILE" ]; then
+  if [ ! -r "$TESLA_PRIVATE_KEY_FILE" ]; then
+    echo "ERROR: TESLA_PRIVATE_KEY_FILE=$TESLA_PRIVATE_KEY_FILE is not readable." >&2
+    echo "  Check the mount path matches, and that the file is not a directory." >&2
+    exit 1
+  fi
+  cat "$TESLA_PRIVATE_KEY_FILE" > "$KEY_PATH"
+elif [ -n "$TESLA_PRIVATE_KEY" ]; then
+  # Accept either raw PEM or base64-encoded PEM.
+  if echo "$TESLA_PRIVATE_KEY" | grep -q "BEGIN EC PRIVATE KEY"; then
+    printf "%s\n" "$TESLA_PRIVATE_KEY" > "$KEY_PATH"
+  else
+    echo "$TESLA_PRIVATE_KEY" | base64 -d > "$KEY_PATH" 2>/dev/null || true
+  fi
 else
-  echo "$TESLA_PRIVATE_KEY" | base64 -d > "$KEY_PATH" 2>/dev/null || true
+  # A PEM is five lines. Most control panels write environment variables into a
+  # single-line .env, so pasting one in produces an EMPTY value, not a truncated
+  # one — the container then reports the variable as missing while the UI
+  # clearly shows it filled.
+  echo "ERROR: no signing key. Set TESLA_PRIVATE_KEY_FILE or TESLA_PRIVATE_KEY." >&2
+  echo "  If the panel shows TESLA_PRIVATE_KEY set, the value was almost" >&2
+  echo "  certainly a multi-line PEM: a .env file cannot hold one, so it" >&2
+  echo "  arrives empty. Mount it as a file, or paste single-line base64:" >&2
+  echo "    base64 -w0 < private.pem" >&2
+  exit 1
 fi
 
 # Fail here rather than letting tesla-http-proxy die on it, so the log says what
 # is wrong with the value instead of that there is something wrong with the key.
 if ! openssl ec -in "$KEY_PATH" -noout 2>/dev/null; then
-  echo "ERROR: TESLA_PRIVATE_KEY is set but did not yield an EC private key." >&2
-  echo "  Most likely a partial paste, or base64 that lost its tail." >&2
-  echo "  Regenerate the value with:  base64 -w0 < private.pem" >&2
-  echo "  It must be one unbroken line, ending in '=' or a base64 character." >&2
+  echo "ERROR: the signing key is set but is not an EC private key." >&2
+  echo "  Either it is not a key at all (a placeholder value?), a partial" >&2
+  echo "  paste, or base64 that lost its tail." >&2
+  echo "  A real one starts '-----BEGIN EC PRIVATE KEY-----' and is generated" >&2
+  echo "  with:  openssl ecparam -genkey -name prime256v1 -noout -out private.pem" >&2
+  echo "  It must be the key whose PUBLIC half Tesla already has on file —" >&2
+  echo "  a fresh pair will have every signed command rejected." >&2
   exit 1
 fi
 

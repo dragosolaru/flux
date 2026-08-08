@@ -61,21 +61,39 @@ Trade-off worth knowing: a pasted Dockerfile has no version history and no
 redeploy-on-push. Fine for getting the proxy up today; the Git route is better
 once it matters.
 
+### Preferred: mount the key as a file
+
+`TESLA_PRIVATE_KEY_FILE` points the entrypoint at a file instead of an
+environment variable, and it avoids both traps below in one move — a file holds
+a five-line PEM without ceremony, and it never becomes a build argument.
+
+In Coolify: **Storages** → **Add File Mount**, path `/run/secrets/tesla_key`,
+contents the raw PEM. Then set `TESLA_PRIVATE_KEY_FILE=/run/secrets/tesla_key`.
+No base64, no single-line juggling.
+
+`TESLA_PRIVATE_KEY` still works and takes raw PEM or base64; the file wins if
+both are set.
+
 ### Keep the key out of the build
 
-Coolify inserts an `ARG` for every environment variable after each `FROM`, so a
-build log will show:
+Coolify inserts an `ARG` for every environment variable after each `FROM`, and
+**writes the value in as the default**, so the deployment log prints it in
+clear:
 
 ```
+FROM golang:1.23-alpine AS build
+ARG TESLA_PRIVATE_KEY=<the actual value, printed three times>
+...
 SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data
-  (ARG "TESLA_PRIVATE_KEY")
 ```
 
-That warning is worth acting on. Nothing in this Dockerfile reads the key at
-build time — it is only ever needed at runtime — so in **Environment Variables**
-leave **Build Variable?** off for `TESLA_PRIVATE_KEY`. A build argument is
-recorded in image metadata and shared with anyone who can pull the image, which
-is the wrong place entirely for a key that signs `unlock` and `remote_start`.
+Observed in a real deployment log, not theoretical. A key that signs `unlock`
+and `remote_start` must not go through that path: it lands in the build log, in
+the image metadata, and in anything that scrapes either.
+
+Nothing in this Dockerfile reads the key at build time. Leave **Build
+Variable?** off for it, and prefer the file mount above — a mounted file is
+never passed to `docker build` at all.
 
 ### The one thing that must not go in the file
 
@@ -103,6 +121,30 @@ proxy rejects the missing token itself rather than asking Tesla — measured at
 Caddy is up but the loopback TLS hop behind it is not; **400** means something
 is speaking plain HTTP straight at the signing proxy; a TLS error means the
 public certificate is wrong. `docker-compose.yml` encodes exactly this check.
+
+### "not an EC private key"
+
+The value reached the container but is not a key. A placeholder left in the
+field is the usual reason; a truncated paste is the other. A real one looks
+like:
+
+```
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEMy...
+-----END EC PRIVATE KEY-----
+```
+
+It must be **the key whose public half Tesla already has**. Generating a fresh
+pair is not a fix: re-registering a domain that is already registered returns
+Tesla's existing record untouched, so a new key means every signed command is
+rejected while everything else looks correct. Check what Tesla holds with
+`/debug` → "Go live with Tesla" → **Check status**, which decodes the served PEM
+and compares it. Only if nothing is registered yet:
+
+```bash
+openssl ecparam -genkey -name prime256v1 -noout -out private.pem
+openssl ec -in private.pem -pubout -out public.pem   # this half goes in TESLA_PUBLIC_KEY
+```
 
 ### "TESLA_PRIVATE_KEY env var is required" while the panel shows it set
 

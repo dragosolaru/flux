@@ -243,7 +243,13 @@ healthcheck and hostname, so a Coolify Docker Compose resource pointed at
 > The signing key never belongs in the compose file, the Dockerfile or a
 > committed `.env`. It signs unlock and remote-start; in git history it is
 > compromised on the first clone, and recovery means a new keypair, a new
-> partner registration and re-pairing the Virtual Key on every car. Without it, every command on a
+> partner registration and re-pairing the Virtual Key on every car.
+>
+> It should not go through a **build argument** either. Coolify injects an `ARG`
+> per environment variable with the value as its default, so the deployment log
+> prints it in clear — observed, not theoretical. Prefer
+> `TESLA_PRIVATE_KEY_FILE` pointing at a mounted file: a PEM's five lines fit a
+> file naturally, and a mount is never passed to `docker build`. Without it, every command on a
 Model 3/Y/S/X built after mid-2021 fails — read-only vehicle data still works,
 so this is the step whose absence looks like "the app works but no button does
 anything".

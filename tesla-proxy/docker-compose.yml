@@ -22,13 +22,19 @@ services:
       # That hostname is what TESLA_PROXY_BASE_URL must be set to in Vercel.
       - SERVICE_FQDN_PROXY_8080
 
-      # The EC P-256 command-signing key, as SINGLE-LINE base64:
-      #   base64 -w0 < private.pem
-      # A raw PEM is five lines and a .env file cannot hold one, so pasting it
-      # into a control panel yields an empty value — the container then reports
-      # the variable as missing while the UI shows it filled. Plain `base64`
-      # wraps at 76 columns, hence -w0. Set the value in Coolify, not here.
-      - TESLA_PRIVATE_KEY=${TESLA_PRIVATE_KEY}
+      # Two ways to hand over the EC P-256 command-signing key. Both read the
+      # value from Coolify; neither puts it in this file.
+      #
+      # Preferred — a mounted file. A PEM is five lines, which an environment
+      # variable handles badly and a build argument handles worse (Coolify
+      # prints build args in the deployment log). Coolify: Storages → Add File
+      # Mount, then set TESLA_PRIVATE_KEY_FILE to the same path.
+      - TESLA_PRIVATE_KEY_FILE=${TESLA_PRIVATE_KEY_FILE:-}
+      #
+      # Fallback — the key inline, as SINGLE-LINE base64: base64 -w0 < key.pem
+      # A raw PEM pasted into a panel yields an EMPTY value, because .env holds
+      # one line per variable; plain `base64` wraps at 76 columns, hence -w0.
+      - TESLA_PRIVATE_KEY=${TESLA_PRIVATE_KEY:-}
 
     expose:
       - "8080"
