@@ -244,6 +244,9 @@ export function DebugClient() {
   // screen was a day or two old while being read as current.
   const DAY_MS = 24 * 60 * 60 * 1000;
   const generatedAtMs = data?.generatedAt ? Date.parse(data.generatedAt) : 0;
+  const teslaFresh = groupedLogs.tesla.filter(
+    (l) => generatedAtMs - new Date(l.latest).getTime() < DAY_MS,
+  ).length;
 
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
@@ -528,7 +531,102 @@ export function DebugClient() {
       .catch(() => toast.error("Clipboard blocked — select the text instead"));
   }
 
+  /**
+   * A section as a handful of lines, not a payload.
+   *
+   * The full JSON runs to ~900 lines and buries its own findings — pasting it
+   * costs the reader more than it tells them, and most of it is never relevant
+   * to the question being asked. These say what state the area is in, and
+   * nothing else. "Copy all (raw)" is still there for when the shape of the
+   * data is itself the question.
+   */
+  function buildReport(section: "car" | "chargers" | "progress"): string {
+    if (!data) return "no data";
+    const when = new Date(data.generatedAt).toISOString().slice(0, 16).replace("T", " ");
+    const out: string[] = [`FLUX · ${section.toUpperCase()} · ${when}Z`];
+
+    const logLine = (l: (typeof groupedLogs.tesla)[number]) => {
+      const ageH = Math.round((generatedAtMs - new Date(l.latest).getTime()) / 3_600_000);
+      const age = ageH >= 24 ? `${Math.floor(ageH / 24)}d` : `${ageH}h`;
+      const ctx = l.context ? ` ${JSON.stringify(l.context).slice(0, 120)}` : "";
+      return `  ${l.scope} ×${l.count} ${age} — ${l.message}${ctx}`;
+    };
+
+    if (section === "car") {
+      const t = data.tesla;
+      if (t) {
+        const unmet = t.steps.filter((x) => !x.ok);
+        out.push(
+          `setup ${t.steps.length - unmet.length}/${t.steps.length} ok` +
+            (unmet.length ? ` · missing: ${unmet.map((x) => x.step).join(", ")}` : ""),
+        );
+        out.push(`next: ${t.nextStep ?? "—"}`);
+        for (const g of t.grants ?? []) {
+          out.push(
+            `car "${g.vehicle}" · scopes ${g.granted.length}/9` +
+              (g.missing.length ? ` · missing ${g.missing.join(",")}` : ""),
+          );
+        }
+        if (!t.grants?.length) out.push("no linked car");
+      }
+      out.push(
+        groupedLogs.tesla.length
+          ? `logs (${groupedLogs.tesla.length} distinct):`
+          : "logs: none — no command has failed server-side",
+      );
+      out.push(...groupedLogs.tesla.map(logLine));
+    }
+
+    if (section === "chargers") {
+      const c = data.chargers;
+      if (c) {
+        out.push(
+          `${c.total} chargers · ${c.operators} operators · ${c.no_operator} without one · ${c.no_country} without a country`,
+        );
+      }
+      out.push(`sources: ${data.sources.map((x) => `${x.source} ${x.rows}`).join(" · ")}`);
+      const failed = data.recentRuns.filter((r) => r.status === "error").length;
+      out.push(`last ${data.recentRuns.length} runs · ${failed} failed`);
+      out.push(`logs (${groupedLogs.other.length} distinct):`);
+      out.push(...groupedLogs.other.map(logLine));
+    }
+
+    if (section === "progress") {
+      for (const m of data.roadmap?.milestones ?? []) {
+        const mark = m.state === "done" ? "[x]" : m.state === "manual" ? "[~]" : "[ ]";
+        out.push(`${mark} ${m.goal}`);
+        if (m.state !== "done") out.push(`    → ${m.nextStep}`);
+      }
+      const migs = migrations.data?.migrations ?? [];
+      const pending = migs.filter((m) => m.status !== "applied");
+      out.push(
+        `migrations: ${migs.length - pending.length}/${migs.length} applied` +
+          (pending.length ? ` · pending ${pending.map((m) => m.id).join(", ")}` : ""),
+      );
+      if (data.warnings.length) out.push(...data.warnings.map((w) => `! ${w}`));
+    }
+
+    return out.join("\n");
+  }
+
+  function copyReport(section: "car" | "chargers" | "progress") {
+    const text = buildReport(section);
+    setCopyFallback(null);
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => toast.success(`${section} report copied`))
+      .catch(() => {
+        setCopyFallback(text);
+        toast.error("Clipboard blocked — select the text below instead");
+      });
+    if (!navigator.clipboard) setCopyFallback(text);
+  }
+
   function copyAll() {
+    // The whole payload, ~900 lines. Demoted to a secondary button once each
+    // section grew a report: this is for when the shape of the data is itself
+    // the question, not for answering "what is wrong with the car".
+    //
     // The keypair is deliberately absent. This blob exists to be pasted into a
     // chat or an issue, which is the last place a signing key should turn up,
     // and a diagnostics dump that quietly swept one along would be a trap.
@@ -625,10 +723,10 @@ export function DebugClient() {
           </button>
           <button
             onClick={copyAll}
-            className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground"
+            className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm text-muted-foreground"
           >
             <Copy className="size-4" />
-            Copy all
+            Raw JSON
           </button>
         </div>
       </div>
@@ -740,70 +838,20 @@ export function DebugClient() {
       </section>
 
       {/* ---- Setup ---- */}
-      <Panel
-        title="Migrations"
-        badge={
-          !migrations.data?.bootstrapped
-            ? "runner missing"
-            : unapplied.length > 0
-              ? `${unapplied.length} to apply`
-              : "all applied"
-        }
-        tone={unapplied.length > 0 || !migrations.data?.bootstrapped ? "warn" : "ok"}
-        open={open.migrations ?? unapplied.length > 0}
-        onToggle={() => toggle("migrations")}
-      >
-        {migrations.data && !migrations.data.bootstrapped && (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
-            Supabase SQL editor once; every migration below then applies from here.
-          </p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <IngestButton
-            label="Apply all"
-            busy={running === "all-migrations"}
-            disabled={running !== null}
-            onClick={() => void applyAllMigrations()}
-          />
+
+      <div className="flex items-start gap-2 pt-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold">🚗 Car</h2>
+          <p className="text-xs text-muted-foreground">Linking, permissions, the Virtual Key, and what commands did.</p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          &quot;Unknown&quot; only means this panel has no record — one you ran by hand shows the
-          same. Re-applying is safe; all are idempotent. Order matters for any migration that
-          replaces a function, and the runner refuses one that would overwrite a newer
-          definition.
-        </p>
-        <div className="space-y-2">
-          {migrationList.map((m) => (
-            <div
-              key={m.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 p-3"
-            >
-              <div className="min-w-0">
-                <p className="font-mono text-xs">{m.id}</p>
-                <p className="text-xs text-muted-foreground">{m.description}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] ${
-                    m.status === "applied"
-                      ? "bg-green-500/15 text-green-300"
-                      : "bg-amber-500/15 text-amber-300"
-                  }`}
-                >
-                  {m.status}
-                </span>
-                <IngestButton
-                  label="Apply"
-                  busy={running === m.id}
-                  disabled={running !== null}
-                  onClick={() => void applyMigration(m.id)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Panel>
+        <button
+          onClick={() => copyReport("car")}
+          className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+        >
+          <Copy className="size-3" />
+          Report
+        </button>
+      </div>
 
       {tesla && (
         <Panel
@@ -1004,35 +1052,41 @@ export function DebugClient() {
       )}
 
       <Panel
-        title="Configuration"
-        badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "all set"}
-        tone={unsetConfig.length > 0 ? "muted" : "ok"}
-        open={open.config ?? false}
-        onToggle={() => toggle("config")}
+        title="Car activity"
+        badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "older" : "quiet"}
+        tone={teslaFresh > 0 ? "warn" : undefined}
+        open={open.carLog ?? false}
+        onToggle={() => toggle("carLog")}
       >
         <p className="text-xs text-muted-foreground">
-          Presence only — no key values are ever sent to the browser.
+          {groupedLogs.total} entries,{" "}
+          {groupedLogs.tesla.length + groupedLogs.other.length} distinct, repeats
+          collapsed. Split by area because a flat list is always dominated by
+          whichever subsystem is noisiest — never the one being debugged.
         </p>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(data.config).map(([k, v]) => {
-            const set = v === true || (typeof v === "string" && v.length > 0);
-            return (
-              <span
-                key={k}
-                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
-                  set ? "bg-green-500/15 text-green-300" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {set ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
-                {k}
-                {typeof v === "string" && v.length > 0 && `: ${v}`}
-              </span>
-            );
-          })}
-        </div>
+        <LogGroup
+          title="Tesla & vehicle"
+          entries={groupedLogs.tesla}
+          emptyNote="Nothing logged. If you are waiting on a command failure to appear here, that means the command never reached the server — or it worked."
+          dayMs={DAY_MS}
+          now={generatedAtMs}
+        />
       </Panel>
 
-      {/* ---- Run ---- */}
+      <div className="flex items-start gap-2 pt-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold">⚡ Chargers</h2>
+          <p className="text-xs text-muted-foreground">Coverage, imports, source health.</p>
+        </div>
+        <button
+          onClick={() => copyReport("chargers")}
+          className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+        >
+          <Copy className="size-3" />
+          Report
+        </button>
+      </div>
+
       <Panel
         title="Populate chargers"
         badge="import"
@@ -1156,7 +1210,6 @@ export function DebugClient() {
         </div>
       </Panel>
 
-      {/* ---- Diagnose ---- */}
       <Panel
         title="Check the sources"
         badge={deadSources > 0 ? `${deadSources} errors logged` : "probe"}
@@ -1240,6 +1293,175 @@ export function DebugClient() {
       </Panel>
 
       <Panel
+        title="Charger activity"
+        badge={deadSources > 0 ? `${deadSources} failed runs` : `${data.recentRuns.length} runs`}
+        tone={deadSources > 0 ? "warn" : undefined}
+        open={open.chargerLog ?? false}
+        onToggle={() => toggle("chargerLog")}
+      >
+        <LogGroup
+          title="Charger sources"
+          entries={groupedLogs.other}
+          emptyNote="Nothing logged."
+          dayMs={DAY_MS}
+          now={generatedAtMs}
+        />
+        <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Ingest runs
+        </p>
+        {data.recentRuns.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No runs recorded.</p>
+        ) : (
+          <div className="-mx-4 max-h-72 overflow-auto px-4">
+            <table className="w-full min-w-[420px] text-xs">
+              <thead className="text-left text-muted-foreground">
+                <tr>
+                  <th className="py-1.5 pr-3">When</th>
+                  <th className="py-1.5 pr-3">Source</th>
+                  <th className="py-1.5 pr-3">Fetched</th>
+                  <th className="py-1.5 pr-3">Upserted</th>
+                  <th className="py-1.5">Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recentRuns.map((r, i) => (
+                  <tr key={i} className="border-t border-border/60">
+                    <td className="whitespace-nowrap py-1.5 pr-3 text-muted-foreground">
+                      {r.finished_at ? new Date(r.finished_at).toLocaleTimeString() : "—"}
+                    </td>
+                    <td
+                      className={`py-1.5 pr-3 ${r.status === "error" ? "text-destructive" : ""}`}
+                    >
+                      {r.source ?? "—"}
+                    </td>
+                    <td className="py-1.5 pr-3 tabular-nums">{r.fetched ?? "—"}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">{r.upserted ?? "—"}</td>
+                    <td className="py-1.5 text-destructive">{r.error ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      <div className="flex items-start gap-2 pt-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold">📋 Progress</h2>
+          <p className="text-xs text-muted-foreground">Where the project stands, and the database schema.</p>
+        </div>
+        <button
+          onClick={() => copyReport("progress")}
+          className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+        >
+          <Copy className="size-3" />
+          Report
+        </button>
+      </div>
+
+      <Panel
+        title="Migrations"
+        badge={
+          !migrations.data?.bootstrapped
+            ? "runner missing"
+            : unapplied.length > 0
+              ? `${unapplied.length} to apply`
+              : "all applied"
+        }
+        tone={unapplied.length > 0 || !migrations.data?.bootstrapped ? "warn" : "ok"}
+        open={open.migrations ?? unapplied.length > 0}
+        onToggle={() => toggle("migrations")}
+      >
+        {migrations.data && !migrations.data.bootstrapped && (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
+            Supabase SQL editor once; every migration below then applies from here.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <IngestButton
+            label="Apply all"
+            busy={running === "all-migrations"}
+            disabled={running !== null}
+            onClick={() => void applyAllMigrations()}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          &quot;Unknown&quot; only means this panel has no record — one you ran by hand shows the
+          same. Re-applying is safe; all are idempotent. Order matters for any migration that
+          replaces a function, and the runner refuses one that would overwrite a newer
+          definition.
+        </p>
+        <div className="space-y-2">
+          {migrationList.map((m) => (
+            <div
+              key={m.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 p-3"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-xs">{m.id}</p>
+                <p className="text-xs text-muted-foreground">{m.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] ${
+                    m.status === "applied"
+                      ? "bg-green-500/15 text-green-300"
+                      : "bg-amber-500/15 text-amber-300"
+                  }`}
+                >
+                  {m.status}
+                </span>
+                <IngestButton
+                  label="Apply"
+                  busy={running === m.id}
+                  disabled={running !== null}
+                  onClick={() => void applyMigration(m.id)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="pt-2">
+        <h2 className="text-sm font-semibold">🔧 Tools</h2>
+        <p className="text-xs text-muted-foreground">
+          Configuration and one-off probes. No report button — nothing here
+          describes a state, it only does things.
+        </p>
+      </div>
+
+      <Panel
+        title="Configuration"
+        badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "all set"}
+        tone={unsetConfig.length > 0 ? "muted" : "ok"}
+        open={open.config ?? false}
+        onToggle={() => toggle("config")}
+      >
+        <p className="text-xs text-muted-foreground">
+          Presence only — no key values are ever sent to the browser.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(data.config).map(([k, v]) => {
+            const set = v === true || (typeof v === "string" && v.length > 0);
+            return (
+              <span
+                key={k}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
+                  set ? "bg-green-500/15 text-green-300" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {set ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
+                {k}
+                {typeof v === "string" && v.length > 0 && `: ${v}`}
+              </span>
+            );
+          })}
+        </div>
+      </Panel>
+
+      <Panel
         title="Call an API route"
         badge={apiMethod}
         open={open.api ?? false}
@@ -1308,76 +1530,6 @@ export function DebugClient() {
           <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
             {JSON.stringify(apiResult, null, 2)}
           </pre>
-        )}
-      </Panel>
-
-      <Panel
-        title="Activity"
-        badge={
-          deadSources > 0 ? `${deadSources} errors` : `${data.recentRuns.length} recent runs`
-        }
-        tone={deadSources > 0 ? "warn" : undefined}
-        open={open.activity ?? false}
-        onToggle={() => toggle("activity")}
-      >
-        <p className="text-xs text-muted-foreground">
-          {groupedLogs.total} entries,{" "}
-          {groupedLogs.tesla.length + groupedLogs.other.length} distinct, repeats
-          collapsed. Split by area because a flat list is always dominated by
-          whichever subsystem is noisiest — never the one being debugged.
-        </p>
-
-        <LogGroup
-          title="Tesla & vehicle"
-          entries={groupedLogs.tesla}
-          emptyNote="Nothing logged. If you are waiting on a command failure to appear here, that means the command never reached the server — or it worked."
-          dayMs={DAY_MS}
-          now={generatedAtMs}
-        />
-        <LogGroup
-          title="Charger sources"
-          entries={groupedLogs.other}
-          emptyNote="Nothing logged."
-          dayMs={DAY_MS}
-          now={generatedAtMs}
-        />
-
-        <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Ingest runs
-        </p>
-        {data.recentRuns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No runs recorded.</p>
-        ) : (
-          <div className="-mx-4 max-h-72 overflow-auto px-4">
-            <table className="w-full min-w-[420px] text-xs">
-              <thead className="text-left text-muted-foreground">
-                <tr>
-                  <th className="py-1.5 pr-3">When</th>
-                  <th className="py-1.5 pr-3">Source</th>
-                  <th className="py-1.5 pr-3">Fetched</th>
-                  <th className="py-1.5 pr-3">Upserted</th>
-                  <th className="py-1.5">Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentRuns.map((r, i) => (
-                  <tr key={i} className="border-t border-border/60">
-                    <td className="whitespace-nowrap py-1.5 pr-3 text-muted-foreground">
-                      {r.finished_at ? new Date(r.finished_at).toLocaleTimeString() : "—"}
-                    </td>
-                    <td
-                      className={`py-1.5 pr-3 ${r.status === "error" ? "text-destructive" : ""}`}
-                    >
-                      {r.source ?? "—"}
-                    </td>
-                    <td className="py-1.5 pr-3 tabular-nums">{r.fetched ?? "—"}</td>
-                    <td className="py-1.5 pr-3 tabular-nums">{r.upserted ?? "—"}</td>
-                    <td className="py-1.5 text-destructive">{r.error ?? ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         )}
       </Panel>
 

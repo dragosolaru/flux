@@ -130,6 +130,10 @@ export async function POST(
       // authorisation is not a failed command, and 401 would sign the driver
       // out of Flux over an unrelated identity.
       if (err instanceof TeslaAuthError) {
+        recordDebugLog("warn", "vehicles/commands", "Tesla authorisation is gone", {
+          command,
+          detail: msg.slice(0, 300),
+        });
         return NextResponse.json(
           { success: false, result: msg, code: "TESLA_REAUTH_REQUIRED" },
           { status: 409 },
@@ -169,6 +173,17 @@ export async function POST(
           notPaired || process.env.TESLA_PROXY_BASE_URL
             ? "VCP_REQUIRED"
             : "PROXY_NOT_CONFIGURED";
+        // Logged, not just returned. Which of the two strings matched is the
+        // whole diagnosis and the UI cannot show it: "not paired" means the
+        // proxy signed and the car refused, "Protocol required" means the
+        // request reached Tesla unsigned — the proxy was bypassed. Same toast,
+        // opposite causes. Without this the Tesla log group stayed empty while
+        // the command visibly failed.
+        recordDebugLog("error", "vehicles/commands", `command refused (${code})`, {
+          command,
+          matched: notPaired ? "key-not-paired" : "protocol-required",
+          detail: msg.slice(0, 300),
+        });
         return NextResponse.json(
           { success: false, result: msg, code },
           { status: 412 },
