@@ -277,15 +277,36 @@ export async function sendVehicleCommand(params: {
   const apiBase = teslaProxyBaseUrl() || baseUrl(region);
 
   const url = `${apiBase}/api/1/vehicles/${params.teslaVehicleId}/command/${params.command}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: params.body ? JSON.stringify(params.body) : undefined,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: params.body ? JSON.stringify(params.body) : undefined,
+      cache: "no-store",
+    });
+  } catch (err) {
+    // Never reached the proxy at all: DNS, a certificate the platform has not
+    // issued yet, a firewall. fetch throws rather than returning a status, so
+    // without this the failure was indistinguishable from the car refusing the
+    // command — and the two have nothing in common. Names the host, because
+    // "cannot reach the proxy" is only useful if you know which one.
+    const host = (() => {
+      try {
+        return new URL(apiBase).host;
+      } catch {
+        return apiBase;
+      }
+    })();
+    throw new Error(
+      `PROXY_UNREACHABLE: could not connect to ${host} — ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");

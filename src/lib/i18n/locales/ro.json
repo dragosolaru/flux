@@ -461,7 +461,8 @@
     "scheduled_save": "Salvează programarea",
     "scheduled_saved": "Programarea încărcării a fost salvată",
     "scheduled_disabled": "Încărcarea programată a fost dezactivată",
-    "scheduled_error": "Programarea încărcării nu a putut fi actualizată"
+    "scheduled_error": "Programarea încărcării nu a putut fi actualizată",
+    "syncUnavailable": "Tesla permite istoricul de încărcare doar conturilor business fleet, deci pe unul personal nu are cum să meargă. Sesiunile vor fi înregistrate direct din mașină odată ce pornim telemetria."
   },
   "commands": {
     "title": "Comenzi",

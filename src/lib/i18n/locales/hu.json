@@ -461,7 +461,8 @@
     "scheduled_save": "Ütemezés mentése",
     "scheduled_saved": "Töltési ütemezés mentve",
     "scheduled_disabled": "Ütemezett töltés letiltva",
-    "scheduled_error": "A töltési ütemezés nem frissíthető"
+    "scheduled_error": "A töltési ütemezés nem frissíthető",
+    "syncUnavailable": "A Tesla a töltési előzményeket csak üzleti flottafiókoknak engedi, személyes fiókon ez nem működhet. A munkameneteket közvetlenül az autóból rögzítjük, amint a telemetria él."
   },
   "commands": {
     "title": "Parancsok",

@@ -92,6 +92,22 @@ export async function POST(
     // nobody reads from a phone.
     logServer("error", "tesla/charging-history", msg, errorContext(err));
     const status = /history (\d{3}):/.exec(msg)?.[1] ?? null;
+    // Tesla's charging endpoints are restricted to business fleet accounts. On
+    // a personal account this call can never succeed, so "try again" is advice
+    // that wastes the driver's time forever. Say it is unavailable instead —
+    // the real charging history has to come from Fleet Telemetry, which is
+    // tracked in docs/TESLA-API-CAPABILITIES.md.
+    if (status === "403") {
+      return NextResponse.json(
+        {
+          message: "Sync failed",
+          code: "CHARGING_HISTORY_UNAVAILABLE",
+          upstreamStatus: 403,
+          detail: msg.slice(0, 300),
+        },
+        { status: 403 },
+      );
+    }
     return NextResponse.json(
       {
         message: "Sync failed",

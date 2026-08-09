@@ -137,6 +137,17 @@ export async function POST(
       // Only the first string was matched, so an unpaired car fell through to
       // the generic 502 and the driver got "command failed" with no pairing
       // prompt — the one case where the app knows exactly what to do next.
+      // The proxy is configured but nothing answered. An operator problem, and
+      // a different one from "the car said no".
+      if (msg.startsWith("PROXY_UNREACHABLE:")) {
+        logServer("error", "vehicles/commands", "signing proxy unreachable", {
+          detail: msg.slice(0, 300),
+        });
+        return NextResponse.json(
+          { success: false, result: msg, code: "PROXY_UNREACHABLE" },
+          { status: 502 },
+        );
+      }
       const notPaired = /has not been paired with the vehicle/i.test(msg);
       const unsigned = msg.includes("Vehicle Command Protocol required");
       if (notPaired || unsigned) {

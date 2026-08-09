@@ -461,7 +461,8 @@
     "scheduled_save": "Zeitplan speichern",
     "scheduled_saved": "Ladeplan gespeichert",
     "scheduled_disabled": "Geplantes Laden deaktiviert",
-    "scheduled_error": "Ladeplan konnte nicht aktualisiert werden"
+    "scheduled_error": "Ladeplan konnte nicht aktualisiert werden",
+    "syncUnavailable": "Tesla erlaubt den Ladeverlauf nur für Business-Fleet-Konten; auf einem privaten Konto kann das nicht funktionieren. Sitzungen werden direkt aus dem Auto erfasst, sobald die Telemetrie läuft."
   },
   "commands": {
     "title": "Befehle",

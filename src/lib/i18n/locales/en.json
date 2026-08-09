@@ -461,7 +461,8 @@
     "scheduled_save": "Save schedule",
     "scheduled_saved": "Charging schedule saved",
     "scheduled_disabled": "Scheduled charging disabled",
-    "scheduled_error": "Couldn’t update charging schedule"
+    "scheduled_error": "Couldn’t update charging schedule",
+    "syncUnavailable": "Tesla only allows charging history on business fleet accounts, so this cannot work on a personal one. Sessions will be recorded from the car directly once telemetry is live."
   },
   "commands": {
     "title": "Commands",

@@ -461,7 +461,8 @@
     "scheduled_save": "Enregistrer la programmation",
     "scheduled_saved": "Programmation de charge enregistrée",
     "scheduled_disabled": "Charge programmée désactivée",
-    "scheduled_error": "Impossible de mettre à jour la programmation de charge"
+    "scheduled_error": "Impossible de mettre à jour la programmation de charge",
+    "syncUnavailable": "Tesla réserve l'historique de charge aux comptes de flotte professionnelle : impossible sur un compte personnel. Les sessions seront enregistrées depuis la voiture une fois la télémétrie active."
   },
   "commands": {
     "title": "Commandes",

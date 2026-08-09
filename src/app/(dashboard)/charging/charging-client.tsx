@@ -25,6 +25,7 @@ import {
   fadeInUp,
   tapShrink,
 } from "@/lib/animations/variants";
+import { ApiError } from "@/lib/api-fetch";
 import { useCapabilities } from "@/hooks/useCapabilities";
 import { useChargingHistorySync } from "@/hooks/useChargingHistorySync";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -341,8 +342,17 @@ export function ChargingClient({
                         toast.success(tc("syncSuccess", { count: result.synced }));
                         router.refresh();
                       },
-                      onError: () => {
-                        toast.error(tc("syncError"));
+                      onError: (err) => {
+                        // 403 is permanent: Tesla restricts the charging
+                        // endpoints to business fleet accounts, so telling a
+                        // personal account to try again is advice that can
+                        // never work.
+                        const unavailable =
+                          err instanceof ApiError &&
+                          err.code === "CHARGING_HISTORY_UNAVAILABLE";
+                        toast.error(
+                          tc(unavailable ? "syncUnavailable" : "syncError"),
+                        );
                       },
                     });
                   }}

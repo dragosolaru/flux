@@ -21,7 +21,7 @@ Already live in Flux, with a real car linked:
 | OAuth + PKCE, all nine scopes | `src/lib/tesla/auth.ts`, `constants.ts` |
 | `vehicle_data` with `location_data` | `src/lib/tesla/api.ts` |
 | 20 commands, signed through the proxy | `src/types/tesla.ts`, `tesla-proxy/` |
-| Charging history via `dx/charging/history` | `src/lib/tesla/charging-history.ts` |
+| ~~Charging history via `dx/charging/history`~~ | in-tree, but **403 on personal accounts** — business fleet only |
 | Partner registration + Virtual Key pairing | `/debug` → Go live with Tesla |
 
 The mapper reads charge, climate, drive, closures, tyres, software and dashcam.
@@ -113,7 +113,7 @@ probe in `src/app/api/tesla/callback/route.ts`.
 
 | Feature | Grade | Note |
 |---|---|---|
-| Per-session record (SOC, kWh, peak/avg kW, temps) | 🟢 | telemetry, far richer than `dx/charging/history` |
+| Per-session record (SOC, kWh, peak/avg kW, temps) | 🟢 | telemetry — and the **only** route, since Tesla's charging endpoints are business-fleet-only |
 | Personal charging curve (kW by SOC) | 🟢 | the single most compelling thing here |
 | Cost per session and per 100 km | 🟢 | tariffs already in Flux |
 | Smart charging in the cheap window | 🟢 | `add_charge_schedule`, signing proxy works |
@@ -215,9 +215,13 @@ feature needs a fleet of consenting users. Not available at one user. It is also
 the feature most likely to attract a privacy problem, so it should arrive with
 explicit opt-in or not at all.
 
-**`/api/1/dx/charging/sessions`.** Business fleet accounts only. We use
-`dx/charging/history`, which does work for a personal account — do not "upgrade"
-to `sessions` expecting richer data on a personal account.
+**Tesla's charging endpoints, all of them.** Business fleet accounts only —
+`dx/charging/sessions` *and* `dx/charging/history`. An earlier version of this
+document said `history` worked on a personal account; it does not, and a
+personal account gets a flat 403. That makes the "Sync from Tesla" button
+permanently impossible for individual owners, which is now what it says rather
+than "try again". Charging history for a personal car has to come from Fleet
+Telemetry — one more thing that stack unlocks and nothing else can.
 
 **Vampire drain measured by polling.** Technically the numbers exist, but each
 poll wakes the car and adds to the drain being measured. The measurement destroys
