@@ -13,20 +13,20 @@ import { recordDebugLog } from "@/lib/debug-log";
 // exactly what happened. It is also a curl with a client-credentials token,
 // i.e. the one step that cannot be done from a phone. Hence a button.
 //
-// Re-registering IS how the key is rotated. Tesla re-fetches
-// /.well-known/appspecific/com.tesla.3p.public-key.pem on every registration
-// call and replaces its record with whatever it finds.
+// Whether re-registering rotates the key is NOT settled, and this comment has
+// asserted both answers. What is actually measured: a POST returns 200 while
+// Tesla keeps a two-month-old `public_key` and an untouched `updated_at`.
 //
-// This comment previously said the opposite, on the strength of one field
-// observation: a POST came back 200 with a two-month-old key and an untouched
-// `updated_at`. The reading was wrong. Tesla did re-fetch — the deployment was
-// still serving the old key at that moment, so the "unchanged" record was
-// simply the old key being re-registered over itself. Whether the record moves
-// depends entirely on what the domain serves when the button is pressed, which
-// is why "Check status" reports `servedKeyPoint` alongside Tesla's.
+// Two explanations fit that equally well — Tesla refuses to replace an existing
+// record, or Tesla re-fetched and the domain was still serving the old key —
+// and nothing here could tell them apart, because `servedKeyPoint` was decoded
+// from process.env.TESLA_PUBLIC_KEY and the URL was never requested. Tesla
+// reads the URL, not our environment.
 //
-// Order therefore matters: deploy the new TESLA_PUBLIC_KEY first, confirm the
-// domain is serving it, then register.
+// So "status" now fetches the .well-known URL over the public internet and
+// reports env / served / Tesla as three separate values. When they disagree the
+// hint says which one is stale, because the fix differs per case. Deploy the
+// key first, confirm the domain serves it, then register.
 export const maxDuration = 60;
 
 const BodySchema = z.object({
@@ -57,6 +57,40 @@ function publicKeyPoint(pem: string | undefined): string | null {
     return point[0] === 0x04 ? point.toString("hex") : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * What the domain ACTUALLY serves, fetched over the public internet.
+ *
+ * `servedKeyPoint` used to be decoded from process.env.TESLA_PUBLIC_KEY, so
+ * "this domain is serving a valid key" was an assumption, never a measurement.
+ * Tesla does not read our environment — it fetches this URL. If the route
+ * mangles the PEM, or answers 503, or a cache serves an older deploy, Tesla
+ * sees something different from the variable and the mismatch is invisible
+ * from inside.
+ *
+ * Registering a key we only believe we serve has already cost hours.
+ */
+async function fetchWellKnownKey(domain: string): Promise<{
+  status: number | null;
+  point: string | null;
+  error?: string;
+}> {
+  const url = `https://${domain}/.well-known/appspecific/com.tesla.3p.public-key.pem`;
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+    const text = await res.text();
+    return { status: res.status, point: publicKeyPoint(text) };
+  } catch (err) {
+    return {
+      status: null,
+      point: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -166,13 +200,27 @@ export async function POST(req: Request) {
   // bytes of the DER, so decode ours down to that before comparing.
   let servedKeyMatches: boolean | null = null;
   let servedKeyPoint: string | null = null;
+  const envKeyPoint = publicKeyPoint(process.env.TESLA_PUBLIC_KEY);
+  const wellKnown = await fetchWellKnownKey(domain);
   if (res.ok) {
     const stored = (body as { response?: { public_key?: string } })?.response?.public_key;
-    servedKeyPoint = publicKeyPoint(process.env.TESLA_PUBLIC_KEY);
+    // Compare against what the URL serves, because that is what Tesla reads.
+    servedKeyPoint = wellKnown.point ?? envKeyPoint;
     if (stored && servedKeyPoint) {
       servedKeyMatches = stored.toLowerCase() === servedKeyPoint;
     }
   }
+
+  // Three separate things that are all called "the key", reported separately so
+  // a disagreement between any two of them is visible rather than inferred.
+  const keys = {
+    env: envKeyPoint,
+    wellKnown: wellKnown.point,
+    wellKnownStatus: wellKnown.status,
+    ...(wellKnown.error ? { wellKnownError: wellKnown.error } : {}),
+    envMatchesWellKnown:
+      envKeyPoint && wellKnown.point ? envKeyPoint === wellKnown.point : null,
+  };
 
   if (!res.ok) {
     recordDebugLog("error", "tesla/partner", `${parsed.data.action} failed`, {
@@ -188,6 +236,7 @@ export async function POST(req: Request) {
     domain,
     region: parsed.data.region,
     status: res.status,
+    keys,
     ...(servedKeyMatches !== null
       ? {
           servedKeyMatches,
@@ -198,9 +247,12 @@ export async function POST(req: Request) {
                 // The fix depends on which side is stale, and the two need
                 // opposite actions — so say which one applies rather than
                 // stating the problem and leaving the operator to guess.
-                keyMismatchHint: servedKeyPoint
-                  ? "Tesla holds a different key than this domain serves, so commands signed with the matching private key are rejected. This domain is serving a valid key, so press Register: Tesla re-fetches /.well-known during registration and replaces its record. Then Check status again to confirm."
-                  : "Tesla holds a key but this domain serves none — TESLA_PUBLIC_KEY is unset or malformed. Fix and redeploy the app first; registering now would only re-register the key Tesla already has.",
+                keyMismatchHint:
+                  wellKnown.point == null
+                    ? `The domain serves no usable key (/.well-known answered ${wellKnown.status ?? "nothing"}${wellKnown.error ? `: ${wellKnown.error}` : ""}). Tesla reads that URL, not the environment variable, so it has nothing new to take. Fix the route first — registering now cannot change anything.`
+                    : keys.envMatchesWellKnown === false
+                      ? "TESLA_PUBLIC_KEY and the key the domain actually serves are different. Tesla reads the URL, so the variable is not the one that matters — redeploy so they agree, then register."
+                      : "Tesla holds a different key than the domain serves, and both are valid. Press Register; if updated_at does not move and the key stays the same, Tesla is refusing to replace an existing record and this needs Tesla developer support — re-registering will not do it.",
               }),
         }
       : {}),

@@ -589,7 +589,17 @@ export function DebugClient() {
       // is the question every "not paired" failure turns into, and it is
       // otherwise buried in a raw JSON dump further down the page.
       const pr = partnerResult as
-        | { servedKeyMatches?: boolean; keyMismatchHint?: string }
+        | {
+            servedKeyMatches?: boolean;
+            keyMismatchHint?: string;
+            keys?: {
+              env?: string | null;
+              wellKnown?: string | null;
+              wellKnownStatus?: number | null;
+              wellKnownError?: string;
+            };
+            body?: { response?: { public_key?: string; updated_at?: string } };
+          }
         | null;
       if (pr && typeof pr.servedKeyMatches === "boolean") {
         out.push(
@@ -598,6 +608,18 @@ export function DebugClient() {
         );
       } else {
         out.push("partner key match: not checked this session");
+      }
+      // Three things are all called "the key" and only their disagreement is
+      // diagnostic, so print all three side by side. Eight hex chars is enough
+      // to tell them apart and short enough to read on a phone.
+      if (pr?.keys) {
+        const k = pr.keys;
+        const head = (v: string | null | undefined) => (v ? v.slice(0, 8) : "none");
+        out.push(
+          `  env ${head(k.env)} · served ${head(k.wellKnown)} (HTTP ${k.wellKnownStatus ?? "—"}` +
+            `${k.wellKnownError ? ` ${k.wellKnownError}` : ""}) · tesla ${head(pr.body?.response?.public_key)}` +
+            (pr.body?.response?.updated_at ? ` since ${pr.body.response.updated_at.slice(0, 10)}` : ""),
+        );
       }
       out.push(
         groupedLogs.tesla.length
@@ -999,10 +1021,12 @@ export function DebugClient() {
                 paired a key we no longer own and rejects every signature.
               </p>
               <p className="text-xs text-muted-foreground">
-                Press <strong>Check status</strong> below. If{" "}
-                <code>servedKeyMatches</code> is <code>false</code>, press{" "}
-                <strong>Register</strong> to update Tesla&apos;s record, then pair
-                the car once more — in that order.
+                Press <strong>Check status</strong> below and read the{" "}
+                <code>keys</code> block: <code>env</code> is the variable,{" "}
+                <code>wellKnown</code> is what the domain actually serves Tesla,
+                and <code>body.response.public_key</code> is what Tesla holds. Fix
+                whichever of the first two is wrong before pressing{" "}
+                <strong>Register</strong> — Tesla reads the URL, not the variable.
               </p>
             </div>
           )}

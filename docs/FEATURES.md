@@ -576,6 +576,35 @@ under the controls on `/commands`; and `unlock` / `remote_start` ask for
 confirmation before firing, then notify the owner on success via
 `alertOnSensitiveCommand` (`src/lib/notifications/security-alert.ts`).
 
+### Partner key diagnostics (what Tesla holds vs what we serve)
+
+**What:** three different values are all called "the public key", and only their
+disagreement explains why a *signed* command comes back `your public key has not
+been paired with the vehicle`:
+
+1. `TESLA_PUBLIC_KEY` — the variable.
+2. What `https://<domain>/.well-known/appspecific/com.tesla.3p.public-key.pem`
+   actually answers. **This is the only one Tesla reads.**
+3. What Tesla stored for the domain (`GET /api/1/partner_accounts/public_key`).
+
+**How to use:** `/debug` → Car → **Check status**. The response now carries a
+`keys` block — `env`, `wellKnown`, `wellKnownStatus`, `envMatchesWellKnown` —
+because the panel used to decode the env var and *call* that "what we serve",
+which made a broken route and a stale Tesla record indistinguishable.
+`keyMismatchHint` names which of the three is wrong: no usable key at the URL
+(fix the route — registering cannot help), env ≠ served (redeploy), or both
+valid and Tesla still different (Tesla is refusing to replace the record →
+developer support). The **Copy car report** button prints all three truncated to
+8 hex chars on one line.
+
+The `.well-known` route is `cache-control: no-store`. It was `max-age=3600`,
+which meant a rotation could keep serving the old key to Tesla *and* to this
+check for an hour, with both agreeing on a stale value.
+
+**Key files:** `src/app/api/internal/debug/tesla-partner/route.ts`,
+`src/app/.well-known/appspecific/com.tesla.3p.public-key.pem/route.ts`,
+`src/app/(dashboard)/debug/debug-client.tsx`.
+
 ## 24. Security hardening
 
 - **Auth on every route** + Supabase UUID-scoped queries (`.eq("user_id", …)`); write routes resolve `ensureSupabaseUserId`.

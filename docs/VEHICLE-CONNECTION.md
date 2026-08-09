@@ -219,17 +219,23 @@ answers every poll normally with `latitude`/`longitude` null — which reads as 
 broken map, not a missing permission. `/debug` → "Go live with Tesla" lists the
 granted scopes per car and warns when this one is absent.
 
-> **Re-registering is how the key is rotated — deploy the new one first.**
-> Tesla re-fetches `/.well-known/appspecific/com.tesla.3p.public-key.pem` on
-> every registration call and replaces its record with whatever the domain
-> serves at that moment. So the order is: set `TESLA_PUBLIC_KEY`, redeploy the
-> app, confirm the domain is serving the new key, *then* press Register.
+> **Whether re-registering rotates the key is unresolved — deploy first, then
+> measure.** The order is not in doubt: set `TESLA_PUBLIC_KEY`, redeploy,
+> confirm `/.well-known/appspecific/com.tesla.3p.public-key.pem` serves the new
+> key, *then* press Register.
 >
-> An earlier version of this note claimed the opposite, from one observation: a
-> `POST` returned `200` with a two-month-old key and an unchanged `updated_at`.
-> That reading was wrong. Tesla did re-fetch; the deployment was still serving
-> the old key, so the record was the old key being written over itself. The
-> record only looks frozen when the domain has not actually changed.
+> What is in doubt is what Register does. Measured in the field: `POST` returns
+> `200`, Tesla keeps a two-month-old `public_key`, and `updated_at` does not
+> move. Either Tesla refuses to replace an existing record, or it re-fetched and
+> the domain was still serving the old key. This note has claimed both, twice,
+> without evidence for either — the panel never fetched the URL, it decoded
+> `TESLA_PUBLIC_KEY` and called that "what we serve".
+>
+> "Check status" now fetches the URL and reports three values: `keys.env`,
+> `keys.wellKnown`, and Tesla's `public_key`. Read them before concluding
+> anything. If the served key is valid, matches the env var, and Tesla still
+> holds a different one after Register, that is Tesla refusing — and it needs
+> Tesla developer support, not another Register press.
 >
 > Use the panel's "Check status", which decodes the served PEM to the raw EC
 > point and compares it with what Tesla reports. A mismatch tells you which side
