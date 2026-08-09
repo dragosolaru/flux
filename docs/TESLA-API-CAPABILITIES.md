@@ -252,6 +252,18 @@ name repeated on every row. At the intervals in §5 it is fine. If the charging
 interval is ever tightened, a wide row per sample (one row, many columns) costs
 several times less.
 
+### One signing key, many cars
+
+Worth stating before anyone designs multi-user storage around it: there is **one
+command-signing keypair for the whole application**, registered against our
+domain. Every car that pairs stores that same public key. A thousand users means
+a thousand OAuth grants and a thousand pairing approvals — but still one key.
+
+`tesla_tokens` is per vehicle and holds the per-user half. Nothing about the
+signing key is per user, and `teslaVirtualKeyUrl()` correctly takes no arguments.
+See `docs/VEHICLE-CONNECTION.md` for the consequences, the sharpest being that
+rotating the key forces every paired car to re-pair.
+
 ### Where our stack differs from the research's
 
 **TimescaleDB.** The research assumes it. Supabase does not offer it on new

@@ -41,6 +41,13 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       (Tesla's own live Supercharger stall counts, better than our ingested data
       for those sites), and `users/region` to replace the EU→NA→CN probe loop in
       the OAuth callback. Days of work, no new infrastructure.
+- [ ] **Rotate the command-signing keypair before the first real customer.**
+      There is one keypair for the whole application, not one per car — every
+      vehicle that pairs stores the same public key. So rotating it re-onboards
+      the entire fleet: every paired car must visit the pairing link again, and
+      commands stay broken for anyone who ignores the prompt. Free to do today
+      with one car; a support event at a hundred. The current key has been
+      through a deploy log as a build argument, which is reason enough.
 - [ ] **Shared secret between Flux and the proxy.** The proxy's published URL is
       an open relay: anyone who reaches it can forward requests to Tesla's API.
       A valid Tesla token for an account that paired our Virtual Key is still

@@ -284,6 +284,40 @@ is refused.
 mock simulator in front of every call, which is why the app appears to work
 fully with no Tesla credentials at all.
 
+### One key for the whole app — not one per car
+
+This is the thing most likely to be assumed backwards, and it shapes the
+multi-user design.
+
+**Flux has exactly one command-signing keypair.** It is registered against our
+domain, its public half is served at `/.well-known/...`, and *every* car that
+pairs stores *that same* public key as its Virtual Key. A thousand customers
+with a thousand cars still means one keypair, one pairing URL, and a thousand
+separate approvals.
+
+What is per-user is the **OAuth grant**: access and refresh tokens, one
+`tesla_tokens` row per vehicle, encrypted individually. Identity is per driver;
+the signing key is per application. Two different things that both get called
+"the Tesla key" in conversation.
+
+Three consequences worth designing around:
+
+**Rotating the key re-onboards the entire fleet.** Every paired car validates
+commands against the public key it stored at pairing time. A new keypair means
+every one of them must visit the pairing link again — an event you cannot do
+quietly, and one that leaves commands broken for anyone who ignores the prompt.
+Rotate before there are customers, not after.
+
+**One key compromise reaches every customer's car**, because it is the same key
+everywhere. That is what makes the handling rules non-negotiable: not a build
+argument (Coolify prints those in the deploy log), not in git, not in a chat.
+The blast radius is the whole fleet, not one account.
+
+**Nothing about pairing is per-user in our code.** `teslaVirtualKeyUrl()` takes
+no arguments and needs none. Resist the pull to store a per-vehicle "pairing
+key" — there is no such thing, and the column would only ever hold the same
+value repeated.
+
 ### 6. Pair the Virtual Key
 
 Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla
