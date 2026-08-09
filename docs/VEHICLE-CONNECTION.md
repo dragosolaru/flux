@@ -245,7 +245,7 @@ granted scopes per car and warns when this one is absent.
 
 See `tesla-proxy/README.md` — **Coolify** and **Fly** are both documented, and
 Coolify has the edge of keeping the signing key on your own hardware.
-`tesla-proxy/docker-compose.yml` declares the build, port, restart policy,
+`tesla-proxy/docker-compose.yaml` declares the build, port, restart policy,
 healthcheck and hostname, so a Coolify Docker Compose resource pointed at
 `/tesla-proxy` needs only `TESLA_PRIVATE_KEY` filled in. Set
 `TESLA_PROXY_BASE_URL` to the resulting URL.

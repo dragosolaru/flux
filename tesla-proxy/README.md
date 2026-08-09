@@ -27,11 +27,11 @@ Works, and keeps the command-signing key on hardware you own instead of a third
 party's. Coolify's Traefik terminates the public certificate and forwards plain
 HTTP, which is exactly what this image expects.
 
-`docker-compose.yml` declares the build, the port, the restart policy, the
+`docker-compose.yaml` declares the build, the port, the restart policy, the
 healthcheck and the hostname, so there is almost nothing to fill in by hand:
 
 1. **New Resource** → **Docker Compose** → your Git repository.
-2. Base Directory **`/tesla-proxy`**. Coolify finds `docker-compose.yml` there.
+2. Base Directory **`/tesla-proxy`**. Coolify finds `docker-compose.yaml` there.
 3. **Environment Variables** → set `TESLA_PRIVATE_KEY`. It is the one value the
    compose file deliberately leaves empty. **Use single-line base64** —
    `base64 -w0 < private.pem` (`base64 < private.pem | tr -d '\n'` on macOS).
@@ -131,7 +131,7 @@ never passed to `docker build` at all.
 
 ### The one thing that must not go in the file
 
-**Never put `TESLA_PRIVATE_KEY` in `docker-compose.yml`, the Dockerfile, or a
+**Never put `TESLA_PRIVATE_KEY` in `docker-compose.yaml`, the Dockerfile, or a
 committed `.env`.** That key signs unlock and remote-start commands. In git
 history it is compromised the moment the repo is cloned, and the only remedy is
 generating a new pair, re-registering the partner account, redeploying the
@@ -154,7 +154,7 @@ proxy rejects the missing token itself rather than asking Tesla — measured at
 1.5 ms — so this is free to poll and costs no Fleet API quota. **502** means
 Caddy is up but the loopback TLS hop behind it is not; **400** means something
 is speaking plain HTTP straight at the signing proxy; a TLS error means the
-public certificate is wrong. `docker-compose.yml` encodes exactly this check.
+public certificate is wrong. `docker-compose.yaml` encodes exactly this check.
 
 ### The URL stays http:// and no certificate appears
 
