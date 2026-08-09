@@ -156,6 +156,27 @@ Caddy is up but the loopback TLS hop behind it is not; **400** means something
 is speaking plain HTTP straight at the signing proxy; a TLS error means the
 public certificate is wrong. `docker-compose.yml` encodes exactly this check.
 
+### The URL stays http:// and no certificate appears
+
+Coolify derives the Traefik routers from the **scheme you typed in the Domain
+field**. Enter `http://…` and it generates one router on the `http` entrypoint
+and stops there — it defines a `redirect-to-https` middleware but never attaches
+it, and never creates an `https` router or asks for a certificate. The read-only
+labels show it plainly:
+
+```
+traefik.http.routers.http-0-<uuid>.entryPoints=http
+traefik.http.routers.http-0-<uuid>.middlewares=gzip        ← no redirect
+                                                            ← no https-0-<uuid>
+                                                            ← no tls.certresolver
+```
+
+Change the Domain to `https://…` and redeploy. Coolify then emits the `https`
+router with a resolver, and Let's Encrypt issues for `sslip.io` names fine.
+
+The app refuses a plaintext `TESLA_PROXY_BASE_URL`, so this is not cosmetic —
+commands carry the driver's Tesla access token.
+
 ### "no available server" while the container is healthy
 
 That string is Traefik's, returned as a `503` when a router matches the domain
