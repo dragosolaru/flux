@@ -1,14 +1,14 @@
 # Tesla API — what we can build, and what we can't
 
-> Written from the research in `docs/reference/Tesla_API_Developer_Research_Full.pdf`,
-> checked against what Flux already ships. The point of this document is the
-> **feasibility grading**: a feature list nobody has graded is a list of
-> disappointments waiting to happen.
+> Written from `docs/reference/Tesla_API_Developer_Research_Full.pdf` (9 pages,
+> committed alongside), checked against what Flux already ships.
 >
-> The PDF text could not be extracted in the build sandbox (font-embedded, no
-> poppler), so this was written from the accompanying summary rather than parsed
-> from the file. If the PDF carries detail the summary omitted, that detail is
-> not reflected here.
+> What this adds to the research: a **feasibility grade** per feature, the
+> **sampling-rate arithmetic** that decides whether telemetry is affordable, and
+> the places where our stack differs from the one the research assumes. The
+> research is careful — it already marks SOH, consumption decomposition and
+> wake-cause as estimates — so §6 is mostly about the handful of items where
+> "mark it as an estimate" is not enough and the feature has to change shape.
 
 ---
 
@@ -229,7 +229,80 @@ firmware. Confirm on the actual car before building a screen that assumes them.
 
 ---
 
-## 7. Order I would build it
+## 7. The data model, mapped onto what we have
+
+The research proposes six tables. Four of them Flux already has a home for, which
+is worth knowing before anyone designs a parallel schema.
+
+| Research table | In Flux today |
+|---|---|
+| `Vehicle` (id, vin, model, variant, firmware) | `vehicles` — has all of it |
+| `ChargingSession` | `charging_sessions` — exists, but only the simulator and the Supercharger sync write to it (`docs/TODO.md` 1f) |
+| `Trip` | `trips` exists; not populated from live data |
+| `Automation` (trigger, condition, action) | the notification alert engine is the closest thing |
+| `TelemetryEvent` (vehicleId, timestamp, field, value) | **new** |
+| `BatterySnapshot` | **new** |
+
+So telemetry adds two tables and finally gives the two existing empty ones
+something to write them.
+
+One caution on `TelemetryEvent` as `(vehicleId, timestamp, field, value)`: that
+shape is flexible and expensive — one row per field per sample, with the field
+name repeated on every row. At the intervals in §5 it is fine. If the charging
+interval is ever tightened, a wide row per sample (one row, many columns) costs
+several times less.
+
+### Where our stack differs from the research's
+
+**TimescaleDB.** The research assumes it. Supabase does not offer it on new
+projects, so check before designing around hypertables — native Postgres
+partitioning by month, or `pg_partman`, is the fallback and is sufficient at the
+volumes in §5.
+
+**Event bus / queue.** Proposed between the receiver and storage. At one car it
+is machinery without a job; the receiver can write straight to Postgres. Add it
+when there are enough vehicles for ingestion to outpace writes, not before.
+
+**Redis.** Already in place (Upstash, via `isRedisConfigured()`), so the caching
+layer in the diagram is the one piece that needs no work.
+
+---
+
+## 8. Implementation principles worth keeping
+
+Lifted from the research because they are correct and easy to abandon under
+deadline pressure.
+
+**Raw first.** Keep the original telemetry. Deriving `consumptionPer100Km` and
+discarding the samples means every future algorithm change starts from zero
+history. Storage is cheap at these volumes; a year of discarded data is not
+recoverable at any price.
+
+**Event-driven, not cron.** Detect trip and charge start/stop from the stream.
+A cron that samples every five minutes both misses short sessions and cannot say
+when one actually began.
+
+**Idempotency.** Telemetry redelivers. The same event arriving twice must not
+produce two trips — the same discipline as `upsert_chargers_batch` in the ingest
+pipeline.
+
+**AI explains, it does not decide.** The daily summary reads numbers computed
+deterministically upstream; it never becomes the source of them. Every claim
+should be traceable to the rows that produced it, with a confidence score. This
+matters more than it sounds: an AI layer that computes its own figures is
+indistinguishable from one that invents them, and the failure is silent.
+
+**Model-specific calibration.** SOH and charge-curve maths depend on pack
+chemistry and firmware. `ModelSpec.chargeCurve` already carries per-model curves;
+the same discipline applies here.
+
+**Privacy.** Location and driving history are the most sensitive data Flux will
+ever hold. Retention limits and encryption are not optional once there is a
+second user, and are cheaper to build in now than to retrofit.
+
+---
+
+## 9. Order I would build it
 
 1. **Cheap wins on the API we already have.** `fleet_status`, `recent_alerts`,
    `service_data`, `release_notes`, `nearby_charging_sites`, and `users/region`
@@ -250,9 +323,39 @@ generic car of your model. After a few hundred kilometres of telemetry we would
 model *yours* — its real consumption at 8 °C into a headwind on 20-inch wheels.
 That is a difference no amount of UI work substitutes for.
 
+**Against the research's own P0/P1/P2:** it agrees on telemetry first, then
+sessions, trips and battery health. Two differences. The cheap endpoints move
+ahead of everything, because they need no infrastructure and `fleet_status`
+makes every later step easier to debug. And Battery Health drops behind the
+charging curve — the research rates it the differentiator, but SOH needs months
+of history before the line means anything, while a charging curve is legible
+after one Supercharger stop. Same destination; the curve just pays sooner.
+
 ---
 
-## 8. Reference
+## 10. Reference
 
 `docs/reference/Tesla_API_Developer_Research_Full.pdf` — the full research,
 committed so it survives this conversation.
+
+Its own source list, kept here so the links are greppable:
+
+- [What is Fleet API](https://developer.tesla.com/docs/fleet-api/getting-started/what-is-fleet-api)
+- [Authentication overview](https://developer.tesla.com/docs/fleet-api/authentication/overview)
+- [Vehicle endpoints](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-endpoints)
+- [Vehicle commands](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-commands)
+- [Fleet Telemetry — available data](https://developer.tesla.com/docs/fleet-api/fleet-telemetry/available-data)
+- [Charging endpoints](https://developer.tesla.com/docs/fleet-api/endpoints/charging-endpoints)
+- [Energy endpoints](https://developer.tesla.com/docs/fleet-api/endpoints/energy)
+- [Legacy Owner API, community docs](https://tesla-api.timdorr.com/vehicle/state/data)
+- [TeslaMate](https://github.com/teslamate-org/teslamate) — the open-source
+  benchmark: battery health, charge details, drive stats, efficiency, vampire
+  drain, Grafana, MQTT, Home Assistant
+- [Tessie Developer API](https://help.tessie.com/article/65-developer-api) — the
+  commercial benchmark: realtime plus historical, Siri/Shortcuts/Watch
+- [MyTeslaMate](https://www.myteslamate.com/) — hosted TeslaMate
+
+**Legacy Owner API** (`charge_state`, `climate_state`, `drive_state`,
+`vehicle_state`, `gui_settings`, `vehicle_config`) is reverse-engineered and
+unsupported. Useful for understanding the ecosystem and for reading other
+projects' code; not a foundation. Fleet API covers everything we need.
