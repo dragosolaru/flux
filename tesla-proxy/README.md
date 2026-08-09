@@ -112,11 +112,15 @@ both are set.
 
 Coolify inserts an `ARG` for every environment variable after each `FROM`, and
 **writes the value in as the default**, so the deployment log prints it in
-clear:
+clear. This happens on the Docker Compose flow too — the log says so plainly:
 
 ```
+Added 9 ARG declarations to Dockerfile for service proxy
+  (multi-stage build, added to 3 stages)
+Adding build arguments to Docker Compose build command.
+
 FROM golang:1.23-alpine AS build
-ARG TESLA_PRIVATE_KEY=<the actual value, printed three times>
+ARG TESLA_PRIVATE_KEY=<the actual value, printed once per stage>
 ...
 SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data
 ```
