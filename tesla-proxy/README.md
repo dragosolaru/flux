@@ -219,6 +219,26 @@ generic "command failed" and the app never offered the pairing link — the one
 case where it knows exactly what to do next. Both are now recognised, and the
 generic branch logs the real reason to `/debug` instead of swallowing it.
 
+**The second row has a second cause, and it is the one that wastes days.** The
+car does not say "I have not paired *your* key" — it says the key that just
+signed this request is not one it holds. So a proxy running the *wrong private
+key* produces exactly the same message as a car that was never paired, and
+sends the owner back to their phone to repeat a step that already worked.
+
+`GET /proxy-public-key` on this container answers with the public half of
+whatever key it actually booted with. `/debug` → Car → **Check status** fetches
+it and lines it up against the other three:
+
+| | what it is |
+|---|---|
+| variable | `TESLA_PUBLIC_KEY` on the app |
+| domain | what `/.well-known/…public-key.pem` serves — **the only one Tesla reads** |
+| proxy | what this container signs with |
+| tesla | what Tesla stored for the domain |
+
+All four must be the same value. Pairing the car while they differ stores a key
+the proxy cannot sign with, which looks like the pairing failing.
+
 ### "not an EC private key"
 
 The value reached the container but is not a key. A placeholder left in the

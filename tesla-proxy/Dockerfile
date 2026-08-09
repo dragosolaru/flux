@@ -42,6 +42,30 @@ RUN cat > /app/Caddyfile <<'CADDYFILE'
 }
 
 :{$PORT:8080} {
+	# The public half of whatever private key this container booted with,
+	# derived at startup by the entrypoint.
+	#
+	# Four separate things are called "the key" — the TESLA_PUBLIC_KEY variable,
+	# what /.well-known serves, what Tesla has on file, and what the proxy
+	# signs with — and only the fourth was unobservable. It is also the one that
+	# breaks silently: sign with a key the car did not pair and every command
+	# comes back "your public key has not been paired with the vehicle", which
+	# reads as a pairing problem and sends the owner to their phone. Days went
+	# that way.
+	#
+	# Publishing it costs nothing. It is a public key, already served openly at
+	# /.well-known on the app's own domain; there is no path from it to the
+	# private half. The proxy itself takes no authentication (see the shared
+	# secret item in docs/TODO.md) so this is not the exposure that matters here.
+	#
+	# tesla-http-proxy only claims /health and /api/1/vehicles/ — everything
+	# else it forwards to Tesla — so this path shadows nothing.
+	handle /proxy-public-key {
+		root * /app/public
+		rewrite * /proxy-public-key.pem
+		file_server
+	}
+
 	# tesla-http-proxy refuses to serve plain HTTP — deliberately, upstream: the
 	# Tesla source carries a comment explaining they omitted an --insecure flag
 	# so nobody accidentally exposes a car over cleartext. So the only way to put
@@ -51,9 +75,15 @@ RUN cat > /app/Caddyfile <<'CADDYFILE'
 	# entrypoint generates at boot. That is safe here and only here: this hop
 	# never leaves the container's loopback interface, so there is no network
 	# path for anything to sit in the middle of.
-	reverse_proxy https://127.0.0.1:8443 {
-		transport http {
-			tls_insecure_skip_verify
+	#
+	# Inside `handle` rather than bare, because `handle` blocks are mutually
+	# exclusive only with each other: a bare terminal directive alongside one
+	# would still match /proxy-public-key.
+	handle {
+		reverse_proxy https://127.0.0.1:8443 {
+			transport http {
+				tls_insecure_skip_verify
+			}
 		}
 	}
 }
@@ -121,6 +151,14 @@ if ! openssl ec -in "$KEY_PATH" -noout 2>/dev/null; then
   echo "  a fresh pair will have every signed command rejected." >&2
   exit 1
 fi
+
+# Publish the public half, so /proxy-public-key answers what this container is
+# actually signing with. Derived from the key in hand rather than taken from a
+# second variable — a variable could disagree with the file, which is precisely
+# the class of bug this endpoint exists to detect.
+mkdir -p /app/public
+openssl ec -in "$KEY_PATH" -pubout -out /app/public/proxy-public-key.pem 2>/dev/null
+echo "signing key fingerprint: $(openssl ec -in "$KEY_PATH" -pubout -outform DER 2>/dev/null | tail -c 65 | od -An -tx1 | tr -d ' \n' | cut -c1-16)"
 
 # A fresh TLS key every boot, and never the command-signing key: the proxy
 # refuses to start if the two match, on the grounds that a TLS key is exposed

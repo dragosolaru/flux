@@ -3,7 +3,12 @@ import { z } from "zod";
 
 import { requireAdmin } from "@/lib/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { TESLA_PARTNER_SCOPES, TESLA_REGIONS, TESLA_TOKEN_URL } from "@/lib/tesla/constants";
+import {
+  TESLA_PARTNER_SCOPES,
+  TESLA_REGIONS,
+  TESLA_TOKEN_URL,
+  teslaProxyBaseUrl,
+} from "@/lib/tesla/constants";
 import { recordDebugLog } from "@/lib/debug-log";
 
 // Registers the Tesla partner account, and reports whether it is registered.
@@ -85,6 +90,46 @@ async function fetchWellKnownKey(domain: string): Promise<{
     });
     const text = await res.text();
     return { status: res.status, point: publicKeyPoint(text) };
+  } catch (err) {
+    return {
+      status: null,
+      point: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * What the signing proxy is actually signing with.
+ *
+ * The last of the four, and the only one nothing could observe: the private
+ * key lives on another host, set by hand, and a wrong one produces exactly the
+ * same "your public key has not been paired with the vehicle" the car returns
+ * when it genuinely has not been paired. Same message, opposite fix.
+ *
+ * Needs the /proxy-public-key endpoint from tesla-proxy/Dockerfile; an older
+ * container simply answers 404 and this reports null.
+ */
+async function fetchProxyKey(): Promise<{
+  point: string | null;
+  status: number | null;
+  error?: string;
+}> {
+  let base: string | null;
+  try {
+    base = teslaProxyBaseUrl();
+  } catch (err) {
+    return { point: null, status: null, error: err instanceof Error ? err.message : String(err) };
+  }
+  if (!base) return { point: null, status: null, error: "TESLA_PROXY_BASE_URL is not set" };
+
+  try {
+    const res = await fetch(`${base}/proxy-public-key`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+    const text = await res.text();
+    return { status: res.status, point: res.ok ? publicKeyPoint(text) : null };
   } catch (err) {
     return {
       status: null,
@@ -201,7 +246,7 @@ export async function POST(req: Request) {
   let servedKeyMatches: boolean | null = null;
   let servedKeyPoint: string | null = null;
   const envKeyPoint = publicKeyPoint(process.env.TESLA_PUBLIC_KEY);
-  const wellKnown = await fetchWellKnownKey(domain);
+  const [wellKnown, proxyKey] = await Promise.all([fetchWellKnownKey(domain), fetchProxyKey()]);
   if (res.ok) {
     const stored = (body as { response?: { public_key?: string } })?.response?.public_key;
     // Compare against what the URL serves, because that is what Tesla reads.
@@ -211,16 +256,44 @@ export async function POST(req: Request) {
     }
   }
 
-  // Three separate things that are all called "the key", reported separately so
-  // a disagreement between any two of them is visible rather than inferred.
+  // Four separate things that are all called "the key", reported side by side
+  // so a disagreement between any two of them is visible rather than inferred.
+  // Commands only work when all four are the same value.
+  const teslaKeyPoint =
+    ((body as { response?: { public_key?: string } })?.response?.public_key ?? null)?.toLowerCase() ??
+    null;
   const keys = {
     env: envKeyPoint,
     wellKnown: wellKnown.point,
     wellKnownStatus: wellKnown.status,
     ...(wellKnown.error ? { wellKnownError: wellKnown.error } : {}),
+    tesla: teslaKeyPoint,
+    proxy: proxyKey.point,
+    proxyStatus: proxyKey.status,
+    ...(proxyKey.error ? { proxyError: proxyKey.error } : {}),
     envMatchesWellKnown:
       envKeyPoint && wellKnown.point ? envKeyPoint === wellKnown.point : null,
+    // The pair that decides whether a *signed* command can ever succeed: the
+    // car pairs the published key, the proxy signs with its own. Everything
+    // else is setup; this one is the command path itself.
+    proxyMatchesWellKnown:
+      proxyKey.point && wellKnown.point ? proxyKey.point === wellKnown.point : null,
   };
+
+  // Said plainly, because four hex strings on a phone screen are not a
+  // diagnosis. Ordered by what has to be true first.
+  const verdict =
+    wellKnown.point == null
+      ? "The domain serves no usable key. Nothing else can be right until it does."
+      : keys.envMatchesWellKnown === false
+        ? "TESLA_PUBLIC_KEY and what the domain serves disagree — the deploy has not picked up the variable."
+        : proxyKey.point == null
+          ? `The proxy is not reporting its key (${proxyKey.status ?? proxyKey.error ?? "no answer"}). Redeploy tesla-proxy to get /proxy-public-key, or the one value that explains a signed rejection stays invisible.`
+          : keys.proxyMatchesWellKnown === false
+            ? "THE PROXY IS SIGNING WITH THE WRONG KEY. It holds a different private key than the public one this domain publishes, so the car rejects every signature no matter how many times it is paired. Set TESLA_PRIVATE_KEY on the proxy to the half that matches."
+            : teslaKeyPoint && teslaKeyPoint !== wellKnown.point
+              ? "Proxy, variable and domain agree; Tesla holds an older key. Press Register — and if the record does not move, this needs Tesla developer support."
+              : "All four keys agree. If a command still fails, the car has not paired this key — check with fleet status.";
 
   if (!res.ok) {
     recordDebugLog("error", "tesla/partner", `${parsed.data.action} failed`, {
@@ -236,26 +309,11 @@ export async function POST(req: Request) {
     domain,
     region: parsed.data.region,
     status: res.status,
+    verdict,
     keys,
-    ...(servedKeyMatches !== null
-      ? {
-          servedKeyMatches,
-          ...(servedKeyMatches
-            ? {}
-            : {
-                servedKeyPoint,
-                // The fix depends on which side is stale, and the two need
-                // opposite actions — so say which one applies rather than
-                // stating the problem and leaving the operator to guess.
-                keyMismatchHint:
-                  wellKnown.point == null
-                    ? `The domain serves no usable key (/.well-known answered ${wellKnown.status ?? "nothing"}${wellKnown.error ? `: ${wellKnown.error}` : ""}). Tesla reads that URL, not the environment variable, so it has nothing new to take. Fix the route first — registering now cannot change anything.`
-                    : keys.envMatchesWellKnown === false
-                      ? "TESLA_PUBLIC_KEY and the key the domain actually serves are different. Tesla reads the URL, so the variable is not the one that matters — redeploy so they agree, then register."
-                      : "Tesla holds a different key than the domain serves, and both are valid. Press Register; if updated_at does not move and the key stays the same, Tesla is refusing to replace an existing record and this needs Tesla developer support — re-registering will not do it.",
-              }),
-        }
-      : {}),
+    // `verdict` above says which one is wrong and what to do; this stays
+    // because it is the single boolean the UI and the car report key off.
+    ...(servedKeyMatches !== null ? { servedKeyMatches, servedKeyPoint } : {}),
     body,
     ...(res.ok
       ? {}

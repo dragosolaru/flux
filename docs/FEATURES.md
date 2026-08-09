@@ -578,32 +578,49 @@ confirmation before firing, then notify the owner on success via
 
 ### Partner key diagnostics (what Tesla holds vs what we serve)
 
-**What:** three different values are all called "the public key", and only their
+**What:** four different values are all called "the public key", and only their
 disagreement explains why a *signed* command comes back `your public key has not
 been paired with the vehicle`:
 
 1. `TESLA_PUBLIC_KEY` — the variable.
 2. What `https://<domain>/.well-known/appspecific/com.tesla.3p.public-key.pem`
    actually answers. **This is the only one Tesla reads.**
-3. What Tesla stored for the domain (`GET /api/1/partner_accounts/public_key`).
+3. What the signing proxy holds (`GET {TESLA_PROXY_BASE_URL}/proxy-public-key`,
+   derived at container boot from the private key in hand).
+4. What Tesla stored for the domain (`GET /api/1/partner_accounts/public_key`).
 
-**How to use:** `/debug` → Car → **Check status**. The response now carries a
-`keys` block — `env`, `wellKnown`, `wellKnownStatus`, `envMatchesWellKnown` —
-because the panel used to decode the env var and *call* that "what we serve",
-which made a broken route and a stale Tesla record indistinguishable.
-`keyMismatchHint` names which of the three is wrong: no usable key at the URL
-(fix the route — registering cannot help), env ≠ served (redeploy), or both
-valid and Tesla still different (Tesla is refusing to replace the record →
-developer support). The **Copy car report** button prints all three truncated to
-8 hex chars on one line.
+A command can only succeed when all four are identical. (3) mattering at all is
+the trap: a proxy running the wrong private key returns the *same* message as a
+genuinely unpaired car, so the owner is sent to re-pair a car that was already
+paired correctly.
+
+**How to use:** `/debug` → Car → **Check status** renders the four side by side,
+first 8 hex chars each, red where they differ from the domain, with a one-line
+`verdict` naming the one to fix. The env-var-only reading it replaced *assumed*
+what the domain served rather than fetching it, which made a broken route and a
+stale Tesla record indistinguishable. Raw JSON is behind a `<details>`; **Copy
+car report** prints all four on two lines.
+
+**Is the car actually paired:** `/debug` → Car → **Check pairing** calls
+`POST /api/1/vehicles/fleet_status` per live VIN with that car's own token, and
+reports Tesla's `key_paired_vins` / `unpaired_vins` verdict plus
+`vehicle_command_protocol_required` and firmware. Every other pairing signal in
+the app is inference — `virtual_key_paired` is only set *after* a signed command
+succeeds — so this is the sole authoritative answer, and three-valued (a VIN in
+neither list is `unknown`, not "unpaired").
 
 The `.well-known` route is `cache-control: no-store`. It was `max-age=3600`,
 which meant a rotation could keep serving the old key to Tesla *and* to this
 check for an hour, with both agreeing on a stale value.
 
 **Key files:** `src/app/api/internal/debug/tesla-partner/route.ts`,
+`src/app/api/internal/debug/tesla-fleet-status/route.ts`,
 `src/app/.well-known/appspecific/com.tesla.3p.public-key.pem/route.ts`,
-`src/app/(dashboard)/debug/debug-client.tsx`.
+`src/app/(dashboard)/debug/debug-client.tsx`, `tesla-proxy/Dockerfile`
+(`/proxy-public-key`).
+
+**Dependencies:** `/proxy-public-key` needs the current `tesla-proxy` image — an
+older container answers 404 and the proxy row reads `none`.
 
 ## 24. Security hardening
 

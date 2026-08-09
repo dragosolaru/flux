@@ -103,6 +103,43 @@ interface IngestResult {
   [key: string]: unknown;
 }
 
+interface FleetStatusResult {
+  ok: boolean;
+  hint: string;
+  cars: {
+    vehicle: string;
+    vin: string;
+    // Three-valued on purpose: Tesla naming the VIN in neither list is not the
+    // same as saying it is unpaired.
+    paired: boolean | null;
+    firmware?: string | null;
+    commandProtocolRequired?: boolean | null;
+    fleetTelemetry?: string | null;
+    error?: string;
+  }[];
+}
+
+// The four values that must all be identical before a signed command can work.
+// Named here because the car report, the callout and the key table all read the
+// same shape and drifted apart when each declared its own.
+interface PartnerResult {
+  verdict?: string;
+  servedKeyMatches?: boolean;
+  keys?: {
+    env?: string | null;
+    wellKnown?: string | null;
+    wellKnownStatus?: number | null;
+    wellKnownError?: string;
+    tesla?: string | null;
+    proxy?: string | null;
+    proxyStatus?: number | null;
+    proxyError?: string;
+    envMatchesWellKnown?: boolean | null;
+    proxyMatchesWellKnown?: boolean | null;
+  };
+  body?: { response?: { public_key?: string; updated_at?: string } };
+}
+
 // Every bulk country, so a region can be topped up without editing code.
 // Order puts the RO/Balkan corridor first because that is the one being worked.
 const COUNTRIES: { code: string; name: string }[] = [
@@ -174,6 +211,7 @@ export function DebugClient() {
   // Several routes worth poking at are POST-only; GET on them returns 405.
   const [apiMethod, setApiMethod] = useState<"GET" | "POST">("GET");
   const [partnerResult, setPartnerResult] = useState<unknown>(null);
+  const [fleetStatus, setFleetStatus] = useState<FleetStatusResult | null>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Held in memory for exactly as long as this page stays open, and never put
   // anywhere else — see the deliberate omission from copyAll below.
@@ -474,6 +512,23 @@ export function DebugClient() {
     }
   }
 
+  async function runFleetStatus() {
+    setRunning("fleet-status");
+    setLastError(null);
+    setFleetStatus(null);
+    try {
+      setFleetStatus(
+        await apiFetch<FleetStatusResult>("/api/internal/debug/tesla-fleet-status", {
+          method: "POST",
+        }),
+      );
+    } catch (err) {
+      setLastError(`Fleet status failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runDedupe() {
     setRunning("dedupe");
     setLastError(null);
@@ -581,45 +636,48 @@ export function DebugClient() {
       if (refusedForKeyNotPaired) {
         out.push(
           "!! car refused a SIGNED command: our key is not paired to it." +
-            " Re-pairing alone will not fix this — check Tesla holds the same" +
-            " key the proxy signs with (Check status → servedKeyMatches).",
+            " Re-pairing helps only if the four keys below already agree —" +
+            " otherwise the car would pair a key the proxy does not hold.",
         );
       }
       // Whatever the last Check status returned, if one was run. The key match
       // is the question every "not paired" failure turns into, and it is
       // otherwise buried in a raw JSON dump further down the page.
-      const pr = partnerResult as
-        | {
-            servedKeyMatches?: boolean;
-            keyMismatchHint?: string;
-            keys?: {
-              env?: string | null;
-              wellKnown?: string | null;
-              wellKnownStatus?: number | null;
-              wellKnownError?: string;
-            };
-            body?: { response?: { public_key?: string; updated_at?: string } };
-          }
-        | null;
-      if (pr && typeof pr.servedKeyMatches === "boolean") {
-        out.push(
-          `partner key match: ${pr.servedKeyMatches}` +
-            (pr.keyMismatchHint ? ` — ${pr.keyMismatchHint}` : ""),
-        );
+      const pr = partnerResult as PartnerResult | null;
+      if (pr?.verdict) {
+        out.push(`keys: ${pr.verdict}`);
       } else {
-        out.push("partner key match: not checked this session");
+        out.push("keys: not checked this session");
       }
-      // Three things are all called "the key" and only their disagreement is
-      // diagnostic, so print all three side by side. Eight hex chars is enough
+      // Four things are all called "the key" and only their disagreement is
+      // diagnostic, so print all four side by side. Eight hex chars is enough
       // to tell them apart and short enough to read on a phone.
       if (pr?.keys) {
         const k = pr.keys;
         const head = (v: string | null | undefined) => (v ? v.slice(0, 8) : "none");
         out.push(
           `  env ${head(k.env)} · served ${head(k.wellKnown)} (HTTP ${k.wellKnownStatus ?? "—"}` +
-            `${k.wellKnownError ? ` ${k.wellKnownError}` : ""}) · tesla ${head(pr.body?.response?.public_key)}` +
+            `${k.wellKnownError ? ` ${k.wellKnownError}` : ""})`,
+        );
+        out.push(
+          `  proxy ${head(k.proxy)} (HTTP ${k.proxyStatus ?? "—"}${k.proxyError ? ` ${k.proxyError}` : ""})` +
+            ` · tesla ${head(k.tesla)}` +
             (pr.body?.response?.updated_at ? ` since ${pr.body.response.updated_at.slice(0, 10)}` : ""),
         );
+      }
+      // Tesla's own answer to "is this car paired with our key" — the only one
+      // that is not an inference.
+      if (fleetStatus) {
+        for (const c of fleetStatus.cars) {
+          out.push(
+            `fleet_status "${c.vehicle}" …${c.vin.slice(-6)} · paired ${c.paired ?? "unknown"}` +
+              (c.commandProtocolRequired != null ? ` · signing required ${c.commandProtocolRequired}` : "") +
+              (c.firmware ? ` · fw ${c.firmware}` : "") +
+              (c.error ? ` · ${c.error}` : ""),
+          );
+        }
+      } else {
+        out.push("fleet_status: not checked this session");
       }
       out.push(
         groupedLogs.tesla.length
@@ -690,6 +748,7 @@ export function DebugClient() {
         rawProbe,
         apiResult,
         partnerResult,
+        fleetStatus,
         ocrResult,
         lastResult,
         lastError,
@@ -1021,12 +1080,12 @@ export function DebugClient() {
                 paired a key we no longer own and rejects every signature.
               </p>
               <p className="text-xs text-muted-foreground">
-                Press <strong>Check status</strong> below and read the{" "}
-                <code>keys</code> block: <code>env</code> is the variable,{" "}
-                <code>wellKnown</code> is what the domain actually serves Tesla,
-                and <code>body.response.public_key</code> is what Tesla holds. Fix
-                whichever of the first two is wrong before pressing{" "}
-                <strong>Register</strong> — Tesla reads the URL, not the variable.
+                Press <strong>Check status</strong> below. It lists all four keys —
+                variable, domain, proxy, Tesla — and says which one is wrong. They
+                must all be the same value before pairing the car is worth doing;
+                pairing while they differ just stores a key the proxy cannot sign
+                with. <strong>Check pairing</strong> then confirms with Tesla
+                whether the car took it.
               </p>
             </div>
           )}
@@ -1116,10 +1175,67 @@ export function DebugClient() {
                 onClick={() => void teslaPartner("register")}
               />
             </div>
+            <KeyTable result={partnerResult as PartnerResult | null} />
             {partnerResult != null && (
-              <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
-                {JSON.stringify(partnerResult, null, 2)}
-              </pre>
+              <details>
+                <summary className="cursor-pointer text-[11px] text-muted-foreground">
+                  Raw response
+                </summary>
+                <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
+                  {JSON.stringify(partnerResult, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+
+          <div className="space-y-2 border-t border-border/60 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Is the car paired? (Tesla&apos;s answer)
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Everything else here is inference — a command that worked once, a key
+              added on a screen that never said whose. This asks Tesla directly
+              whether the VIN is paired with the key registered for this domain.
+            </p>
+            <IngestButton
+              label="Check pairing"
+              busy={running === "fleet-status"}
+              disabled={running !== null}
+              onClick={() => void runFleetStatus()}
+            />
+            {fleetStatus && (
+              <div className="space-y-1.5">
+                {fleetStatus.cars.map((c) => (
+                  <div
+                    key={c.vin}
+                    className="rounded border border-border/60 bg-muted/20 p-2 text-[11px]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{c.vehicle}</span>
+                      <span
+                        className={
+                          c.paired === true
+                            ? "font-mono text-emerald-400"
+                            : c.paired === false
+                              ? "font-mono text-destructive"
+                              : "font-mono text-amber-400"
+                        }
+                      >
+                        {c.paired === true ? "paired" : c.paired === false ? "NOT paired" : "unknown"}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                      …{c.vin.slice(-6)}
+                      {c.firmware ? ` · fw ${c.firmware}` : ""}
+                      {c.commandProtocolRequired != null
+                        ? ` · signing ${c.commandProtocolRequired ? "required" : "not required"}`
+                        : ""}
+                    </p>
+                    {c.error && <p className="mt-0.5 text-[10px] text-destructive">{c.error}</p>}
+                  </div>
+                ))}
+                <p className="text-[11px] text-muted-foreground">{fleetStatus.hint}</p>
+              </div>
             )}
           </div>
         </Panel>
@@ -1768,6 +1884,76 @@ function IngestButton({
       {busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
       {label}
     </button>
+  );
+}
+
+/**
+ * The four keys, side by side.
+ *
+ * A signed command works only when all four are the same value, and the whole
+ * class of failure here has been two of them silently differing. The raw JSON
+ * held the answer for weeks and nobody read it, so this is four rows and a
+ * sentence: the first eight hex characters are plenty to see a mismatch, and
+ * the verdict says which one to go and fix.
+ */
+function KeyTable({ result }: { result: PartnerResult | null }) {
+  if (!result?.keys) return null;
+  const k = result.keys;
+  const truth = k.wellKnown ?? null;
+  const rows: { label: string; value: string | null | undefined; note?: string }[] = [
+    { label: "variable", value: k.env, note: "TESLA_PUBLIC_KEY" },
+    {
+      label: "domain",
+      value: k.wellKnown,
+      note: `what Tesla reads · HTTP ${k.wellKnownStatus ?? "—"}${k.wellKnownError ? ` ${k.wellKnownError}` : ""}`,
+    },
+    {
+      label: "proxy",
+      value: k.proxy,
+      note: k.proxyError ?? `what signs commands · HTTP ${k.proxyStatus ?? "—"}`,
+    },
+    { label: "tesla", value: k.tesla, note: "what Tesla stored" },
+  ];
+
+  return (
+    <div className="space-y-1.5">
+      {result.verdict && (
+        <p
+          className={
+            k.proxyMatchesWellKnown === false || k.envMatchesWellKnown === false
+              ? "rounded border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive"
+              : "rounded border border-border/60 bg-muted/20 p-2 text-[11px] text-muted-foreground"
+          }
+        >
+          {result.verdict}
+        </p>
+      )}
+      <div className="space-y-0.5">
+        {rows.map((r) => {
+          // Compared against the domain, not against each other pairwise: it is
+          // the one value Tesla and the car both act on, so it is the reference
+          // the other three have to match.
+          const agrees = r.value && truth ? r.value === truth : null;
+          return (
+            <div key={r.label} className="flex items-baseline gap-2 text-[11px]">
+              <span className="w-16 shrink-0 text-muted-foreground">{r.label}</span>
+              <span
+                className={
+                  agrees === false
+                    ? "font-mono text-destructive"
+                    : agrees
+                      ? "font-mono text-emerald-400"
+                      : "font-mono text-amber-400"
+                }
+              >
+                {r.value ? r.value.slice(0, 8) : "none"}
+              </span>
+              <span className="truncate text-[10px] text-muted-foreground">{r.note}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
