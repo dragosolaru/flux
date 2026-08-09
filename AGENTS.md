@@ -34,7 +34,9 @@ Agent(review,     subagent_type="claude")            # senior review after merge
 
 1. Read `CODEBASE_CONTEXT.md` — stack, file map, key patterns.
 2. For security changes → also read `docs/SECURITY-AUDIT.md`.
-3. For Tesla integration → also read `docs/VEHICLE-CONNECTION.md`.
+3. For Tesla integration → also read `docs/VEHICLE-CONNECTION.md` (setup and
+   OAuth) and `docs/TESLA-API-CAPABILITIES.md` (what the API can and cannot
+   do, graded — read it before promising a feature).
 4. For cost/OCR pipeline → also read `docs/COST-INTELLIGENCE.md`.
 
 ## Commit rules

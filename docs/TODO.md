@@ -27,6 +27,20 @@ Tracked in full in `docs/LAUNCH-CHECKLIST.md`. Open items as of 2026-08-07:
       Without it every command on a Model 3/Y/S/X built after 2021 fails — now
       reported as `PROXY_NOT_CONFIGURED` rather than blamed on the Virtual Key.
       See `tesla-proxy/README.md`.
+- [ ] **Fleet Telemetry receiver on Coolify.** The single change that unlocks
+      battery analytics, trip history, charging curves and vampire drain — the
+      car pushes to us instead of us waking it to ask. Cannot live on Vercel: it
+      is a long-lived push connection to a fixed host, which serverless has
+      neither the lifetime nor the address for. Reuses the partner domain,
+      public key and TLS host that `tesla-proxy` already needed. Feature-by-
+      feature feasibility and the sampling-rate maths are in
+      `docs/TESLA-API-CAPABILITIES.md`; the short version is that 500 ms on
+      everything is ~1.8 billion rows a year and nothing needs it.
+- [ ] **Cheap Fleet API endpoints we have not wired.** `fleet_status`,
+      `recent_alerts`, `service_data`, `release_notes`, `nearby_charging_sites`
+      (Tesla's own live Supercharger stall counts, better than our ingested data
+      for those sites), and `users/region` to replace the EU→NA→CN probe loop in
+      the OAuth callback. Days of work, no new infrastructure.
 - [ ] **Shared secret between Flux and the proxy.** The proxy's published URL is
       an open relay: anyone who reaches it can forward requests to Tesla's API.
       A valid Tesla token for an account that paired our Virtual Key is still
