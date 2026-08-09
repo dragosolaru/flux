@@ -80,20 +80,47 @@ function publicKeyPoint(pem: string | undefined): string | null {
 async function fetchWellKnownKey(domain: string): Promise<{
   status: number | null;
   point: string | null;
+  /** What the function itself generates right now, past any CDN copy. */
+  originPoint: string | null;
+  cdn: string | null;
+  ageSeconds: number | null;
+  cacheControl: string | null;
   error?: string;
 }> {
-  const url = `https://${domain}/.well-known/appspecific/com.tesla.3p.public-key.pem`;
+  const base = `https://${domain}/.well-known/appspecific/com.tesla.3p.public-key.pem`;
   try {
-    const res = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(15_000),
-    });
-    const text = await res.text();
-    return { status: res.status, point: publicKeyPoint(text) };
+    // Twice, and the difference is the point. The plain URL is what Tesla
+    // fetches, cache and all. The second carries a query string, which is part
+    // of the CDN cache key, so it can only be answered by the function — and
+    // `process.env` inside that function is the value the panel reports as
+    // `env`. When those two disagree the variable is fine and something in
+    // front is serving an older copy; without both, an edge cache is
+    // indistinguishable from a deploy that never picked the variable up.
+    const [live, origin] = await Promise.all([
+      fetch(base, { cache: "no-store", signal: AbortSignal.timeout(15_000) }),
+      fetch(`${base}?cache-bust=${Date.now()}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(15_000),
+      }),
+    ]);
+    const [liveText, originText] = await Promise.all([live.text(), origin.text()]);
+    const age = live.headers.get("age");
+    return {
+      status: live.status,
+      point: publicKeyPoint(liveText),
+      originPoint: origin.ok ? publicKeyPoint(originText) : null,
+      cdn: live.headers.get("x-vercel-cache"),
+      ageSeconds: age ? Number(age) : null,
+      cacheControl: live.headers.get("cache-control"),
+    };
   } catch (err) {
     return {
       status: null,
       point: null,
+      originPoint: null,
+      cdn: null,
+      ageSeconds: null,
+      cacheControl: null,
       error: err instanceof Error ? err.message : String(err),
     };
   }
@@ -282,6 +309,12 @@ export async function POST(req: Request) {
     wellKnown: wellKnown.point,
     wellKnownStatus: wellKnown.status,
     ...(wellKnown.error ? { wellKnownError: wellKnown.error } : {}),
+    // What the route generates when the CDN cannot answer. Only interesting
+    // when it differs from `wellKnown` — that gap IS the stale copy.
+    domainOrigin: wellKnown.originPoint,
+    domainCdn: wellKnown.cdn,
+    domainAgeSeconds: wellKnown.ageSeconds,
+    domainCacheControl: wellKnown.cacheControl,
     tesla: teslaKeyPoint,
     proxy: proxyKey.point,
     proxyStatus: proxyKey.status,
@@ -304,8 +337,18 @@ export async function POST(req: Request) {
   // different private key still fails every command, and it fails with the
   // pairing message — so it reads as the owner's problem and is the one that
   // wastes days. A stale TESLA_PUBLIC_KEY, meanwhile, breaks nothing today.
-  const verdict =
-    wellKnown.point == null
+  // A cached copy at the edge outranks every other diagnosis, because while it
+  // lasts the domain is publishing a key nobody set — and Tesla and the car
+  // both read the domain. Blaming the proxy or the variable here sends the
+  // operator to change something that is already correct.
+  const staleEdge =
+    wellKnown.originPoint != null &&
+    wellKnown.point != null &&
+    wellKnown.originPoint !== wellKnown.point;
+
+  const verdict = staleEdge
+    ? `The variable is right and the route is right — a CACHED COPY is being served in front of them (x-vercel-cache: ${wellKnown.cdn ?? "unknown"}, age ${wellKnown.ageSeconds ?? "?"}s, ${wellKnown.cacheControl ?? "no cache-control"}). Tesla and the car read that copy, so nothing else can be fixed until it clears. Change nothing; redeploy to force a new cache key, and re-check.`
+    : wellKnown.point == null
       ? "The domain serves no usable key. Nothing else can be right until it does."
       : proxyKey.point == null
         ? `The proxy is not reporting its key (${proxyKey.status ?? proxyKey.error ?? "no answer"}). Redeploy tesla-proxy to get /proxy-public-key, or the one value that explains a signed rejection stays invisible.`
@@ -318,8 +361,12 @@ export async function POST(req: Request) {
   // Not the verdict, because it is not what is broken today — but a redeploy
   // would make the domain serve the variable, and the domain is what the car
   // paired. A mismatch here is a working setup with a delayed fuse.
+  //
+  // Suppressed while a stale copy is in front: the variable and the route
+  // already agree, and saying "the variable does not match" would send the
+  // operator to edit the one thing that is correct.
   const warning =
-    keys.envMatchesWellKnown === false
+    !staleEdge && keys.envMatchesWellKnown === false
       ? "Separately: TESLA_PUBLIC_KEY does not match what the domain currently serves. Nothing is broken by that right now, but the next deploy that picks the variable up will change the published key and unpair the car."
       : null;
 
@@ -342,7 +389,7 @@ export async function POST(req: Request) {
     keys,
     // Only when it is the one to adopt. Shipping it unconditionally would put a
     // second copy of a key on screen in every healthy check for no reason.
-    ...(keys.proxyMatchesWellKnown === false && proxyKey.pem
+    ...(!staleEdge && keys.proxyMatchesWellKnown === false && proxyKey.pem
       ? {
           proxyPublicKeyPem: proxyKey.pem,
           // Vercel's variable editor takes one line. A PEM is five, and pasting

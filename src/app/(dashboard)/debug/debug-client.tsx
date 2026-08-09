@@ -133,6 +133,10 @@ interface PartnerResult {
     wellKnown?: string | null;
     wellKnownStatus?: number | null;
     wellKnownError?: string;
+    domainOrigin?: string | null;
+    domainCdn?: string | null;
+    domainAgeSeconds?: number | null;
+    domainCacheControl?: string | null;
     tesla?: string | null;
     proxy?: string | null;
     proxyStatus?: number | null;
@@ -663,6 +667,12 @@ export function DebugClient() {
           `  env ${head(k.env)} · served ${head(k.wellKnown)} (HTTP ${k.wellKnownStatus ?? "—"}` +
             `${k.wellKnownError ? ` ${k.wellKnownError}` : ""})`,
         );
+        if (k.domainOrigin && k.domainOrigin !== k.wellKnown) {
+          out.push(
+            `  origin ${head(k.domainOrigin)} — served copy is stale` +
+              ` (${k.domainCdn ?? "?"}, age ${k.domainAgeSeconds ?? "?"}s, ${k.domainCacheControl ?? "no cache-control"})`,
+          );
+        }
         out.push(
           `  proxy ${head(k.proxy)} (HTTP ${k.proxyStatus ?? "—"}${k.proxyError ? ` ${k.proxyError}` : ""})` +
             ` · tesla ${head(k.tesla)}` +
@@ -1917,6 +1927,17 @@ function KeyTable({
       value: k.wellKnown,
       note: `what Tesla reads · HTTP ${k.wellKnownStatus ?? "—"}${k.wellKnownError ? ` ${k.wellKnownError}` : ""}`,
     },
+    // Only when it disagrees with the cached copy. Shown always, it is a fifth
+    // identical row and one more thing to read past.
+    ...(k.domainOrigin && k.domainOrigin !== k.wellKnown
+      ? [
+          {
+            label: "↳ origin",
+            value: k.domainOrigin,
+            note: `route output, past the cache · ${k.domainCdn ?? "?"} age ${k.domainAgeSeconds ?? "?"}s`,
+          },
+        ]
+      : []),
     {
       label: "proxy",
       value: k.proxy,
