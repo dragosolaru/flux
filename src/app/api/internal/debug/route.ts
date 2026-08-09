@@ -210,7 +210,12 @@ export async function GET() {
       // and pin nextStep to itself.
       virtualKeyUrl: teslaVirtualKeyUrl(),
     },
-    roadmap: { goal: GOAL, milestones: resolveRoadmap(config) },
+    // teslaConfig is merged back in here and only here. It is deliberately
+    // absent from the `config` payload (the Tesla panel reports it better),
+    // but the roadmap checks read teslaLive and teslaProxy — so dropping it
+    // from the object flipped "Tesla linked and commands working" from done
+    // back to todo, which is a lie the panel told for a day.
+    roadmap: { goal: GOAL, milestones: resolveRoadmap({ ...config, ...teslaConfig }) },
     warnings,
   });
 }

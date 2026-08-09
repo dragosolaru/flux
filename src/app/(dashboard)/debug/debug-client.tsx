@@ -225,8 +225,25 @@ export function DebugClient() {
         });
       }
     }
-    return [...byKey.values()];
+    // Split by area. "I only have charger errors" was the complaint, and it was
+    // accurate: a flat list is dominated by whichever subsystem is noisiest,
+    // which is never the one being debugged. Tesla comes first and is shown
+    // even when empty — "nothing logged" is itself the answer when you are
+    // waiting for a command failure to appear.
+    const all = [...byKey.values()];
+    const isTesla = (scope: string) =>
+      scope.startsWith("tesla/") || scope.startsWith("vehicles/");
+    return {
+      tesla: all.filter((l) => isTesla(l.scope)),
+      other: all.filter((l) => !isTesla(l.scope)),
+      total: data?.logs?.length ?? 0,
+    };
   }, [data?.logs]);
+
+  // Anything older than this is history, not a live problem. Every entry on
+  // screen was a day or two old while being read as current.
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const generatedAtMs = data?.generatedAt ? Date.parse(data.generatedAt) : 0;
 
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
@@ -1303,59 +1320,28 @@ export function DebugClient() {
         open={open.activity ?? false}
         onToggle={() => toggle("activity")}
       >
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Logged errors and warnings
+        <p className="text-xs text-muted-foreground">
+          {groupedLogs.total} entries,{" "}
+          {groupedLogs.tesla.length + groupedLogs.other.length} distinct, repeats
+          collapsed. Split by area because a flat list is always dominated by
+          whichever subsystem is noisiest — never the one being debugged.
         </p>
-        {groupedLogs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing recorded.</p>
-        ) : (
-          <>
-            <p className="text-xs text-muted-foreground">
-              {data.logs.length} entries, {groupedLogs.length} distinct. Repeats are
-              collapsed — one broken source retrying all night is one problem, not
-              forty.
-            </p>
-            <div className="max-h-96 space-y-1.5 overflow-y-auto">
-              {groupedLogs.map((l) => (
-                <div key={l.key} className="rounded-lg bg-muted/40 p-2 text-xs">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={
-                        l.level === "error"
-                          ? "font-semibold text-destructive"
-                          : l.level === "warn"
-                            ? "font-semibold text-amber-400"
-                            : "text-muted-foreground"
-                      }
-                    >
-                      {l.level}
-                    </span>
-                    <span className="font-mono text-muted-foreground">{l.scope}</span>
-                    {l.count > 1 && (
-                      <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums text-muted-foreground">
-                        ×{l.count}
-                      </span>
-                    )}
-                    <span className="ml-auto text-muted-foreground">
-                      {new Date(l.latest).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="mt-1 break-words">{l.message}</p>
-                  {l.context != null && (
-                    <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
-                      {JSON.stringify(l.context)}
-                    </pre>
-                  )}
-                  {l.count > 1 && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      first seen {new Date(l.earliest).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+
+        <LogGroup
+          title="Tesla & vehicle"
+          entries={groupedLogs.tesla}
+          emptyNote="Nothing logged. If you are waiting on a command failure to appear here, that means the command never reached the server — or it worked."
+          dayMs={DAY_MS}
+          now={generatedAtMs}
+        />
+        <LogGroup
+          title="Charger sources"
+          entries={groupedLogs.other}
+          emptyNote="Nothing logged."
+          dayMs={DAY_MS}
+          now={generatedAtMs}
+        />
+
         <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Ingest runs
         </p>
@@ -1556,5 +1542,118 @@ function IngestButton({
       {busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
       {label}
     </button>
+  );
+}
+
+/**
+ * One area's worth of collapsed log entries.
+ *
+ * Age is stated in relative terms and anything past a day is dimmed, because
+ * every entry on this panel was read as a live problem while being two days
+ * old. "3 zile" answers a question the absolute timestamp did not.
+ */
+function LogGroup({
+  title,
+  entries,
+  emptyNote,
+  dayMs,
+  now,
+}: {
+  title: string;
+  entries: {
+    key: string;
+    level: "info" | "warn" | "error";
+    scope: string;
+    message: string;
+    context: Record<string, unknown> | null;
+    count: number;
+    latest: string;
+    earliest: string;
+  }[];
+  emptyNote: string;
+  dayMs: number;
+  /**
+   * The payload's own generation time, not Date.now(). Pure — the lint rule
+   * forbids the latter in render — and more honest: ages are relative to when
+   * the server read the table, so they do not drift as the page sits open.
+   */
+  now: number;
+}) {
+  const fresh = entries.filter((l) => now - new Date(l.latest).getTime() < dayMs);
+
+  return (
+    <div className="space-y-1.5 border-t border-border/60 pt-3">
+      <div className="flex items-center gap-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {title}
+        </p>
+        {entries.length > 0 && (
+          <span
+            className={`rounded-full px-1.5 text-[10px] tabular-nums ${
+              fresh.length > 0
+                ? "bg-destructive/15 text-destructive"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {fresh.length > 0 ? `${fresh.length} today` : "all older than a day"}
+          </span>
+        )}
+      </div>
+
+      {entries.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{emptyNote}</p>
+      ) : (
+        <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          {entries.map((l) => {
+            const ageMs = now - new Date(l.latest).getTime();
+            const stale = ageMs >= dayMs;
+            const days = Math.floor(ageMs / dayMs);
+            const hours = Math.floor(ageMs / 3_600_000);
+            const mins = Math.floor(ageMs / 60_000);
+            const age =
+              days >= 1 ? `${days}d ago` : hours >= 1 ? `${hours}h ago` : `${mins}m ago`;
+            return (
+              <div
+                key={l.key}
+                className={`rounded-lg p-2 text-xs ${
+                  stale ? "bg-muted/20 opacity-60" : "bg-muted/40"
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={
+                      l.level === "error"
+                        ? "font-semibold text-destructive"
+                        : l.level === "warn"
+                          ? "font-semibold text-amber-400"
+                          : "text-muted-foreground"
+                    }
+                  >
+                    {l.level}
+                  </span>
+                  <span className="font-mono text-muted-foreground">{l.scope}</span>
+                  {l.count > 1 && (
+                    <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums text-muted-foreground">
+                      ×{l.count}
+                    </span>
+                  )}
+                  <span className="ml-auto tabular-nums text-muted-foreground">{age}</span>
+                </div>
+                <p className="mt-1 break-words">{l.message}</p>
+                {l.context != null && (
+                  <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
+                    {JSON.stringify(l.context)}
+                  </pre>
+                )}
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {new Date(l.latest).toLocaleString()}
+                  {l.count > 1 && ` · first ${new Date(l.earliest).toLocaleString()}`}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
