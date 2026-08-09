@@ -247,6 +247,15 @@ export function DebugClient() {
   const teslaFresh = groupedLogs.tesla.filter(
     (l) => generatedAtMs - new Date(l.latest).getTime() < DAY_MS,
   ).length;
+  // The car answered and said our key is not one of its keys. Distinct from
+  // never having paired: re-pairing is the obvious response and the wrong one,
+  // because it re-pairs whatever key Tesla currently holds for the domain.
+  const refusedForKeyNotPaired = groupedLogs.tesla.some(
+    (l) =>
+      l.scope === "vehicles/commands" &&
+      typeof l.context?.matched === "string" &&
+      l.context.matched === "key-not-paired",
+  );
 
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
@@ -568,6 +577,27 @@ export function DebugClient() {
           );
         }
         if (!t.grants?.length) out.push("no linked car");
+      }
+      if (refusedForKeyNotPaired) {
+        out.push(
+          "!! car refused a SIGNED command: our key is not paired to it." +
+            " Re-pairing alone will not fix this — check Tesla holds the same" +
+            " key the proxy signs with (Check status → servedKeyMatches).",
+        );
+      }
+      // Whatever the last Check status returned, if one was run. The key match
+      // is the question every "not paired" failure turns into, and it is
+      // otherwise buried in a raw JSON dump further down the page.
+      const pr = partnerResult as
+        | { servedKeyMatches?: boolean; keyMismatchHint?: string }
+        | null;
+      if (pr && typeof pr.servedKeyMatches === "boolean") {
+        out.push(
+          `partner key match: ${pr.servedKeyMatches}` +
+            (pr.keyMismatchHint ? ` — ${pr.keyMismatchHint}` : ""),
+        );
+      } else {
+        out.push("partner key match: not checked this session");
       }
       out.push(
         groupedLogs.tesla.length
@@ -956,6 +986,26 @@ export function DebugClient() {
               </div>
             )}
           </div>
+
+          {refusedForKeyNotPaired && (
+            <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/10 p-3">
+              <p className="text-xs font-medium text-destructive">
+                The car refused a signed command: our key is not paired to it
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Pairing again will not help if it has already been done. The car
+                stores the public key Tesla holds for this domain — so if that
+                record is older than the keypair the proxy signs with, the car
+                paired a key we no longer own and rejects every signature.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Press <strong>Check status</strong> below. If{" "}
+                <code>servedKeyMatches</code> is <code>false</code>, press{" "}
+                <strong>Register</strong> to update Tesla&apos;s record, then pair
+                the car once more — in that order.
+              </p>
+            </div>
+          )}
 
           {tesla.virtualKeyUrl && (
             <div className="space-y-2 border-t border-border/60 pt-3">

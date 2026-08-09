@@ -481,7 +481,7 @@
     "success": "Parancs elküldve",
     "error": "Parancs sikertelen",
     "error_rate_limit": "Túl sok parancs. Várj egy pillanatot, és próbáld újra.",
-    "error_vcp_required": "Ez az autó még nem párosította a virtuális kulcsot. Nyisd meg a párosítási linket a telefonodon a Tesla alkalmazással, majd hagyd jóvá.",
+    "error_vcp_required": "Az autó elutasította az aláírt parancsot: a kulcsunk nincs hozzá párosítva. Ha már párosítottad, az újbóli párosítás nem segít — a regisztrált kulcs régebbi lehet, mint amivel aláírunk. Lásd /debug → Car.",
     "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz.",
     "confirm": {
       "unlock": {

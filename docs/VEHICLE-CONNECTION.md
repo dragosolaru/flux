@@ -326,6 +326,18 @@ value repeated.
 > by pairing. Tesla's own REST API accepts either, so `sendVehicleCommand` uses
 > the VIN only when routing through the proxy.
 
+> **"Not paired" after pairing usually means the wrong key is registered.** The
+> car stores the public key Tesla holds for the domain. Rotate the keypair
+> without pressing **Register**, and Tesla keeps the old public key, the car
+> pairs *that*, and the proxy signs with the new private half — so the car
+> rejects every command with `your public key has not been paired with the
+> vehicle`, no matter how many times it is paired.
+>
+> The order that works: new keypair → `TESLA_PUBLIC_KEY` deployed → confirm the
+> domain serves it → **Register** → **Check status** shows
+> `servedKeyMatches: true` → *then* pair the car. Pairing before Register pairs
+> a key that is about to be replaced.
+
 ### 6. Pair the Virtual Key
 
 Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla

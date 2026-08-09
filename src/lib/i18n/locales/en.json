@@ -481,7 +481,7 @@
     "success": "Command sent",
     "error": "Command failed",
     "error_rate_limit": "Too many commands. Please wait a moment and try again.",
-    "error_vcp_required": "This car has not paired its Virtual Key yet. Open the pairing link on your phone with the Tesla app installed, then approve.",
+    "error_vcp_required": "The car refused the signed command: our key is not paired to it. If you have already paired, re-pairing will not help — the registered key may be older than the one we sign with. Check /debug → Car.",
     "error_not_supported": "This command isn't available for this vehicle.",
     "confirm": {
       "unlock": {

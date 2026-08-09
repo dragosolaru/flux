@@ -481,7 +481,7 @@
     "success": "Befehl gesendet",
     "error": "Befehl fehlgeschlagen",
     "error_rate_limit": "Zu viele Befehle. Bitte warte einen Moment und versuche es erneut.",
-    "error_vcp_required": "Dieses Auto hat seinen Virtual Key noch nicht gekoppelt. Öffne den Kopplungslink auf dem Handy mit installierter Tesla-App und bestätige.",
+    "error_vcp_required": "Das Auto hat den signierten Befehl abgelehnt: unser Schlüssel ist nicht mit ihm gekoppelt. Wenn bereits gekoppelt wurde, hilft erneutes Koppeln nicht — der registrierte Schlüssel ist womöglich älter als der, mit dem wir signieren. Siehe /debug → Car.",
     "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar.",
     "confirm": {
       "unlock": {

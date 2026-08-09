@@ -481,7 +481,7 @@
     "success": "Commande envoyée",
     "error": "Commande échouée",
     "error_rate_limit": "Trop de commandes. Patientez un instant et réessayez.",
-    "error_vcp_required": "Cette voiture n'a pas encore associé sa clé virtuelle. Ouvrez le lien d'association sur votre téléphone avec l'app Tesla installée, puis approuvez.",
+    "error_vcp_required": "La voiture a refusé la commande signée : notre clé ne lui est pas associée. Si vous avez déjà associé, recommencer n'aidera pas — la clé enregistrée est peut-être plus ancienne que celle qui signe. Voir /debug → Car.",
     "error_not_supported": "Cette commande n'est pas disponible pour ce véhicule.",
     "confirm": {
       "unlock": {
