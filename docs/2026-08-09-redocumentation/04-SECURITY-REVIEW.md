@@ -114,21 +114,29 @@ signup. `src/lib/roadmap.ts` already tracks this as a milestone and correctly
 marks it "manual" — the stubs return the same shape as the real check, which is
 exactly why config inspection cannot detect it.
 
-### S-3 · MEDIUM · No second confirmation on remote unlock or remote start
+### ~~S-3 · No second confirmation on remote unlock or remote start~~ — **WITHDRAWN, FALSE POSITIVE**
 
-Searched across `src/components` and `src/app`; no confirmation step found for
-the destructive command paths.
+**This finding was wrong. The control already exists, and existed at audit time.**
 
-`docs/LAUNCH-CHECKLIST.md` §4b lists this as required before a real customer
-connects a car, and it is the only item in that section still genuinely open
-(the disconnect flow and the command history it also lists have since shipped).
+`src/components/vehicle/CommandPanel.tsx:41` holds a `confirming` state and
+renders a confirmation dialog at `:141-167`, keyed by command. The i18n keys
+`commands.confirm.unlock.*` and `commands.confirm.remote_start.*` are present in
+all five locales — and those are the **only** two commands with confirmation
+keys, which is exactly the scope this finding recommended: the destructive pair
+only, not every command.
 
-An XSS, a borrowed unlocked phone, or a hijacked session becomes a physical
-unlock in one tap. The command history exists to make it *visible* after the
-fact; nothing makes it *deliberate* beforehand.
+Verified present at commit `e81141b`, the snapshot this audit was taken
+against. It was not added later.
 
-**Recommendation:** add a confirmation sheet for `unlock` and `remote_start`
-specifically — not for every command, which would train users to dismiss it.
+**Why it was missed:** the search pattern was
+`confirm.*unlock|unlock.*confirm`, and the code builds its keys as
+``t(`confirm.${confirming}.title`)`` — a template literal the regex could never
+match. A grep that finds nothing is not evidence of absence, and this finding
+was written as though it were.
+
+`docs/LAUNCH-CHECKLIST.md` §4b lists this item as outstanding. That checklist
+entry is **also stale** — like the disconnect flow and the command history in
+the same section, it has shipped. All three of §4b's listed gaps are now closed.
 
 ### S-4 · MEDIUM · Broad OAuth scopes requested from every user
 
@@ -224,11 +232,12 @@ their *correctness*. See the flagged list in `01-STATE-OF-THE-APP.md`.
 
 ## Priority order
 
-1. **S-3** — confirmation on unlock / remote start. Cheapest fix, most direct physical risk.
-2. **S-6** — verify migration 031 is applied. Five minutes, potentially wide exposure.
-3. **S-2** — restore subscription limits. Blocks public signup safely.
-4. **S-5** — write the key-rotation procedure. Needed before customers, not after.
-5. **S-4** — split the OAuth scopes. Larger change; structural risk reduction.
-6. **S-1** — revisit the keypair endpoint once go-live is complete.
-7. **S-7** — boot-time warning when Upstash is missing.
-8. **S-8** — dedicated per-route ownership review.
+1. **S-6** — verify migration 031 is applied. Five minutes, potentially wide exposure. *(Superseded in part by F6 in `07-DEEP-VERIFICATION.md`: 031's contents are correct, but the RPC layer bypasses it.)*
+2. **S-2** — restore subscription limits. Blocks public signup safely.
+3. **S-5** — write the key-rotation procedure. Needed before customers, not after.
+4. **S-4** — split the OAuth scopes. Larger change; structural risk reduction.
+5. **S-1** — revisit the keypair endpoint once go-live is complete.
+6. **S-7** — boot-time warning when Upstash is missing.
+7. **S-8** — dedicated per-route ownership review. *(Closed by Part 1 of `07-DEEP-VERIFICATION.md`.)*
+
+~~S-3~~ — withdrawn, see above.

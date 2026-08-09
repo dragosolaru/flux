@@ -154,8 +154,15 @@ checklist has fallen behind the code:
 - ~~"Command history visible to the user (`command_events` is written but displayed nowhere)"~~ — it is displayed: `src/components/vehicle/CommandHistory.tsx` → `/api/vehicles/[vehicleId]/command-history`.
 - ~~"Playwright smoke tests — suite exists, CI gate not enforced"~~ — partially: the suite exists in `e2e/`; the CI gate genuinely is still unenforced.
 
-**Still genuinely open from that section, and important:** extra confirmation
-before remote unlock and remote start (searched for; not found anywhere in
-`src/components` or `src/app`), a rotation procedure for
-`TESLA_TOKEN_ENCRYPTION_KEY`, and the question of whether `vehicle_cmds` scope
-should be requested at all for users who only want costs and routes.
+- ~~"Extra confirmation before unlock and remote start"~~ — it exists:
+  `src/components/vehicle/CommandPanel.tsx:41,141-167`, with
+  `commands.confirm.unlock.*` and `commands.confirm.remote_start.*` keys in all
+  five locales, and those two commands only. *(This entry originally listed the
+  item as open. That was a false positive — see the withdrawn S-3 in
+  `04-SECURITY-REVIEW.md`.)*
+
+So **all three** items §4b lists as missing have in fact shipped.
+
+**Still genuinely open from that section:** a rotation procedure for
+`TESLA_TOKEN_ENCRYPTION_KEY`, and the question of whether the `vehicle_cmds`
+scope should be requested at all for users who only want costs and routes.

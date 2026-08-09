@@ -26,6 +26,17 @@ better tested than you found it.**
 4. `CLAUDE.md` and `AGENTS.md` — the project's non-negotiable rules.
 5. `CODEBASE_CONTEXT.md` — architecture, before touching anything structural.
 
+### The audit is dated — main has moved since
+
+The audit was taken against commit `e81141b`. Commits landed afterwards, and
+the addendum at the end of `07-DEEP-VERIFICATION.md` records which findings that
+changed: one was **withdrawn as a false positive** (S-3), one is **already
+fixed** (`window_control` coordinates), and one is **partly fixed** (T4 — the
+call sites were corrected, the root cause in `src/lib/tesla/api.ts:67` was not).
+
+Assume more has moved since. **Check `git log` before you start**, and re-read
+the addendum.
+
 ### Treat every finding as a hypothesis, not as fact
 
 The audit verified each finding against the code at the time. Code moves.
@@ -193,9 +204,6 @@ that T1 changes again, and that has never had a test.
 
 ### Wave 4 — Cheap, high-value hardening
 
-- **S-3** — add a confirmation step before **`unlock` and `remote_start` only**.
-  Not every command; a prompt on all of them trains users to dismiss it. New
-  strings go into all five locales.
 - **B-1 / S-2** — `src/lib/subscription.ts:66-79`: `canUploadDocument` and
   `canUploadVaultDocument` are `TODO(live)` stubs returning `{allowed: true}`,
   so free-tier OCR is unlimited and the Anthropic bill is unbounded. Restore the

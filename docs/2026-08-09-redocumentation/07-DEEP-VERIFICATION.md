@@ -785,12 +785,34 @@ money and time are not.**
 | 1 | **F4** unverified email registration | 1 | Enables third-party PII theft; gates the F1/F2 fix |
 | 2 | **F1+F2** cross-tenant document injection | 1 | Attacker writes into a victim's vault |
 | 3 | **C2+C3+C4** cost attribution | 3 | The flagship feature shows wrong money today |
-| 4 | **S-3** confirm before unlock / remote start | `04` | Cheapest fix, most direct physical risk |
-| 5 | **T3** wake before command + proxy timeout | 2 | Biggest live-command reliability win |
-| 6 | **T2** audience/region binding | 2 | Signed commands depend on which token is current |
-| 7 | **F6** revoke charger RPCs from `anon` | 1 | Restores migration 031's intent |
-| 8 | **C1** Model 3 SoH | 3 | Shows >100% battery health on the commonest model |
-| 9 | **T4** stop waking cars from polling and cron | 2 | Required before the battery-safety claim is made publicly |
-| 10 | **S-2** restore subscription limits | `04` | Blocks public signup safely |
-| 11 | **C5** simulator plugged-idle | 3 | First thing every evaluator sees |
-| 12 | Everything else, in the per-part orders above | | |
+| 4 | **T3** wake before command + proxy timeout | 2 | Biggest live-command reliability win |
+| 5 | **T2** audience/region binding | 2 | Signed commands depend on which token is current |
+| 6 | **F6** revoke charger RPCs from `anon` | 1 | Restores migration 031's intent |
+| 7 | **C1** Model 3 SoH | 3 | Shows >100% battery health on the commonest model |
+| 8 | **T4** stop waking cars from polling and cron | 2 | Partly addressed on main — see below. Finish it before the battery-safety claim is made publicly |
+| 9 | **S-2** restore subscription limits | `04` | Blocks public signup safely |
+| 10 | **C5** simulator plugged-idle | 3 | First thing every evaluator sees |
+| 11 | Everything else, in the per-part orders above | | |
+
+---
+
+## Addendum — main moved while this audit was being written
+
+This pass was taken against commit `e81141b`. Two commits landed on `main`
+afterwards (`6072bae`, `ea3e946`) and they change the standing of three
+findings. Re-verified:
+
+| Finding | New status |
+|---|---|
+| **S-3** confirmation on unlock / remote start | **WITHDRAWN — false positive.** The control existed at `e81141b`; the audit's grep pattern could not match a template-literal i18n key. See `04-SECURITY-REVIEW.md`. |
+| **T12 — `window_control` sends `lat: 0, lon: 0`** | **FIXED** in `6072bae`. The car's own reported position is passed now. The commit message confirms the diagnosis exactly: vent tolerated `0,0` and close rejected it, so venting worked and closing silently did not. |
+| **T4 — polling wakes sleeping cars** | **PARTIALLY FIXED** in `6072bae`. `useVehicle`'s `live` flag defaulted to `false` and only two of eight call sites passed it, so `/commands`, `/charging`, `/insights` and the energy cards each polled a real car every 30 s forever. It defaults to `true` now. **The root cause is untouched:** `src/lib/tesla/api.ts:67` still fires `wake_up` on every 408, so a poll of a sleeping car still wakes it. The `wake: false` parameter this document recommends is still needed. |
+
+Nothing in Parts 1–3 other than the above was affected. The cost-attribution
+findings (C1–C5), the Tesla routing findings (T1, T2, T3, T5–T11), and every
+security finding (F1–F9) were re-confirmed as still present.
+
+**Lesson worth keeping:** the one finding this audit got wrong was the one
+asserted from a grep that returned nothing. Absence of a match is not absence of
+the control — every negative claim needs a positive read of the code that would
+have contained it.

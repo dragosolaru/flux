@@ -20,6 +20,12 @@ they do not replace `docs/` yet. See `06-DOCS-AUDIT.md` for the proposed merge.
 | 4 | [`04-SECURITY-REVIEW.md`](04-SECURITY-REVIEW.md) | **Can someone steal a customer's car?** Findings ranked by severity, focused on Tesla tokens and command signing keys. |
 | 5 | [`05-ISSUES-AND-TECH-DEBT.md`](05-ISSUES-AND-TECH-DEBT.md) | **The fix-later list.** Bugs, dead code, duplication — every entry with a `file:line` reference. |
 | 6 | [`06-DOCS-AUDIT.md`](06-DOCS-AUDIT.md) | **Which documents lie.** Contradictions between docs, and the proposed target structure. |
+| 7 | [`07-DEEP-VERIFICATION.md`](07-DEEP-VERIFICATION.md) | **The second pass.** Per-query IDOR and RLS, Tesla platform review against the real Fleet API, and correctness of the money/time arithmetic. Ends with a consolidated priority order and an addendum on what changed after the audit. |
+| 8 | [`08-FIX-PROMPT.md`](08-FIX-PROMPT.md) | **The work order.** A self-contained prompt for the agent that fixes all of it. |
+
+> **Snapshot:** taken against commit `e81141b`. `main` has moved since — see the
+> addendum at the end of `07-DEEP-VERIFICATION.md` for the three findings whose
+> standing changed, including **one that was simply wrong**.
 
 ---
 
