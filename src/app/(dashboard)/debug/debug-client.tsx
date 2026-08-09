@@ -103,6 +103,16 @@ interface IngestResult {
   [key: string]: unknown;
 }
 
+interface PublishedKey {
+  label: string;
+  url: string;
+  status: number | null;
+  cache: string | null;
+  age: string | null;
+  cacheControl: string | null;
+  text: string;
+}
+
 interface FleetStatusResult {
   ok: boolean;
   hint: string;
@@ -219,6 +229,7 @@ export function DebugClient() {
   const [apiMethod, setApiMethod] = useState<"GET" | "POST">("GET");
   const [partnerResult, setPartnerResult] = useState<unknown>(null);
   const [fleetStatus, setFleetStatus] = useState<FleetStatusResult | null>(null);
+  const [publishedKeys, setPublishedKeys] = useState<PublishedKey[] | null>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Held in memory for exactly as long as this page stays open, and never put
   // anywhere else — see the deliberate omission from copyAll below.
@@ -519,6 +530,57 @@ export function DebugClient() {
     }
   }
 
+  // A phone cannot open an application/x-pem-file download, so the one way to
+  // see what the domain publishes was unavailable on the device this app is
+  // tested from. Fetched here and shown as text instead.
+  async function showPublishedKeys() {
+    setRunning("published-keys");
+    setLastError(null);
+    setPublishedKeys(null);
+    const wellKnown = "/.well-known/appspecific/com.tesla.3p.public-key.pem";
+    const read = async (url: string, label: string) => {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        const text = await res.text();
+        return {
+          label,
+          url,
+          status: res.status,
+          // Same origin, so every header is readable — including the ones that
+          // say whether this came from a cache and how old it is.
+          cache: res.headers.get("x-vercel-cache"),
+          age: res.headers.get("age"),
+          cacheControl: res.headers.get("cache-control"),
+          text: text.trim(),
+        };
+      } catch (err) {
+        return {
+          label,
+          url,
+          status: null,
+          cache: null,
+          age: null,
+          cacheControl: null,
+          text: err instanceof Error ? err.message : String(err),
+        };
+      }
+    };
+    try {
+      setPublishedKeys(
+        await Promise.all([
+          read(wellKnown, "what Tesla fetches"),
+          // A query string is part of the CDN cache key, so this can only be
+          // answered by the route itself. Different text here means a copy in
+          // front is stale; identical text rules that out.
+          read(`${wellKnown}?cache-bust=${Date.now()}`, "past any cache"),
+          read("/api/tesla-public-key", "the route directly"),
+        ]),
+      );
+    } finally {
+      setRunning(null);
+    }
+  }
+
   async function runFleetStatus() {
     setRunning("fleet-status");
     setLastError(null);
@@ -667,12 +729,12 @@ export function DebugClient() {
           `  env ${head(k.env)} · served ${head(k.wellKnown)} (HTTP ${k.wellKnownStatus ?? "—"}` +
             `${k.wellKnownError ? ` ${k.wellKnownError}` : ""})`,
         );
-        if (k.domainOrigin && k.domainOrigin !== k.wellKnown) {
-          out.push(
-            `  origin ${head(k.domainOrigin)} — served copy is stale` +
-              ` (${k.domainCdn ?? "?"}, age ${k.domainAgeSeconds ?? "?"}s, ${k.domainCacheControl ?? "no cache-control"})`,
-          );
-        }
+        // Printed even when it agrees. Omitted, "no origin line" read as "the
+        // check is not deployed yet" and the same report was sent twice.
+        out.push(
+          `  origin ${head(k.domainOrigin)}${k.domainOrigin && k.domainOrigin !== k.wellKnown ? " — SERVED COPY IS STALE" : " (same as served)"}` +
+            ` · ${k.domainCdn ?? "no x-vercel-cache"}, age ${k.domainAgeSeconds ?? "?"}s, ${k.domainCacheControl ?? "no cache-control"}`,
+        );
         out.push(
           `  proxy ${head(k.proxy)} (HTTP ${k.proxyStatus ?? "—"}${k.proxyError ? ` ${k.proxyError}` : ""})` +
             ` · tesla ${head(k.tesla)}` +
@@ -1199,6 +1261,51 @@ export function DebugClient() {
                   {JSON.stringify(partnerResult, null, 2)}
                 </pre>
               </details>
+            )}
+          </div>
+
+          <div className="space-y-2 border-t border-border/60 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              What the domain publishes
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Opening the URL on a phone downloads a .pem nothing can read. This
+              shows the text of all three paths to it — the one Tesla fetches, the
+              same one past any cache, and the route directly. Identical is what
+              you want.
+            </p>
+            <IngestButton
+              label="Show published key"
+              busy={running === "published-keys"}
+              disabled={running !== null}
+              onClick={() => void showPublishedKeys()}
+            />
+            {publishedKeys && (
+              <div className="space-y-1.5">
+                {publishedKeys.map((p) => (
+                  <div
+                    key={p.url}
+                    className="rounded border border-border/60 bg-muted/20 p-2 text-[11px]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{p.label}</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        {p.status ?? "failed"}
+                        {p.cache ? ` · ${p.cache}` : ""}
+                        {p.age ? ` · age ${p.age}s` : ""}
+                      </span>
+                    </div>
+                    <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed">
+                      {p.text}
+                    </pre>
+                  </div>
+                ))}
+                <p className="text-[11px] text-muted-foreground">
+                  {new Set(publishedKeys.map((p) => p.text)).size === 1
+                    ? "All three agree — nothing is caching a stale copy."
+                    : "These do NOT all match. Whichever differs is being answered by something other than the route."}
+                </p>
+              </div>
             )}
           </div>
 

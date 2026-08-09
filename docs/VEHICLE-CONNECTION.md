@@ -219,6 +219,14 @@ answers every poll normally with `latitude`/`longitude` null — which reads as 
 broken map, not a missing permission. `/debug` → "Go live with Tesla" lists the
 granted scopes per car and warns when this one is absent.
 
+> **The published key comes from `TESLA_PUBLIC_KEY`, served by
+> `src/app/api/tesla-public-key/route.ts` via a rewrite in `next.config.ts`.**
+> Do not add a route at the `.well-known` path itself: the rewrite takes
+> precedence, and `.gitignore`'s `*.pem` matches the directory name, so such a
+> file is both shadowed and untracked. One existed for weeks, read the variable
+> correctly, and never ran — while the rewrite served a PEM hardcoded in source
+> since June. Every rotation went into the variable and changed nothing.
+>
 > **Four things are called "the public key" and all four must be equal.**
 > `TESLA_PUBLIC_KEY`; what the domain serves; what the signing proxy holds; what
 > Tesla stored. The third is the one that hurts: a proxy on the wrong private

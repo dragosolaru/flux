@@ -614,9 +614,20 @@ the app is inference — `virtual_key_paired` is only set *after* a signed comma
 succeeds — so this is the sole authoritative answer, and three-valued (a VIN in
 neither list is `unknown`, not "unpaired").
 
-The `.well-known` route is `cache-control: no-store`. It was `max-age=3600`,
-which meant a rotation could keep serving the old key to Tesla *and* to this
-check for an hour, with both agreeing on a stale value.
+**Where the published key comes from:** `TESLA_PUBLIC_KEY` →
+`src/app/api/tesla-public-key/route.ts`, reached by a rewrite in
+`next.config.ts`. Never add a route at the `.well-known` path itself — the
+rewrite wins *and* `.gitignore`'s `*.pem` matches the directory name, so the
+file is shadowed and untracked at once. That combination hid the real bug for
+weeks: the rewrite served a PEM hardcoded in source since June while every
+rotation went into the variable and changed nothing. `cache-control` is now
+`no-store` (was `max-age=3600`, which could serve a rotated-away key for an hour).
+
+**Show published key** (`/debug` → Car) fetches the URL three ways — as Tesla
+does, with a cache-busting query, and the route directly — and prints the PEM
+text with `x-vercel-cache`/`age`. A phone cannot open an
+`application/x-pem-file` download, so this was otherwise unverifiable on the
+device the app is tested from.
 
 **Key files:** `src/app/api/internal/debug/tesla-partner/route.ts`,
 `src/app/api/internal/debug/tesla-fleet-status/route.ts`,

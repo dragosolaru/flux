@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      // Tesla insists on this literal path, dots and all, and will not follow a
+      // redirect. This rewrite is the ONLY thing serving it — do not add a
+      // route file at the path itself, because the rewrite takes precedence and
+      // the new file would silently never run. That happened, and cost hours.
       {
         source: "/.well-known/appspecific/com.tesla.3p.public-key.pem",
         destination: "/api/tesla-public-key",
