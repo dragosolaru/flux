@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { errorContext, logServer } from "@/lib/debug-log";
+import { errorContext, recordDebugLog } from "@/lib/debug-log";
 import { isLiveEnabled } from "@/lib/live-integrations";
 import { exchangeCodeForTokens, verifyState } from "@/lib/tesla/auth";
 import { TESLA_SCOPES } from "@/lib/tesla/constants";
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       redirectUri: process.env.TESLA_REDIRECT_URI!,
     });
   } catch (err) {
-    logServer("error", "tesla/callback", "token exchange failed", errorContext(err));
+    recordDebugLog("error", "tesla/callback", "token exchange failed", errorContext(err));
     return NextResponse.redirect(
       new URL("/connect/tesla?error=token_exchange", req.url),
     );
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
     const everyRegionErrored = regions.every(
       (r) => typeof regionErrors[r] === "string" && !String(regionErrors[r]).startsWith("reachable"),
     );
-    logServer("error", "tesla/callback", "no vehicle found after linking", {
+    recordDebugLog("error", "tesla/callback", "no vehicle found after linking", {
       regions: regionErrors,
       // The likeliest cause by far, and not something the Tesla error text says.
       hint: everyRegionErrored
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
         .single();
 
   if (vehErr || !createdVehicle) {
-    logServer("error", "tesla/callback", "vehicle insert failed", {
+    recordDebugLog("error", "tesla/callback", "vehicle insert failed", {
       detail: vehErr?.message ?? "no row returned",
     });
     return NextResponse.redirect(
@@ -200,7 +200,7 @@ export async function GET(req: NextRequest) {
   );
 
   if (tokErr) {
-    logServer("error", "tesla/callback", "token save failed", {
+    recordDebugLog("error", "tesla/callback", "token save failed", {
       detail: tokErr.message,
     });
     return NextResponse.redirect(

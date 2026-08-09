@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { TESLA_PARTNER_SCOPES, TESLA_REGIONS, TESLA_TOKEN_URL } from "@/lib/tesla/constants";
-import { logServer } from "@/lib/debug-log";
+import { recordDebugLog } from "@/lib/debug-log";
 
 // Registers the Tesla partner account, and reports whether it is registered.
 //
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
 
   const token = await partnerToken(audience);
   if (!token.ok) {
-    logServer("error", "tesla/partner", "client-credentials token failed", {
+    recordDebugLog("error", "tesla/partner", "client-credentials token failed", {
       status: token.status,
       body: token.body,
     });
@@ -175,7 +175,7 @@ export async function POST(req: Request) {
   }
 
   if (!res.ok) {
-    logServer("error", "tesla/partner", `${parsed.data.action} failed`, {
+    recordDebugLog("error", "tesla/partner", `${parsed.data.action} failed`, {
       status: res.status,
       domain,
       region: parsed.data.region,

@@ -11,7 +11,7 @@ import { applyCommand } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot, recordCommandEvent } from "@/lib/mock/persistence";
 import { alertOnSensitiveCommand } from "@/lib/notifications/security-alert";
 import { createInitialSnapshot } from "@/lib/mock/seed";
-import { logServer } from "@/lib/debug-log";
+import { recordDebugLog } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendVehicleCommand } from "@/lib/tesla/api";
 import { TeslaAuthError } from "@/lib/tesla/tokens";
@@ -152,7 +152,7 @@ export async function POST(
       // The proxy is configured but nothing answered. An operator problem, and
       // a different one from "the car said no".
       if (msg.startsWith("PROXY_UNREACHABLE:")) {
-        logServer("error", "vehicles/commands", "signing proxy unreachable", {
+        recordDebugLog("error", "vehicles/commands", "signing proxy unreachable", {
           detail: msg.slice(0, 300),
         });
         return NextResponse.json(
@@ -177,7 +177,7 @@ export async function POST(
       // logServer, not console.error: this is the branch that hides the real
       // reason behind "Command failed", so the reason has to land somewhere the
       // debug panel can show it.
-      logServer("error", "vehicles/commands", "live command failed", {
+      recordDebugLog("error", "vehicles/commands", "live command failed", {
         command,
         detail: msg.slice(0, 300),
       });

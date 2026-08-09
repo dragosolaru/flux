@@ -22,9 +22,18 @@ export type DebugLevel = "info" | "warn" | "error";
 /**
  * One structured line to the platform log. No database write.
  *
- * Use this on request paths — an API route erroring is worth having in Vercel
- * but does not belong in a table a human reviews, and a burst of them would
- * bury the ingest events that do.
+ * For ordinary CRUD failures — a document upload, a saved route — where Vercel
+ * is the right place to look and the panel would only be noisier for it.
+ *
+ * NOT for the Tesla integration. Those use recordDebugLog, because the panel is
+ * the only screen available on a trip and a command failing is exactly what has
+ * to be readable there. This distinction cost an afternoon: command failures
+ * were logged with this function, so the advice "check /debug → Activity"
+ * pointed at a panel that could never show them.
+ *
+ * The original worry — that request-path errors would bury the ingest events —
+ * no longer holds: the panel collapses repeats by scope and message, so a
+ * retrying source is one line, and `prune_debug_logs` caps the table at 500.
  */
 export function logServer(
   level: DebugLevel,

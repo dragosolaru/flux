@@ -13,7 +13,7 @@ import { seedMockHistory } from "@/lib/mock/seed-history";
 import { recordBatteryHealth } from "@/lib/battery-health";
 import { fetchVehicleData } from "@/lib/tesla/api";
 import { TeslaAuthError } from "@/lib/tesla/tokens";
-import { errorContext, logServer } from "@/lib/debug-log";
+import { errorContext, recordDebugLog } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BrandKey } from "@/lib/brands/types";
 
@@ -80,7 +80,7 @@ export async function GET(
         // access from their Tesla account to check their connection and retry
         // — advice that can never work. They need to re-link, and nothing else.
         if (err instanceof TeslaAuthError) {
-          logServer("warn", "vehicles/state", "Tesla authorisation is gone", {
+          recordDebugLog("warn", "vehicles/state", "Tesla authorisation is gone", {
             vehicleId: vehicle.id,
           });
           // 409, not 401: apiFetch redirects to /login on any 401, so returning
@@ -92,7 +92,7 @@ export async function GET(
             { status: 409 },
           );
         }
-        logServer("error", "vehicles/state", "live fetch failed", errorContext(err));
+        recordDebugLog("error", "vehicles/state", "live fetch failed", errorContext(err));
         return NextResponse.json({ message: msg }, { status: 502 });
       }
     }

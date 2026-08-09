@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { errorContext, logServer } from "@/lib/debug-log";
+import { errorContext, recordDebugLog } from "@/lib/debug-log";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -93,7 +93,7 @@ export async function POST(
     // Scope names are read as route paths in the debug panel, so they have to
     // match one. This said "tesla/charging-history", which is not a route —
     // /api/tesla/charging-history 404s — and was duly typed into the API caller.
-    logServer("error", "vehicles/charging-history", msg, errorContext(err));
+    recordDebugLog("error", "vehicles/charging-history", msg, errorContext(err));
     const status = /history (\d{3}):/.exec(msg)?.[1] ?? null;
     // Tesla's charging endpoints are restricted to business fleet accounts. On
     // a personal account this call can never succeed, so "try again" is advice
