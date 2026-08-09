@@ -11,6 +11,7 @@ import { applyCommand } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot, recordCommandEvent } from "@/lib/mock/persistence";
 import { alertOnSensitiveCommand } from "@/lib/notifications/security-alert";
 import { createInitialSnapshot } from "@/lib/mock/seed";
+import { logServer } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendVehicleCommand } from "@/lib/tesla/api";
 import { TeslaAuthError } from "@/lib/tesla/tokens";
@@ -122,26 +123,41 @@ export async function POST(
           { status: 409 },
         );
       }
-      if (msg.includes("Vehicle Command Protocol required")) {
-        // Two different problems produce the same Tesla error, and telling the
-        // driver to pair a Virtual Key is useless advice for the first one:
-        //
-        //   no proxy   — the request reached Tesla unsigned, because there is
-        //                nothing deployed to sign it. An operator fixes this.
-        //   proxy set  — signing happened and the car still refused, so the
-        //                key is not paired to this vehicle. The owner fixes it
-        //                on their phone.
-        const signed = !!process.env.TESLA_PROXY_BASE_URL;
+      // Two different problems, two different fixes, and they arrive worded
+      // completely differently because they come from different places:
+      //
+      //   "Vehicle Command Protocol required" — from Tesla's REST endpoint,
+      //     because the request arrived unsigned. Nothing is deployed to sign
+      //     it. An operator fixes this.
+      //   "your public key has not been paired with the vehicle" — from the
+      //     signing proxy itself (protocol.ErrKeyNotPaired in
+      //     teslamotors/vehicle-command). Signing worked; this car has not
+      //     stored our key. The owner fixes it on their phone.
+      //
+      // Only the first string was matched, so an unpaired car fell through to
+      // the generic 502 and the driver got "command failed" with no pairing
+      // prompt — the one case where the app knows exactly what to do next.
+      const notPaired = /has not been paired with the vehicle/i.test(msg);
+      const unsigned = msg.includes("Vehicle Command Protocol required");
+      if (notPaired || unsigned) {
+        // notPaired can only happen once signing is working, so it always means
+        // "pair the key" regardless of how the env looks.
+        const code =
+          notPaired || process.env.TESLA_PROXY_BASE_URL
+            ? "VCP_REQUIRED"
+            : "PROXY_NOT_CONFIGURED";
         return NextResponse.json(
-          {
-            success: false,
-            result: "Tesla Vehicle Command Protocol required",
-            code: signed ? "VCP_REQUIRED" : "PROXY_NOT_CONFIGURED",
-          },
+          { success: false, result: msg, code },
           { status: 412 },
         );
       }
-      console.error("[vehicles/[vehicleId]/commands]", msg);
+      // logServer, not console.error: this is the branch that hides the real
+      // reason behind "Command failed", so the reason has to land somewhere the
+      // debug panel can show it.
+      logServer("error", "vehicles/commands", "live command failed", {
+        command,
+        detail: msg.slice(0, 300),
+      });
       return NextResponse.json({ success: false, result: "Command failed" }, { status: 502 });
     }
   }

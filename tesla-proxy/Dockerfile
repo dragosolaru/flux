@@ -24,9 +24,8 @@ RUN git clone --depth 1 https://github.com/teslamotors/vehicle-command.git . \
 FROM caddy:2.8-alpine AS caddy
 
 FROM alpine:3.20
-# curl is for the healthcheck, which has to tell a 403 (alive, no token) from a
-# 502 (the loopback TLS hop is dead) — busybox wget collapses both into
-# "non-zero" and cannot.
+# curl for the healthcheck. busybox wget would do for a plain 200 check, but
+# curl's -f gives a clean non-zero on any error status without parsing output.
 RUN apk add --no-cache ca-certificates openssl curl
 WORKDIR /app
 COPY --from=build /out/tesla-http-proxy /usr/local/bin/tesla-http-proxy
@@ -166,9 +165,11 @@ RUN chmod +x /app/entrypoint.sh
 ENV PORT=8080
 EXPOSE 8080
 
-# 403 means the proxy answered and only lacked a token — healthy. 502 means
-# Caddy is up but the loopback TLS hop behind it is not. The request never
-# leaves the container, so this costs no Fleet API quota.
+# /health is the proxy's own endpoint and is served before the auth check, so it
+# answers 200 with no token. The earlier probe used /api/1/vehicles, which works
+# — it returns 403 — but logs "Returning error Forbidden" on every single check.
+# Two lines of noise every 30 seconds is what a real error has to be found
+# among later.
 #
 # ${PORT:-8080} rather than a literal: Caddy listens on $PORT, so a host that
 # sets it to anything else would leave the healthcheck probing a dead port and
@@ -176,6 +177,6 @@ EXPOSE 8080
 # instructions Docker expands at build time, so this reaches the runtime shell
 # intact and resolves against the container's own environment.
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
-  CMD curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT:-8080}/api/1/vehicles" | grep -q '^[24]'
+  CMD curl -fsS -o /dev/null "http://127.0.0.1:${PORT:-8080}/health"
 
 ENTRYPOINT ["/app/entrypoint.sh"]

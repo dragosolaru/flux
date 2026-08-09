@@ -153,12 +153,16 @@ No custom Traefik labels are needed. If you find yourself setting
 `loadbalancer.server.scheme=https`, something is wrong: the container publishes
 plain HTTP on purpose.
 
-Health check: `GET /api/1/vehicles` with no token should return **403**. The
-proxy rejects the missing token itself rather than asking Tesla — measured at
-1.5 ms — so this is free to poll and costs no Fleet API quota. **502** means
-Caddy is up but the loopback TLS hop behind it is not; **400** means something
-is speaking plain HTTP straight at the signing proxy; a TLS error means the
-public certificate is wrong. `docker-compose.yaml` encodes exactly this check.
+Health check: `GET /health` should return **200**. It is the proxy's own
+endpoint, served before the auth check, so no token is needed and — unlike
+probing `/api/1/vehicles` — it logs nothing. The request never leaves the
+container, so it costs no Fleet API quota.
+
+For a manual check from outside, `GET /api/1/vehicles` with no token returning
+**403** proves the whole chain including Caddy. **502** means Caddy is up but the
+loopback TLS hop behind it is not; **400** means something is speaking plain HTTP
+straight at the signing proxy; a TLS error means the public certificate is
+wrong.
 
 ### The URL stays http:// and no certificate appears
 
@@ -199,6 +203,21 @@ problem: `SERVICE_FQDN_PROXY_8080` names the port explicitly.
 Two rarer causes, if the port is already right: the container is not on the
 `coolify` network, or Traefik has not reloaded — restarting the Coolify proxy
 settles both.
+
+### "Comandă eșuată" / "Command failed" with no pairing prompt
+
+Two different problems produce a refused command, and they are worded nothing
+alike because they come from different places:
+
+| Message | From | Meaning | Fix |
+|---|---|---|---|
+| `Vehicle Command Protocol required` | Tesla's REST endpoint | the request arrived unsigned | deploy the proxy, set `TESLA_PROXY_BASE_URL` |
+| `your public key has not been paired with the vehicle` | the proxy itself (`protocol.ErrKeyNotPaired`) | signing worked, this car has not stored our key | the owner pairs it on their phone |
+
+Flux matched only the first for a while, so an unpaired car fell through to a
+generic "command failed" and the app never offered the pairing link — the one
+case where it knows exactly what to do next. Both are now recognised, and the
+generic branch logs the real reason to `/debug` instead of swallowing it.
 
 ### "not an EC private key"
 

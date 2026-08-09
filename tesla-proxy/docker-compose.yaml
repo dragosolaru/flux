@@ -41,15 +41,13 @@ services:
 
     restart: unless-stopped
 
-    # 403 means the proxy answered and only lacked a token — healthy. 502 means
-    # Caddy is up but the loopback TLS hop behind it is not, and 000 means
-    # nothing answered at all. Both are unhealthy. The request never leaves the
-    # container: the proxy rejects a missing token itself rather than asking
-    # Tesla, so this costs no Fleet API quota.
+    # The proxy's own /health, served before its auth check, so it answers 200
+    # without a token and — unlike probing /api/1/vehicles — logs nothing. The
+    # request never leaves the container, so it costs no Fleet API quota.
     healthcheck:
       test:
         - CMD-SHELL
-        - curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/1/vehicles | grep -q '^[24]'
+        - curl -fsS -o /dev/null http://127.0.0.1:8080/health
       interval: 30s
       timeout: 5s
       retries: 3
