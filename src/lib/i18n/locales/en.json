@@ -529,7 +529,8 @@
     "apply": "Apply",
     "nav_placeholder": "Address or place",
     "nav_send": "Send",
-    "nav_not_found": "Could not find that place."
+    "nav_not_found": "Could not find that place.",
+    "all_commands": "All commands"
   },
   "garage": {
     "title": "Garage",

@@ -529,7 +529,8 @@
     "apply": "Übernehmen",
     "nav_placeholder": "Adresse oder Ort",
     "nav_send": "Senden",
-    "nav_not_found": "Ort nicht gefunden."
+    "nav_not_found": "Ort nicht gefunden.",
+    "all_commands": "Alle Befehle"
   },
   "garage": {
     "title": "Garage",

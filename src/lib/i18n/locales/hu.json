@@ -529,7 +529,8 @@
     "apply": "Alkalmaz",
     "nav_placeholder": "Cím vagy hely",
     "nav_send": "Küldés",
-    "nav_not_found": "Nem található ez a hely."
+    "nav_not_found": "Nem található ez a hely.",
+    "all_commands": "Összes parancs"
   },
   "garage": {
     "title": "Garázs",

@@ -6,6 +6,7 @@ import {
   BatteryCharging,
   ChevronRight,
   Fan,
+  LayoutGrid,
   Loader2,
   Lock,
   MapPin,
@@ -16,9 +17,10 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { AllCommands } from "@/components/vehicle/AllCommands";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -407,6 +409,7 @@ function QuickActions({
   const td = useTranslations("dashboard");
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, error } = useVehicleCommand();
+  const [showAll, setShowAll] = useState(false);
 
   // Two ways to know. `notPaired` comes from the column set true the first time
   // the car accepts a signed command — the only proof of pairing there is,
@@ -464,6 +467,20 @@ function QuickActions({
       disabled: false,
       href: `/charging`,
     },
+    // The other nineteen commands. They lived only on /commands, which on a
+    // phone is two taps into the "more" menu — so the app looked like it could
+    // do three things. Expanding in place beats navigating away from the one
+    // screen that shows the battery you are deciding against.
+    {
+      key: "all",
+      cmd: null as CommandName | null,
+      icon: <LayoutGrid className="size-5" />,
+      label: t("all_commands"),
+      active: showAll,
+      inFlight: false,
+      disabled: false,
+      expand: true,
+    },
   ].filter(Boolean) as {
     key: string;
     cmd: CommandName | null;
@@ -473,6 +490,7 @@ function QuickActions({
     inFlight: boolean;
     disabled: boolean;
     href?: string;
+    expand?: boolean;
   }[];
 
   return (
@@ -503,6 +521,10 @@ function QuickActions({
           title={action.label}
           aria-label={action.label}
           onClick={() => {
+            if (action.expand) {
+              setShowAll((v) => !v);
+              return;
+            }
             if (action.href) {
               window.location.href = action.href;
               return;
@@ -523,6 +545,11 @@ function QuickActions({
         </motion.button>
       ))}
       </div>
+      {showAll && (
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <AllCommands vehicleId={vehicleId} brand={brand} state={state} />
+        </div>
+      )}
     </div>
   );
 }

@@ -529,7 +529,8 @@
     "apply": "Aplică",
     "nav_placeholder": "Adresă sau loc",
     "nav_send": "Trimite",
-    "nav_not_found": "Nu am găsit locul acesta."
+    "nav_not_found": "Nu am găsit locul acesta.",
+    "all_commands": "Toate comenzile"
   },
   "garage": {
     "title": "Garaj",
