@@ -12,6 +12,7 @@ import {
   Thermometer,
   Unlock,
   Zap,
+  KeyRound,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
@@ -39,6 +40,12 @@ import { ApiError } from "@/lib/api-fetch";
 
 interface DashboardClientProps {
   checklist: ChecklistData;
+  /**
+   * Where an owner pairs the Virtual Key. One link for the whole app, not one
+   * per car — but every car has to be approved individually, so this belongs
+   * in the app rather than only in the admin panel where it started.
+   */
+  virtualKeyUrl: string | null;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -385,15 +392,23 @@ function QuickActions({
   vehicleId,
   brand,
   state,
+  virtualKeyUrl,
 }: {
   vehicleId: string;
   brand: BrandKey;
   state: VehicleState | undefined;
+  virtualKeyUrl: string | null;
 }) {
   const t = useTranslations("commands");
   const td = useTranslations("dashboard");
   const caps = useBrandCapabilities(brand);
-  const { mutate, isPending, variables } = useVehicleCommand();
+  const { mutate, isPending, variables, error } = useVehicleCommand();
+
+  // Only after a command has actually been refused for want of the key. A
+  // permanent "pair your key" row would be clutter for every driver who
+  // already did it, and there is no way to ask Tesla whether a car is paired.
+  const needsPairing =
+    error instanceof Error && error.message === "error_vcp_required";
 
   function send(command: CommandName) {
     mutate({ vehicleId, command });
@@ -454,7 +469,24 @@ function QuickActions({
   }[];
 
   return (
-    <div className="flex justify-center gap-4">
+    <div className="space-y-3">
+      {needsPairing && virtualKeyUrl && (
+        <a
+          href={virtualKeyUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mx-auto flex max-w-sm items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left"
+        >
+          <KeyRound className="mt-0.5 size-4 shrink-0 text-amber-400" />
+          <span className="text-xs">
+            <span className="block font-medium text-amber-300">
+              {td("pair_key_title")}
+            </span>
+            <span className="text-amber-500/80">{td("pair_key_hint")}</span>
+          </span>
+        </a>
+      )}
+      <div className="flex justify-center gap-4">
       {actions.map((action) => (
         <motion.button
           key={action.key}
@@ -483,6 +515,7 @@ function QuickActions({
           )}
         </motion.button>
       ))}
+      </div>
     </div>
   );
 }
@@ -531,7 +564,7 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ checklist }: DashboardClientProps) {
+export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientProps) {
   const { selectedVehicleId } = useVehicleContext();
   const { data: vehicles } = useVehicles();
   const vehicle = vehicles?.find((v) => v.id === selectedVehicleId);
@@ -683,7 +716,12 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
         </Card>
       ) : (
         <>
-          <QuickActions vehicleId={vehicleId} brand={brand} state={data} />
+          <QuickActions
+            vehicleId={vehicleId}
+            brand={brand}
+            state={data}
+            virtualKeyUrl={virtualKeyUrl}
+          />
 
           {data?.chargingState === "charging" && (
             <ChargingOverlayCard state={data} />

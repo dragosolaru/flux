@@ -420,7 +420,9 @@
     "reauth_title": "L'accès Tesla a été révoqué",
     "reauth_subtitle": "Cette application n'a plus l'autorisation de joindre votre voiture. Reconnectez-vous pour la rétablir.",
     "reauth_action": "Reconnecter Tesla",
-    "contacting_car": "Connexion à la voiture…"
+    "contacting_car": "Connexion à la voiture…",
+    "pair_key_title": "Cette voiture n'a pas associé sa clé virtuelle",
+    "pair_key_hint": "Touchez pour ouvrir la page d'association, puis approuvez dans l'app Tesla. Une approbation par voiture."
   },
   "charging": {
     "page_title": "Recharge",

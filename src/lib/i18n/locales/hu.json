@@ -420,7 +420,9 @@
     "reauth_title": "A Tesla-hozzáférés visszavonva",
     "reauth_subtitle": "Az alkalmazás már nem érheti el az autót. Csatlakoztasd újra a helyreállításhoz.",
     "reauth_action": "Tesla újracsatlakoztatása",
-    "contacting_car": "Kapcsolódás az autóhoz…"
+    "contacting_car": "Kapcsolódás az autóhoz…",
+    "pair_key_title": "Ez az autó nem párosította a virtuális kulcsot",
+    "pair_key_hint": "Koppints a párosítási oldalért, majd hagyd jóvá a Tesla appban. Autónként egy jóváhagyás."
   },
   "charging": {
     "page_title": "Töltés",

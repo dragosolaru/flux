@@ -4,7 +4,7 @@ import {
   TESLA_VEHICLE_DATA_ENDPOINTS,
   teslaProxyBaseUrl,
 } from "./constants";
-import { getValidAccessToken } from "./tokens";
+import { getValidAccessToken, TeslaAuthError } from "./tokens";
 import type {
   TeslaCommand,
   TeslaCommandResponse,
@@ -80,6 +80,21 @@ export async function fetchVehicleData(params: {
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
+    // Revoking access at tesla.com kills the ACCESS token immediately, but our
+    // stored one still has a future expiry — so getValidAccessToken hands it
+    // back without refreshing, no TeslaAuthError is raised, and this call is
+    // the first thing to notice. Without this branch the route fell through to
+    // a generic 502 and the dashboard said "check your connection and try
+    // again", which is the exact advice the reauth card exists to replace.
+    //
+    // 403 counts too: on a data endpoint it means the token is not allowed to
+    // read this, i.e. a scope was not granted. Re-consenting is the fix for
+    // both, and the reconnect screen is where the tickboxes are.
+    if (res.status === 401 || res.status === 403) {
+      throw new TeslaAuthError(
+        `Tesla rejected the access token (${res.status}): ${body.slice(0, 200)}`,
+      );
+    }
     throw new Error(`Tesla vehicle_data ${res.status}: ${body.slice(0, 200)}`);
   }
 
@@ -274,6 +289,14 @@ export async function sendVehicleCommand(params: {
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
+    // Same reasoning as fetchVehicleData: a revoked grant shows up here as a
+    // 401, and "command failed" is the wrong thing to tell someone whose
+    // authorisation is gone.
+    if (res.status === 401) {
+      throw new TeslaAuthError(
+        `Tesla rejected the access token (401): ${body.slice(0, 200)}`,
+      );
+    }
     throw new Error(`Tesla command ${res.status}: ${body.slice(0, 200)}`);
   }
 

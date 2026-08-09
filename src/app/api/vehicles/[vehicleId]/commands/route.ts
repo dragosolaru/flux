@@ -13,6 +13,7 @@ import { alertOnSensitiveCommand } from "@/lib/notifications/security-alert";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendVehicleCommand } from "@/lib/tesla/api";
+import { TeslaAuthError } from "@/lib/tesla/tokens";
 import type { CommandName } from "@/types/history";
 import type { BrandKey } from "@/lib/brands/types";
 
@@ -112,6 +113,15 @@ export async function POST(
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Command failed";
       await recordCommandEvent(vehicleId, command, args, false, msg).catch(() => null);
+      // Same 409 the state route uses, for the same reason: a revoked Tesla
+      // authorisation is not a failed command, and 401 would sign the driver
+      // out of Flux over an unrelated identity.
+      if (err instanceof TeslaAuthError) {
+        return NextResponse.json(
+          { success: false, result: msg, code: "TESLA_REAUTH_REQUIRED" },
+          { status: 409 },
+        );
+      }
       if (msg.includes("Vehicle Command Protocol required")) {
         // Two different problems produce the same Tesla error, and telling the
         // driver to pair a Virtual Key is useless advice for the first one:

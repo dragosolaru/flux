@@ -420,7 +420,9 @@
     "reauth_title": "Accesul Tesla a fost revocat",
     "reauth_subtitle": "Aplicația nu mai are permisiunea să contacteze mașina. Reconectează ca să o restabilești.",
     "reauth_action": "Reconectează Tesla",
-    "contacting_car": "Contactăm mașina…"
+    "contacting_car": "Contactăm mașina…",
+    "pair_key_title": "Mașina nu are Cheia Virtuală împerecheată",
+    "pair_key_hint": "Apasă pentru pagina de împerechere, apoi aprobă în aplicația Tesla. O aprobare pentru fiecare mașină."
   },
   "charging": {
     "page_title": "Încărcare",

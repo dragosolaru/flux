@@ -11,7 +11,7 @@
 // and one rule: a half-asleep car that reports two of four doors must produce
 // null, not a confident "the other two are shut".
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 import { mapVehicleData } from "../api";
 import type { TeslaVehicleDataResponse } from "@/types/tesla";
@@ -315,5 +315,68 @@ describe("teslaProxyBaseUrl", () => {
   it("rejects a value that is not a URL at all", async () => {
     process.env.TESLA_PROXY_BASE_URL = "flux-tesla-proxy.fly.dev";
     expect(await subject().then((f) => () => f())).toThrow(/not a URL/);
+  });
+});
+
+// Revoking access at tesla.com kills the access token immediately, but the
+// stored row still has a future expiry — so getValidAccessToken hands the dead
+// token straight back without refreshing, and no TeslaAuthError comes from the
+// refresh path. The data call is the first thing that notices. Before this,
+// the route fell through to a generic 502 and the dashboard told the driver to
+// check their connection, which is exactly the advice the reauth card exists
+// to replace.
+describe("fetchVehicleData — a revoked grant", () => {
+  const env = { ...process.env };
+  afterEach(() => {
+    process.env = { ...env };
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  async function callWith(status: number, body = "") {
+    vi.resetModules();
+    vi.doMock("../tokens", async () => {
+      const actual = await vi.importActual<typeof import("../tokens")>("../tokens");
+      return {
+        ...actual,
+        // A token that has not expired yet, which is the whole point.
+        getValidAccessToken: async () => ({ accessToken: "stale", region: "eu" }),
+      };
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status,
+        text: async () => body,
+      } as unknown as Response),
+    );
+    const api = await import("../api");
+    const { TeslaAuthError } = await import("../tokens");
+    const err = await api
+      .fetchVehicleData({
+        vehicleId: "v",
+        userId: "u",
+        teslaVehicleId: 1,
+        displayName: "car",
+      })
+      .catch((e: unknown) => e);
+    return { err, TeslaAuthError };
+  }
+
+  it("raises TeslaAuthError on 401, so the route can answer 409", async () => {
+    const { err, TeslaAuthError } = await callWith(401, "token revoked");
+    expect(err).toBeInstanceOf(TeslaAuthError);
+  });
+
+  it("raises TeslaAuthError on 403 too — a scope that was never granted", async () => {
+    const { err, TeslaAuthError } = await callWith(403, "missing scope");
+    expect(err).toBeInstanceOf(TeslaAuthError);
+  });
+
+  it("leaves other failures alone — a 500 is not an authorisation problem", async () => {
+    const { err, TeslaAuthError } = await callWith(500, "upstream boom");
+    expect(err).toBeInstanceOf(Error);
+    expect(err).not.toBeInstanceOf(TeslaAuthError);
   });
 });

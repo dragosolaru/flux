@@ -420,7 +420,9 @@
     "reauth_title": "Tesla access was revoked",
     "reauth_subtitle": "This app no longer has permission to reach your car. Reconnect to restore it.",
     "reauth_action": "Reconnect Tesla",
-    "contacting_car": "Contacting the car…"
+    "contacting_car": "Contacting the car…",
+    "pair_key_title": "This car has not paired its Virtual Key",
+    "pair_key_hint": "Tap to open the pairing page, then approve in the Tesla app. One approval per car."
   },
   "charging": {
     "page_title": "Charging",

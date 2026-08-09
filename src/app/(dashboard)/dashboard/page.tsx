@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardClient } from "./dashboard-client";
 import { auth } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { teslaVirtualKeyUrl } from "@/lib/tesla/constants";
 import type { ChecklistData } from "@/components/onboarding/GettingStartedCard";
 
 export const metadata = { title: "Dashboard · Flux" };
@@ -45,5 +46,10 @@ export default async function DashboardPage() {
     ),
   };
 
-  return <DashboardClient checklist={checklist} />;
+  // Per-domain, not per-vehicle — the same link pairs every car, but each car
+  // has to be approved separately by whoever sits in it. Computed here rather
+  // than read client-side because it derives from a server-only env var.
+  return (
+    <DashboardClient checklist={checklist} virtualKeyUrl={teslaVirtualKeyUrl()} />
+  );
 }
