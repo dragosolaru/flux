@@ -341,3 +341,17 @@ input[type="range"].soc-slider::-moz-range-track {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Sonner hangs its close button off the toast's top-left corner with a negative
+   translate. On a phone the toast is nearly full width, so that corner sits at
+   the very edge of the viewport and the button ends up half off-screen and too
+   small to hit — the reported "I cannot dismiss it". Moved inside, top-right,
+   with a 32px target. */
+[data-sonner-toast] [data-close-button] {
+  inset-inline-start: auto;
+  inset-inline-end: 0.5rem;
+  inset-block-start: 0.5rem;
+  transform: none;
+  width: 2rem;
+  height: 2rem;
+}

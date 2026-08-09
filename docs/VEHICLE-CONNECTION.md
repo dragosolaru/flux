@@ -318,6 +318,14 @@ no arguments and needs none. Resist the pull to store a per-vehicle "pairing
 key" — there is no such thing, and the column would only ever hold the same
 value repeated.
 
+> **Commands must address the car by VIN, not by Fleet API id.** The proxy
+> refuses anything else — `pkg/proxy/proxy.go` checks the path segment is 17
+> characters and answers `404 expected 17-character VIN in path (do not user
+> Fleet API ID)`. Sending the numeric id makes every signed command fail before
+> it reaches Tesla, which looks exactly like an unpaired key and cannot be fixed
+> by pairing. Tesla's own REST API accepts either, so `sendVehicleCommand` uses
+> the VIN only when routing through the proxy.
+
 ### 6. Pair the Virtual Key
 
 Each owner visits `https://tesla.com/_ak/<domain>` on their phone with the Tesla

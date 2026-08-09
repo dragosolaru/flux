@@ -67,7 +67,7 @@ export async function POST(
   const supabase = createSupabaseAdminClient();
   const { data: vehicle, error: vehErr } = await supabase
     .from("vehicles")
-    .select("id, brand, data_source, display_name, model, tesla_vehicle_id")
+    .select("id, brand, data_source, display_name, model, tesla_vehicle_id, vin")
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .maybeSingle();
@@ -100,6 +100,7 @@ export async function POST(
         vehicleId: vehicle.id,
         userId: session.user.id,
         teslaVehicleId: vehicle.tesla_vehicle_id,
+        vin: vehicle.vin,
         command: entry.teslaCmd,
         body: entry.buildBody(args),
       });

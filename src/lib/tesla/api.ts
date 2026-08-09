@@ -262,6 +262,8 @@ export async function sendVehicleCommand(params: {
   vehicleId: string;
   userId: string;
   teslaVehicleId: number;
+  /** Required when routing through the signing proxy — see below. */
+  vin?: string | null;
   command: TeslaCommand;
   body?: Record<string, unknown>;
 }): Promise<TeslaCommandResponse> {
@@ -274,9 +276,30 @@ export async function sendVehicleCommand(params: {
   // pre-2021 Model S/X and for cars where REST commands still pass).
   // Throws on a plaintext proxy URL rather than sending the access token over
   // it — see teslaProxyBaseUrl.
-  const apiBase = teslaProxyBaseUrl() || baseUrl(region);
+  const proxyBase = teslaProxyBaseUrl();
+  const apiBase = proxyBase || baseUrl(region);
 
-  const url = `${apiBase}/api/1/vehicles/${params.teslaVehicleId}/command/${params.command}`;
+  // The proxy demands a 17-character VIN and refuses the numeric Fleet API id
+  // outright — pkg/proxy/proxy.go in teslamotors/vehicle-command answers
+  // `404 expected 17-character VIN in path (do not user Fleet API ID)`. We were
+  // sending the id, so every signed command 404'd before it reached Tesla, and
+  // no amount of pairing could help: the request never got far enough to care.
+  //
+  // Tesla's own REST API accepts either, so the direct path keeps the id rather
+  // than depending on a column that could be null on an older row.
+  let tag = String(params.teslaVehicleId);
+  if (proxyBase) {
+    if (!params.vin || params.vin.length !== 17) {
+      throw new Error(
+        `PROXY_NEEDS_VIN: the signing proxy requires a 17-character VIN, got ${
+          params.vin ? `${params.vin.length} characters` : "none"
+        }`,
+      );
+    }
+    tag = params.vin;
+  }
+
+  const url = `${apiBase}/api/1/vehicles/${tag}/command/${params.command}`;
   let res: Response;
   try {
     res = await fetch(url, {
