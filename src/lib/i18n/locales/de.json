@@ -422,7 +422,8 @@
     "reauth_action": "Tesla neu verbinden",
     "contacting_car": "Verbindung zum Auto…",
     "pair_key_title": "Dieses Auto hat seinen Virtual Key nicht gekoppelt",
-    "pair_key_hint": "Tippe für die Kopplungsseite und bestätige in der Tesla-App. Eine Bestätigung pro Auto."
+    "pair_key_hint": "Tippe für die Kopplungsseite und bestätige in der Tesla-App. Eine Bestätigung pro Auto.",
+    "find_car": "Auto finden"
   },
   "charging": {
     "page_title": "Laden",
@@ -503,7 +504,32 @@
       "sensitive": "sensibel",
       "footer": "Sehen Sie einen Befehl, den Sie nicht gesendet haben? Trennen Sie Tesla in den Einstellungen und ändern Sie Ihr Passwort."
     },
-    "error_proxy_missing": "Befehle werden noch nicht signiert — der Signatur-Proxy läuft nicht. Das liegt an uns, nicht an dir."
+    "error_proxy_missing": "Befehle werden noch nicht signiert — der Signatur-Proxy läuft nicht. Das liegt an uns, nicht an dir.",
+    "group_access": "Zugang",
+    "group_charging": "Laden",
+    "group_climate": "Klima",
+    "group_windows": "Fenster",
+    "group_security": "Sicherheit",
+    "set_charge_limit": "Ladelimit",
+    "set_charge_amps": "Ladestrom",
+    "set_climate_temp": "Innenraumtemperatur",
+    "start_charging": "Laden starten",
+    "stop_charging": "Laden stoppen",
+    "open_charge_port": "Ladeklappe öffnen",
+    "close_charge_port": "Ladeklappe schließen",
+    "vent_windows": "Fenster lüften",
+    "close_windows": "Fenster schließen",
+    "activate_sentry": "Wächtermodus an",
+    "deactivate_sentry": "Wächtermodus aus",
+    "remote_start": "Fernstart",
+    "schedule_charging": "Geplantes Laden",
+    "schedule_departure": "Abfahrtszeit",
+    "precondition_max": "Max. Enteisung",
+    "share_navigation": "An Navigation senden",
+    "apply": "Übernehmen",
+    "nav_placeholder": "Adresse oder Ort",
+    "nav_send": "Senden",
+    "nav_not_found": "Ort nicht gefunden."
   },
   "garage": {
     "title": "Garage",

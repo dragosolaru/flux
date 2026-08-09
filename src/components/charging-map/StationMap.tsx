@@ -263,9 +263,23 @@ interface StationMapProps {
   selected: Charger | null;
   onSelect: (s: Charger) => void;
   userLocation?: { lat: number; lng: number } | null;
+  /** The car, when the map was opened to go and find it. */
+  carLocation?: { lat: number; lng: number } | null;
   onUserLocate?: (lat: number, lng: number) => void;
   onAreaChange?: (bbox: ViewportBBox) => void;
   isFetching?: boolean;
+}
+
+// Car pin. Deliberately unlike the blue user dot and unlike a charger marker:
+// when the point of the screen is walking towards it, telling the two dots
+// apart at a glance is the whole feature.
+function carLocationIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:26px;height:26px;background:#22c55e;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
 }
 
 // User-location pin: a blue dot with an optional pulsing ring while loading.
@@ -287,6 +301,7 @@ export default function StationMap({
   selected,
   onSelect,
   userLocation,
+  carLocation,
   onUserLocate,
   onAreaChange,
   isFetching = false,
@@ -349,6 +364,14 @@ export default function StationMap({
         onLocate={onUserLocate ?? (() => undefined)}
         errorMessage={t("location_error")}
       />
+
+      {carLocation && (
+        <Marker
+          position={[carLocation.lat, carLocation.lng]}
+          icon={carLocationIcon()}
+          zIndexOffset={1100}
+        />
+      )}
 
       {/* User location dot — pulse ring animates while stations are loading */}
       {userLocation && (

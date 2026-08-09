@@ -422,7 +422,8 @@
     "reauth_action": "Reconnecter Tesla",
     "contacting_car": "Connexion à la voiture…",
     "pair_key_title": "Cette voiture n'a pas associé sa clé virtuelle",
-    "pair_key_hint": "Touchez pour ouvrir la page d'association, puis approuvez dans l'app Tesla. Une approbation par voiture."
+    "pair_key_hint": "Touchez pour ouvrir la page d'association, puis approuvez dans l'app Tesla. Une approbation par voiture.",
+    "find_car": "Trouver la voiture"
   },
   "charging": {
     "page_title": "Recharge",
@@ -503,7 +504,32 @@
       "sensitive": "sensible",
       "footer": "Si vous voyez une commande que vous n’avez pas envoyée, déconnectez Tesla dans les Réglages et changez votre mot de passe."
     },
-    "error_proxy_missing": "Les commandes ne sont pas encore signées — le proxy de signature n'est pas déployé. Cela vient de nous."
+    "error_proxy_missing": "Les commandes ne sont pas encore signées — le proxy de signature n'est pas déployé. Cela vient de nous.",
+    "group_access": "Accès",
+    "group_charging": "Recharge",
+    "group_climate": "Climatisation",
+    "group_windows": "Vitres",
+    "group_security": "Sécurité",
+    "set_charge_limit": "Limite de charge",
+    "set_charge_amps": "Courant de charge",
+    "set_climate_temp": "Température habitacle",
+    "start_charging": "Démarrer la charge",
+    "stop_charging": "Arrêter la charge",
+    "open_charge_port": "Ouvrir la trappe",
+    "close_charge_port": "Fermer la trappe",
+    "vent_windows": "Entrouvrir les vitres",
+    "close_windows": "Fermer les vitres",
+    "activate_sentry": "Sentinelle activée",
+    "deactivate_sentry": "Sentinelle désactivée",
+    "remote_start": "Démarrage à distance",
+    "schedule_charging": "Charge programmée",
+    "schedule_departure": "Heure de départ",
+    "precondition_max": "Dégivrage max",
+    "share_navigation": "Envoyer à la navigation",
+    "apply": "Appliquer",
+    "nav_placeholder": "Adresse ou lieu",
+    "nav_send": "Envoyer",
+    "nav_not_found": "Lieu introuvable."
   },
   "garage": {
     "title": "Garage",

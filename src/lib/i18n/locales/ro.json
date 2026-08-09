@@ -422,7 +422,8 @@
     "reauth_action": "Reconectează Tesla",
     "contacting_car": "Contactăm mașina…",
     "pair_key_title": "Mașina nu are Cheia Virtuală împerecheată",
-    "pair_key_hint": "Apasă pentru pagina de împerechere, apoi aprobă în aplicația Tesla. O aprobare pentru fiecare mașină."
+    "pair_key_hint": "Apasă pentru pagina de împerechere, apoi aprobă în aplicația Tesla. O aprobare pentru fiecare mașină.",
+    "find_car": "Găsește mașina"
   },
   "charging": {
     "page_title": "Încărcare",
@@ -503,7 +504,32 @@
       "sensitive": "sensibilă",
       "footer": "Dacă vezi o comandă pe care nu ai dat-o tu, deconectează Tesla din Setări și schimbă-ți parola."
     },
-    "error_proxy_missing": "Comenzile nu sunt încă semnate — proxy-ul de semnare nu este pornit. Asta ține de noi, nu de tine."
+    "error_proxy_missing": "Comenzile nu sunt încă semnate — proxy-ul de semnare nu este pornit. Asta ține de noi, nu de tine.",
+    "group_access": "Acces",
+    "group_charging": "Încărcare",
+    "group_climate": "Climatizare",
+    "group_windows": "Geamuri",
+    "group_security": "Securitate",
+    "set_charge_limit": "Limită de încărcare",
+    "set_charge_amps": "Curent de încărcare",
+    "set_climate_temp": "Temperatură în habitaclu",
+    "start_charging": "Pornește încărcarea",
+    "stop_charging": "Oprește încărcarea",
+    "open_charge_port": "Deschide portul",
+    "close_charge_port": "Închide portul",
+    "vent_windows": "Întredeschide geamurile",
+    "close_windows": "Închide geamurile",
+    "activate_sentry": "Sentry pornit",
+    "deactivate_sentry": "Sentry oprit",
+    "remote_start": "Pornire de la distanță",
+    "schedule_charging": "Încărcare programată",
+    "schedule_departure": "Ora de plecare",
+    "precondition_max": "Dezgheț maxim",
+    "share_navigation": "Trimite la navigație",
+    "apply": "Aplică",
+    "nav_placeholder": "Adresă sau loc",
+    "nav_send": "Trimite",
+    "nav_not_found": "Nu am găsit locul acesta."
   },
   "garage": {
     "title": "Garaj",

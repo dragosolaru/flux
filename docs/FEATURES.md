@@ -172,9 +172,41 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 **Getting the signing key in.** `TESLA_PRIVATE_KEY_FILE` (a mounted file) is preferred over `TESLA_PRIVATE_KEY` (raw PEM or single-line base64); the file wins when both are set. A PEM is five lines, and both env-var routes mangle that — a `.env` holds one line per variable, so a pasted PEM arrives **empty**, and Coolify additionally injects each env var as an `ARG` with its value as the default, printing it in the deployment log. The entrypoint validates with `openssl ec` and reports empty, unreadable-mount and not-a-key separately, so the log names the actual fault instead of blaming the key.
 
-**How to use:** UI `/commands` and `CommandPanel` on the dashboard. API: `POST /api/vehicles/[vehicleId]/commands` (UUID validate → rate limit → auth → ownership → capability check → live `sendVehicleCommand` or mock `applyCommand`). Adding a command: see the checklist in `CLAUDE.md`.
+**All 22 commands are now reachable.** Eighteen of them were mapped, capability-flagged, rate-limited and audited end to end, and had no button anywhere: `CommandPanel` rendered exactly four (lock/unlock, climate, honk, flash). `AllCommands` on `/commands` adds the rest, grouped Access / Charging / Climate / Windows / Security, with sliders for charge limit (50–100 %), charging current (1–48 A) and cabin temperature (15–28 °C), time pickers for scheduled charging and departure (sent as minutes past local midnight), and an address box for `share_navigation` that resolves through `/api/geocode` because Tesla's `navigation_gps_request` takes coordinates, not text. `unlock` and `remote_start` keep the confirmation step. The dashboard keeps the four-button quick row.
 
-**Key files:** `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/lib/brands/{command-map.ts,tesla/command-map.ts}`, `src/lib/mock/engine.ts`, `src/components/vehicle/CommandPanel.tsx`, `src/hooks/useVehicleCommand.ts`, `src/lib/api/vehicles.ts` (`shareNavigation` helper unifies the share_navigation + optional precondition_max sequence).
+**Window commands need the car's coordinates.** `window_control` takes `lat`/`lon` as a proximity check — Tesla closes windows only for someone near the car. Both were hardcoded `0, 0`, which `vent` tolerates and `close` rejects, so venting worked and closing silently did not. The UI now passes the car's own reported position, falling back to `0, 0` when no location has been reported yet.
+
+**How to use:** UI `/commands` (full set) and `CommandPanel` on the dashboard (quick row). API: `POST /api/vehicles/[vehicleId]/commands` (UUID validate → rate limit → auth → ownership → capability check → live `sendVehicleCommand` or mock `applyCommand`). Adding a command: see the checklist in `CLAUDE.md`.
+
+**Key files:** `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/lib/brands/{command-map.ts,tesla/command-map.ts}`, `src/lib/mock/engine.ts`, `src/components/vehicle/{CommandPanel,AllCommands}.tsx`, `src/hooks/useVehicleCommand.ts`, `src/lib/api/vehicles.ts` (`shareNavigation` helper unifies the share_navigation + optional precondition_max sequence).
+
+**Not draining the battery.** Every poll of a linked car is a `vehicle_data`
+call, and `fetchVehicleData` answers a 408 by sending `wake_up` — so an open tab
+keeps the car awake, and a Tesla that never reaches deep sleep loses roughly ten
+times more charge per idle day. Four things stop that:
+
+1. TanStack does not run intervals while the tab is hidden, so a backgrounded
+   phone or a buried tab polls nothing at all.
+2. `useVehicle` stops polling after **10 idle minutes** (`IDLE_PAUSE_MS`) — for a
+   focused tab nobody is touching, which is the case the browser cannot detect.
+   A deliberate touch or keypress resumes it; a `visibilitychange` does not.
+3. A failed poll stops the interval instead of retrying every 30 s: an
+   unreachable car is asleep, out of signal or unlinked, and each retry would
+   wake it. The error card's Retry is the way back.
+4. Screens that need a value rather than a stream (the trip planner) pass
+   `poll: false` and never start an interval.
+
+The `live` parameter that gates 2–3 **defaulted to `false`**, and only the
+dashboard and the map passed it — `/commands`, `/charging`, `/insights` and the
+energy cards each polled a real car every 30 s with no idle cut-off. It defaults
+to `true` now: an opt-in protection that every call site has to remember is not
+a protection. The dashboard additionally shows a manual "let it sleep" control
+(`SleepControl`), and that pause is sticky — only idle pauses auto-resume.
+
+**Where is my car.** The dashboard location row is tappable and opens
+`/map?lat=…&lng=…&car=1`, which centres the map there and drops a green car pin,
+distinct from the blue "you are here" dot. Reading the parameters into initial
+state rather than an effect means panning away is not undone on re-render.
 
 **Dependencies:** Tesla Fleet API (live, needs VCP proxy for post-2021 cars), mock engine (default).
 

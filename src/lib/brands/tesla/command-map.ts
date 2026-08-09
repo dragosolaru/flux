@@ -6,6 +6,16 @@ type CommandEntry = {
   buildBody: (args: Record<string, unknown> | null) => Record<string, unknown> | undefined;
 };
 
+function windowBody(command: "vent" | "close", args: Record<string, unknown> | null) {
+  const lat = Number(args?.lat);
+  const lon = Number(args?.lng ?? args?.lon);
+  return {
+    command,
+    lat: Number.isFinite(lat) ? lat : 0,
+    lon: Number.isFinite(lon) ? lon : 0,
+  };
+}
+
 export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   lock:             { teslaCmd: "door_lock",              buildBody: () => undefined },
   unlock:           { teslaCmd: "door_unlock",             buildBody: () => undefined },
@@ -32,8 +42,13 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   stop_charging:     { teslaCmd: "charge_stop",            buildBody: () => undefined },
   open_charge_port:  { teslaCmd: "charge_port_door_open",  buildBody: () => undefined },
   close_charge_port: { teslaCmd: "charge_port_door_close", buildBody: () => undefined },
-  vent_windows:      { teslaCmd: "window_control",         buildBody: () => ({ command: "vent",  lat: 0, lon: 0 }) },
-  close_windows:     { teslaCmd: "window_control",         buildBody: () => ({ command: "close", lat: 0, lon: 0 }) },
+  // lat/lon are a proximity check, not telemetry: Tesla closes the windows only
+  // for someone near the car. 0,0 passes for `vent` and fails for `close`,
+  // which is why venting worked and closing did not. The caller passes the
+  // car's own position when it has one; 0,0 stays as the fallback so venting
+  // still works before any location has been reported.
+  vent_windows:      { teslaCmd: "window_control",         buildBody: (args) => windowBody("vent", args) },
+  close_windows:     { teslaCmd: "window_control",         buildBody: (args) => windowBody("close", args) },
   activate_sentry:   { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: true }) },
   deactivate_sentry: { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: false }) },
   remote_start:      { teslaCmd: "remote_start_drive",     buildBody: () => undefined },

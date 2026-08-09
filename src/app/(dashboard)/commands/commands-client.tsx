@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
+import { AllCommands } from "@/components/vehicle/AllCommands";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
 import { CommandHistory } from "@/components/vehicle/CommandHistory";
 import { FeatureGate } from "@/components/layout/FeatureGate";
@@ -84,7 +85,13 @@ function VehicleCommands({
     <motion.div variants={cardVariants}>
       <SectionHeader title={name} icon={Car} />
       <Card variant="surface" className="p-5 mt-2">
+        {/* The quick row stays on top: four taps cover almost every session,
+            and burying them in a group of twenty-two would be a downgrade. */}
         <CommandPanel vehicleId={id} brand={brand} state={data} />
+
+        <div className="mt-6">
+          <AllCommands vehicleId={id} brand={brand} state={data} />
+        </div>
 
         {/* The audit trail sits with the controls that write it, so an unlock
             nobody recognises is visible where it would be acted on. */}

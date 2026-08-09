@@ -422,7 +422,8 @@
     "reauth_action": "Tesla újracsatlakoztatása",
     "contacting_car": "Kapcsolódás az autóhoz…",
     "pair_key_title": "Ez az autó nem párosította a virtuális kulcsot",
-    "pair_key_hint": "Koppints a párosítási oldalért, majd hagyd jóvá a Tesla appban. Autónként egy jóváhagyás."
+    "pair_key_hint": "Koppints a párosítási oldalért, majd hagyd jóvá a Tesla appban. Autónként egy jóváhagyás.",
+    "find_car": "Autó megkeresése"
   },
   "charging": {
     "page_title": "Töltés",
@@ -503,7 +504,32 @@
       "sensitive": "érzékeny",
       "footer": "Ha olyan parancsot lát, amelyet nem Ön adott ki, válassza le a Teslát a Beállításokban és változtasson jelszót."
     },
-    "error_proxy_missing": "A parancsokat még nem írjuk alá — az aláíró proxy nem fut. Ez rajtunk múlik, nem rajtad."
+    "error_proxy_missing": "A parancsokat még nem írjuk alá — az aláíró proxy nem fut. Ez rajtunk múlik, nem rajtad.",
+    "group_access": "Hozzáférés",
+    "group_charging": "Töltés",
+    "group_climate": "Klíma",
+    "group_windows": "Ablakok",
+    "group_security": "Biztonság",
+    "set_charge_limit": "Töltési limit",
+    "set_charge_amps": "Töltőáram",
+    "set_climate_temp": "Utastér hőmérséklete",
+    "start_charging": "Töltés indítása",
+    "stop_charging": "Töltés leállítása",
+    "open_charge_port": "Töltőnyílás nyitása",
+    "close_charge_port": "Töltőnyílás zárása",
+    "vent_windows": "Ablakok résnyitása",
+    "close_windows": "Ablakok zárása",
+    "activate_sentry": "Őrszem mód be",
+    "deactivate_sentry": "Őrszem mód ki",
+    "remote_start": "Távindítás",
+    "schedule_charging": "Ütemezett töltés",
+    "schedule_departure": "Indulási idő",
+    "precondition_max": "Max. jégtelenítés",
+    "share_navigation": "Küldés a navigációba",
+    "apply": "Alkalmaz",
+    "nav_placeholder": "Cím vagy hely",
+    "nav_send": "Küldés",
+    "nav_not_found": "Nem található ez a hely."
   },
   "garage": {
     "title": "Garázs",

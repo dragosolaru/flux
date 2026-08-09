@@ -211,8 +211,25 @@ export function MapClient() {
   }
 
   // ---- Explore mode state ----
-  const [exploreCenter, setExploreCenter] = useState({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+  // ?lat&lng centres the map on arrival — how "where is my car" gets from the
+  // dashboard to a map. Read once into initial state rather than an effect, so
+  // panning away is not undone on the next render.
+  const [exploreCenter, setExploreCenter] = useState(() => {
+    const lat = Number(searchParams.get("lat"));
+    const lng = Number(searchParams.get("lng"));
+    return Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)
+      ? { lat, lng }
+      : { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
+  });
   const [exploreUserLoc, setExploreUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  // Only pinned when the dashboard sent us here to find the car, so the pin
+  // means "your car is there" rather than "a car was here once".
+  const carLocation =
+    searchParams.get("car") === "1" &&
+    Number.isFinite(Number(searchParams.get("lat"))) &&
+    Number.isFinite(Number(searchParams.get("lng")))
+      ? { lat: Number(searchParams.get("lat")), lng: Number(searchParams.get("lng")) }
+      : null;
   const [exploreArea, setExploreArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
@@ -768,6 +785,7 @@ export function MapClient() {
         ) : (
           <StationMap
             stations={stations}
+            carLocation={carLocation}
             center={exploreCenter}
             selected={selectedStation}
             onSelect={setSelectedStation}

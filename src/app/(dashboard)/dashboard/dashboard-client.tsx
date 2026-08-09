@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   BatteryCharging,
+  ChevronRight,
   Fan,
   Loader2,
   Lock,
@@ -14,6 +15,7 @@ import {
   Zap,
   KeyRound,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 
@@ -570,6 +572,7 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // Main export
 // --------------------------------------------------------------------------
 export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientProps) {
+  const router = useRouter();
   const { selectedVehicleId } = useVehicleContext();
   const { data: vehicles } = useVehicles();
   const vehicle = vehicles?.find((v) => v.id === selectedVehicleId);
@@ -736,10 +739,17 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
           <StatChips state={data} isLoading={isLoading} />
 
           {showLocation && data && (
+            // Tappable. It showed a coordinate-derived label and did nothing,
+            // which is the wrong half of "where is my car" — the question is
+            // almost always asked while walking towards it.
             <ListRow
               leading={<MapPin className="size-4 text-primary" />}
               title={mockLocationLabel(data.latitude!, data.longitude!)}
-              meta={td("chip_location")}
+              meta={td("find_car")}
+              trailing={<ChevronRight className="size-4 text-muted-foreground" />}
+              onClick={() =>
+                router.push(`/map?lat=${data.latitude}&lng=${data.longitude}&car=1`)
+              }
             />
           )}
         </>

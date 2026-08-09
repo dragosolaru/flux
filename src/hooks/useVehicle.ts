@@ -33,13 +33,20 @@ export interface VehiclePolling {
 }
 
 /**
- * @param live  the vehicle is a linked car, so polling wakes it
+ * @param live  the vehicle is a linked car, so polling wakes it. Defaults to
+ *              true because it defaulted to false and only two of eight call
+ *              sites remembered to pass it: /commands, /charging, /insights and
+ *              the energy cards all polled a real car every 30 s with no idle
+ *              cut-off at all, and a poll on a sleeping car triggers a wake_up
+ *              (see fetchVehicleData). An opt-in protection that has to be
+ *              remembered at every call site is not a protection. The simulator
+ *              loses nothing by pausing too.
  * @param poll  keep refreshing. Screens that only need the current value once
  *              — the trip planner reading the battery to plan from — pass
  *              false: they get the cached value, or one fetch, and never start
  *              an interval that keeps the car awake while someone plans.
  */
-export function useVehicle(vehicleId: string, live = false, poll = true) {
+export function useVehicle(vehicleId: string, live = true, poll = true) {
   // Only a linked car can be kept awake; the simulator has nothing to disturb,
   // so mock vehicles keep polling exactly as before.
   const [active, setActive] = useState(true);
@@ -69,12 +76,21 @@ export function useVehicle(vehicleId: string, live = false, poll = true) {
     if (!live) return;
     armIdleTimer();
 
-    const onActivity = () => {
-      // Deliberately does not un-pause: once polling has stopped, moving the
-      // mouse must not silently start waking the car again. Resuming is the
-      // driver's decision.
-      if (!active) return;
-      armIdleTimer();
+    const onActivity = (event: Event) => {
+      if (active) {
+        armIdleTimer();
+        return;
+      }
+      // Paused. Only a deliberate touch or keypress brings it back, and only
+      // when it stopped by itself — a `pause()` the driver pressed means "let
+      // the car sleep" and must survive them scrolling the page afterwards.
+      //
+      // Auto-resuming at all is new. It used to be strictly manual, which was
+      // right for the dashboard's visible pause control and wrong everywhere
+      // else: now that every screen idles out, /commands and /charging would
+      // simply stop updating after ten minutes with nothing on screen offering
+      // a way back.
+      if (pausedByIdle && event.type !== "visibilitychange") resume();
     };
 
     for (const e of ACTIVITY_EVENTS) {
@@ -84,7 +100,7 @@ export function useVehicle(vehicleId: string, live = false, poll = true) {
       for (const e of ACTIVITY_EVENTS) document.removeEventListener(e, onActivity);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [live, active, armIdleTimer]);
+  }, [live, active, pausedByIdle, armIdleTimer, resume]);
 
   const query = useQuery({
     queryKey: ["vehicle", vehicleId],

@@ -422,7 +422,8 @@
     "reauth_action": "Reconnect Tesla",
     "contacting_car": "Contacting the car…",
     "pair_key_title": "This car has not paired its Virtual Key",
-    "pair_key_hint": "Tap to open the pairing page, then approve in the Tesla app. One approval per car."
+    "pair_key_hint": "Tap to open the pairing page, then approve in the Tesla app. One approval per car.",
+    "find_car": "Find the car"
   },
   "charging": {
     "page_title": "Charging",
@@ -503,7 +504,32 @@
       "sensitive": "sensitive",
       "footer": "If you see a command you did not issue, disconnect Tesla in Settings and change your password."
     },
-    "error_proxy_missing": "Commands are not being signed yet — the signing proxy is not deployed. This one is on us, not you."
+    "error_proxy_missing": "Commands are not being signed yet — the signing proxy is not deployed. This one is on us, not you.",
+    "group_access": "Access",
+    "group_charging": "Charging",
+    "group_climate": "Climate",
+    "group_windows": "Windows",
+    "group_security": "Security",
+    "set_charge_limit": "Charge limit",
+    "set_charge_amps": "Charging current",
+    "set_climate_temp": "Cabin temperature",
+    "start_charging": "Start charging",
+    "stop_charging": "Stop charging",
+    "open_charge_port": "Open charge port",
+    "close_charge_port": "Close charge port",
+    "vent_windows": "Vent windows",
+    "close_windows": "Close windows",
+    "activate_sentry": "Sentry on",
+    "deactivate_sentry": "Sentry off",
+    "remote_start": "Remote start",
+    "schedule_charging": "Scheduled charging",
+    "schedule_departure": "Departure time",
+    "precondition_max": "Max defrost",
+    "share_navigation": "Send to navigation",
+    "apply": "Apply",
+    "nav_placeholder": "Address or place",
+    "nav_send": "Send",
+    "nav_not_found": "Could not find that place."
   },
   "garage": {
     "title": "Garage",
