@@ -32,13 +32,17 @@ export async function GET() {
       .from("ingest_runs")
       .select("source, status, fetched, upserted, error, finished_at")
       .order("finished_at", { ascending: false })
-      .limit(25),
+      // Twelve is enough to see the last cron and anything that failed in it.
+      // Twenty-five was mostly repeats of the same successful bulk run.
+      .limit(12),
     supabase.rpc("debug_source_counts"),
     supabase
       .from("debug_logs")
       .select("level, scope, message, context, created_at")
       .order("created_at", { ascending: false })
-      .limit(50),
+      // 200, not 50. The panel is where a failure gets diagnosed, and a burst
+      // of one noisy source used to push everything older off the end.
+      .limit(200),
   ]);
 
   const stats = (chargerStats ?? null) as {
@@ -80,7 +84,7 @@ export async function GET() {
 
   const recentErrors = (runs ?? []).filter((r) => r.status === "error");
   if (recentErrors.length > 0) {
-    warnings.push(`${recentErrors.length} of the last 25 ingest runs failed.`);
+    warnings.push(`${recentErrors.length} of the last ${(runs ?? []).length} ingest runs failed.`);
   }
 
   const config = {
@@ -91,18 +95,22 @@ export async function GET() {
     anthropicKey: !!process.env.ANTHROPIC_API_KEY,
     cronSecret: !!process.env.CRON_SECRET,
     ingestWebhookSecret: !!process.env.INGEST_WEBHOOK_SECRET,
-    teslaProxy: !!process.env.TESLA_PROXY_BASE_URL,
     liveIntegrations: process.env.LIVE_INTEGRATIONS ?? "",
     openRouteServiceKey: !!process.env.OPENROUTESERVICE_API_KEY,
     stripe: !!process.env.STRIPE_SECRET_KEY,
-    // Everything the live Tesla path needs, in the order it is needed. Reported
-    // together because a half-configured integration fails at the point of use
-    // — a command returning 412 — rather than at startup.
+  };
+
+  // Kept out of `config` on purpose: every one of these is reported again, in
+  // dependency order and with what it blocks, under tesla.steps. Listing them
+  // twice made the Configuration panel the longest thing on the page while
+  // saying nothing the Tesla panel did not say better.
+  const teslaConfig = {
     teslaClientId: !!process.env.TESLA_CLIENT_ID,
     teslaClientSecret: !!process.env.TESLA_CLIENT_SECRET,
     teslaPublicKey: !!process.env.TESLA_PUBLIC_KEY,
     teslaTokenEncryptionKey: !!process.env.TESLA_TOKEN_ENCRYPTION_KEY,
     teslaRedirectUri: !!process.env.TESLA_REDIRECT_URI,
+    teslaProxy: !!process.env.TESLA_PROXY_BASE_URL,
     teslaLive: (process.env.LIVE_INTEGRATIONS ?? "").split(",").map((s) => s.trim()).includes("tesla"),
   };
 
@@ -120,13 +128,13 @@ export async function GET() {
   // how the docs are written. LIVE_INTEGRATIONS is first because /api/tesla/*
   // answers 410 without it — the flow cannot even start, whatever else is set.
   const teslaSteps: { step: string; ok: boolean; blocks: string }[] = [
-    { step: "LIVE_INTEGRATIONS=tesla", ok: config.teslaLive, blocks: "every /api/tesla/* route — they answer 410 until this is set" },
-    { step: "TESLA_CLIENT_ID", ok: config.teslaClientId, blocks: "the OAuth redirect to Tesla" },
-    { step: "TESLA_CLIENT_SECRET", ok: config.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
-    { step: "TESLA_REDIRECT_URI", ok: config.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
-    { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: config.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
-    { step: "TESLA_PUBLIC_KEY", ok: config.teslaPublicKey, blocks: "partner registration and Virtual Key pairing — register AFTER this is served" },
-    { step: "TESLA_PROXY_BASE_URL", ok: config.teslaProxy && !teslaProxyProblem, blocks: "every command on a post-2021 car — unset means nothing signs them, http means we refuse to send the access token over plaintext" },
+    { step: "LIVE_INTEGRATIONS=tesla", ok: teslaConfig.teslaLive, blocks: "every /api/tesla/* route — they answer 410 until this is set" },
+    { step: "TESLA_CLIENT_ID", ok: teslaConfig.teslaClientId, blocks: "the OAuth redirect to Tesla" },
+    { step: "TESLA_CLIENT_SECRET", ok: teslaConfig.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
+    { step: "TESLA_REDIRECT_URI", ok: teslaConfig.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
+    { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: teslaConfig.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
+    { step: "TESLA_PUBLIC_KEY", ok: teslaConfig.teslaPublicKey, blocks: "partner registration and Virtual Key pairing — register AFTER this is served" },
+    { step: "TESLA_PROXY_BASE_URL", ok: teslaConfig.teslaProxy && !teslaProxyProblem, blocks: "every command on a post-2021 car — unset means nothing signs them, http means we refuse to send the access token over plaintext" },
   ];
 
   // Registration has no environment variable behind it, so it cannot be
@@ -142,10 +150,18 @@ export async function GET() {
   // narrower than the request — and the failure is silent. Without
   // vehicle_location in particular the car answers every poll normally and
   // just never has a position, which looks like a bug in the map.
+  // Active vehicles only, newest first. Without the filter this listed every
+  // token row the account had ever held — including cars deactivated long ago —
+  // so a grant fixed hours earlier still showed as broken, and the warning
+  // below told the driver to reconnect a car that was already correct. Seven
+  // rows for one visible car, four of them warning about a scope that had since
+  // been granted.
   const { data: grantRows } = await supabase
     .from("tesla_tokens")
-    .select("scopes, updated_at, vehicles!inner(display_name, user_id)")
-    .eq("user_id", admin.userId);
+    .select("scopes, updated_at, vehicles!inner(display_name, user_id, is_active)")
+    .eq("user_id", admin.userId)
+    .eq("vehicles.is_active", true)
+    .order("updated_at", { ascending: false });
 
   const teslaGrants = (grantRows ?? []).map((row) => {
     const granted: string[] = Array.isArray(row.scopes) ? row.scopes : [];

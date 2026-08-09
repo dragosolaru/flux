@@ -4,7 +4,7 @@
 // tool for the maintainer, not a product surface, so it stays out of the five
 // locale files rather than adding ~40 keys that no user will ever read.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -185,6 +185,46 @@ export function DebugClient() {
   const [copyFallback, setCopyFallback] = useState<string | null>(null);
   const [ocrVariant, setOcrVariant] = useState<"energy" | "car">("energy");
   const [pickedCountries, setPickedCountries] = useState<string[]>(["ro"]);
+
+  // Same failure logged forty times is one problem, not forty. The panel now
+  // pulls 200 rows so nothing old gets pushed off the end, which only works if
+  // the repeats collapse — otherwise a single retrying source buries the rest.
+  // Rows arrive newest-first, so the first of a group is the latest.
+  const groupedLogs = useMemo(() => {
+    const byKey = new Map<
+      string,
+      {
+        key: string;
+        level: DebugLog["level"];
+        scope: string;
+        message: string;
+        context: Record<string, unknown> | null;
+        count: number;
+        latest: string;
+        earliest: string;
+      }
+    >();
+    for (const l of data?.logs ?? []) {
+      const key = `${l.level}|${l.scope}|${l.message}`;
+      const hit = byKey.get(key);
+      if (hit) {
+        hit.count += 1;
+        hit.earliest = l.created_at;
+      } else {
+        byKey.set(key, {
+          key,
+          level: l.level,
+          scope: l.scope,
+          message: l.message,
+          context: l.context,
+          count: 1,
+          latest: l.created_at,
+          earliest: l.created_at,
+        });
+      }
+    }
+    return [...byKey.values()];
+  }, [data?.logs]);
 
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
@@ -1220,38 +1260,55 @@ export function DebugClient() {
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Logged errors and warnings
         </p>
-        {data.logs.length === 0 ? (
+        {groupedLogs.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing recorded.</p>
         ) : (
-          <div className="max-h-72 space-y-1.5 overflow-y-auto">
-            {data.logs.map((l, i) => (
-              <div key={i} className="rounded-lg bg-muted/40 p-2 text-xs">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={
-                      l.level === "error"
-                        ? "font-semibold text-destructive"
-                        : l.level === "warn"
-                          ? "font-semibold text-amber-400"
-                          : "text-muted-foreground"
-                    }
-                  >
-                    {l.level}
-                  </span>
-                  <span className="font-mono text-muted-foreground">{l.scope}</span>
-                  <span className="ml-auto text-muted-foreground">
-                    {new Date(l.created_at).toLocaleString()}
-                  </span>
+          <>
+            <p className="text-xs text-muted-foreground">
+              {data.logs.length} entries, {groupedLogs.length} distinct. Repeats are
+              collapsed — one broken source retrying all night is one problem, not
+              forty.
+            </p>
+            <div className="max-h-96 space-y-1.5 overflow-y-auto">
+              {groupedLogs.map((l) => (
+                <div key={l.key} className="rounded-lg bg-muted/40 p-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={
+                        l.level === "error"
+                          ? "font-semibold text-destructive"
+                          : l.level === "warn"
+                            ? "font-semibold text-amber-400"
+                            : "text-muted-foreground"
+                      }
+                    >
+                      {l.level}
+                    </span>
+                    <span className="font-mono text-muted-foreground">{l.scope}</span>
+                    {l.count > 1 && (
+                      <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums text-muted-foreground">
+                        ×{l.count}
+                      </span>
+                    )}
+                    <span className="ml-auto text-muted-foreground">
+                      {new Date(l.latest).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-1 break-words">{l.message}</p>
+                  {l.context != null && (
+                    <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
+                      {JSON.stringify(l.context)}
+                    </pre>
+                  )}
+                  {l.count > 1 && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      first seen {new Date(l.earliest).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-                <p className="mt-1 break-words">{l.message}</p>
-                {l.context && (
-                  <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
-                    {JSON.stringify(l.context)}
-                  </pre>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
         <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Ingest runs
