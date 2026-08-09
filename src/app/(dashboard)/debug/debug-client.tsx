@@ -533,6 +533,13 @@ export function DebugClient() {
   // A phone cannot open an application/x-pem-file download, so the one way to
   // see what the domain publishes was unavailable on the device this app is
   // tested from. Fetched here and shown as text instead.
+  // Only once a check has actually run — an unchecked panel must not claim the
+  // keys disagree and block the link on a guess.
+  const partnerKeys = (partnerResult as PartnerResult | null)?.keys;
+  const partnerKeysDisagree = Boolean(
+    partnerKeys?.tesla && partnerKeys.wellKnown && partnerKeys.tesla !== partnerKeys.wellKnown,
+  );
+
   async function showPublishedKeys() {
     setRunning("published-keys");
     setLastError(null);
@@ -1178,14 +1185,29 @@ export function DebugClient() {
                 Pointless until the proxy is deployed: without it nothing signs the
                 commands, so the car never sees a signature to check.
               </p>
-              <a
-                href={tesla.virtualKeyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block break-all rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
-              >
-                Pair Virtual Key →
-              </a>
+              {/* Tesla's pairing page validates the domain against its own
+                  partner record, and when they disagree it says "This third
+                  party isn't registered with Tesla" — which reads as the app
+                  never having been registered at all, not as "your record is
+                  one key behind". Blocking the link is kinder than letting the
+                  owner walk to the car for a dead end. */}
+              {partnerKeysDisagree ? (
+                <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
+                  Register first. Tesla still holds a different key than this
+                  domain serves, so its pairing page will refuse with &ldquo;this
+                  third party isn&apos;t registered with Tesla&rdquo;. Press
+                  Register above, confirm all four keys agree, then come back.
+                </p>
+              ) : (
+                <a
+                  href={tesla.virtualKeyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block break-all rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+                >
+                  Pair Virtual Key →
+                </a>
+              )}
               <p className="break-all font-mono text-[10px] text-muted-foreground">
                 {tesla.virtualKeyUrl}
               </p>
