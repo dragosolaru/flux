@@ -599,7 +599,12 @@ first 8 hex chars each, red where they differ from the domain, with a one-line
 `verdict` naming the one to fix. The env-var-only reading it replaced *assumed*
 what the domain served rather than fetching it, which made a broken route and a
 stale Tesla record indistinguishable. Raw JSON is behind a `<details>`; **Copy
-car report** prints all four on two lines.
+car report** prints all four on two lines. When the proxy is the odd one out the
+panel also offers its PEM to copy (both raw and `\n`-escaped one-line, since
+Vercel's editor takes one line) — adopting the proxy's key is the exit that
+needs no private key you may no longer hold. A `warning` field flags
+`env ≠ domain` separately: harmless today, but the next deploy that picks the
+variable up republishes a different key and unpairs the car.
 
 **Is the car actually paired:** `/debug` → Car → **Check pairing** calls
 `POST /api/1/vehicles/fleet_status` per live VIN with that car's own token, and

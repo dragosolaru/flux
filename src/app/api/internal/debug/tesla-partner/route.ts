@@ -113,15 +113,23 @@ async function fetchWellKnownKey(domain: string): Promise<{
 async function fetchProxyKey(): Promise<{
   point: string | null;
   status: number | null;
+  pem: string | null;
   error?: string;
 }> {
   let base: string | null;
   try {
     base = teslaProxyBaseUrl();
   } catch (err) {
-    return { point: null, status: null, error: err instanceof Error ? err.message : String(err) };
+    return {
+      point: null,
+      status: null,
+      pem: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-  if (!base) return { point: null, status: null, error: "TESLA_PROXY_BASE_URL is not set" };
+  if (!base) {
+    return { point: null, status: null, pem: null, error: "TESLA_PROXY_BASE_URL is not set" };
+  }
 
   try {
     const res = await fetch(`${base}/proxy-public-key`, {
@@ -129,11 +137,18 @@ async function fetchProxyKey(): Promise<{
       signal: AbortSignal.timeout(15_000),
     });
     const text = await res.text();
-    return { status: res.status, point: res.ok ? publicKeyPoint(text) : null };
+    if (!res.ok) return { status: res.status, point: null, pem: null };
+    // The PEM itself, not just the fingerprint. When the proxy is the odd one
+    // out, the fix is to make everything else adopt ITS key — and that means
+    // pasting this exact text into TESLA_PUBLIC_KEY. Returning only a hex
+    // fingerprint would diagnose the problem and then leave the operator
+    // hunting for the value on a phone.
+    return { status: res.status, point: publicKeyPoint(text), pem: text.trim() };
   } catch (err) {
     return {
       status: null,
       point: null,
+      pem: null,
       error: err instanceof Error ? err.message : String(err),
     };
   }
@@ -281,19 +296,32 @@ export async function POST(req: Request) {
   };
 
   // Said plainly, because four hex strings on a phone screen are not a
-  // diagnosis. Ordered by what has to be true first.
+  // diagnosis.
+  //
+  // Ordered by what blocks a command *now*, not by setup order. The proxy
+  // sits first among the mismatches because it is the only one on the signing
+  // path: with Tesla, the domain and the car all agreeing, a proxy holding a
+  // different private key still fails every command, and it fails with the
+  // pairing message — so it reads as the owner's problem and is the one that
+  // wastes days. A stale TESLA_PUBLIC_KEY, meanwhile, breaks nothing today.
   const verdict =
     wellKnown.point == null
       ? "The domain serves no usable key. Nothing else can be right until it does."
-      : keys.envMatchesWellKnown === false
-        ? "TESLA_PUBLIC_KEY and what the domain serves disagree — the deploy has not picked up the variable."
-        : proxyKey.point == null
-          ? `The proxy is not reporting its key (${proxyKey.status ?? proxyKey.error ?? "no answer"}). Redeploy tesla-proxy to get /proxy-public-key, or the one value that explains a signed rejection stays invisible.`
-          : keys.proxyMatchesWellKnown === false
-            ? "THE PROXY IS SIGNING WITH THE WRONG KEY. It holds a different private key than the public one this domain publishes, so the car rejects every signature no matter how many times it is paired. Set TESLA_PRIVATE_KEY on the proxy to the half that matches."
-            : teslaKeyPoint && teslaKeyPoint !== wellKnown.point
-              ? "Proxy, variable and domain agree; Tesla holds an older key. Press Register — and if the record does not move, this needs Tesla developer support."
-              : "All four keys agree. If a command still fails, the car has not paired this key — check with fleet status.";
+      : proxyKey.point == null
+        ? `The proxy is not reporting its key (${proxyKey.status ?? proxyKey.error ?? "no answer"}). Redeploy tesla-proxy to get /proxy-public-key, or the one value that explains a signed rejection stays invisible.`
+        : keys.proxyMatchesWellKnown === false
+          ? "THE PROXY IS SIGNING WITH THE WRONG KEY — this is what is breaking commands. It holds a different private key than the one this domain publishes and the car paired, so every signature is rejected however many times the car is paired. Two ways out: put the matching private key on the proxy, or adopt the proxy's key everywhere (copy its PEM below into TESLA_PUBLIC_KEY, redeploy, Register, re-pair)."
+          : teslaKeyPoint && teslaKeyPoint !== wellKnown.point
+            ? "Proxy and domain agree; Tesla holds an older key. Press Register — and if the record does not move, this needs Tesla developer support."
+            : "The keys on the signing path all agree. If a command still fails, the car has not paired this key — check with Check pairing.";
+
+  // Not the verdict, because it is not what is broken today — but a redeploy
+  // would make the domain serve the variable, and the domain is what the car
+  // paired. A mismatch here is a working setup with a delayed fuse.
+  const warning =
+    keys.envMatchesWellKnown === false
+      ? "Separately: TESLA_PUBLIC_KEY does not match what the domain currently serves. Nothing is broken by that right now, but the next deploy that picks the variable up will change the published key and unpair the car."
+      : null;
 
   if (!res.ok) {
     recordDebugLog("error", "tesla/partner", `${parsed.data.action} failed`, {
@@ -310,7 +338,19 @@ export async function POST(req: Request) {
     region: parsed.data.region,
     status: res.status,
     verdict,
+    ...(warning ? { warning } : {}),
     keys,
+    // Only when it is the one to adopt. Shipping it unconditionally would put a
+    // second copy of a key on screen in every healthy check for no reason.
+    ...(keys.proxyMatchesWellKnown === false && proxyKey.pem
+      ? {
+          proxyPublicKeyPem: proxyKey.pem,
+          // Vercel's variable editor takes one line. A PEM is five, and pasting
+          // one there yields an empty value — the same trap the proxy README
+          // documents for Coolify.
+          proxyPublicKeyOneLine: proxyKey.pem.replace(/\n/g, "\\n"),
+        }
+      : {}),
     // `verdict` above says which one is wrong and what to do; this stays
     // because it is the single boolean the UI and the car report key off.
     ...(servedKeyMatches !== null ? { servedKeyMatches, servedKeyPoint } : {}),

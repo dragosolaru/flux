@@ -124,6 +124,9 @@ interface FleetStatusResult {
 // same shape and drifted apart when each declared its own.
 interface PartnerResult {
   verdict?: string;
+  warning?: string;
+  proxyPublicKeyPem?: string;
+  proxyPublicKeyOneLine?: string;
   servedKeyMatches?: boolean;
   keys?: {
     env?: string | null;
@@ -646,6 +649,7 @@ export function DebugClient() {
       const pr = partnerResult as PartnerResult | null;
       if (pr?.verdict) {
         out.push(`keys: ${pr.verdict}`);
+        if (pr.warning) out.push(`  warn: ${pr.warning}`);
       } else {
         out.push("keys: not checked this session");
       }
@@ -1175,7 +1179,7 @@ export function DebugClient() {
                 onClick={() => void teslaPartner("register")}
               />
             </div>
-            <KeyTable result={partnerResult as PartnerResult | null} />
+            <KeyTable result={partnerResult as PartnerResult | null} onCopy={copyText} />
             {partnerResult != null && (
               <details>
                 <summary className="cursor-pointer text-[11px] text-muted-foreground">
@@ -1896,7 +1900,13 @@ function IngestButton({
  * sentence: the first eight hex characters are plenty to see a mismatch, and
  * the verdict says which one to go and fix.
  */
-function KeyTable({ result }: { result: PartnerResult | null }) {
+function KeyTable({
+  result,
+  onCopy,
+}: {
+  result: PartnerResult | null;
+  onCopy: (text: string, label: string) => void;
+}) {
   if (!result?.keys) return null;
   const k = result.keys;
   const truth = k.wellKnown ?? null;
@@ -1953,6 +1963,34 @@ function KeyTable({ result }: { result: PartnerResult | null }) {
           );
         })}
       </div>
+      {result.warning && (
+        <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
+          {result.warning}
+        </p>
+      )}
+      {result.proxyPublicKeyPem && (
+        <div className="space-y-1 rounded border border-border/60 bg-muted/20 p-2">
+          <p className="text-[11px] text-muted-foreground">
+            The proxy&apos;s own public key. Paste it into <code>TESLA_PUBLIC_KEY</code>{" "}
+            to make everything adopt the key the proxy already signs with — that
+            path needs no private key you might no longer have.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onCopy(result.proxyPublicKeyPem!, "Proxy public key")}
+              className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
+            >
+              Copy PEM
+            </button>
+            <button
+              onClick={() => onCopy(result.proxyPublicKeyOneLine!, "Proxy public key (one line)")}
+              className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
+            >
+              Copy one-line (\n)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

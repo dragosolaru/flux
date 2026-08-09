@@ -219,6 +219,16 @@ answers every poll normally with `latitude`/`longitude` null — which reads as 
 broken map, not a missing permission. `/debug` → "Go live with Tesla" lists the
 granted scopes per car and warns when this one is absent.
 
+> **Four things are called "the public key" and all four must be equal.**
+> `TESLA_PUBLIC_KEY`; what the domain serves; what the signing proxy holds; what
+> Tesla stored. The third is the one that hurts: a proxy on the wrong private
+> key is rejected by the car with *"your public key has not been paired with the
+> vehicle"* — the same sentence an unpaired car returns — so it reads as the
+> owner's problem and sends them back to their phone. Confirmed in the field
+> with `fleet_status` saying `paired: true` while every command failed.
+> `/debug` → Car → **Check status** prints all four; the proxy row needs the
+> `/proxy-public-key` endpoint from `tesla-proxy/Dockerfile`.
+>
 > **Whether re-registering rotates the key is unresolved — deploy first, then
 > measure.** The order is not in doubt: set `TESLA_PUBLIC_KEY`, redeploy,
 > confirm `/.well-known/appspecific/com.tesla.3p.public-key.pem` serves the new
