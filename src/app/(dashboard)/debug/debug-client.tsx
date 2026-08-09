@@ -171,6 +171,8 @@ export function DebugClient() {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [apiPath, setApiPath] = useState("/api/chargers/stats");
   const [apiResult, setApiResult] = useState<unknown>(null);
+  // Several routes worth poking at are POST-only; GET on them returns 405.
+  const [apiMethod, setApiMethod] = useState<"GET" | "POST">("GET");
   const [partnerResult, setPartnerResult] = useState<unknown>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Held in memory for exactly as long as this page stays open, and never put
@@ -382,15 +384,42 @@ export function DebugClient() {
     setApiResult(null);
     const startedAt = Date.now();
     try {
-      const res = await fetch(path, { headers: { Accept: "application/json" } });
+      const res = await fetch(path, {
+        method: apiMethod,
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        ...(apiMethod === "POST" ? { body: "{}" } : {}),
+      });
       const text = await res.text();
-      let body: unknown = text;
+      const contentType = res.headers.get("content-type") ?? "";
+      let body: unknown;
       try {
         body = JSON.parse(text);
       } catch {
-        // Not JSON — an HTML error page is itself the useful answer.
+        // NOT the useful answer, whatever the old comment here claimed. A wrong
+        // /api/ path makes Next.js render the app's HTML 404 — around 200 KB of
+        // markup, script tags and the entire locale bundle — and the panel
+        // dumped all of it. The status is the finding; the page is noise that
+        // buries it and makes the result unusable to paste anywhere.
+        const excerpt = text
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 200);
+        body = {
+          nonJson: true,
+          contentType: contentType.split(";")[0] || "unknown",
+          bytes: text.length,
+          excerpt,
+          ...(res.status === 404
+            ? { hint: "No API route at this path — Next.js served the HTML 404 page." }
+            : {}),
+          ...(res.status === 405
+            ? { hint: `Route exists but does not accept ${apiMethod}. Try the other method.` }
+            : {}),
+        };
       }
-      setApiResult({ path, status: res.status, ms: Date.now() - startedAt, body });
+      setApiResult({ path, method: apiMethod, status: res.status, ms: Date.now() - startedAt, body });
     } catch (err) {
       setApiResult({ path, error: err instanceof Error ? err.message : String(err) });
     } finally {
@@ -1195,19 +1224,36 @@ export function DebugClient() {
 
       <Panel
         title="Call an API route"
-        badge="GET"
+        badge={apiMethod}
         open={open.api ?? false}
         onToggle={() => toggle("api")}
       >
         <p className="text-xs text-muted-foreground">
-          Runs a GET against this app with your own session and shows the response. Useful when
-          a screen looks wrong and the question is whether the API or the UI is at fault — and
-          for answering &quot;what does <code>/api/…</code> return for you?&quot; without a laptop.
+          Runs a request against this app with your own session and shows the response.
+          Useful when a screen looks wrong and the question is whether the API or the UI is
+          at fault. A non-JSON response is summarised rather than dumped — a wrong path
+          returns the app&apos;s HTML 404, and 200 KB of markup is not an answer.
         </p>
+        <div className="flex gap-1.5">
+          {(["GET", "POST"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setApiMethod(m)}
+              className={`min-h-11 rounded-lg border px-4 font-mono text-xs ${
+                apiMethod === m
+                  ? "border-primary/50 bg-primary/15"
+                  : "border-border bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {[
             "/api/chargers/stats",
             "/api/vehicles",
+            "/api/me/capabilities",
             "/api/saved-routes",
             "/api/tariffs/prices",
           ].map((path) => (
