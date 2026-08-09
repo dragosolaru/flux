@@ -393,22 +393,27 @@ function QuickActions({
   brand,
   state,
   virtualKeyUrl,
+  notPaired,
 }: {
   vehicleId: string;
   brand: BrandKey;
   state: VehicleState | undefined;
   virtualKeyUrl: string | null;
+  notPaired: boolean;
 }) {
   const t = useTranslations("commands");
   const td = useTranslations("dashboard");
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, error } = useVehicleCommand();
 
-  // Only after a command has actually been refused for want of the key. A
-  // permanent "pair your key" row would be clutter for every driver who
-  // already did it, and there is no way to ask Tesla whether a car is paired.
+  // Two ways to know. `notPaired` comes from the column set true the first time
+  // the car accepts a signed command — the only proof of pairing there is,
+  // since Tesla exposes no way to ask — so a live car that has never had one
+  // work is prompted up front rather than after a puzzling failure. The error
+  // check stays for the case where the key was removed from the car's Locks
+  // screen after having worked once.
   const needsPairing =
-    error instanceof Error && error.message === "error_vcp_required";
+    notPaired || (error instanceof Error && error.message === "error_vcp_required");
 
   function send(command: CommandName) {
     mutate({ vehicleId, command });
@@ -721,6 +726,7 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
             brand={brand}
             state={data}
             virtualKeyUrl={virtualKeyUrl}
+            notPaired={isLive && vehicle?.virtualKeyPaired === false}
           />
 
           {data?.chargingState === "charging" && (

@@ -104,6 +104,17 @@ export async function POST(
         body: entry.buildBody(args),
       });
       await recordCommandEvent(vehicleId, command, args, result.response.result, result.response.reason || null);
+      // A signed command the car accepted is the only proof of pairing there
+      // is — Tesla exposes no way to ask. Recording it here is what lets the
+      // dashboard stop prompting, and what makes `virtual_key_paired` mean
+      // something instead of sitting unread since the column was added.
+      if (result.response.result) {
+        await supabase
+          .from("vehicles")
+          .update({ virtual_key_paired: true })
+          .eq("id", vehicle.id)
+          .eq("user_id", session.user.id);
+      }
       alertOnSensitiveCommand({
         userId: session.user.id,
         command,

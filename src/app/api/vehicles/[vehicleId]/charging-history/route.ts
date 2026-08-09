@@ -90,7 +90,10 @@ export async function POST(
     // missing scope, 404 a wrong path, 4xx on the query a bad page parameter.
     // Collapsing all of it into "Sync failed" left the one useful fact in a log
     // nobody reads from a phone.
-    logServer("error", "tesla/charging-history", msg, errorContext(err));
+    // Scope names are read as route paths in the debug panel, so they have to
+    // match one. This said "tesla/charging-history", which is not a route —
+    // /api/tesla/charging-history 404s — and was duly typed into the API caller.
+    logServer("error", "vehicles/charging-history", msg, errorContext(err));
     const status = /history (\d{3}):/.exec(msg)?.[1] ?? null;
     // Tesla's charging endpoints are restricted to business fleet accounts. On
     // a personal account this call can never succeed, so "try again" is advice
