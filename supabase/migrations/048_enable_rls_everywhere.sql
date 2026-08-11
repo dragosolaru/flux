@@ -27,10 +27,12 @@
 -- would abort and take the real fixes with it. The loop below skips anything
 -- owned by an extension and anything it cannot alter, and reports what it did.
 --
--- If spatial_ref_sys IS the flagged table, the real remedies are to move the
--- extension out of `public` (`alter extension postgis set schema extensions;`
--- — disruptive, every geography column type reference has to resolve) or to
--- accept it. Read-only reference data being world-readable is not a leak.
+-- It IS the flagged table — confirmed 2026-08-09, one row, owner
+-- supabase_admin. PostGIS does not support `alter extension ... set schema`,
+-- so relocating it means dropping and recreating the extension and every
+-- geometry column with it. The remedy is to check whether anon/authenticated
+-- hold write privileges on it and revoke those if so; the read is harmless.
+-- See docs/MIGRATIONS-PENDING.md §0 for the two queries.
 
 do $$
 declare

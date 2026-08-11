@@ -8,15 +8,16 @@ Project `flux` · `bryhduakxqunixxbpsgn`.
 
 ---
 
-## 0. First, see what the advisor is actually flagging
+## 0. The advisor alert — answered
 
-Before running anything, paste this and keep the output:
+Confirmed on 2026-08-09 by running the query below: **one row,
+`spatial_ref_sys`, owner `supabase_admin`.** No table of ours is exposed —
+every table created by a migration in this repo has RLS enabled.
 
 ```sql
 select
   c.relname as table_name,
-  pg_catalog.pg_get_userbyid(c.relowner) as owner,
-  (select count(*) from pg_depend d where d.objid = c.oid and d.deptype = 'e') > 0 as owned_by_extension
+  pg_catalog.pg_get_userbyid(c.relowner) as owner
 from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
@@ -25,31 +26,46 @@ where n.nspname = 'public'
 order by c.relname;
 ```
 
-Every table created by a migration in this repo already has RLS enabled —
-verified one at a time. So the flagged table is either one created by hand in
-the SQL editor, or an extension's.
+`spatial_ref_sys` is PostGIS's own table: ~8500 rows of EPSG projection
+definitions, identical in every PostGIS installation on earth. It arrived
+because migration `017` runs `create extension if not exists postgis` with no
+`with schema`, so the extension installed into `public`. There is no user data
+in it and never can be.
 
-**The likely answer is `spatial_ref_sys`.** Migration `017` runs
-`create extension if not exists postgis` with no `with schema`, so PostGIS
-installs into `public` and brings `public.spatial_ref_sys` with it: about 8500
-rows of EPSG projection definitions. It is reference data shipped with the
-extension — no user data, nothing of yours in it — and it is world-readable in
-every PostGIS install. `alter table` on it fails with *must be owner*, so it
-cannot be fixed by a migration.
+**The read half of the warning is noise. The write half is worth one query.**
+RLS is not the only gate — a role also needs table privileges. Supabase grants
+`anon`/`authenticated` broadly in `public`, so the question is whether they can
+*modify* this table. A deleted projection row would break every coordinate
+transform the charger map depends on: an availability bug, not a data leak, but
+a real one.
 
-If that is what the query returns, the options are:
+```sql
+select grantee, string_agg(privilege_type, ', ' order by privilege_type) as privileges
+from information_schema.role_table_grants
+where table_schema = 'public'
+  and table_name = 'spatial_ref_sys'
+  and grantee in ('anon', 'authenticated', 'PUBLIC')
+group by grantee;
+```
 
-- **Accept it.** Read-only projection constants being readable is not a data
-  exposure. This is the common choice and Supabase's own advisor documentation
-  treats it as a known case.
-- **Move the extension out of `public`:** `alter extension postgis set schema
-  extensions;`. Disruptive — every `geography`/`geometry` type reference has to
-  resolve through the new schema, so the charger tables and every PostGIS
-  function in `018`–`044` need `search_path` checked afterwards. Do not do this
-  in the same sitting as the migrations below.
+- **No rows, or `SELECT` only** → nothing to do. Dismiss the advisor finding.
+- **`INSERT` / `UPDATE` / `DELETE` listed** → close it:
 
-If the query returns anything **else**, that is a real finding and `048` fixes
-it.
+```sql
+revoke insert, update, delete, truncate on table public.spatial_ref_sys
+  from anon, authenticated;
+```
+
+That may fail with *must be owner* — `supabase_admin` owns the table and the
+SQL editor runs as `postgres`. If it does, raise it with Supabase support; it is
+their extension placement, and the app does not need those grants.
+
+**Do not try to move the extension.** An earlier version of this note suggested
+`alter extension postgis set schema extensions`. PostGIS does not support
+`SET SCHEMA` — it raises *extension "postgis" does not support SET SCHEMA* —
+so the only way to relocate it is to drop and recreate the extension, which
+means dropping every `geometry`/`geography` column in the charger tables. Not
+worth it for a table of projection constants.
 
 ---
 
@@ -106,21 +122,19 @@ point of the change.
 Enables RLS on every ordinary table in `public` that lacks it, skipping
 extension-owned tables, and prints what it did.
 
-**Why:** the advisor alert. Written as a sweep rather than a named table so it
-also covers anything created by hand in the SQL editor since.
+**It will change nothing today**, and that is the honest expectation: the sweep
+found every one of our tables already has RLS, and it skips `spatial_ref_sys`
+because PostGIS owns it. Expect `RLS sweep complete: 0 enabled, 0 skipped` and
+one row from the trailing select.
 
-**No policies are added, deliberately** — service-role bypasses RLS, and
-`anon`/`authenticated` are unused. A table that genuinely needs browser access
-needs a policy written for it on purpose.
-
-**Read the `NOTICE` output.** It names each table it enabled and each it
-skipped. The trailing `select` shows what is still exposed — expect zero rows,
-or `spatial_ref_sys` and the decision above.
+Run it anyway, or don't. It earns its place as a guard, not a fix — the next
+table created by hand in the SQL editor is the one it is for, and that is
+exactly how this alert happened.
 
 ---
 
 ## After all four
 
-Re-run the query in §0. Then re-run the Supabase advisor. Anything still listed
-should be extension-owned and explainable; if a table of ours appears, `048`
-skipped it for a privilege reason and the `NOTICE` output will say which.
+Re-run the query in §0. The expected result is one row, `spatial_ref_sys`. If a
+table of **ours** appears, `048` skipped it for a privilege reason and its
+`NOTICE` output will say which.
