@@ -122,6 +122,13 @@ into a field the client fills in. Reverted to constant `0,0` in `0cdfcf6`.
 
 ## 4. Needs you
 
+0. **`docs/MIGRATIONS-PENDING.md` is the runbook** — order, what each one
+   changes, and the diagnostic query for the Supabase `rls_disabled_in_public`
+   alert. Every table created by a migration in this repo already has RLS; the
+   flagged one is almost certainly `public.spatial_ref_sys`, which PostGIS
+   brings in because `017` installs the extension without `with schema`. It is
+   EPSG reference data and cannot be altered by the migration role. `048`
+   sweeps everything that *is* ours.
 1. **Apply migrations, in this order.** None have been run.
    - `045_push_subscription_ownership.sql` — de-duplicates then re-keys the
      unique index. Deletes rows only where `(user_id, endpoint)` collides, which
@@ -131,6 +138,9 @@ into a field the client fills in. Reverted to constant `0,0` in `0cdfcf6`.
      running.** Safe today because nothing uses the `anon`/`authenticated`
      roles. If you ever want a browser-callable RPC it will need an explicit
      grant afterwards.
+   - `048_enable_rls_everywhere.sql` — enables RLS on every ordinary table in
+     `public` that lacks it, skipping extension-owned ones, and prints what it
+     did. Read the `NOTICE` output.
 2. **Set `RESEND_API_KEY` and `RESEND_FROM`**, or verification mail silently
    no-ops (`sendEmailToUser` returns early) and `recover` stays closed to
    everyone. That is fail-closed, which is the right default, but it is not
