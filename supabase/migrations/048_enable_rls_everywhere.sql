@@ -1,83 +1,135 @@
 -- 048_enable_rls_everywhere.sql
 --
--- Answers the Supabase advisor's `rls_disabled_in_public` alert, and keeps
--- answering it.
+-- Answers the Supabase advisor's `rls_disabled_in_public` alert, keeps
+-- answering it, and — the part that matters — reports what it found somewhere
+-- a phone can read.
 --
--- Every table created by a migration in this repo already has RLS enabled —
--- checked one by one. So whatever the advisor flagged either was created by
--- hand in the SQL editor, or belongs to an extension. This migration enables
--- RLS on every ordinary table in `public` that does not have it, rather than
--- naming one, because a list would go stale the next time a table is created
--- outside a migration — which is how this happened.
+-- Every table created by a migration in this repo already has RLS enabled,
+-- checked one by one. Whatever the advisor flagged was created by hand in the
+-- SQL editor or belongs to an extension. Confirmed 2026-08-09: one row,
+-- `public.spatial_ref_sys`, owner supabase_admin — PostGIS's EPSG projection
+-- table, no user data, brought in because 017 installs the extension without
+-- `with schema`.
 --
--- WITH NO POLICIES, DELIBERATELY. That is the model the rest of the schema
--- already uses for shared tables (031, 037): the service-role key bypasses RLS
--- entirely and every database access in the app goes through a Next.js route
--- holding it, while `anon` and `authenticated` are reduced to no access at all.
--- Nothing in the app uses those two roles — src/lib/supabase/client.ts is
--- imported by nothing and no component calls .rpc() — so this cannot break a
--- read path. If a table ever does need browser access, it needs a policy
--- written for it on purpose.
+-- Written as FUNCTIONS rather than a DO block on purpose. The debug panel
+-- applies migrations through `exec_sql`, which returns void, so a DO block's
+-- RAISE NOTICE output goes nowhere — from a phone the migration would succeed
+-- and say nothing, which is the same as not knowing. These return rows, so
+-- /debug can show them and re-show them later.
 --
--- EXTENSION TABLES ARE SKIPPED, and this is the part that matters for the
--- alert. PostGIS (017) installs into `public`, which creates
--- `public.spatial_ref_sys` — ~8500 rows of EPSG projection definitions, no user
--- data, owned by the extension. `alter table` on it fails with "must be owner
--- of table spatial_ref_sys" for the migration role, so a migration that tried
--- would abort and take the real fixes with it. The loop below skips anything
--- owned by an extension and anything it cannot alter, and reports what it did.
---
--- It IS the flagged table — confirmed 2026-08-09, one row, owner
--- supabase_admin. PostGIS does not support `alter extension ... set schema`,
--- so relocating it means dropping and recreating the extension and every
--- geometry column with it. The remedy is to check whether anon/authenticated
--- hold write privileges on it and revoke those if so; the read is harmless.
--- See docs/MIGRATIONS-PENDING.md §0 for the two queries.
+-- The sweep enables RLS WITH NO POLICIES, deliberately: that is the model the
+-- rest of the schema uses for shared tables (031, 037). The service-role key
+-- bypasses RLS and every database access in the app holds it, while `anon` and
+-- `authenticated` are reduced to nothing. Neither role is used anywhere —
+-- src/lib/supabase/client.ts is imported by nothing and no component calls
+-- .rpc() — so this cannot break a read path. A table that genuinely needs
+-- browser access needs a policy written for it on purpose.
 
-do $$
+-- ---------------------------------------------------------------------------
+-- What is exposed, right now.
+-- ---------------------------------------------------------------------------
+create or replace function public.debug_rls_status()
+returns table (
+  table_name text,
+  rls_enabled boolean,
+  owner text,
+  owned_by_extension boolean
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    c.relname::text,
+    c.relrowsecurity,
+    pg_catalog.pg_get_userbyid(c.relowner)::text,
+    exists (
+      select 1 from pg_depend d where d.objid = c.oid and d.deptype = 'e'
+    )
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relkind = 'r'
+  order by c.relrowsecurity, c.relname;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Who can touch a given table, regardless of RLS.
+--
+-- RLS is not the only gate: a role also needs table privileges. This is what
+-- turns "spatial_ref_sys is world-readable" from an alert into a decision —
+-- reading EPSG constants is harmless, but a DELETE would break every
+-- coordinate transform the charger map depends on.
+-- ---------------------------------------------------------------------------
+create or replace function public.debug_table_grants(p_table text)
+returns table (grantee text, privileges text)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    g.grantee::text,
+    string_agg(g.privilege_type, ', ' order by g.privilege_type)::text
+  from information_schema.role_table_grants g
+  where g.table_schema = 'public'
+    and g.table_name = p_table
+    and g.grantee in ('anon', 'authenticated', 'PUBLIC')
+  group by g.grantee;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- The sweep. Returns one row per table it considered.
+--
+-- Extension-owned tables are skipped, and that is what keeps this runnable:
+-- `alter table public.spatial_ref_sys` fails with "must be owner" for the
+-- migration role, and a statement that aborts would take the real fixes with
+-- it. Anything else that cannot be altered is caught per table and reported
+-- rather than raised.
+-- ---------------------------------------------------------------------------
+create or replace function public.debug_enable_rls_everywhere()
+returns table (table_name text, action text)
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
   t record;
-  enabled int := 0;
-  skipped int := 0;
 begin
   for t in
-    select c.oid, c.relname
+    select c.oid, c.relname,
+           exists (select 1 from pg_depend d where d.objid = c.oid and d.deptype = 'e') as from_extension
     from pg_class c
     join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public'
       and c.relkind = 'r'
       and c.relrowsecurity = false
-      -- Anything an extension owns is not ours to alter.
-      and not exists (
-        select 1 from pg_depend d
-        where d.objid = c.oid
-          and d.deptype = 'e'
-      )
     order by c.relname
   loop
+    if t.from_extension then
+      table_name := t.relname; action := 'skipped — owned by an extension';
+      return next;
+      continue;
+    end if;
+
     begin
       execute format('alter table public.%I enable row level security', t.relname);
-      raise notice 'RLS enabled on public.%', t.relname;
-      enabled := enabled + 1;
+      table_name := t.relname; action := 'RLS enabled';
+      return next;
     exception when insufficient_privilege then
-      -- Not ours. Report rather than abort, so one unowned table cannot
-      -- prevent the rest from being secured.
-      raise notice 'SKIPPED public.% — not owned by %', t.relname, current_user;
-      skipped := skipped + 1;
+      table_name := t.relname;
+      action := format('skipped — not owned by %s', current_user);
+      return next;
     end;
   end loop;
-
-  raise notice 'RLS sweep complete: % enabled, % skipped', enabled, skipped;
 end $$;
 
--- What is still exposed after this runs. Expect zero rows; anything listed is
--- extension-owned and needs the decision in the header rather than a migration.
-select
-  c.relname as still_without_rls,
-  pg_catalog.pg_get_userbyid(c.relowner) as owner
-from pg_class c
-join pg_namespace n on n.oid = c.relnamespace
-where n.nspname = 'public'
-  and c.relkind = 'r'
-  and c.relrowsecurity = false
-order by c.relname;
+revoke all on function public.debug_rls_status() from public, anon, authenticated;
+revoke all on function public.debug_table_grants(text) from public, anon, authenticated;
+revoke all on function public.debug_enable_rls_everywhere() from public, anon, authenticated;
+grant execute on function public.debug_rls_status() to service_role;
+grant execute on function public.debug_table_grants(text) to service_role;
+grant execute on function public.debug_enable_rls_everywhere() to service_role;
+
+-- Run it once, now. Applying the migration is meant to fix the thing, not just
+-- install the ability to.
+select public.debug_enable_rls_everywhere();

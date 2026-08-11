@@ -103,6 +103,21 @@ interface IngestResult {
   [key: string]: unknown;
 }
 
+interface RlsPayload {
+  available: boolean;
+  message?: string;
+  hint?: string;
+  total?: number;
+  withRls?: number;
+  verdict?: string;
+  exposed?: {
+    table: string;
+    owner: string;
+    ownedByExtension: boolean;
+    grants: { grantee: string; privileges: string }[];
+  }[];
+}
+
 interface PublishedKey {
   label: string;
   url: string;
@@ -230,6 +245,7 @@ export function DebugClient() {
   const [partnerResult, setPartnerResult] = useState<unknown>(null);
   const [fleetStatus, setFleetStatus] = useState<FleetStatusResult | null>(null);
   const [publishedKeys, setPublishedKeys] = useState<PublishedKey[] | null>(null);
+  const [rls, setRls] = useState<RlsPayload | null>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
   // Held in memory for exactly as long as this page stays open, and never put
   // anywhere else — see the deliberate omission from copyAll below.
@@ -583,6 +599,38 @@ export function DebugClient() {
           read("/api/tesla-public-key", "the route directly"),
         ]),
       );
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  // Row-level-security state and the sweep that fixes it. Here rather than in
+  // the Supabase SQL editor because the editor needs pasted SQL, and this app
+  // is operated from a phone.
+  async function loadRls() {
+    setRunning("rls");
+    setLastError(null);
+    try {
+      setRls(await apiFetch<RlsPayload>("/api/internal/debug/rls"));
+    } catch (err) {
+      setLastError(`RLS check failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function fixRls() {
+    setRunning("rls-fix");
+    setLastError(null);
+    try {
+      const res = await apiFetch<{ summary: string }>("/api/internal/debug/rls", {
+        method: "POST",
+      });
+      toast.success(res.summary);
+      await loadRls();
+    } catch (err) {
+      setLastError(`RLS sweep failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error("RLS sweep failed");
     } finally {
       setRunning(null);
     }
@@ -1725,6 +1773,68 @@ export function DebugClient() {
           replaces a function, and the runner refuses one that would overwrite a newer
           definition.
         </p>
+
+        <div className="space-y-2 rounded-lg border border-border bg-card/60 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-medium">Row-level security</p>
+            <div className="flex gap-2">
+              <IngestButton
+                label="Check"
+                busy={running === "rls"}
+                disabled={running !== null}
+                onClick={() => void loadRls()}
+              />
+              <IngestButton
+                label="Enable everywhere"
+                busy={running === "rls-fix"}
+                disabled={running !== null}
+                onClick={() => void fixRls()}
+              />
+            </div>
+          </div>
+          {rls && !rls.available && (
+            <p className="text-[11px] text-amber-300">
+              {rls.hint ?? rls.message}
+            </p>
+          )}
+          {rls?.available && (
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-muted-foreground">
+                {rls.withRls}/{rls.total} tables protected
+              </p>
+              {(rls.exposed ?? []).map((e) => (
+                <div key={e.table} className="rounded border border-border/60 bg-muted/20 p-2">
+                  <p className="font-mono text-[11px]">
+                    {e.table}
+                    <span className="ml-2 text-muted-foreground">
+                      {e.owner}
+                      {e.ownedByExtension ? " · extension" : ""}
+                    </span>
+                  </p>
+                  {e.grants.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground">
+                      anon/authenticated hold no privileges on it
+                    </p>
+                  ) : (
+                    e.grants.map((g) => (
+                      <p
+                        key={g.grantee}
+                        className={
+                          /INSERT|UPDATE|DELETE|TRUNCATE/.test(g.privileges)
+                            ? "text-[10px] text-destructive"
+                            : "text-[10px] text-muted-foreground"
+                        }
+                      >
+                        {g.grantee}: {g.privileges}
+                      </p>
+                    ))
+                  )}
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground">{rls.verdict}</p>
+            </div>
+          )}
+        </div>
         <div className="space-y-2">
           {migrationList.map((m) => (
             <div

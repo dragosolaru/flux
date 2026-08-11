@@ -1,12 +1,20 @@
 # Migrations waiting to be applied
 
-**From your phone: `/debug` → Migrations.** Each one has its own Apply button
-and `045`–`048` are now listed there. Tap them **individually, in order** —
-`045`, `046`, `047`, `048`. Do not use *Apply all*: it re-runs `034`–`044` too,
-which is wasteful and, for the dedupe migrations, slow.
+**Everything here runs from `/debug` on a phone. No SQL editor, no copy-paste.**
 
-The Supabase SQL editor is the alternative, and the better place for `048` —
-see §4.
+`/debug` → Migrations. Each migration has its own Apply button. Tap them
+**individually, in order**: `045`, `046`, `047`, `048`. Avoid *Apply all* — it
+re-runs `034`–`044` as well, which is wasteful and slow on the dedupe ones.
+
+Above the list there is a **Row-level security** tile with two buttons:
+
+- **Check** — every table in `public`, which lack RLS, who owns them, and
+  whether `anon`/`authenticated` can write to them. Write privileges are shown
+  in red, because that is the half of the advisor's warning that matters.
+- **Enable everywhere** — the sweep. Enables RLS on everything we own that
+  lacks it, skips extension-owned tables, and reports each one.
+
+Both need migration `048` applied first; until then Check says so.
 
 Order matters and none of these have been applied; there is no CI runner and no
 applied-state record in git for anything applied by hand.
@@ -126,27 +134,30 @@ point of the change.
 
 ## 4. `048_enable_rls_everywhere.sql`
 
-Enables RLS on every ordinary table in `public` that lacks it, skipping
-extension-owned tables, and prints what it did.
+Creates three reporting functions and runs the sweep once.
 
-**It will change nothing today**, and that is the honest expectation: the sweep
-found every one of our tables already has RLS, and it skips `spatial_ref_sys`
-because PostGIS owns it. Expect `RLS sweep complete: 0 enabled, 0 skipped` and
-one row from the trailing select.
+**Why functions and not a plain `DO` block:** the panel applies migrations
+through `exec_sql`, which returns `void`. A `DO` block's `RAISE NOTICE` output
+goes nowhere, so from a phone the migration would succeed and tell you nothing —
+which is the same as not knowing. `debug_rls_status()`,
+`debug_table_grants(text)` and `debug_enable_rls_everywhere()` return rows
+instead, and the RLS tile shows them.
 
-Run it anyway, or don't. It earns its place as a guard, not a fix — the next
-table created by hand in the SQL editor is the one it is for, and that is
-exactly how this alert happened.
+All three are `SECURITY DEFINER`, revoked from `public`/`anon`/`authenticated`
+and granted to `service_role` only — the same pattern as `035`.
 
-**Run this one in the SQL editor rather than from `/debug`.** Its whole output
-is `NOTICE` lines and a trailing `select`, and the runner calls `exec_sql`,
-which returns void — so from the panel it succeeds and tells you nothing. The
-other three have nothing to read.
+**Expect it to change nothing today.** Every table of ours already has RLS and
+`spatial_ref_sys` is skipped as extension-owned. `0 enabled, 1 skipped` is the
+correct result, not a failure. It earns its place as a guard: the next table
+created by hand in the SQL editor is what it is for, and that is exactly how
+this alert happened.
 
 ---
 
 ## After all four
 
-Re-run the query in §0. The expected result is one row, `spatial_ref_sys`. If a
-table of **ours** appears, `048` skipped it for a privilege reason and its
-`NOTICE` output will say which.
+Tap **Check** on the RLS tile. Expected: `26/27 tables protected`, one exposed
+row for `spatial_ref_sys`, and a verdict saying only extension-owned tables are
+exposed. If the tile shows write privileges in red for it, that is the one thing
+left worth chasing with Supabase support — the app does not need those grants
+and cannot revoke them itself.
