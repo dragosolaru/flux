@@ -1,8 +1,15 @@
 # Migrations waiting to be applied
 
-Run these in the Supabase SQL editor, **in this order**. None of them have been
-applied — there is no CI runner and no applied-state record in git for
-hand-applied migrations.
+**From your phone: `/debug` → Migrations.** Each one has its own Apply button
+and `045`–`048` are now listed there. Tap them **individually, in order** —
+`045`, `046`, `047`, `048`. Do not use *Apply all*: it re-runs `034`–`044` too,
+which is wasteful and, for the dedupe migrations, slow.
+
+The Supabase SQL editor is the alternative, and the better place for `048` —
+see §4.
+
+Order matters and none of these have been applied; there is no CI runner and no
+applied-state record in git for anything applied by hand.
 
 Project `flux` · `bryhduakxqunixxbpsgn`.
 
@@ -130,6 +137,11 @@ one row from the trailing select.
 Run it anyway, or don't. It earns its place as a guard, not a fix — the next
 table created by hand in the SQL editor is the one it is for, and that is
 exactly how this alert happened.
+
+**Run this one in the SQL editor rather than from `/debug`.** Its whole output
+is `NOTICE` lines and a trailing `select`, and the runner calls `exec_sql`,
+which returns void — so from the panel it succeeds and tells you nothing. The
+other three have nothing to read.
 
 ---
 
