@@ -6,8 +6,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { VaultDocument, DocumentCategory } from "@/types/costs";
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/costs/constants";
 import { logServer } from "@/lib/debug-log";
+import { CAR_DOC_TYPES } from "@/lib/documents/car-doc-types";
 
-const CAR_DOC_TYPES = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 const CATEGORY_VALUES = new Set<DocumentCategory>([

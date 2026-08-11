@@ -1,4 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { CAR_DOC_TYPES } from "@/lib/documents/car-doc-types";
+
+const FREE_ENERGY_DOCS_PER_MONTH = 5;
+const FREE_VAULT_DOCS_PER_MONTH = 10;
 
 export type SubscriptionTier = "free" | "pro";
 
@@ -65,15 +69,78 @@ export async function canAddVehicle(
   return { allowed: true };
 }
 
-// TODO(live): re-enable per-tier limits before launch
+/** Midnight on the 1st, local time — the window both quotas count over. */
+function startOfMonth(): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+/**
+ * Energy documents: 5/month on free.
+ *
+ * These were `return { allowed: true }` behind a `TODO(live): re-enable before
+ * launch`, so free-tier OCR was unmetered — every upload runs Claude Vision and
+ * the bill has no ceiling. Restored from 32ac1aa, but counted against the
+ * current CAR_DOC_TYPES list: the copy that shipped with the original limits
+ * had six entries where the rest of the app has nineteen, which would have
+ * charged thirteen kinds of vehicle document to the energy quota.
+ *
+ * Pending and unclassified uploads count. They cost the same OCR call, and not
+ * counting them is a free unlimited quota for anyone who uploads faster than
+ * the classifier runs.
+ */
 export async function canUploadDocument(
-  _userId: string,
+  userId: string,
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
+  const tier = await getSubscriptionTier(userId);
+  if (tier !== "free") return { allowed: true };
+
+  const supabase = createSupabaseAdminClient();
+  const { count } = await supabase
+    .from("documents")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", startOfMonth())
+    .not("document_type", "in", `(${CAR_DOC_TYPES.join(",")})`);
+
+  if ((count ?? 0) >= FREE_ENERGY_DOCS_PER_MONTH) {
+    return {
+      allowed: false,
+      message: `Free tier allows ${FREE_ENERGY_DOCS_PER_MONTH} energy documents a month. Upgrade to Pro for unlimited.`,
+    };
+  }
   return { allowed: true };
 }
 
+/**
+ * Vehicle documents: 10/month on free.
+ *
+ * A separate bucket because the two are used at completely different rates — an
+ * insurance policy or an inspection certificate arrives a few times a year,
+ * an energy bill every month — so one shared limit would either starve the
+ * vault or make the OCR quota meaningless.
+ */
 export async function canUploadVaultDocument(
-  _userId: string,
+  userId: string,
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
+  const tier = await getSubscriptionTier(userId);
+  if (tier !== "free") return { allowed: true };
+
+  const supabase = createSupabaseAdminClient();
+  const { count } = await supabase
+    .from("documents")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", startOfMonth())
+    .in("document_type", CAR_DOC_TYPES);
+
+  if ((count ?? 0) >= FREE_VAULT_DOCS_PER_MONTH) {
+    return {
+      allowed: false,
+      message: `Free tier allows ${FREE_VAULT_DOCS_PER_MONTH} vehicle documents a month. Upgrade to Pro for unlimited.`,
+    };
+  }
   return { allowed: true };
 }

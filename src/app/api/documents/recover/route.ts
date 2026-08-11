@@ -3,12 +3,20 @@
  * first active vehicle.
  *
  * Access control:
- *   Only documents whose stored sender_email matches the authenticated user's
- *   verified email are eligible. Other unmatched documents stay in the
- *   unmatched/ pool — they belong to someone else.
+ *   The address must be VERIFIED — proven by opening a signed link sent to it,
+ *   recorded in profiles.email_verified_at — before it is honoured as identity.
  *
- *   This prevents user B from claiming user A's documents when the inbound
- *   webhook can't auto-resolve a vehicle from the To header.
+ *   The comment here used to call the address verified while nothing verified
+ *   it. /api/auth/register creates every user with email_confirm: true and no
+ *   verification mail, because signInWithPassword refuses an unconfirmed
+ *   address and there is no SMTP behind it. So anyone could register an
+ *   address they did not own and claim every unmatched document that address
+ *   had ever sent in. Gating on Supabase's own email_confirmed_at would have
+ *   read as a fix and changed nothing: it is always set.
+ *
+ *   sender_email itself is still only a filter, not a credential — nothing in
+ *   the inbound webhook verifies DKIM or SPF, so a From header is free text.
+ *   Verification is what makes the pairing mean something.
  */
 
 import { NextResponse } from "next/server";
@@ -37,6 +45,22 @@ export async function POST() {
   }
 
   const supabase = createSupabaseAdminClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email_verified_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!(profile as { email_verified_at: string | null } | null)?.email_verified_at) {
+    return NextResponse.json(
+      {
+        message: "Confirm your email address before claiming documents",
+        code: "EMAIL_NOT_VERIFIED",
+      },
+      { status: 403 },
+    );
+  }
 
   const { data: vehicle } = await supabase
     .from("vehicles")

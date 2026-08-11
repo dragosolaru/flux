@@ -5,11 +5,17 @@
  * Cloudmailin sends multipart/form-data with bracket-notation fields:
  *   envelope[to], envelope[from], headers[to], headers[subject], attachments[]
  *
- * Vehicle identification (priority order):
- *   1. +subaddress = 8-hex vehicle short ID  → that vehicle
- *   2. +subaddress = user email local part   → user's first active vehicle
- *   3. Sender email = registered user        → user's first active vehicle
- *   4. Subject contains vehicle nickname     → that vehicle
+ * Vehicle identification — one signal, deliberately:
+ *   +subaddress = vehicle UUID (full, or its first 8 hex characters)
+ *
+ * Nothing here verifies DKIM or SPF, so every other candidate signal is
+ * attacker-controlled. Matching on the sender address, on a user's email
+ * local part, or on a vehicle nickname in the subject each let anyone who can
+ * send an email file a document against a stranger's car. All three are gone;
+ * this comment advertised two of them for a while after they were removed.
+ *
+ * Unmatched mail lands in the FALLBACK_USER_ID pool as needs_review with no
+ * OCR, and is claimed deliberately by its owner.
  *
  * Env vars:
  *   EMAIL_WEBHOOK_SECRET            — shared secret, sent in the `x-webhook-secret`
@@ -78,38 +84,6 @@ function extractEmailAddress(rawFrom: string): string {
   return rawFrom.replace(/.*<(.+)>/, "$1").trim().toLowerCase();
 }
 
-async function firstActiveVehicle(userId: string, supabase: AdminClient): Promise<string | null> {
-  const { data } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-  return data ? (data as { id: string }).id : null;
-}
-
-async function findUserByEmailLocalPart(localPart: string, supabase: AdminClient): Promise<string | null> {
-  const { data: authList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  // Exact match only — normalization (strip dots/dashes) causes cross-user collisions
-  // (e.g. john.doe@ and johndoe@ both normalize to johndoe).
-  const user = authList?.users.find(
-    (u: { id: string; email?: string }) =>
-      u.email?.toLowerCase().split("@")[0] === localPart,
-  );
-  return user?.id ?? null;
-}
-
-async function findUserByEmail(email: string, supabase: AdminClient): Promise<string | null> {
-  if (!email) return null;
-  const { data: authList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  const user = authList?.users.find(
-    (u: { id: string; email?: string }) => u.email?.toLowerCase() === email,
-  );
-  return user?.id ?? null;
-}
-
 async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promise<VehicleMatch | null> {
   const subaddress = extractSubaddress(parsed.to);
 
@@ -143,29 +117,20 @@ async function resolveVehicle(parsed: ParsedEmail, supabase: AdminClient): Promi
     }
   }
 
-  // 2. +subaddress = user email local part
-  if (subaddress) {
-    const userId = await findUserByEmailLocalPart(subaddress, supabase);
-    if (userId) {
-      const vehicleId = await firstActiveVehicle(userId, supabase);
-      if (vehicleId) return { vehicleId, userId };
-    }
-  }
-
-  // 3. Sender email = registered user
-  const senderEmail = extractEmailAddress(parsed.from);
-  if (senderEmail) {
-    const userId = await findUserByEmail(senderEmail, supabase);
-    if (userId) {
-      const vehicleId = await firstActiveVehicle(userId, supabase);
-      if (vehicleId) return { vehicleId, userId };
-    }
-  }
-
-  // No trusted signal matched. Do NOT fall back to scanning vehicle nicknames
-  // across all users — that is a cross-tenant IDOR (a spoofed sender could
-  // attribute a document to a victim's vehicle). Unmatched mail lands in the
-  // FALLBACK_USER_ID pool and is claimable via the sender_email recovery flow.
+  // There is no step 3.
+  //
+  // Two more signals used to be trusted here and both were attacker-controlled:
+  // the +subaddress read as a user's email local part, and the sender address.
+  // Nothing in this handler verifies DKIM or SPF, so `From:` is a free-text
+  // header — anyone who can send mail could address it as a victim and have the
+  // document filed against that victim's first active vehicle. The local-part
+  // route was the same hole with an extra step: user emails are not secret.
+  //
+  // What remains (1a/1b) is the vehicle UUID in the subaddress, which is a
+  // capability rather than an identity: you have to know it to use it.
+  //
+  // Unmatched mail is not lost. It lands in the FALLBACK_USER_ID pool with
+  // status needs_review and no OCR, where the owner claims it deliberately.
   return null;
 }
 

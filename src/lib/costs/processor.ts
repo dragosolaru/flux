@@ -4,11 +4,11 @@ import { getExchangeRate } from "@/lib/external/bnr/client";
 import { attributeHomeBill } from "./attribution";
 import { matchChargingSession } from "./session-matcher";
 import type { Document, DocumentType, ParsedDocument } from "@/types/costs";
+import { CAR_DOC_TYPES } from "@/lib/documents/car-doc-types";
 import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 
 const CONFIDENCE_THRESHOLD = 0.7;
 
-const CAR_DOC_TYPES: DocumentType[] = ["rca", "casco", "itp", "rovinieta", "vignette", "bridge_toll", "car_tax", "service", "parking", "fuel", "tires", "fine", "highway_toll", "car_wash", "leasing", "roadside_assistance", "spare_parts", "ferry", "talon"];
 
 // Categories that belong in the per-vehicle document vault (everything except energy bills and non-vehicle docs).
 const VEHICLE_CATEGORIES = new Set([

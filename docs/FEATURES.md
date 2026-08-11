@@ -577,6 +577,8 @@ The brand rule exists because sources disagree about *which field* holds the net
 - **`apiFetch` error messages:** HTTP/2 carries no reason phrase, so `res.statusText` is `""` for everything Vercel serves. The fallback chain used `??`, which skips only null/undefined — the empty string won, and any error without a JSON body (a 504 from an exceeded `maxDuration`, above all) reached the UI as an empty message. Callers written `msg || t("some_hint")` then rendered their hint as if it were a diagnosis: a planner timeout surfaced as "try a higher battery percentage". Now `||`, with the status appended (`"Request failed (504)"`). Pinned by `src/lib/__tests__/api-fetch.test.ts`.
 - **Typed API client layer (`src/lib/api/`):** all client HTTP calls go through one typed module per resource (`vehicles`, `chargers`, `documents`, `me`, `tariffs`, `costs`, `trip`); `apiFetch` (`src/lib/api-fetch.ts`) is imported only here. `apiFetch` redirects to `/login` on client 401.
 - **Rate limiting:** `checkRateLimit(userId, bucket, max)` in `src/lib/rate-limit.ts` (Upstash Redis).
+- **Function EXECUTE is revoked from `anon`/`authenticated`** (migration `047`). Migration 031 enabled RLS on the charger tables and it did not help: ~20 `SECURITY DEFINER` functions across 018–044 run as their owner, and PostgREST exposes every function the caller holds EXECUTE on at `/rest/v1/rpc/<name>`. EXECUTE defaults to PUBLIC, so the browser-shipped anon key reached `chargers_in_bbox`, `upsert_charger`, `upsert_chargers_batch` and the dedupe family with RLS not consulted — two of which mutate data. Revoked schema-wide rather than by listing twenty signatures, plus `alter default privileges` so the next function does not reopen it. Safe because no application code uses those roles: every access goes through a route holding the service-role key, `src/lib/supabase/client.ts` is imported by nothing, and no client component calls `.rpc()`. A function you *want* browser-callable now needs an explicit grant — which is the point.
+- **Push subscriptions are owned** (migration `045`). `endpoint` was globally unique and the upsert conflicted on it alone, so posting someone else's endpoint rewrote that row's `user_id`: the victim lost their subscription and the attacker's notifications were delivered to the victim's browser. The conflict target is `(user_id, endpoint)` now, so a foreign endpoint can only ever create a row of your own.
 - **Deleted as dead code** (each verified unreferenced first): `POST /api/tesla/command` and `GET /api/tesla/vehicle` — authenticated endpoints that spent Fleet API quota and drove a real car with weaker handling than the route actually in use (no `buildBody` mapping, no `recordCommandEvent`, no security alert, no 409 reauth); `GET /api/charging-map` and `GET /api/charging-stations`, superseded by the bbox charger queries; `src/lib/currency/convert.ts`, `src/hooks/useVirtualKeyPair.ts`, and `src/components/vehicles/VehicleIcon.tsx`. The last also removes `src/components/vehicles/` — two directories one letter apart from `src/components/vehicle/` is a trap, and the singular one is where every live component lives.
 
 ---
@@ -715,6 +717,59 @@ device the app is tested from.
 
 **Dependencies:** `/proxy-public-key` needs the current `tesla-proxy` image — an
 older container answers 404 and the proxy row reads `none`.
+
+### Email as identity (verification)
+
+**What:** `/api/documents/recover` hands over unmatched inbound documents whose
+`sender_email` matches the caller. That treated an email address as proof of
+identity while nothing proved it: `/api/auth/register` creates every account
+with `email_confirm: true` and sends no verification mail, because login goes
+through `signInWithPassword` and Supabase refuses an unconfirmed address.
+Register a stranger's address — nothing prevented it, and the address being
+unregistered is exactly *why* their document went unmatched — and their
+documents were claimable, PII and all. Gating on `auth.users.email_confirmed_at`
+would have read as a fix and changed nothing, since registration always sets it.
+
+**How to use:** `POST /api/account/verify-email` mails a signed link (Resend);
+`GET /api/account/verify-email?token=…` records `profiles.email_verified_at` and
+redirects to `/settings?email_verified=1|0`. `recover` returns **403
+`EMAIL_NOT_VERIFIED`** until that column is set. The token is a stateless
+HMAC over `userId:email:expiry` keyed on `NEXTAUTH_SECRET` (the same key the
+OAuth state binding uses), valid 24 h. The address is inside the signed payload,
+so a token issued for an old address cannot verify a new one, and the confirm
+route re-checks it still matches the account. Deliberately not session-gated —
+mail is opened on other devices — which is safe precisely because it can only
+ever mark the one address it was issued for.
+
+**Inbound attribution is down to one signal.** `resolveVehicle` used to fall
+back to the `+subaddress` read as a user's email local part, and then to the
+`From` header. Nothing in the handler verifies DKIM or SPF, so both were free
+text: one email addressed `…+alice@` filed an attacker's document against
+Alice's car and ran OCR on it under her account. Both are deleted, along with
+the `listUsers({perPage: 1000})` helpers that scanned every user on each inbound
+mail. What remains is the vehicle UUID in the subaddress — a capability, not an
+identity. Unmatched mail lands in the fallback pool as `needs_review` with no
+OCR. (The address is still derived from the primary key and therefore not
+rotatable — **F3**, an open owner decision.)
+
+**Key files:** `src/lib/email-verification.ts`,
+`src/app/api/account/verify-email/route.ts`, `src/app/api/documents/recover/route.ts`,
+`src/app/api/documents/inbound-email/route.ts`, migration `046`.
+Pinned by `src/lib/__tests__/email-verification.test.ts`.
+
+### Free-tier limits are enforced again
+
+`canUploadDocument` and `canUploadVaultDocument` were `return { allowed: true }`
+behind a `TODO(live): re-enable before launch`, so free-tier OCR was unmetered
+and the Anthropic bill had no ceiling. Restored at 5 energy documents and 10
+vehicle documents per month, counted separately because the two are used at
+completely different rates. Pending and unclassified uploads count — they cost
+the same OCR call, and excluding them is an unlimited quota for anyone who
+uploads faster than the classifier runs. `CAR_DOC_TYPES` moved to
+`src/lib/documents/car-doc-types.ts`: it decided three different things from
+three hand-written copies, and the one in `subscription.ts` had gone stale at
+six entries against the others' nineteen — restoring the limits against it would
+have billed thirteen vehicle-document types to the energy quota.
 
 ## 24. Security hardening
 

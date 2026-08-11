@@ -52,7 +52,11 @@ export async function POST(request: Request) {
       user_agent: request.headers.get("user-agent"),
       last_used_at: new Date().toISOString(),
     },
-    { onConflict: "endpoint" },
+    // (user_id, endpoint), not endpoint. A globally unique endpoint meant
+    // posting someone else's rewrote THEIR row's user_id — the victim lost the
+    // subscription and the attacker's notifications went to the victim's
+    // browser. See migration 045.
+    { onConflict: "user_id,endpoint" },
   );
 
   if (error) {
