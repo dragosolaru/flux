@@ -172,6 +172,12 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 **Getting the signing key in.** `TESLA_PRIVATE_KEY_FILE` (a mounted file) is preferred over `TESLA_PRIVATE_KEY` (raw PEM or single-line base64); the file wins when both are set. A PEM is five lines, and both env-var routes mangle that — a `.env` holds one line per variable, so a pasted PEM arrives **empty**, and Coolify additionally injects each env var as an `ARG` with its value as the default, printing it in the deployment log. The entrypoint validates with `openssl ec` and reports empty, unreadable-mount and not-a-key separately, so the log names the actual fault instead of blaming the key.
 
+**Commands reflect the car, and pairs are one control.** The first version of `AllCommands` rendered a button per command, so Sentry on / Sentry off sat side by side looking identical, nothing changed appearance after a command succeeded, and the panel could not answer the question it exists for — did that work. Opposing pairs (`start`/`stop_charging`, `vent`/`close_windows`, `activate`/`deactivate_sentry`, `precondition_max` on/off) are now single stateful toggles driven by `VehicleState`, carrying the app's existing active treatment. `precondition_max` had **no off control at all** — the plumbing existed in the command map and the mock engine and no button reached it, so max defrost could be started and never stopped. `lock`/`unlock` and `climate_on`/`climate_off` were removed from the grid: `CommandPanel` owns them, and rendering both meant two independent mutations for one command 40px apart.
+
+**Values are tapped, not dragged.** Charge limit and charging current are `Chip` rows of their real values (50–100 in tens; Tesla's 5/8/12/16/24/32/40/48). A range input gave 27px of travel per 5% inside a vertically scrolling page, which iOS frequently reads as a scroll. Tapping a value *is* the command, so the Apply step disappears with it. Cabin temperature keeps a control — a ±stepper with two 44px targets — because "one more degree" is meaningful there. Every remaining Apply button is `bg-primary`: `bg-secondary` on a card is roughly 1.25:1 in the dark theme, so the one control that committed the value was invisible in daylight.
+
+**Controls seed from the car, or show a skeleton.** Temperature opened at a hardcoded 21 °C and scheduled charging at 23:00 while `driverTempC` and `scheduledChargingStartMinutes` both exist — a driver checking a 01:00 schedule saw "23:00", assumed it was wrong, and one tap made it wrong. Nothing renders a fabricated default now.
+
 **All 22 commands are now reachable.** Eighteen of them were mapped, capability-flagged, rate-limited and audited end to end, and had no button anywhere: `CommandPanel` rendered exactly four (lock/unlock, climate, honk, flash). `AllCommands` on `/commands` adds the rest, grouped Access / Charging / Climate / Windows / Security, with sliders for charge limit (50–100 %), charging current (1–48 A) and cabin temperature (15–28 °C), time pickers for scheduled charging and departure (sent as minutes past local midnight), and an address box for `share_navigation` that resolves through `/api/geocode` because Tesla's `navigation_gps_request` takes coordinates, not text. `unlock` and `remote_start` keep the confirmation step.
 
 The dashboard reaches the same set through a fourth quick-action button that expands `AllCommands` in place. `/commands` alone was not enough: on a phone it sits two taps inside the "more" overflow, so the app looked like it could do three things. Expanding beats navigating away from the screen showing the battery you are deciding against.
@@ -188,6 +194,14 @@ The dashboard reaches the same set through a fourth quick-action button that exp
 
 **Key files:** `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/lib/brands/{command-map.ts,tesla/command-map.ts}`, `src/lib/mock/engine.ts`, `src/components/vehicle/{CommandPanel,AllCommands}.tsx`, `src/hooks/useVehicleCommand.ts`, `src/lib/api/vehicles.ts` (`shareNavigation` helper unifies the share_navigation + optional precondition_max sequence).
 
+**Command errors are classified by body, not only by status.** Tesla answers **403** both for a missing scope and for `Vehicle Command Protocol required`. Treating every 403 as `TeslaAuthError` shadowed the VCP split entirely, because `commands/route.ts` checks `instanceof TeslaAuthError` before it string-matches — so an operator who simply had not deployed the signing proxy was told to re-authorise Tesla, which cannot fix it. `sendVehicleCommand` now checks the body first. Pinned by `src/lib/tesla/__tests__/command-errors.test.ts`, which asserts the classification *and* the route's branch order, since the defect lived in the interaction between the two.
+
+**One argument name per command.** `args` is `Record<string, unknown>` from the button to the Tesla request body, so a UI sending `{limitPct}` to a builder reading `args.percent` type-checks and fails at runtime. It did: `/charging` sent `limitPct`, `TESLA_COMMAND_MAP` read `percent ?? 80`, and **every live charge-limit change reached the car as 80%** behind a success toast. The mock engine also read `limitPct`, so the simulator and its unit test agreed with the UI and all three were wrong about the car. Standardised on `percent` (Tesla's own field name) across `charging-client`, `mock/engine`, `useVehicleCommand` and the tests, with `src/lib/brands/__tests__/command-args.test.ts` asserting that the Tesla body builder and the mock engine respond to the same key — neither alone can catch a rename.
+
+**Shared: `ConfirmCommandDialog` + `SENSITIVE_COMMANDS`** (`src/components/vehicle/ConfirmCommandDialog.tsx`). The dialog was byte-identical in two components and the sensitive-command set existed in *three* places, the third being `security-alert.ts`, which exports `isSensitiveCommand()` but imports the Supabase admin client so no component can use it. A security-relevant list whose natural home is the server copy would have drifted with the UIs left behind.
+
+**`src/lib/time.ts`** — `minutesFromMidnight` / `minutesToHhmm`. Three screens converted `<input type="time">` to Tesla's minutes-past-midnight independently, with three different malformed-value fallbacks. One turned a cleared input into `0`, silently scheduling charging for midnight; it returns `null` now and the Apply button is disabled.
+
 **Not draining the battery.** Every poll of a linked car is a `vehicle_data`
 call, and `fetchVehicleData` answers a 408 by sending `wake_up` — so an open tab
 keeps the car awake, and a Tesla that never reaches deep sleep loses roughly ten
@@ -203,6 +217,8 @@ times more charge per idle day. Four things stop that:
    wake it. The error card's Retry is the way back.
 4. Screens that need a value rather than a stream (the trip planner) pass
    `poll: false` and never start an interval.
+
+A pause must also actually stop polling, and two things defeated it. `armIdleTimer()` ran unconditionally in an effect whose deps include `active`, so pressing "let it sleep" re-armed the countdown on an already-paused hook; ten minutes later it set `pausedByIdle`, and the next tap auto-resumed — the control survived exactly ten minutes and then silently started waking the car with the indicator back to green. And `refetchInterval` is scheduled **per observer, not per query**: `useVehicleNotifications`, `useSmartChargeNotifications` and `SmartChargeCard` each mounted their own `useVehicle` on the same key beside the pause button, so the dashboard kept polling regardless. Those three pass `poll: false` now — they read state, they are not pollers.
 
 The `live` parameter that gates 2–3 **defaulted to `false`**, and only the
 dashboard and the map passed it — `/commands`, `/charging`, `/insights` and the
@@ -226,7 +242,13 @@ a protection. The dashboard additionally shows a manual "let it sleep" control
   nothing computed.
 - A banner shows the distance (`haversineMeters`, rounded to 10 m under a
   kilometre) and hands walking directions to the phone's maps app, which knows
-  about crossings and one-way footpaths.
+  about crossings and one-way footpaths. A denied or failed fix says so rather
+  than promising indefinitely that it is still looking.
+- `fitBounds` padding is asymmetric (`175` top, `96` bottom): the banner and
+  mode card cover the top ~160px, so uniform padding put the northern pin
+  behind the banner announcing how far away it was. The locate button also
+  stops re-centring in this mode — it flew to zoom 11 and `FitCarAndWalker`
+  will not re-fit coordinates it has already handled, so there was no way back.
 
 Reading the parameters into initial state rather than an effect means panning
 away is not undone on re-render.
@@ -359,7 +381,7 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 **Apply migrations in id order.** Most of these files are `create or replace function`, so applying an older one afterwards silently overwrites a newer definition. This happened in the field: 041 rewrote four dedupe functions, 038 was applied eight seconds later, and its slow `dedupe_same_site_names` came back — the panel showed everything "applied" while the dedupe kept timing out. `POST /api/internal/debug/migrations` now returns **409** when a newer migration is already applied, listing which ones; pass `force: true` to override deliberately.
 
-> Legacy live-aggregation routes `GET /api/charging-map` and `GET /api/charging-stations` still exist (auth + rate-limited) but are no longer consumed by the charging-map UI; the latter is kept only for its re-exported `ChargingStation` type.
+> The legacy live-aggregation routes `GET /api/charging-map` and `GET /api/charging-stations` were **deleted** — no callers remained after the bbox charger queries replaced them. See section 23.
 
 ---
 

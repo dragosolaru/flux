@@ -284,8 +284,8 @@ export function applyCommand(
     case "flash":
       break; // side-effect only; no state mutation in mock
     case "set_charge_limit":
-      if (typeof args?.limitPct === "number")
-        state.chargeLimit = Math.max(50, Math.min(100, args.limitPct));
+      if (typeof args?.percent === "number")
+        state.chargeLimit = Math.max(50, Math.min(100, args.percent));
       break;
     case "set_charge_amps":
       break; // affects next tick's chargingRateKw; no-op for v1 mock

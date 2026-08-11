@@ -51,7 +51,7 @@ Aplicația rulează în două moduri:
 | Vehicule | `vehicles`, `vehicles/[id]/{state,commands,stats,charging-history,battery-health,weather}` |
 | Seif documente | `vehicles/[id]/vault`, `.../[docId]/{add-to-costs,dismiss}`, `.../calendar` |
 | Tesla | `tesla/{connect,callback,refresh,command,vehicle}`, `tesla-public-key` |
-| Încărcare | `chargers`, `chargers/{nearby,search,stats,[id]}`, `charging-map`, `charging-stations` |
+| Încărcare | `chargers`, `chargers/{nearby,search,stats,[id]}` |
 | Rute | `trip-plan`, `saved-routes`, `saved-routes/[routeId]`, `geocode` |
 | Costuri | `costs`, `costs/export`, `documents`, `documents/{inbound-email,inbound-whatsapp,recover}`, `exchange-rates` |
 | Tarife | `tariffs/prices`, `tariffs/settings` |

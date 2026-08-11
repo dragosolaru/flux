@@ -177,7 +177,15 @@ function FitCarAndWalker({
         [carLocation.lat, carLocation.lng],
         [userLocation.lat, userLocation.lng],
       ]);
-      map.fitBounds(bounds, { padding: [70, 70], maxZoom: 17 });
+      // Asymmetric, because the map is not empty. The find-my-car banner and
+      // the mode card cover the top ~160px and the nav pill plus the locate
+      // control cover the bottom ~96px; uniform 70px padding put the northern
+      // pin at y=70, behind the banner telling you how far away it was.
+      map.fitBounds(bounds, {
+        paddingTopLeft: [24, 175],
+        paddingBottomRight: [24, 96],
+        maxZoom: 17,
+      });
     } else {
       map.setView([carLocation.lat, carLocation.lng], 17);
     }
@@ -247,11 +255,18 @@ function MoveWatcher({ onAreaChange }: MoveWatcherProps) {
 // LocationButton
 // ---------------------------------------------------------------------------
 interface LocationButtonProps {
+  /**
+   * False when something else owns the viewport — find-my-car frames the car
+   * and the walker together, and flying to zoom 11 (~20km) threw that away
+   * with no way back, because FitCarAndWalker will not re-fit for coordinates
+   * it has already handled.
+   */
+  recenter?: boolean;
   onLocate: (lat: number, lng: number) => void;
   errorMessage: string;
 }
 
-function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
+function LocationButton({ onLocate, errorMessage, recenter = true }: LocationButtonProps) {
   const map = useMap();
   const t = useTranslations("chargingMap");
   const [locating, setLocating] = useState(false);
@@ -267,7 +282,7 @@ function LocationButton({ onLocate, errorMessage }: LocationButtonProps) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         // Zoom 11 ≈ city view (~20 km across) — wide enough to show nearby stations.
-        map.flyTo([lat, lng], 11);
+        if (recenter) map.flyTo([lat, lng], 11);
         onLocate(lat, lng);
         setLocating(false);
       },
@@ -414,6 +429,7 @@ export default function StationMap({
       <LocationButton
         onLocate={onUserLocate ?? (() => undefined)}
         errorMessage={t("location_error")}
+        recenter={!carLocation}
       />
 
       {/* Straight line, deliberately dashed: it is a bearing and a distance, not

@@ -752,6 +752,11 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
       ) : (
         <>
           <QuickActions
+            // Remount per car. AllCommands seeds its controls from the vehicle
+            // once and then keeps local state, so without this a value picked
+            // for one car stayed on screen — and in the Apply button — after
+            // switching to another.
+            key={vehicleId}
             vehicleId={vehicleId}
             brand={brand}
             state={data}

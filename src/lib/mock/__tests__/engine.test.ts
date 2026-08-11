@@ -213,19 +213,19 @@ describe("applyCommand", () => {
 
   it("set_charge_limit updates chargeLimit", () => {
     const snap = makeSnapshot();
-    const result = applyCommand(snap, "set_charge_limit", { limitPct: 90 }, tesla);
+    const result = applyCommand(snap, "set_charge_limit", { percent: 90 }, tesla);
     expect(result.state.chargeLimit).toBe(90);
   });
 
   it("set_charge_limit clamps below 50", () => {
     const snap = makeSnapshot();
-    const result = applyCommand(snap, "set_charge_limit", { limitPct: 20 }, tesla);
+    const result = applyCommand(snap, "set_charge_limit", { percent: 20 }, tesla);
     expect(result.state.chargeLimit).toBe(50);
   });
 
   it("set_charge_limit clamps above 100", () => {
     const snap = makeSnapshot();
-    const result = applyCommand(snap, "set_charge_limit", { limitPct: 110 }, tesla);
+    const result = applyCommand(snap, "set_charge_limit", { percent: 110 }, tesla);
     expect(result.state.chargeLimit).toBe(100);
   });
 

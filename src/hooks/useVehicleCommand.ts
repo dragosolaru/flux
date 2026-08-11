@@ -66,7 +66,7 @@ function optimisticPatch(
     case "stop_charging":
       return { chargingState: "stopped" };
     case "set_charge_limit": {
-      const limit = args?.limitPct;
+      const limit = args?.percent;
       return typeof limit === "number" && limit >= 0 && limit <= 100
         ? { chargeLimit: limit }
         : null;

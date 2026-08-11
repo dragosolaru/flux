@@ -242,7 +242,7 @@ interface BatterySectionProps {
 
 function BatterySection({ vehicleId }: BatterySectionProps) {
   const t = useTranslations("insights");
-  const { data: vehicleState } = useVehicle(vehicleId);
+  const { data: vehicleState } = useVehicle(vehicleId, true, false);
   const { data: history, isLoading } = useQuery<BatteryHealthPoint[]>({
     queryKey: ["battery-health", vehicleId],
     queryFn: () => vehiclesApi.getBatteryHealth<BatteryHealthPoint>(vehicleId),
@@ -339,7 +339,7 @@ interface EfficiencySectionProps {
 function EfficiencySection({ vehicleId, from }: EfficiencySectionProps) {
   const t = useTranslations("insights");
   const { data: stats, isLoading } = useStats(vehicleId, from);
-  const { data: vehicleState } = useVehicle(vehicleId);
+  const { data: vehicleState } = useVehicle(vehicleId, true, false);
 
   if (isLoading) return <Skeleton className="h-20 w-full rounded-2xl" />;
 

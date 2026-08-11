@@ -43,7 +43,9 @@ function VehicleRecommendation({
 
   const hasCommandsReady = caps?.hasCommandsReady ?? false;
 
-  const { data: state } = useVehicle(vehicle.id);
+  // poll: false — a card reading current state, not a second poller. See the
+  // note in useSmartChargeNotifications: intervals are per observer.
+  const { data: state } = useVehicle(vehicle.id, true, false);
 
   if (!state) return null;
 

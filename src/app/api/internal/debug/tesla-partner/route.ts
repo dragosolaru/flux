@@ -96,19 +96,30 @@ async function fetchWellKnownKey(domain: string): Promise<{
     // `env`. When those two disagree the variable is fine and something in
     // front is serving an older copy; without both, an edge cache is
     // indistinguishable from a deploy that never picked the variable up.
-    const [live, origin] = await Promise.all([
+    // allSettled, not all: the cache-busted URL can only be answered by the
+    // function, so a cold start can outlast the timeout while the plain URL is
+    // served instantly from cache. Promise.all turned that into a rejection and
+    // the verdict then announced "the domain serves no usable key" about a
+    // domain that was serving it perfectly.
+    const [liveRes, originRes] = await Promise.allSettled([
       fetch(base, { cache: "no-store", signal: AbortSignal.timeout(15_000) }),
       fetch(`${base}?cache-bust=${Date.now()}`, {
         cache: "no-store",
         signal: AbortSignal.timeout(15_000),
       }),
     ]);
-    const [liveText, originText] = await Promise.all([live.text(), origin.text()]);
+    if (liveRes.status === "rejected") throw liveRes.reason;
+    const live = liveRes.value;
+    const liveText = await live.text();
+    const origin = originRes.status === "fulfilled" ? originRes.value : null;
+    const originText = origin ? await origin.text() : null;
     const age = live.headers.get("age");
     return {
       status: live.status,
-      point: publicKeyPoint(liveText),
-      originPoint: origin.ok ? publicKeyPoint(originText) : null,
+      // Guarded on ok for the same reason originPoint is: a 503 body is not a
+      // key, and feeding it to the parser only produced a confusing null.
+      point: live.ok ? publicKeyPoint(liveText) : null,
+      originPoint: origin?.ok && originText ? publicKeyPoint(originText) : null,
       cdn: live.headers.get("x-vercel-cache"),
       ageSeconds: age ? Number(age) : null,
       cacheControl: live.headers.get("cache-control"),
@@ -229,9 +240,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Invalid body" }, { status: 422 });
   }
 
-  // The domain Tesla must be told about is the one this request arrived on, so
-  // it cannot drift from the deployment the way a hand-set env var would.
-  const domain = new URL(req.url).host;
+  // Pinned to TESLA_REDIRECT_URI, not to the request's Host header.
+  //
+  // Two reasons, and the second is the bigger one. The header is caller-set, so
+  // it steered a server-side fetch at an arbitrary host — admin-only and blind,
+  // but free to remove. And this same value is what gets REGISTERED with Tesla
+  // and queried back, while the Virtual Key link is already built from
+  // TESLA_REDIRECT_URI (teslaVirtualKeyUrl). Two sources for one domain is
+  // exactly the class of drift that cost days here.
+  const configuredHost = (() => {
+    const raw = process.env.TESLA_REDIRECT_URI;
+    if (!raw) return null;
+    try {
+      return new URL(raw).host;
+    } catch {
+      return null;
+    }
+  })();
+  const domain = configuredHost ?? new URL(req.url).host;
   const audience = TESLA_REGIONS[parsed.data.region];
 
   const token = await partnerToken(audience);

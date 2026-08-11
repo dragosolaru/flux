@@ -14,7 +14,11 @@ interface TariffResponse extends TariffForecast {
 }
 
 export function useSmartChargeNotifications(vehicleId: string) {
-  const { data: vehicleState } = useVehicle(vehicleId);
+  // poll: false — this reads chargingState to gate a tariff query and shares a
+  // query key with the screen it renders on. TanStack schedules refetchInterval
+  // per observer, not per query, so a second polling observer kept fetching
+  // (and waking the car) straight through the dashboard's "let it sleep".
+  const { data: vehicleState } = useVehicle(vehicleId, true, false);
 
   const { data: forecast } = useQuery({
     queryKey: ["tariff-prices"],

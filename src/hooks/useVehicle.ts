@@ -74,7 +74,12 @@ export function useVehicle(vehicleId: string, live = true, poll = true) {
 
   useEffect(() => {
     if (!live) return;
-    armIdleTimer();
+    // Guarded, because `active` is a dependency: pause() flips it, the effect
+    // re-runs, and an unguarded re-arm started a fresh countdown on an already
+    // paused hook. Ten minutes later it set pausedByIdle, and the next tap
+    // auto-resumed — so "let it sleep" survived exactly ten minutes and then
+    // silently started waking the car again, with the indicator back to green.
+    if (active) armIdleTimer();
 
     const onActivity = (event: Event) => {
       if (active) {

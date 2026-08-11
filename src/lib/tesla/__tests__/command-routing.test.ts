@@ -136,15 +136,18 @@ describe("command routing", () => {
       });
     });
 
-    it("window_control carries the car's coordinates when given", async () => {
+    // Tesla's proximity interlock, left for Tesla to enforce. Caller-supplied
+    // coordinates are ignored on purpose: passing the car's own position made
+    // the check pass unconditionally, and `args` is client-controlled.
+    it("window_control never takes coordinates from the caller", async () => {
       expect((await send("close_windows", { lat: 40.7, lng: 23.65 })).body).toEqual({
         command: "close",
-        lat: 40.7,
-        lon: 23.65,
+        lat: 0,
+        lon: 0,
       });
     });
 
-    it("window_control falls back to 0,0 rather than NaN", async () => {
+    it("window_control sends 0,0 with no args", async () => {
       expect((await send("vent_windows", null)).body).toEqual({ command: "vent", lat: 0, lon: 0 });
     });
 

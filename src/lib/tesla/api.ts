@@ -355,12 +355,17 @@ export async function sendVehicleCommand(params: {
     // 401, and "command failed" is the wrong thing to tell someone whose
     // authorisation is gone.
     //
-    // 403 belongs here too, for the reason the data path at fetchVehicleData
-    // already gives: on a command endpoint it means the grant never carried
-    // the scope, which no retry fixes and which "command failed" describes
-    // badly. This branch claimed to use the same reasoning while checking only
-    // 401.
-    if (res.status === 401 || res.status === 403) {
+    // 403 belongs here too — on a command endpoint it usually means the grant
+    // never carried the scope, which no retry fixes — but ONLY after checking
+    // the body, because Tesla also answers 403 for "Vehicle Command Protocol
+    // required". Classifying that as an auth failure told the driver to
+    // re-authorise Tesla when the actual fix is deploying the signing proxy,
+    // and it did so by shadowing the string match in commands/route.ts, which
+    // runs after the TeslaAuthError check. Status alone cannot tell these
+    // apart; the body can.
+    const isCommandProtocol =
+      /Vehicle Command Protocol required|has not been paired with the vehicle/i.test(body);
+    if (res.status === 401 || (res.status === 403 && !isCommandProtocol)) {
       throw new TeslaAuthError(
         `Tesla rejected the access token (${res.status}): ${body.slice(0, 200)}`,
       );

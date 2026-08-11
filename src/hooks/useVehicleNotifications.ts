@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import { useVehicle } from "@/hooks/useVehicle";
 
 export function useVehicleNotifications(vehicleId: string) {
-  const { data } = useVehicle(vehicleId);
+  // poll: false — this watches for a charging-complete transition in data the
+  // screen it renders on is already fetching. refetchInterval is scheduled per
+  // observer, not per query, so its own interval kept waking the car straight
+  // through the dashboard's "let it sleep".
+  const { data } = useVehicle(vehicleId, true, false);
   const prevStateRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {

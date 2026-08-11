@@ -245,6 +245,10 @@ export function MapClient() {
       ? { lat: Number(searchParams.get("lat")), lng: Number(searchParams.get("lng")) }
       : null;
   const findingCar = carLocation != null;
+  // Distinguishes "still waiting" from "we will never know", so the banner does
+  // not promise indefinitely that it is finding you while a denied permission
+  // guarantees it never will.
+  const [locateFailed, setLocateFailed] = useState(false);
   const [exploreArea, setExploreArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
@@ -282,7 +286,9 @@ export function MapClient() {
         if (findingCar) setExploreUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         else handleExploreLocate(pos.coords.latitude, pos.coords.longitude);
       },
-      () => undefined,
+      () => {
+        if (findingCar) setLocateFailed(true);
+      },
       findingCar
         ? { timeout: 10_000, enableHighAccuracy: true, maximumAge: 15_000 }
         : { timeout: 3000 },
@@ -846,7 +852,9 @@ export function MapClient() {
                       haversineMeters(exploreUserLoc, carLocation),
                     ),
                   })
-                : tCommands("find_car_locating")}
+                : locateFailed
+                  ? tCommands("find_car_no_location")
+                  : tCommands("find_car_locating")}
             </p>
           </div>
           {/* Handed off rather than drawn: a real pavement route needs a
@@ -856,7 +864,7 @@ export function MapClient() {
             href={`https://www.google.com/maps/dir/?api=1&destination=${carLocation.lat},${carLocation.lng}&travelmode=walking`}
             target="_blank"
             rel="noreferrer"
-            className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground"
           >
             <Footprints className="size-4" />
             {tCommands("find_car_walk")}
@@ -872,7 +880,7 @@ export function MapClient() {
         className="absolute inset-x-3 z-[1000] lg:hidden"
         style={{
           top: findingCar
-            ? "calc(env(safe-area-inset-top, 0px) + 72px)"
+            ? "calc(env(safe-area-inset-top, 0px) + 80px)"
             : "calc(env(safe-area-inset-top, 0px) + 12px)",
         }}
       >
