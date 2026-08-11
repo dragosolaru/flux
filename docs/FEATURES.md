@@ -176,7 +176,13 @@ A localStorage-persisted React context (`VehicleContext`, key `flux:selectedVehi
 
 The dashboard reaches the same set through a fourth quick-action button that expands `AllCommands` in place. `/commands` alone was not enough: on a phone it sits two taps inside the "more" overflow, so the app looked like it could do three things. Expanding beats navigating away from the screen showing the battery you are deciding against.
 
-**Window commands need the car's coordinates.** `window_control` takes `lat`/`lon` as a proximity check — Tesla closes windows only for someone near the car. Both were hardcoded `0, 0`, which `vent` tolerates and `close` rejects, so venting worked and closing silently did not. The UI now passes the car's own reported position, falling back to `0, 0` when no location has been reported yet.
+**Not every command can go through the signing proxy.** The proxy switches on the command name and answers `400 invalid_command` locally — without contacting Tesla — for anything it does not implement. `navigation_gps_request` is one: `pkg/proxy/command.go` handles `navigation_request` (returning `ErrCommandUseRESTAPI`, which the proxy then forwards) and has no case for the GPS variant. So "send to navigation" could never work on a proxied car. `CommandEntry` now carries `signed?: false`, `share_navigation` sets it, and `sendVehicleCommand` routes those straight to Tesla's REST endpoint addressed by numeric id. Nothing is lost: Tesla's own note in that file is that sharing endpoints "often require server-side processing, which prevents strict end-to-end authentication".
+
+**Command routing has a test now** (`src/lib/tesla/__tests__/command-routing.test.ts`, 52 cases). It asserts URL, vehicle tag and body for every entry in `TESLA_COMMAND_MAP`, with and without `TESLA_PROXY_BASE_URL`. This decision had broken twice with nothing to catch it — commit `f08b316` sent the numeric id to a proxy that only accepts a 17-character VIN, and `share_navigation` above. Verified to fail without the fix.
+
+**403 on a command is an auth error**, matching what the data path already did. The branch claimed the same reasoning in a comment while checking only 401; on a command endpoint a 403 means the grant never carried the scope, which no retry fixes.
+
+**Window commands and coordinates.** `window_control` takes `lat`/`lon` as a proximity check on **Tesla's REST endpoint** — it closes windows only for a caller near the car, and `0, 0` fails that for `close`. **Through the signing proxy they are ignored entirely**: the proxy reads only `command` and calls `VentWindows`/`CloseWindows`, under an upstream comment saying coordinates are not required for vehicles on this protocol. The UI passes the car's own position, which matters on the direct path and is inert on the signed one. An earlier version of this entry claimed `0, 0` was why closing windows failed on a proxied car — that was wrong, and no such failure was ever observed.
 
 **How to use:** UI `/commands` (full set) and `CommandPanel` on the dashboard (quick row). API: `POST /api/vehicles/[vehicleId]/commands` (UUID validate → rate limit → auth → ownership → capability check → live `sendVehicleCommand` or mock `applyCommand`). Adding a command: see the checklist in `CLAUDE.md`.
 
@@ -206,9 +212,24 @@ a protection. The dashboard additionally shows a manual "let it sleep" control
 (`SleepControl`), and that pause is sticky — only idle pauses auto-resume.
 
 **Where is my car.** The dashboard location row is tappable and opens
-`/map?lat=…&lng=…&car=1`, which centres the map there and drops a green car pin,
-distinct from the blue "you are here" dot. Reading the parameters into initial
-state rather than an effect means panning away is not undone on re-render.
+`/map?lat=…&lng=…&car=1`. That mode is framed for walking, not browsing:
+
+- `FitCarAndWalker` fits the car and the walker together with padding, capped at
+  zoom 17 — the default zoom 10 is tens of kilometres across, right for finding
+  chargers and useless for finding a car. With no fix yet it drops to zoom 17 on
+  the car alone. `CenterOnUser` and `FitStations` stand down so nothing fights it.
+- Geolocation is requested with `enableHighAccuracy` and a 10 s timeout instead
+  of the 3 s coarse fix used for browsing, and it does **not** re-centre — a
+  network fix landing a second later would yank the map off the framing.
+- A dashed green line joins the two. Deliberately straight and dashed: it is a
+  bearing and a distance, not a route. A solid line would promise a footpath
+  nothing computed.
+- A banner shows the distance (`haversineMeters`, rounded to 10 m under a
+  kilometre) and hands walking directions to the phone's maps app, which knows
+  about crossings and one-way footpaths.
+
+Reading the parameters into initial state rather than an effect means panning
+away is not undone on re-render.
 
 **Dependencies:** Tesla Fleet API (live, needs VCP proxy for post-2021 cars), mock engine (default).
 
@@ -530,10 +551,11 @@ The brand rule exists because sources disagree about *which field* holds the net
 
 ## 23. Platform endpoints & infra
 
-- **Tesla Fleet API (dormant):** `GET /api/tesla/connect`, `GET /api/tesla/callback`, `POST /api/tesla/refresh`, `POST /api/tesla/command`, `GET /api/tesla/vehicle` — all return **410** unless `isLiveEnabled("tesla")`. `GET /api/tesla-public-key` serves the command-signing public key (proxied to `/.well-known/appspecific/com.tesla.3p.public-key.pem` via `next.config.ts` rewrites). Tesla token refresh is single-flighted per vehicle (`src/lib/tesla/tokens.ts`).
+- **Tesla Fleet API (dormant):** `GET /api/tesla/connect`, `GET /api/tesla/callback`, `POST /api/tesla/refresh` — all return **410** unless `isLiveEnabled("tesla")`. `GET /api/tesla-public-key` serves the command-signing public key (proxied to `/.well-known/appspecific/com.tesla.3p.public-key.pem` via `next.config.ts` rewrites). Tesla token refresh is single-flighted per vehicle (`src/lib/tesla/tokens.ts`).
 - **`apiFetch` error messages:** HTTP/2 carries no reason phrase, so `res.statusText` is `""` for everything Vercel serves. The fallback chain used `??`, which skips only null/undefined — the empty string won, and any error without a JSON body (a 504 from an exceeded `maxDuration`, above all) reached the UI as an empty message. Callers written `msg || t("some_hint")` then rendered their hint as if it were a diagnosis: a planner timeout surfaced as "try a higher battery percentage". Now `||`, with the status appended (`"Request failed (504)"`). Pinned by `src/lib/__tests__/api-fetch.test.ts`.
 - **Typed API client layer (`src/lib/api/`):** all client HTTP calls go through one typed module per resource (`vehicles`, `chargers`, `documents`, `me`, `tariffs`, `costs`, `trip`); `apiFetch` (`src/lib/api-fetch.ts`) is imported only here. `apiFetch` redirects to `/login` on client 401.
 - **Rate limiting:** `checkRateLimit(userId, bucket, max)` in `src/lib/rate-limit.ts` (Upstash Redis).
+- **Deleted as dead code** (each verified unreferenced first): `POST /api/tesla/command` and `GET /api/tesla/vehicle` — authenticated endpoints that spent Fleet API quota and drove a real car with weaker handling than the route actually in use (no `buildBody` mapping, no `recordCommandEvent`, no security alert, no 409 reauth); `GET /api/charging-map` and `GET /api/charging-stations`, superseded by the bbox charger queries; `src/lib/currency/convert.ts`, `src/hooks/useVirtualKeyPair.ts`, and `src/components/vehicles/VehicleIcon.tsx`. The last also removes `src/components/vehicles/` — two directories one letter apart from `src/components/vehicle/` is a trap, and the singular one is where every live component lives.
 
 ---
 

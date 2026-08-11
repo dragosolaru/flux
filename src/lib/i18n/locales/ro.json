@@ -530,7 +530,11 @@
     "nav_placeholder": "Adresă sau loc",
     "nav_send": "Trimite",
     "nav_not_found": "Nu am găsit locul acesta.",
-    "all_commands": "Toate comenzile"
+    "all_commands": "Toate comenzile",
+    "find_car_title": "Mașina ta",
+    "find_car_distance": "{distance} pe jos",
+    "find_car_locating": "Îți caut poziția…",
+    "find_car_walk": "Pe jos"
   },
   "garage": {
     "title": "Garaj",

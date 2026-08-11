@@ -530,7 +530,11 @@
     "nav_placeholder": "Adresse ou lieu",
     "nav_send": "Envoyer",
     "nav_not_found": "Lieu introuvable.",
-    "all_commands": "Toutes les commandes"
+    "all_commands": "Toutes les commandes",
+    "find_car_title": "Votre voiture",
+    "find_car_distance": "{distance} à pied",
+    "find_car_locating": "Recherche de votre position…",
+    "find_car_walk": "À pied"
   },
   "garage": {
     "title": "Garage",

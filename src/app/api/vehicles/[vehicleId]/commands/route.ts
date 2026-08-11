@@ -103,6 +103,7 @@ export async function POST(
         vin: vehicle.vin,
         command: entry.teslaCmd,
         body: entry.buildBody(args),
+        signed: entry.signed,
       });
       await recordCommandEvent(vehicleId, command, args, result.response.result, result.response.reason || null);
       // A signed command the car accepted is the only proof of pairing there

@@ -530,7 +530,11 @@
     "nav_placeholder": "Cím vagy hely",
     "nav_send": "Küldés",
     "nav_not_found": "Nem található ez a hely.",
-    "all_commands": "Összes parancs"
+    "all_commands": "Összes parancs",
+    "find_car_title": "Az autód",
+    "find_car_distance": "{distance} gyalog",
+    "find_car_locating": "Helyzeted keresése…",
+    "find_car_walk": "Gyalog"
   },
   "garage": {
     "title": "Garázs",

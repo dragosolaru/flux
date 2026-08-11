@@ -22,6 +22,8 @@ import {
   Send,
   Share2,
   List,
+  CarFront,
+  Footprints,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,6 +56,7 @@ import { shareRoute } from "@/lib/trip/share-route";
 import { routeNeedsPreconditioning, needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
+import { haversineMeters } from "@/lib/chargers/dedup";
 import type { ViewportBBox } from "@/components/charging-map/StationMap";
 import type { RouteLine } from "@/components/trip/TripMap";
 
@@ -147,6 +150,17 @@ const DEFAULT_BBOX: ViewportBBox = {
 // then fall back to a Model 3 for.
 const PLANNABLE_MODELS = ["Model 3", "Model Y", "Model S", "Model X"] as const;
 
+/**
+ * Walking distance, rounded to what is useful on foot.
+ *
+ * Metres below a kilometre, in tens — "180 m" helps, "183 m" implies a
+ * precision consumer GPS does not have. One decimal above that.
+ */
+function formatWalkDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters / 10) * 10} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
 function toBBox(lat: number, lng: number): ViewportBBox {
   return { minLat: lat - 0.5, minLng: lng - 0.7, maxLat: lat + 0.5, maxLng: lng + 0.7 };
 }
@@ -230,6 +244,7 @@ export function MapClient() {
     Number.isFinite(Number(searchParams.get("lng")))
       ? { lat: Number(searchParams.get("lat")), lng: Number(searchParams.get("lng")) }
       : null;
+  const findingCar = carLocation != null;
   const [exploreArea, setExploreArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
   const [connector, setConnector] = useState<ConnectorType | "all">("all");
@@ -251,16 +266,28 @@ export function MapClient() {
     setExploreArea(bbox);
   }
 
-  // Silent auto-locate on mount
+  // Silent auto-locate on mount.
+  //
+  // Two different needs. Browsing chargers wants a rough position quickly, and
+  // re-centres on it. Walking to the car wants an accurate one and must NOT
+  // re-centre — the view belongs to the car-and-walker fit, and a coarse
+  // network fix landing a second later would yank the map away from it. Three
+  // seconds is also too short for a GPS fix; someone standing in a car park
+  // will wait ten for a dot they can trust.
   useEffect(() => {
     if (!navigator.geolocation) return;
+    const findingCar = carLocation != null;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        handleExploreLocate(pos.coords.latitude, pos.coords.longitude);
+        if (findingCar) setExploreUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        else handleExploreLocate(pos.coords.latitude, pos.coords.longitude);
       },
       () => undefined,
-      { timeout: 3000 },
+      findingCar
+        ? { timeout: 10_000, enableHighAccuracy: true, maximumAge: 15_000 }
+        : { timeout: 3000 },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { data: stations = [], isFetching } = useQuery({
@@ -790,12 +817,52 @@ export function MapClient() {
             selected={selectedStation}
             onSelect={setSelectedStation}
             userLocation={exploreUserLoc}
-            onUserLocate={handleExploreLocate}
+            onUserLocate={
+              findingCar
+                ? (lat, lng) => setExploreUserLoc({ lat, lng })
+                : handleExploreLocate
+            }
             onAreaChange={handleExploreAreaChange}
             isFetching={isFetching}
           />
         )}
       </div>
+
+      {/* Find-my-car banner. Sits above the mode tabs because in this mode the
+          tabs are not what the screen is for — the distance and the handoff to
+          a walking app are. */}
+      {findingCar && carLocation && (
+        <div
+          className="absolute inset-x-3 z-[1001] flex items-center gap-2 rounded-2xl border border-border bg-card/95 px-3 py-2 shadow-xl backdrop-blur-xl"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+        >
+          <CarFront className="size-5 shrink-0 text-emerald-500" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{tCommands("find_car_title")}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {exploreUserLoc
+                ? tCommands("find_car_distance", {
+                    distance: formatWalkDistance(
+                      haversineMeters(exploreUserLoc, carLocation),
+                    ),
+                  })
+                : tCommands("find_car_locating")}
+            </p>
+          </div>
+          {/* Handed off rather than drawn: a real pavement route needs a
+              pedestrian router we do not have, and the phone already has one
+              that knows about crossings and one-way footpaths. */}
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${carLocation.lat},${carLocation.lng}&travelmode=walking`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground"
+          >
+            <Footprints className="size-4" />
+            {tCommands("find_car_walk")}
+          </a>
+        </div>
+      )}
 
       {/* LAYER 2: Mobile Top Card (Waze/ABRP pattern)
           Replaces the old floating filter button + pills + collapsed bottom card.
@@ -803,7 +870,11 @@ export function MapClient() {
           No overflow-hidden so GeocodingSearch dropdowns extend below the card. */}
       <div
         className="absolute inset-x-3 z-[1000] lg:hidden"
-        style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+        style={{
+          top: findingCar
+            ? "calc(env(safe-area-inset-top, 0px) + 72px)"
+            : "calc(env(safe-area-inset-top, 0px) + 12px)",
+        }}
       >
         <div className="rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur-xl">
           {/* Mode tabs — compact. When a plan is active, ONE button cycles the route strip:

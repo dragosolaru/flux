@@ -111,5 +111,5 @@ git checkout demo-brands-archive -- src/components/ui/BrandLogo.tsx
 - **`SUPABASE_SERVICE_ROLE_KEY`** bypasses RLS. Used only server-side via `createSupabaseAdminClient()`. Never leaked to client bundles.
 - **`TESLA_TOKEN_ENCRYPTION_KEY`** must be a 32-byte hex string. Tokens at rest are AES-256-GCM encrypted; the IV is stored alongside the ciphertext.
 - **OAuth callbacks** validate `state` parameter to prevent CSRF.
-- **`/api/tesla/command`** requires authenticated session + vehicle ownership check before sending any Fleet API call.
+- **`/api/vehicles/[vehicleId]/commands`** requires authenticated session + vehicle ownership check before sending any Fleet API call. (It replaced `/api/tesla/command`, which was deleted as dead code — it had no callers and weaker handling.)
 - **Live mode does not "leak" into mock**: dispatcher routes by `data_source` column; flipping the column requires explicit user action (OAuth completion).

@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocateFixed, Loader2 } from "lucide-react";
@@ -137,6 +137,51 @@ function CenterOnUser({ userLocation }: { userLocation: { lat: number; lng: numb
     map.setView([userLocation.lat, userLocation.lng], 12);
     done.current = true;
   }, [userLocation, map]);
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// FitCarAndWalker: frame the walk, not the region.
+//
+// The default view is zoom 10 — tens of kilometres across, which is the right
+// scale for browsing chargers and useless for the one question this mode
+// answers: which way do I walk. With both points known it fits them with room
+// to spare and stops at 17, close enough to read street names; with only the
+// car it drops straight to 17 on the car.
+//
+// Runs once per pair of coordinates, so panning afterwards is never undone —
+// but a late geolocation fix (they arrive seconds after the map) does re-fit,
+// which is what someone waiting for the blue dot expects.
+// ---------------------------------------------------------------------------
+function FitCarAndWalker({
+  carLocation,
+  userLocation,
+}: {
+  carLocation: { lat: number; lng: number } | null;
+  userLocation: { lat: number; lng: number } | null;
+}) {
+  const map = useMap();
+  const lastFit = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!carLocation) return;
+    const key = userLocation
+      ? `${carLocation.lat},${carLocation.lng}|${userLocation.lat},${userLocation.lng}`
+      : `${carLocation.lat},${carLocation.lng}`;
+    if (lastFit.current === key) return;
+    lastFit.current = key;
+
+    if (userLocation) {
+      const bounds = L.latLngBounds([
+        [carLocation.lat, carLocation.lng],
+        [userLocation.lat, userLocation.lng],
+      ]);
+      map.fitBounds(bounds, { padding: [70, 70], maxZoom: 17 });
+    } else {
+      map.setView([carLocation.lat, carLocation.lng], 17);
+    }
+  }, [carLocation, userLocation, map]);
 
   return null;
 }
@@ -356,14 +401,33 @@ export default function StationMap({
         maxZoom={20}
       />
 
-      <CenterOnUser userLocation={userLocation ?? null} />
-      <FitStations stations={stations} enabled={!userLocation} />
+      {/* Both of these would fight the walk framing — one centres on the user at
+          zoom 12, the other fits every charger in the bbox. */}
+      {!carLocation && <CenterOnUser userLocation={userLocation ?? null} />}
+      <FitStations stations={stations} enabled={!userLocation && !carLocation} />
+      <FitCarAndWalker
+        carLocation={carLocation ?? null}
+        userLocation={userLocation ?? null}
+      />
       {onAreaChange && <MoveWatcher onAreaChange={onAreaChange} />}
 
       <LocationButton
         onLocate={onUserLocate ?? (() => undefined)}
         errorMessage={t("location_error")}
       />
+
+      {/* Straight line, deliberately dashed: it is a bearing and a distance, not
+          a route. Drawing a solid line would promise a footpath we have not
+          computed — the "walk there" button hands that to a maps app. */}
+      {carLocation && userLocation && (
+        <Polyline
+          positions={[
+            [userLocation.lat, userLocation.lng],
+            [carLocation.lat, carLocation.lng],
+          ]}
+          pathOptions={{ color: "#22c55e", weight: 3, dashArray: "6 8", opacity: 0.9 }}
+        />
+      )}
 
       {carLocation && (
         <Marker

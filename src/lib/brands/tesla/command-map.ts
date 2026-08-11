@@ -4,6 +4,12 @@ import type { CommandName } from "@/types/history";
 type CommandEntry = {
   teslaCmd: TeslaCommand;
   buildBody: (args: Record<string, unknown> | null) => Record<string, unknown> | undefined;
+  /**
+   * Set false for commands the signing proxy does not implement, so they are
+   * sent straight to Tesla's REST endpoint instead of being rejected locally
+   * with `400 invalid_command`. Signed is the default and the safe one.
+   */
+  signed?: false;
 };
 
 function windowBody(command: "vent" | "close", args: Record<string, unknown> | null) {
@@ -42,11 +48,15 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   stop_charging:     { teslaCmd: "charge_stop",            buildBody: () => undefined },
   open_charge_port:  { teslaCmd: "charge_port_door_open",  buildBody: () => undefined },
   close_charge_port: { teslaCmd: "charge_port_door_close", buildBody: () => undefined },
-  // lat/lon are a proximity check, not telemetry: Tesla closes the windows only
-  // for someone near the car. 0,0 passes for `vent` and fails for `close`,
-  // which is why venting worked and closing did not. The caller passes the
-  // car's own position when it has one; 0,0 stays as the fallback so venting
-  // still works before any location has been reported.
+  // lat/lon are a proximity check on Tesla's REST endpoint: it closes the
+  // windows only for a caller near the car, and 0,0 fails that for `close`.
+  //
+  // Through the signing proxy they are ignored outright — pkg/proxy/command.go
+  // reads only `command` and calls VentWindows/CloseWindows, under a comment
+  // saying coordinates are not required for vehicles on this protocol. So this
+  // matters on the direct path and is inert on the signed one. An earlier
+  // version of this comment claimed 0,0 was why closing windows failed on a
+  // proxied car; that was wrong, and no such failure was ever observed.
   vent_windows:      { teslaCmd: "window_control",         buildBody: (args) => windowBody("vent", args) },
   close_windows:     { teslaCmd: "window_control",         buildBody: (args) => windowBody("close", args) },
   activate_sentry:   { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: true }) },
@@ -77,8 +87,13 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   // single GPS target, so the driver navigates stop-by-stop. Tesla auto-
   // preconditions the battery when navigating to a Supercharger; the UI flags
   // non-SC fast stops for a manual precondition.
+  //
+  // `signed: false` because the signing proxy has no case for this command and
+  // answers 400 locally, never forwarding it. Verified in
+  // teslamotors/vehicle-command pkg/proxy/command.go.
   share_navigation: {
     teslaCmd: "navigation_gps_request",
+    signed: false,
     buildBody: (args) => {
       const rawStops = Array.isArray(args?.stops) ? args.stops : [];
       const stops = rawStops

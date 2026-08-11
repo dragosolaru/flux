@@ -266,6 +266,11 @@ export async function sendVehicleCommand(params: {
   vin?: string | null;
   command: TeslaCommand;
   body?: Record<string, unknown>;
+  /**
+   * False for commands the signing proxy cannot carry, so they go straight to
+   * Tesla's REST endpoint. Defaults to signed.
+   */
+  signed?: boolean;
 }): Promise<TeslaCommandResponse> {
   const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
 
@@ -276,7 +281,20 @@ export async function sendVehicleCommand(params: {
   // pre-2021 Model S/X and for cars where REST commands still pass).
   // Throws on a plaintext proxy URL rather than sending the access token over
   // it — see teslaProxyBaseUrl.
-  const proxyBase = teslaProxyBaseUrl();
+  //
+  // Not every command can go through it. The proxy switches on the command
+  // name and answers `400 invalid_command` for anything it does not implement
+  // — locally, without ever contacting Tesla. `navigation_gps_request` is one
+  // of those: pkg/proxy/command.go handles `navigation_request` (by returning
+  // ErrCommandUseRESTAPI, which the proxy then forwards) and has no case for
+  // the GPS variant at all. So "send to navigation" could not work, and failed
+  // with a Tesla-shaped error that named nothing useful.
+  //
+  // These commands are unsigned by nature — Tesla's own note in that file is
+  // that sharing endpoints "often require server-side processing, which
+  // prevents strict end-to-end authentication" — so bypassing the proxy loses
+  // nothing that was ever available.
+  const proxyBase = params.signed === false ? null : teslaProxyBaseUrl();
   const apiBase = proxyBase || baseUrl(region);
 
   // The proxy demands a 17-character VIN and refuses the numeric Fleet API id
@@ -336,9 +354,15 @@ export async function sendVehicleCommand(params: {
     // Same reasoning as fetchVehicleData: a revoked grant shows up here as a
     // 401, and "command failed" is the wrong thing to tell someone whose
     // authorisation is gone.
-    if (res.status === 401) {
+    //
+    // 403 belongs here too, for the reason the data path at fetchVehicleData
+    // already gives: on a command endpoint it means the grant never carried
+    // the scope, which no retry fixes and which "command failed" describes
+    // badly. This branch claimed to use the same reasoning while checking only
+    // 401.
+    if (res.status === 401 || res.status === 403) {
       throw new TeslaAuthError(
-        `Tesla rejected the access token (401): ${body.slice(0, 200)}`,
+        `Tesla rejected the access token (${res.status}): ${body.slice(0, 200)}`,
       );
     }
     throw new Error(`Tesla command ${res.status}: ${body.slice(0, 200)}`);
