@@ -31,6 +31,40 @@ const bodySchema = z.object({
   args: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
+/**
+ * Bounds for the commands that carry a number to the car.
+ *
+ * `args` is an open record — it has to be, since each command takes a different
+ * shape — so nothing stopped `set_charge_limit` with `percent: 3` or
+ * `set_charge_amps` with a negative value from being built into a request and
+ * sent. The car is the last thing that should be validating this: a rejected
+ * command is a wasted Fleet API call at best, and Tesla's own bounds are not
+ * documented as stable.
+ *
+ * Only the commands with a numeric range are listed. Everything else passes
+ * through, because `buildBody` already ignores what it does not read.
+ */
+const ARG_BOUNDS: Partial<Record<CommandName, z.ZodType>> = {
+  set_charge_limit: z.object({ percent: z.number().int().min(50).max(100) }).loose(),
+  set_charge_amps: z.object({ amps: z.number().int().min(0).max(48) }).loose(),
+  set_climate_temp: z.object({ temp: z.number().min(15).max(28) }).loose(),
+  // Minutes past local midnight.
+  schedule_charging: z
+    .object({ time: z.number().int().min(0).max(1439) })
+    .loose(),
+  schedule_departure: z
+    .object({ time: z.number().int().min(0).max(1439) })
+    .loose(),
+  share_navigation: z
+    .object({
+      destination: z.object({
+        lat: z.number().min(-90).max(90),
+        lng: z.number().min(-180).max(180),
+      }),
+    })
+    .loose(),
+};
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ vehicleId: string }> },
@@ -63,6 +97,17 @@ export async function POST(
 
   const command = parsed.data.command as CommandName;
   const args = parsed.data.args ?? null;
+
+  const bounds = ARG_BOUNDS[command];
+  if (bounds) {
+    const checked = bounds.safeParse(args ?? {});
+    if (!checked.success) {
+      return NextResponse.json(
+        { message: "invalid-command-args", errors: z.treeifyError(checked.error) },
+        { status: 400 },
+      );
+    }
+  }
 
   const supabase = createSupabaseAdminClient();
   const { data: vehicle, error: vehErr } = await supabase

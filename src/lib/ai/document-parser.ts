@@ -190,12 +190,14 @@ function mapCarDoc(raw: unknown): ParsedDocument {
     valid_from: carDoc.valid_from,
     valid_until: carDoc.valid_until,
     issuer: carDoc.issuer,
+    // Only what a vehicle document actually has. These three used to be 0,
+    // which averageConfidence then counted: a flawless extraction scored
+    // (1+0+1+0+0+1)/6 = 0.5 against a 0.7 threshold, so no car document could
+    // ever reach `done` — and the vault calendar only exports documents that
+    // are done.
     confidence: {
       document_type: carDoc.confidence.document_type,
-      total_kwh: 0,
       cost_total: carDoc.confidence.cost_total,
-      period_start: 0,
-      session_timestamp: 0,
       valid_until: carDoc.confidence.valid_until,
     },
   };

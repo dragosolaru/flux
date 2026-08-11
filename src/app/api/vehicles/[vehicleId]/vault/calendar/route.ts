@@ -8,8 +8,36 @@ function escapeIcal(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 }
 
-function toIcalDate(iso: string): string {
-  return iso.replace(/-/g, "");
+/**
+ * An iCalendar DATE value: exactly YYYYMMDD.
+ *
+ * Sliced to ten characters first. `valid_until` is AI-extracted, so it can
+ * arrive as a full timestamp, and `2027-04-30T00:00:00Z` became
+ * `20270430T00:00:00Z` — colons are the property/parameter separator in
+ * iCalendar, so that one value corrupts the rest of the file for the importer.
+ * Returns null rather than emitting a broken event.
+ */
+function toIcalDate(iso: string): string | null {
+  const date = iso.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  return date.replace(/-/g, "");
+}
+
+/**
+ * DTEND for an all-day event is EXCLUSIVE — RFC 5545 §3.6.1.
+ *
+ * DTSTART and DTEND on the same date is a zero-length event, which Google
+ * Calendar and Apple Calendar each render differently and neither renders as
+ * "this day". The end is the day after.
+ */
+function nextDay(yyyymmdd: string): string {
+  const d = new Date(
+    Number(yyyymmdd.slice(0, 4)),
+    Number(yyyymmdd.slice(4, 6)) - 1,
+    Number(yyyymmdd.slice(6, 8)) + 1,
+  );
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -38,18 +66,23 @@ export async function GET(
 
   const supabase = createSupabaseAdminClient();
 
-  const { data: vehicle } = await supabase
+  // display_name. `name` and `plate_number` have never existed on this table —
+  // PostgREST answers a select on an unknown column with an error and no rows,
+  // so this route returned 404 unconditionally and the ICS export has never
+  // worked once. The plate lives on vehicle_doc_meta, which is already read
+  // below, so there is nothing to join here.
+  const { data: vehicle, error: vehicleError } = await supabase
     .from("vehicles")
-    .select("id, name, plate_number")
+    .select("id, display_name")
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .maybeSingle();
 
-  if (!vehicle) return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
+  if (vehicleError || !vehicle) {
+    return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
+  }
 
-  const vehicleLabel = (vehicle as { name?: string | null; plate_number?: string | null }).name
-    ?? (vehicle as { plate_number?: string | null }).plate_number
-    ?? "Vehicle";
+  const vehicleLabel = (vehicle as { display_name?: string | null }).display_name ?? "Vehicle";
 
   const [{ data: metas }, { data: docs }] = await Promise.all([
     supabase
@@ -80,6 +113,9 @@ export async function GET(
       ?? (doc.parsed_json as Record<string, unknown> | null)?.valid_until as string | null;
     if (!validUntil) continue;
 
+    const start = toIcalDate(validUntil);
+    if (!start) continue;
+
     const label = TYPE_LABELS[doc.document_type as string] ?? (doc.document_type as string ?? "Document");
     const plate = meta?.plate_number
       ?? (doc.parsed_json as Record<string, unknown> | null)?.plate_number as string | null
@@ -91,8 +127,8 @@ export async function GET(
       "BEGIN:VEVENT",
       `UID:${uid}`,
       `DTSTAMP:${stamp}`,
-      `DTSTART;VALUE=DATE:${toIcalDate(validUntil)}`,
-      `DTEND;VALUE=DATE:${toIcalDate(validUntil)}`,
+      `DTSTART;VALUE=DATE:${start}`,
+      `DTEND;VALUE=DATE:${nextDay(start)}`,
       `SUMMARY:${summary}`,
       `DESCRIPTION:Flux vehicle document vault reminder`,
       "BEGIN:VALARM",

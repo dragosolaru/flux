@@ -194,6 +194,25 @@ The dashboard reaches the same set through a fourth quick-action button that exp
 
 **Key files:** `src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/lib/brands/{command-map.ts,tesla/command-map.ts}`, `src/lib/mock/engine.ts`, `src/components/vehicle/{CommandPanel,AllCommands}.tsx`, `src/hooks/useVehicleCommand.ts`, `src/lib/api/vehicles.ts` (`shareNavigation` helper unifies the share_navigation + optional precondition_max sequence).
 
+**Refresh-token single-flight now spans instances.** Tesla rotates the refresh
+token on use, so two lambdas refreshing at once do not merely waste a call — the
+loser writes a token Tesla has already invalidated, and the next refresh fails
+`invalid_grant`, which reaches the driver as "reconnect your Tesla". The guard
+was a `Map` in module scope, which is empty in the instance that races the one
+holding it: `/state`, `/commands` and the cron each run in a different lambda.
+A Redis `SET NX` with a 15 s TTL now fronts it; a caller that loses the lock
+waits for the fresher row to appear (250 ms → 4 s) instead of making its own
+call. Best-effort in both directions — no Redis configured means the previous
+behaviour exactly, and a waiter that times out refreshes anyway, because a stuck
+lock must never be able to lock someone out of their car.
+
+**Per-command argument bounds.** `args` is an open record, so
+`set_charge_limit` with `percent: 3`, negative amps, or a 40 °C cabin were built
+into a request and sent. `ARG_BOUNDS` in the commands route validates the
+commands that carry a number (percent 50–100, amps 0–48, temp 15–28, schedule
+minutes 0–1439, navigation lat/lng) and answers 400. The car should not be the
+thing validating this.
+
 **Command errors are classified by body, not only by status.** Tesla answers **403** both for a missing scope and for `Vehicle Command Protocol required`. Treating every 403 as `TeslaAuthError` shadowed the VCP split entirely, because `commands/route.ts` checks `instanceof TeslaAuthError` before it string-matches — so an operator who simply had not deployed the signing proxy was told to re-authorise Tesla, which cannot fix it. `sendVehicleCommand` now checks the body first. Pinned by `src/lib/tesla/__tests__/command-errors.test.ts`, which asserts the classification *and* the route's branch order, since the defect lived in the interaction between the two.
 
 **One argument name per command.** `args` is `Record<string, unknown>` from the button to the Tesla request body, so a UI sending `{limitPct}` to a builder reading `args.percent` type-checks and fails at runtime. It did: `/charging` sent `limitPct`, `TESLA_COMMAND_MAP` read `percent ?? 80`, and **every live charge-limit change reached the car as 80%** behind a success toast. The mock engine also read `limitPct`, so the simulator and its unit test agreed with the UI and all three were wrong about the car. Standardised on `percent` (Tesla's own field name) across `charging-client`, `mock/engine`, `useVehicleCommand` and the tests, with `src/lib/brands/__tests__/command-args.test.ts` asserting that the Tesla body builder and the mock engine respond to the same key — neither alone can catch a rename.
@@ -756,6 +775,31 @@ rotatable — **F3**, an open owner decision.)
 `src/app/api/account/verify-email/route.ts`, `src/app/api/documents/recover/route.ts`,
 `src/app/api/documents/inbound-email/route.ts`, migration `046`.
 Pinned by `src/lib/__tests__/email-verification.test.ts`.
+
+### Two features that had never worked once
+
+**The vault calendar export.** `GET /api/vehicles/[id]/vault/calendar` selected
+`name` and `plate_number` from `vehicles`. Neither column has ever existed —
+it is `display_name`, and the plate lives on `vehicle_doc_meta` — so PostgREST
+answered with an error and no rows, and the route returned **404
+unconditionally** for its whole life. Fixed, and with it two iCalendar defects
+that would have surfaced the moment it did work: `DTEND` for an all-day event is
+*exclusive* (RFC 5545 §3.6.1), so start and end on the same date is a
+zero-length event that Google and Apple each render differently; and
+`toIcalDate` is now sliced to ten characters, because `valid_until` is
+AI-extracted and a full timestamp turned into `20270430T00:00:00Z` — colons are
+iCalendar's separator, so one such value corrupts the file for the importer.
+
+**No vehicle document could ever reach `done`.** `averageConfidence` averages
+every numeric confidence, and the parser padded the three fields a car document
+has no equivalent for — kWh, billing period, session timestamp — with hardcoded
+zeros. A flawless extraction therefore scored `(1+0+1+0+0+1)/6 = 0.5` against a
+0.7 threshold and was filed `needs_review`. Those fields are now absent rather
+than zero, and `averageConfidence` skips what was never reported. The two bugs
+compounded: the calendar reads only documents that are `done`, so even a working
+query would have exported an empty file. Pinned by
+`src/lib/costs/__tests__/confidence.test.ts`, which keeps the old padded shape
+as a case so it cannot come back quietly.
 
 ### Free-tier limits are enforced again
 

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
+import { minutesFromMidnight } from "@/lib/time";
 
 interface DepartureCardProps {
   vehicleId: string;
@@ -22,8 +23,8 @@ export function DepartureCard({ vehicleId }: DepartureCardProps) {
   const inFlight = (cmd: string) => isPending && variables?.command === cmd;
 
   function handleScheduleDeparture() {
-    const [h, m] = departureTime.split(":").map(Number);
-    const minutes = (h ?? 8) * 60 + (m ?? 0);
+    const minutes = minutesFromMidnight(departureTime);
+    if (minutes == null) return;
     mutate(
       { vehicleId, command: "schedule_departure", args: { time: minutes } },
       {

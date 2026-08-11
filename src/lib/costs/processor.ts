@@ -7,7 +7,7 @@ import type { Document, DocumentType, ParsedDocument } from "@/types/costs";
 import { CAR_DOC_TYPES } from "@/lib/documents/car-doc-types";
 import { HOME_BILL_DEFAULT_PERIOD_DAYS } from "./constants";
 
-const CONFIDENCE_THRESHOLD = 0.7;
+export const CONFIDENCE_THRESHOLD = 0.7;
 
 
 // Categories that belong in the per-vehicle document vault (everything except energy bills and non-vehicle docs).
@@ -21,8 +21,16 @@ function isVehicleDoc(parsed: ParsedDocument): boolean {
   return parsed.category != null && VEHICLE_CATEGORIES.has(parsed.category);
 }
 
-function averageConfidence(c: ParsedDocument["confidence"]): number {
-  const vals = Object.values(c).filter((v) => typeof v === "number");
+/**
+ * Mean of the confidences the extractor actually reported.
+ *
+ * Absent keys are skipped rather than counted as zero — a document type that
+ * has no kWh has not failed to read one. Missing confidences on a field that
+ * WAS extracted still count as 0 via the parser, which is the conservative
+ * direction; this only stops a schema mismatch reading as low confidence.
+ */
+export function averageConfidence(c: ParsedDocument["confidence"]): number {
+  const vals = Object.values(c).filter((v): v is number => typeof v === "number");
   if (vals.length === 0) return 0;
   return vals.reduce((a, b) => a + b, 0) / vals.length;
 }

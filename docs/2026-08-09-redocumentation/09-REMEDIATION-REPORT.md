@@ -1,6 +1,6 @@
 # 09 — Remediation Report
 
-*Written 2026-08-10. Covers `898d058..f408593` on `main`.*
+*Written 2026-08-10. Covers `898d058..HEAD` on `main`.*
 
 Every finding below was re-verified against the code at HEAD before being
 touched. Where the audit was wrong, or where a fix I shipped earlier turned out
@@ -20,7 +20,8 @@ to be wrong, it says so — that is the more useful half of this document.
 | **F4** | `FIXED` (f408593), **not** as the audit proposed | See §2 — the audit's minimum fix was a no-op. |
 | **F5** | `FIXED` (f408593) + migration `045` | Conflict target is `(user_id, endpoint)`; the global unique on `endpoint` is dropped. |
 | **F6** | `FIXED` (f408593) + migration `047` | EXECUTE revoked schema-wide from `anon`/`authenticated`, plus `alter default privileges`. |
-| F7, F8, F9 | `NOT DONE` | Out of this pass. F8 (vault calendar selects `name`/`plate_number`, columns that never existed, so the ICS export has never worked) is the highest-value one left. |
+| **F8** | `FIXED` | The route selected `name`/`plate_number` from `vehicles`; neither column has ever existed, so it returned 404 for its whole life. Fixed with the two iCalendar defects (exclusive `DTEND`, date slicing) that would have surfaced the moment it worked. |
+| F7, F9 | `NOT DONE` | Out of this pass. |
 
 ### Tesla (T)
 
@@ -29,7 +30,9 @@ to be wrong, it says so — that is the more useful half of this document.
 | **T1** | `FIXED` (55dfb2f) | `signed?: false` on `CommandEntry`; `share_navigation` bypasses the proxy. Verified against `pkg/proxy/command.go`: it has a case for `navigation_request` and none for the GPS variant, so the proxy answered `400 invalid_command` locally and "send to navigation" could never have worked. |
 | **T7** | `FIXED` (55dfb2f) | `/api/tesla/command` and `/api/tesla/vehicle` deleted; both were unreferenced. |
 | **T8** | `FIXED` (0cdfcf6), after I broke it | See §3. |
-| T3, T4, T5, T6, T9, T11, T12 | `NOT DONE` | T5 (refresh-token single-flight is per-instance and useless on serverless) and T6 (per-user rate limits against a per-partner-account quota) are the two that will bite first in production. |
+| **T5** | `FIXED` | Redis `SET NX` (15 s TTL) fronts the in-process map; a loser waits for the fresher row rather than refreshing with a token Tesla has already rotated. Best-effort both ways — no Redis means the old behaviour, and a timed-out waiter refreshes anyway. |
+| **T12** (argument validation half) | `FIXED` | `ARG_BOUNDS` in the commands route; percent 50–100, amps 0–48, temp 15–28, schedule minutes 0–1439, nav lat/lng. |
+| T3, T4, T6, T9, T11, T12 (scopes half) | `NOT DONE` | T6 (per-user rate limits against a per-partner-account quota) is the one that will bite first in production. |
 | **T2** | `DEFERRED — needs human` | Changes the live pairing flow; can break working cars. |
 | **T10** | `DEFERRED — needs human` | The signing proxy takes no authentication. Raised in priority: `/proxy-public-key`, which I added for diagnosis, makes the relay self-identifying to a scanner. I did **not** hide it behind a secret header — that is obscurity sold as a control. Fix the relay. |
 
@@ -37,7 +40,8 @@ to be wrong, it says so — that is the more useful half of this document.
 
 | ID | Status |
 |---|---|
-| C1–C5, P2, P3 | `NOT DONE` — the verification agent for this group hit the session limit before reporting. C2/C3/C4 must still be read together and given one meaning for `energy_costs.cost_ron` before anything is changed. |
+| **Car documents can never reach `done`** (P2) | `FIXED` — the parser padded three absent confidences with zeros, so a perfect extraction scored 0.5 against a 0.7 threshold. Compounded with F8: the calendar reads only `done` documents. |
+| C1–C5, rest of P2, P3 | `NOT DONE` — the verification agent for this group hit the session limit before reporting. C2/C3/C4 must still be read together and given one meaning for `energy_costs.cost_ron` before anything is changed. |
 
 Two correctness defects **not** in the audit were found and fixed — see §3.
 
@@ -142,10 +146,11 @@ into a field the client fills in. Reverted to constant `0,0` in `0cdfcf6`.
 
 ## 5. Tests
 
-**267 → 341.** New files:
+**267 → 346.** New files:
 
 | File | Covers |
 |---|---|
+| `src/lib/costs/__tests__/confidence.test.ts` (5) | The review threshold, keeping the old zero-padded shape as a case so it cannot return. |
 | `src/lib/tesla/__tests__/command-routing.test.ts` (52) | URL, vehicle tag and body for every command, with and without a proxy. The decision that broke twice with nothing to catch it. |
 | `src/lib/tesla/__tests__/command-errors.test.ts` (6) | 401 vs 403-scope vs 403-VCP vs proxy-not-paired vs unreachable, **and** the route's branch order — the defect lived in the interaction. |
 | `src/lib/brands/__tests__/command-args.test.ts` (5) | The Tesla body builder and the mock engine respond to the same argument key. |
@@ -153,6 +158,9 @@ into a field the client fills in. Reverted to constant `0,0` in `0cdfcf6`.
 
 Two of these were verified to **fail without their fix** by reverting the fix
 and re-running.
+
+Also unified while in there: three hand-written `hh:mm` → minutes conversions
+with three different fallbacks (`src/lib/time.ts`), and `CAR_DOC_TYPES`.
 
 Still untested: `AllCommands`, the `useVehicle` idle state machine, map fitting,
 and the key-diagnosis verdict cascade in `tesla-partner` — which is the densest

@@ -78,12 +78,16 @@ export interface ParsedDocument {
   issuer?: string | null;
   seria_polita?: string | null;
   bonus_malus?: string | null;
+  // Every field is optional: a vehicle document reports no kWh and no billing
+  // period, and padding those with 0 dragged the average below the review
+  // threshold no matter how good the extraction was. Absent means "not part of
+  // this document's schema", which is not the same as "extracted, badly".
   confidence: {
-    document_type: number;
-    total_kwh: number;
-    cost_total: number;
-    period_start: number;
-    session_timestamp: number;
+    document_type?: number;
+    total_kwh?: number;
+    cost_total?: number;
+    period_start?: number;
+    session_timestamp?: number;
     valid_until?: number;
   };
 }

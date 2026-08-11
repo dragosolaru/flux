@@ -31,6 +31,7 @@ import { useChargingHistorySync } from "@/hooks/useChargingHistorySync";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
+import { minutesFromMidnight, minutesToHhmm } from "@/lib/time";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import type { ChargingSessionRow } from "./page";
@@ -113,11 +114,7 @@ export function ChargingClient({
     const mins = data?.scheduledChargingStartMinutes;
     queueMicrotask(() => {
       setScheduled(enabled);
-      if (mins != null && Number.isFinite(mins)) {
-        const h = Math.floor(mins / 60) % 24;
-        const m = mins % 60;
-        setScheduleTime(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-      }
+      if (mins != null && Number.isFinite(mins)) setScheduleTime(minutesToHhmm(mins));
     });
   }, [data?.scheduledChargingEnabled, data?.scheduledChargingStartMinutes]);
 
@@ -133,8 +130,8 @@ export function ChargingClient({
   }
 
   function saveSchedule() {
-    const [h, m] = scheduleTime.split(":").map(Number);
-    const minutes = (Number.isFinite(h) ? h : 23) * 60 + (Number.isFinite(m) ? m : 0);
+    const minutes = minutesFromMidnight(scheduleTime);
+    if (minutes == null) return;
     mutate(
       {
         vehicleId,

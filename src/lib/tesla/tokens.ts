@@ -5,18 +5,89 @@ import {
 } from "node:crypto";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { redis } from "@/lib/redis";
 import { refreshTeslaTokens } from "./auth";
 
 const ALGO = "aes-256-gcm";
 const IV_BYTES = 12;
 
-// Single-flight guard: if two requests both see an expiring token, only one
-// refresh races to Tesla. Tesla rotates refresh tokens on use, so the last
-// DB write would desync the stored token otherwise.
+// Single-flight guard, per process. Necessary and not sufficient: /state,
+// /commands and the cron each run in a different lambda, so this Map is empty
+// in the instance that races the one holding it. Tesla ROTATES the refresh
+// token on use, so a lost race does not just waste a call — the loser writes a
+// token Tesla has already invalidated, and the next refresh fails with
+// invalid_grant, which surfaces to the driver as "reconnect your Tesla".
+//
+// The cross-instance half is REFRESH_LOCK below.
 const refreshInFlight = new Map<
   string,
   Promise<{ accessToken: string; region: string }>
 >();
+
+/**
+ * Cross-instance refresh lock.
+ *
+ * Redis SET NX with a short TTL. The holder refreshes; everyone else waits for
+ * the new row to appear rather than making a second call with a token that is
+ * about to be revoked.
+ *
+ * Deliberately best-effort in both directions: with no Redis configured
+ * (local, preview) acquire() returns true and the behaviour is exactly what it
+ * was, and a waiter that times out refreshes anyway. A stuck lock must never
+ * be able to lock a driver out of their car.
+ */
+const REFRESH_LOCK_TTL_S = 15;
+const WAIT_STEPS_MS = [250, 500, 1000, 2000, 4000];
+
+async function acquireRefreshLock(vehicleId: string): Promise<boolean> {
+  if (!redis) return true;
+  try {
+    const res = await redis.set(`tesla:refresh:${vehicleId}`, "1", {
+      nx: true,
+      ex: REFRESH_LOCK_TTL_S,
+    });
+    return res === "OK";
+  } catch {
+    // Redis unreachable is not a reason to refuse to refresh.
+    return true;
+  }
+}
+
+async function releaseRefreshLock(vehicleId: string): Promise<void> {
+  if (!redis) return;
+  try {
+    await redis.del(`tesla:refresh:${vehicleId}`);
+  } catch {
+    // The TTL cleans up.
+  }
+}
+
+/**
+ * Wait for whoever holds the lock to publish a fresher row.
+ *
+ * Returns the new access token, or null if it never appeared — in which case
+ * the caller refreshes itself. Compares against the expiry we already read, so
+ * "fresher" means strictly newer rather than merely present.
+ */
+async function awaitRefreshedToken(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  vehicleId: string,
+  knownExpiresAt: number,
+): Promise<string | null> {
+  for (const delay of WAIT_STEPS_MS) {
+    await new Promise((r) => setTimeout(r, delay));
+    const { data } = await supabase
+      .from("tesla_tokens")
+      .select("access_token_enc, expires_at")
+      .eq("vehicle_id", vehicleId)
+      .maybeSingle();
+    const row = data as { access_token_enc: string; expires_at: string } | null;
+    if (row && new Date(row.expires_at).getTime() > knownExpiresAt) {
+      return decryptToken(row.access_token_enc);
+    }
+  }
+  return null;
+}
 
 function getKey(): Buffer {
   const hex = process.env.TESLA_TOKEN_ENCRYPTION_KEY;
@@ -116,6 +187,15 @@ export async function getValidAccessToken(
 
     const refreshPromise = (async () => {
       try {
+        const holdsLock = await acquireRefreshLock(vehicleId);
+        if (!holdsLock) {
+          const fresh = await awaitRefreshedToken(supabase, vehicleId, expiresAt);
+          if (fresh) return { accessToken: fresh, region: vehicle.tesla_region };
+          // The holder died or is slower than we can wait. Refreshing with a
+          // possibly-rotated token risks invalid_grant, but refusing here
+          // guarantees the command fails, so take the chance.
+        }
+
         const refreshToken = decryptToken(tokenRow.refresh_token_enc);
         let fresh;
         try {
@@ -154,6 +234,7 @@ export async function getValidAccessToken(
         return { accessToken: fresh.access_token, region: vehicle.tesla_region };
       } finally {
         refreshInFlight.delete(vehicleId);
+        await releaseRefreshLock(vehicleId);
       }
     })();
 
