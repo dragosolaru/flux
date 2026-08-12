@@ -3,7 +3,7 @@
 **Everything here runs from `/debug` on a phone. No SQL editor, no copy-paste.**
 
 `/debug` → Migrations. Each migration has its own Apply button. Tap them
-**individually, in order**: `045`, `046`, `047`, `048`. Avoid *Apply all* — it
+**individually, in order**: `045`, `046`, `047`, `048`, `049`. Avoid *Apply all* — it
 re-runs `034`–`044` as well, which is wasteful and slow on the dedupe ones.
 
 Above the list there is a **Row-level security** tile with two buttons:
@@ -169,9 +169,24 @@ correct result, not a failure. It earns its place as a guard: the next table
 created by hand in the SQL editor is what it is for, and that is exactly how
 this alert happened.
 
+## 5. `049_profiles_email_lookup.sql`
+
+Adds `profiles.email` with a case-insensitive unique index, backfills it, and
+extends the `handle_new_user` trigger to fire on email UPDATE as well as insert.
+
+**Why:** sign-in resolved a user id by paging through `auth.admin.listUsers`
+capped at ten pages. At 1001 users a returning Google user is not found and the
+code creates a **second account**, silently orphaning their vehicles, documents
+and costs. Also ten sequential admin round-trips on every login.
+
+**Data change:** backfills `email` from `auth.users` and replaces the trigger.
+The unique index will fail to build if two accounts share an address
+case-insensitively — if that happens, you have duplicates already and want to
+know.
+
 ---
 
-## After all four
+## After all five
 
 Tap **Check** on the RLS tile. Expected: `26/27 tables protected`, one exposed
 row for `spatial_ref_sys`, and a verdict saying only extension-owned tables are
