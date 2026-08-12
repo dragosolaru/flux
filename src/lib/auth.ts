@@ -68,14 +68,19 @@ export const authConfig: NextAuthConfig = {
       if (account?.provider === "google" && profile?.email) {
         const supabase = createSupabaseAdminClient();
 
-        let match: { id: string } | undefined;
-        let page = 1;
-        while (!match && page <= 10) {
-          const { data } = await supabase.auth.admin.listUsers({ page, perPage: 100 });
-          match = data?.users.find((u: { id: string; email?: string }) => u.email === profile.email);
-          if (!data || data.users.length < 100) break;
-          page++;
-        }
+        // One indexed lookup, not a capped scan.
+        //
+        // This paged through listUsers ten times and gave up at 1001 users —
+        // at which point a RETURNING user was not found and the else branch
+        // below created a second account for them, silently orphaning every
+        // vehicle, document and cost record on the first. profiles.email is
+        // maintained by the handle_new_user trigger (migration 049).
+        const { data: found } = await supabase
+          .from("profiles")
+          .select("id")
+          .ilike("email", profile.email)
+          .maybeSingle();
+        const match = found as { id: string } | null;
 
         if (match) {
           token.id = match.id;

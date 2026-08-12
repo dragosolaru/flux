@@ -1,4 +1,3 @@
-import type { User } from "@supabase/supabase-js";
 import type { Session } from "next-auth";
 import { createSupabaseAdminClient } from "./server";
 
@@ -50,18 +49,17 @@ export async function ensureSupabaseUserId(
 
   if (!createErr && created.user) return created.user.id;
 
-  // User already exists — find by email via paginated scan (max 1 000 users)
-  let page = 1;
-  while (page <= 10) {
-    const { data } = await supabase.auth.admin.listUsers({
-      page,
-      perPage: 100,
-    });
-    const match = data?.users.find((u: User) => u.email === email);
-    if (match) return match.id;
-    if (!data || data.users.length < 100) break;
-    page++;
-  }
+  // User already exists — one indexed lookup on the profiles mirror.
+  //
+  // This was a paginated scan of auth.admin.listUsers capped at ten pages, so
+  // it stopped finding people at 1001 users and returned null, and callers read
+  // null as "no such user". profiles.email is kept in step by the
+  // handle_new_user trigger (migration 049).
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
 
-  return null;
+  return (profile as { id: string } | null)?.id ?? null;
 }

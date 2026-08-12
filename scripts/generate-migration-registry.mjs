@@ -52,7 +52,9 @@ const DESCRIPTIONS = {
   "047_revoke_function_execute_from_anon":
     "Revoke function EXECUTE from anon/authenticated (read its header first)",
   "048_enable_rls_everywhere":
-    "RLS sweep — expected to change nothing today; run in the SQL editor to read its NOTICE output",
+    "RLS sweep + the reporting functions the Row-level security tile reads",
+  "049_profiles_email_lookup":
+    "profiles.email + index — sign-in stops scanning users and stops duplicating accounts past 1000",
 };
 
 /** First comment line that is not just the filename. */
