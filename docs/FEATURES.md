@@ -751,6 +751,14 @@ unregistered is exactly *why* their document went unmatched — and their
 documents were claimable, PII and all. Gating on `auth.users.email_confirmed_at`
 would have read as a fix and changed nothing, since registration always sets it.
 
+**An `ADMIN_EMAILS` address counts as verified.** Not a loophole: that list is
+an environment variable, so being on it means whoever controls the deployment
+vouched for the address — stronger evidence than a click in an inbox, since
+anyone who can edit it already owns everything the gate protects. It also keeps
+the gate honest: without it a solo deployment cannot claim its own documents
+until Resend is configured, and a fail-closed gate nobody can pass is a gate
+someone eventually turns off.
+
 **How to use:** `POST /api/account/verify-email` mails a signed link (Resend);
 `GET /api/account/verify-email?token=…` records `profiles.email_verified_at` and
 redirects to `/settings?email_verified=1|0`. `recover` returns **403

@@ -108,10 +108,27 @@ address and claim their unmatched documents.
 **Data change:** none. Adds a column.
 
 **After running:** `POST /api/documents/recover` returns `403
-EMAIL_NOT_VERIFIED` for everyone until they confirm. That is intentional and
-fail-closed. **Set `RESEND_API_KEY` and `RESEND_FROM` in Vercel first**, or the
-verification mail silently no-ops (`sendEmailToUser` returns early when the key
-is missing) and nobody can pass the gate.
+EMAIL_NOT_VERIFIED` until the address is confirmed. Intentional and fail-closed.
+
+**You are exempt.** An address listed in `ADMIN_EMAILS` counts as verified —
+that list lives in the deployment's environment, so being on it means whoever
+controls the environment vouched for the address, which is stronger evidence
+than a click in an inbox. So you can apply `046` now and nothing locks you out.
+
+`RESEND_API_KEY` only matters when someone who is *not* on that list needs to
+claim documents — i.e. when there is a second user. Until then it can stay
+unset; `sendEmailToUser` returns early without it and nothing errors.
+
+When you do want it:
+
+| Variable | What to put |
+|---|---|
+| `RESEND_API_KEY` | From [resend.com](https://resend.com) → API Keys → Create. Starts `re_`. Free tier is 3 000 emails/month, no card. |
+| `RESEND_FROM` | `Flux <onboarding@resend.dev>` to start — Resend's shared sender, works with no DNS setup, but **only delivers to the email address that owns the Resend account**. Fine for testing, useless for real users. For those, verify a domain in Resend (three DNS records) and use `Flux <no-reply@yourdomain>`. |
+
+The current default is `Flux <alerts@flux.app>`, a domain nobody has verified,
+so leaving `RESEND_FROM` unset while setting the key would have Resend reject
+every send.
 
 ## 3. `047_revoke_function_execute_from_anon.sql`
 

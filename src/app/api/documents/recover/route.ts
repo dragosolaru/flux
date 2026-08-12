@@ -52,7 +52,22 @@ export async function POST() {
     .eq("id", userId)
     .maybeSingle();
 
-  if (!(profile as { email_verified_at: string | null } | null)?.email_verified_at) {
+  // An address in ADMIN_EMAILS counts as verified, and it is not a loophole:
+  // that list lives in the deployment's environment, so being on it means
+  // whoever controls the environment vouched for the address. Anyone able to
+  // edit it already owns everything this gate protects — it is strictly
+  // stronger evidence than clicking a link in an inbox.
+  //
+  // The practical reason is that the alternative is worse. Without it, a solo
+  // deployment cannot claim its own documents until Resend is configured, and
+  // a fail-closed gate nobody can pass invites turning the gate off.
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isOwner = adminEmails.includes(userEmail);
+
+  if (!isOwner && !(profile as { email_verified_at: string | null } | null)?.email_verified_at) {
     return NextResponse.json(
       {
         message: "Confirm your email address before claiming documents",
