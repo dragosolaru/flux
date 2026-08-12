@@ -189,6 +189,22 @@ const COUNTRIES: { code: string; name: string }[] = [
   { code: "nl", name: "Netherlands" },
 ];
 
+/**
+ * Scopes that are charger connectors. Kept beside the probe buttons that name
+ * the same set, so a new connector shows up in the right panel.
+ */
+const SOURCE_SCOPES = new Set([
+  "irve",
+  "ndw",
+  "ndw-nobbox",
+  "austria",
+  "bnetza",
+  "bnetza-openapi",
+  "ocm",
+  "osm",
+  "tomtom",
+]);
+
 const CORRIDOR = [
   { label: "Cluj", minLat: 46.5, minLng: 23.2, maxLat: 47.2, maxLng: 24.2 },
   { label: "Bucharest", minLat: 44.2, minLng: 25.8, maxLat: 44.7, maxLng: 26.4 },
@@ -305,9 +321,15 @@ export function DebugClient() {
     const all = [...byKey.values()];
     const isTesla = (scope: string) =>
       scope.startsWith("tesla/") || scope.startsWith("vehicles/");
+    // A charger connector, i.e. exactly what the "Check the sources" panel is
+    // about. Splitting these out is what lets that panel's badge count the
+    // thing the panel contains — it used to count every error in the table,
+    // Tesla included, on a panel that displayed none of them.
+    const isSource = (scope: string) => SOURCE_SCOPES.has(scope);
     return {
       tesla: all.filter((l) => isTesla(l.scope)),
-      other: all.filter((l) => !isTesla(l.scope)),
+      sources: all.filter((l) => !isTesla(l.scope) && isSource(l.scope)),
+      other: all.filter((l) => !isTesla(l.scope) && !isSource(l.scope)),
       total: data?.logs?.length ?? 0,
     };
   }, [data?.logs]);
@@ -828,8 +850,17 @@ export function DebugClient() {
       out.push(`sources: ${data.sources.map((x) => `${x.source} ${x.rows}`).join(" · ")}`);
       const failed = data.recentRuns.filter((r) => r.status === "error").length;
       out.push(`last ${data.recentRuns.length} runs · ${failed} failed`);
-      out.push(`logs (${groupedLogs.other.length} distinct):`);
-      out.push(...groupedLogs.other.map(logLine));
+      out.push(`failed runs: ${data.recentRuns.filter((r) => r.status === "error").length}`);
+      out.push(
+        groupedLogs.sources.length
+          ? `connector logs (${groupedLogs.sources.length} distinct):`
+          : "connector logs: none",
+      );
+      out.push(...groupedLogs.sources.map(logLine));
+      if (groupedLogs.other.length) {
+        out.push(`other logs (${groupedLogs.other.length} distinct):`);
+        out.push(...groupedLogs.other.map(logLine));
+      }
     }
 
     if (section === "progress") {
@@ -930,7 +961,16 @@ export function DebugClient() {
   const unsetConfig = Object.entries(data.config).filter(
     ([, v]) => v === false || v === "",
   );
-  const deadSources = data.logs.filter((l) => l.level === "error").length;
+  // Two different questions that shared one wrong answer. `data.logs.filter(
+  // error).length` was shown as BOTH "N errors logged" on the sources panel and
+  // "N failed runs" on charger activity — so 44 Tesla-and-connector log rows
+  // were reported as 44 failed ingest runs while every recent run had status
+  // "ok". Neither badge was counting what it named.
+  const sourceErrorsFresh = groupedLogs.sources.filter(
+    (l) => l.level === "error" && generatedAtMs - new Date(l.latest).getTime() < DAY_MS,
+  ).length;
+  const sourceErrorsTotal = groupedLogs.sources.filter((l) => l.level === "error").length;
+  const failedRuns = data.recentRuns.filter((r) => r.status === "error").length;
 
   // One line saying what to do next, rather than leaving it to be inferred from
   // four separate sections. Ordered by what blocks the most.
@@ -1593,8 +1633,14 @@ export function DebugClient() {
 
       <Panel
         title="Check the sources"
-        badge={deadSources > 0 ? `${deadSources} errors logged` : "probe"}
-        tone={deadSources > 0 ? "warn" : undefined}
+        badge={
+          sourceErrorsFresh > 0
+            ? `${sourceErrorsFresh} today`
+            : sourceErrorsTotal > 0
+              ? `${sourceErrorsTotal} older`
+              : "probe"
+        }
+        tone={sourceErrorsFresh > 0 ? "warn" : undefined}
         open={open.sources ?? false}
         onToggle={() => toggle("sources")}
       >
@@ -1671,19 +1717,27 @@ export function DebugClient() {
             </pre>
           )}
         </div>
+
+        <LogGroup
+          title="Connector errors"
+          entries={groupedLogs.sources}
+          emptyNote="No connector has logged an error."
+          dayMs={DAY_MS}
+          now={generatedAtMs}
+        />
       </Panel>
 
       <Panel
         title="Charger activity"
-        badge={deadSources > 0 ? `${deadSources} failed runs` : `${data.recentRuns.length} runs`}
-        tone={deadSources > 0 ? "warn" : undefined}
+        badge={failedRuns > 0 ? `${failedRuns} failed runs` : `${data.recentRuns.length} runs ok`}
+        tone={failedRuns > 0 ? "warn" : undefined}
         open={open.chargerLog ?? false}
         onToggle={() => toggle("chargerLog")}
       >
         <LogGroup
-          title="Charger sources"
+          title="Everything else"
           entries={groupedLogs.other}
-          emptyNote="Nothing logged."
+          emptyNote="Nothing logged outside Tesla and the charger connectors."
           dayMs={DAY_MS}
           now={generatedAtMs}
         />
@@ -2262,6 +2316,60 @@ function KeyTable({
  * every entry on this panel was read as a live problem while being two days
  * old. "3 zile" answers a question the absolute timestamp did not.
  */
+/**
+ * The useful part of a log's context, and the rest behind a tap.
+ *
+ * Entries were rendered as one `JSON.stringify` line. For a Tesla error that is
+ * a serialised stack trace with webpack chunk paths in it — several hundred
+ * characters of `/var/task/.next/server/chunks/...` wrapping across a phone
+ * screen, with the one sentence that says what went wrong buried inside. The
+ * `detail` field already holds that sentence; `stack` never once helped, since
+ * the frames are minified.
+ */
+function LogContext({ context }: { context: Record<string, unknown> | null }) {
+  const [open, setOpen] = useState(false);
+  if (context == null) return null;
+
+  const detail = typeof context.detail === "string" ? context.detail : null;
+  const rest = Object.fromEntries(
+    Object.entries(context).filter(([k]) => k !== "detail" && k !== "stack" && k !== "name"),
+  );
+  const hasRest = Object.keys(rest).length > 0;
+  const hasStack = "stack" in context;
+
+  return (
+    <div className="mt-1 space-y-1">
+      {detail && (
+        <p className="break-words text-[11px] text-muted-foreground">{detail.trim()}</p>
+      )}
+      {hasRest && (
+        <p className="break-words font-mono text-[10px] text-muted-foreground">
+          {Object.entries(rest)
+            .map(([k, v]) => `${k}=${typeof v === "string" ? v : JSON.stringify(v)}`)
+            .join(" · ")}
+        </p>
+      )}
+      {hasStack && (
+        <>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-[10px] underline decoration-dotted text-muted-foreground"
+          >
+            {open ? "hide stack" : "stack"}
+          </button>
+          {open && (
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all text-[10px] text-muted-foreground">
+              {Array.isArray(context.stack)
+                ? (context.stack as unknown[]).join("\n")
+                : String(context.stack)}
+            </pre>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function LogGroup({
   title,
   entries,
@@ -2350,11 +2458,7 @@ function LogGroup({
                   <span className="ml-auto tabular-nums text-muted-foreground">{age}</span>
                 </div>
                 <p className="mt-1 break-words">{l.message}</p>
-                {l.context != null && (
-                  <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">
-                    {JSON.stringify(l.context)}
-                  </pre>
-                )}
+                <LogContext context={l.context} />
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   {new Date(l.latest).toLocaleString()}
                   {l.count > 1 && ` · first ${new Date(l.earliest).toLocaleString()}`}
