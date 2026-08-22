@@ -1,0 +1,146 @@
+# More cars, more users, and whether to buy the connection
+
+*2026-08-12. Answers three questions: does a second car cost more, are commands
+unlimited, and should a third party sit between Flux and the cars.*
+
+---
+
+## 1. Does another car cost more?
+
+**From Flux: no.** Nothing in the app is priced per vehicle. `vehicles` is a
+table, the dashboard renders whatever is in it, and the free-tier limits that
+exist are on *document uploads* (5 energy + 10 vehicle a month), not on cars.
+`canAddVehicle` caps the free tier at one vehicle, which is a product decision
+you can change in one line, not a cost.
+
+**From Tesla: yes, but not per car — per request.** Tesla bills the **partner
+account**, not the driver. Adding a car does not cost anything by itself; it
+costs whatever that car's data gets polled and commanded.
+
+That distinction is the whole game:
+
+| What we do | How often | Cost weight |
+|---|---|---|
+| `vehicle_data` poll | every 30 s while a dashboard is open | **dominant** |
+| `vehicle_data` poll | daily cron per vehicle | small |
+| A command | when someone taps | negligible |
+| `wake_up` | when a command hits a sleeping car | small, but wakes the car |
+
+Ten cars whose owners never open the app cost almost nothing. **One car with a
+dashboard left open all day costs more than all ten.**
+
+### Where the numbers actually are
+
+I am not going to quote you Tesla's price list from memory — it has changed
+since Fleet API billing was introduced and I would be guessing. Read it from the
+source: **developer portal → your app → usage/billing**. What matters is that
+you look at *requests per month*, not at car count, and that the free allowance
+is per partner account.
+
+`fleet_status` also returns `discounted_device_data` per VIN, which is Tesla's
+own flag for whether that vehicle's data is billed at the reduced rate. We
+already call that endpoint from `/debug` → Car → **Check pairing**; surfacing
+the flag there is a small addition worth making before you have many cars.
+
+### What keeps it cheap
+
+Three things, in order of effect:
+
+1. **Fleet Telemetry** (gate 3). The car pushes instead of being polled. This
+   removes the dominant line from the table above entirely. It is the single
+   largest cost lever and it is also the feature you want for other reasons.
+2. **A shared server-side cache** of `vehicle_data` per vehicle, 20–30 s (gate
+   1, T6). Several tabs, the map, the charging screen and the dashboard
+   currently each pull their own copy. One upstream call should serve all of
+   them.
+3. **The idle pause that already exists.** `useVehicle` stops after ten idle
+   minutes, TanStack does not poll a hidden tab, and a failed poll stops rather
+   than retrying. That work is done.
+
+---
+
+## 2. Are commands unlimited?
+
+**Effectively yes on cost, no on rate — and the rate limit that will bite you
+first is ours, not Tesla's.**
+
+Commands are cheap. Nobody taps *lock* four hundred times an hour. The ceiling
+that matters is `checkRateLimit(userId, "commands", 30)` — thirty per hour per
+user, which is generous for a human and would be limiting for automation.
+
+The real problem is **T6**, and it is not about commands: every limit in the app
+is per user, while Tesla counts per partner account. `/state` allows 120/hour
+per user and the dashboard polls at exactly 30 s, so **one** open dashboard
+already sits permanently at its own ceiling. Ten users put the app at ten times
+whatever Tesla allows, and Tesla throttles all of them at once — which will look
+like Flux is broken, not like Flux is popular.
+
+So: unlimited commands per user is fine. Unlimited *polling* per user is the
+thing that has to be capped app-wide before the second car appears.
+
+---
+
+## 3. Should we use TeslaFi, Tessie, Teslemetry or similar?
+
+**No — and the reason is that you have already paid the entry price.**
+
+The hard part of talking to a Tesla is not the API. It is:
+
+- a registered partner account, per region
+- a public key served at a fixed `.well-known` path on the registered domain
+- an EC P-256 signing keypair and a Vehicle Command Protocol proxy
+- Virtual Key pairing on each car
+- knowing which of those four is wrong when a command fails
+
+That took days. **It is built, deployed and working.** Buying a connection layer
+now means paying a per-vehicle monthly fee to skip work already done.
+
+What you would be trading away:
+
+| | Own connection (today) | Reseller (TeslaFi/Tessie/etc.) |
+|---|---|---|
+| Cost | Tesla's request billing, shared across all users | per vehicle per month, scales linearly with customers |
+| Margin | improves with scale | fixed floor under every subscription you sell |
+| Latency | you → Tesla | you → them → Tesla |
+| Outages | Tesla's, and yours | Tesla's, theirs, **and** yours |
+| Data | whatever the API gives | whatever they choose to expose |
+| Differentiator | you have the pipeline | you have the same pipeline as their other customers |
+| Consent | driver authorises **Flux** | driver authorises a third party, and you explain why |
+
+That last row is not a small thing for a product asking people to hand over
+control of their car.
+
+Also worth knowing: most of these are consumer logging services first. TeslaFi
+in particular is built for owners logging their own car, not as a B2B connection
+layer. Tessie and Teslemetry have real APIs, but you would still typically need
+your own partner registration for OAuth, so you would be maintaining both.
+
+### The one place buying is genuinely open
+
+**Fleet Telemetry, and only that.**
+
+A telemetry receiver is a long-lived mTLS service handling protobuf streams with
+backpressure and reconnection — a different class of work from the REST proxy,
+and the only piece on the roadmap where "a week of building plus a box to run it
+on" is a real comparison against a per-vehicle fee.
+
+If you price it: what matters is the break-even car count. Below it, buy and
+ship the feature now. Above it, host it — and you are hosting the signing proxy
+already, so the marginal operational cost is small.
+
+I would still lean towards hosting, because telemetry *is* the differentiator
+(see `docs/NEXT-STEPS.md` gate 3) and renting your differentiator from a vendor
+who sells it to everyone else is a weak position. But that is a judgement call
+about the product, not a technical constraint, and it is genuinely yours.
+
+---
+
+## Summary
+
+- **Another car costs nothing extra.** Another *actively polled* car does.
+- **Commands are not the cost problem.** Polling is, and the fix is gate 1 (T6)
+  now and Fleet Telemetry later.
+- **Do not put a reseller between Flux and the cars.** You already own the
+  hardest part of that pipeline, and it works.
+- **The only honest build-vs-buy is the telemetry receiver**, and even there I
+  would host it.

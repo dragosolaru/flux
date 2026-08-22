@@ -75,6 +75,14 @@ export const ROADMAP: Milestone[] = [
   },
   {
     gate: 1,
+    goal: "Show which cars Tesla bills at the discounted rate",
+    nextStep:
+      "fleet_status already returns discounted_device_data per VIN and we already call it from Check pairing — surface the flag. One field.",
+    cost:
+      "Tesla bills the partner account per request, not per car, so cost tracking has to be per vehicle and per request volume. Cheap to add now, guesswork once there are many cars. See docs/SCALING-AND-COSTS.md.",
+  },
+  {
+    gate: 1,
     goal: "Commands work on a sleeping car (T3/T4)",
     nextStep:
       "GET /api/1/vehicles/{id} first (cheap, does not wake); if not online, wake_up DIRECT — never through the proxy — poll with 2/4/8/15s backoff, then send. Distinct VEHICLE_ASLEEP code.",
