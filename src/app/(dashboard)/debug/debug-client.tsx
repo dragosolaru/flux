@@ -80,7 +80,14 @@ interface DebugPayload {
   };
   roadmap?: {
     goal: string;
-    milestones: { goal: string; nextStep: string; state: "done" | "todo" | "manual" }[];
+    milestones: {
+      gate: 1 | 2 | 3;
+      gateLabel: string;
+      goal: string;
+      nextStep: string;
+      cost?: string;
+      state: "done" | "todo" | "manual";
+    }[];
   };
   warnings: string[];
 }
@@ -864,10 +871,20 @@ export function DebugClient() {
     }
 
     if (section === "progress") {
+      let lastGate = 0;
       for (const m of data.roadmap?.milestones ?? []) {
+        if (m.gate !== lastGate) {
+          lastGate = m.gate;
+          out.push(`-- gate ${m.gate}: ${m.gateLabel}`);
+        }
         const mark = m.state === "done" ? "[x]" : m.state === "manual" ? "[~]" : "[ ]";
         out.push(`${mark} ${m.goal}`);
-        if (m.state !== "done") out.push(`    → ${m.nextStep}`);
+        if (m.state !== "done") {
+          out.push(`    → ${m.nextStep}`);
+          // The consequence travels with the item; a bare next step reads as
+          // optional once it is out of the panel and in a message.
+          if (m.cost) out.push(`    !! ${m.cost}`);
+        }
       }
       const migs = migrations.data?.migrations ?? [];
       const pending = migs.filter((m) => m.status !== "applied");
@@ -1049,31 +1066,67 @@ export function DebugClient() {
             </p>
             <p className="mt-0.5 text-sm font-semibold">{data.roadmap.goal}</p>
           </div>
-          <ul className="space-y-2.5">
-            {data.roadmap.milestones.map((m) => (
-              <li key={m.goal} className="flex gap-2.5">
-                {m.state === "done" ? (
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-400" />
-                ) : m.state === "manual" ? (
-                  <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                ) : (
-                  <Circle className="mt-0.5 size-4 shrink-0 text-amber-400" />
-                )}
-                <div className="min-w-0">
-                  <p className={`text-sm ${m.state === "done" ? "text-muted-foreground" : ""}`}>
-                    {m.goal}
+          {/* Grouped by gate. A flat list made "add the Stripe keys" and "the
+              signing proxy is an open relay" look like peers. */}
+          {([1, 2, 3] as const).map((gate) => {
+            const items = (data.roadmap?.milestones ?? []).filter((m) => m.gate === gate);
+            if (items.length === 0) return null;
+            const left = items.filter((m) => m.state !== "done").length;
+            return (
+              <div key={gate} className="space-y-2">
+                <div className="flex items-baseline justify-between gap-2 border-t border-border/60 pt-2.5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {items[0].gateLabel}
                   </p>
-                  {m.state !== "done" && (
-                    <p className="text-xs text-muted-foreground">{m.nextStep}</p>
-                  )}
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 text-[10px] tabular-nums ${
+                      left === 0
+                        ? "bg-green-500/15 text-green-300"
+                        : gate === 1
+                          ? "bg-destructive/15 text-destructive"
+                          : "bg-amber-500/15 text-amber-300"
+                    }`}
+                  >
+                    {left === 0 ? "clear" : `${left} left`}
+                  </span>
                 </div>
-              </li>
-            ))}
-          </ul>
+                <ul className="space-y-2.5">
+                  {items.map((m) => (
+                    <li key={m.goal} className="flex gap-2.5">
+                      {m.state === "done" ? (
+                        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-400" />
+                      ) : m.state === "manual" ? (
+                        <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <Circle className="mt-0.5 size-4 shrink-0 text-amber-400" />
+                      )}
+                      <div className="min-w-0">
+                        <p
+                          className={`text-sm ${m.state === "done" ? "text-muted-foreground" : ""}`}
+                        >
+                          {m.goal}
+                        </p>
+                        {m.state !== "done" && (
+                          <>
+                            <p className="text-xs text-muted-foreground">{m.nextStep}</p>
+                            {/* What breaks if it is skipped. Without it every
+                                item reads as equally optional. */}
+                            {m.cost && (
+                              <p className="mt-0.5 text-xs text-amber-300/80">{m.cost}</p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
           <p className="text-xs text-muted-foreground">
-            Checked against this deployment where it can be. A dashed circle means it cannot be
-            verified from outside and needs a look — see <code>docs/TODO.md</code> for the long
-            form.
+            Checked against this deployment where it can be. A dashed circle cannot be verified
+            from outside and needs a look. Long form with the reasoning:{" "}
+            <code>docs/NEXT-STEPS.md</code>.
           </p>
         </section>
       )}
