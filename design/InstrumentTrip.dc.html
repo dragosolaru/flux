@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.78 0.17 195); }
+    a:hover { color: oklch(0.86 0.17 195); }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: oklch(0.08 0.01 240); color: oklch(0.97 0 0); font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 24px; box-sizing: border-box; overflow: hidden">
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 20px; animation: rise .5s ease-out both">
+    <span style="font-size: 15px; font-weight: 500">Traseu</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">24% la plecare</span>
+  </div>
+
+  <!-- Origin / destination as two rows, no input chrome -->
+  <div style="margin-top: 18px; animation: rise .5s .08s ease-out both">
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <span style="width: 19px; display: flex; justify-content: center"><span style="width: 7px; height: 7px; border-radius: 9999px; border: 1.5px solid oklch(0.62 0.02 240)"></span></span>
+      <span style="flex: 1; font-size: 16px">Βρασνά</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">ACUM</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <span style="width: 19px; display: flex; justify-content: center"><span style="width: 7px; height: 7px; border-radius: 9999px; background: oklch(0.78 0.17 195)"></span></span>
+      <span style="flex: 1; font-size: 16px">Cluj-Napoca</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: oklch(0.78 0.17 195); font-variant-numeric: tabular-nums">1 284 km</span>
+    </div>
+  </div>
+
+  <!-- The route as a vertical instrument: SOC is the axis -->
+  <div style="margin-top: 22px; flex: 1; animation: rise .6s .18s ease-out both">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">4 opriri · 15 h 40 m</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">≈ 612 lei</span>
+    </div>
+
+    <div style="position: relative; margin-top: 16px; padding-left: 26px">
+      <!-- the spine -->
+      <div style="position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: oklch(0.97 0 0 / 14%)"></div>
+
+      <!-- stop -->
+      <div style="position: relative; padding-bottom: 22px">
+        <div style="position: absolute; left: -26px; top: 3px; width: 11px; height: 11px; border-radius: 9999px; border: 1.5px solid oklch(0.80 0.17 75); background: oklch(0.08 0.01 240)"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <span style="font-size: 16px">Thessaloniki · Supercharger</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; font-variant-numeric: tabular-nums">18 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px">
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.80 0.17 75); font-variant-numeric: tabular-nums">8%</span>
+          <div style="flex: 1; height: 2px; background: oklch(0.97 0 0 / 10%); border-radius: 9999px; overflow: hidden"><div style="width: 72%; height: 100%; background: linear-gradient(90deg, oklch(0.80 0.17 75), oklch(0.72 0.17 155))"></div></div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.72 0.17 155); font-variant-numeric: tabular-nums">72%</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">250 kW</span>
+        </div>
+      </div>
+
+      <div style="position: relative; padding-bottom: 22px">
+        <div style="position: absolute; left: -26px; top: 3px; width: 11px; height: 11px; border-radius: 9999px; border: 1.5px solid oklch(0.62 0.02 240); background: oklch(0.08 0.01 240)"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <span style="font-size: 16px">Sofia · Eldrive</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; font-variant-numeric: tabular-nums">26 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px">
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.80 0.17 75); font-variant-numeric: tabular-nums">12%</span>
+          <div style="flex: 1; height: 2px; background: oklch(0.97 0 0 / 10%); border-radius: 9999px; overflow: hidden"><div style="width: 68%; height: 100%; background: linear-gradient(90deg, oklch(0.80 0.17 75), oklch(0.72 0.17 155))"></div></div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.72 0.17 155); font-variant-numeric: tabular-nums">80%</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">150 kW</span>
+        </div>
+        <!-- preconditioning: a fact about the stop, in the row -->
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; color: oklch(0.80 0.17 75); margin-top: 5px">PRECONDIȚIONARE MANUALĂ — NU E SUPERCHARGER</div>
+      </div>
+
+      <div style="position: relative; padding-bottom: 22px">
+        <div style="position: absolute; left: -26px; top: 3px; width: 11px; height: 11px; border-radius: 9999px; border: 1.5px solid oklch(0.62 0.02 240); background: oklch(0.08 0.01 240)"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <span style="font-size: 16px">București · Supercharger</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; font-variant-numeric: tabular-nums">22 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px">
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.80 0.17 75); font-variant-numeric: tabular-nums">14%</span>
+          <div style="flex: 1; height: 2px; background: oklch(0.97 0 0 / 10%); border-radius: 9999px; overflow: hidden"><div style="width: 66%; height: 100%; background: linear-gradient(90deg, oklch(0.80 0.17 75), oklch(0.72 0.17 155))"></div></div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.72 0.17 155); font-variant-numeric: tabular-nums">80%</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">250 kW</span>
+        </div>
+      </div>
+
+      <div style="position: relative">
+        <div style="position: absolute; left: -26px; top: 3px; width: 11px; height: 11px; border-radius: 9999px; background: oklch(0.78 0.17 195)"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <span style="font-size: 16px; color: oklch(0.78 0.17 195)">Cluj-Napoca</span>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; color: oklch(0.78 0.17 195); font-variant-numeric: tabular-nums">08:20</span>
+        </div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.55 0.02 240); margin-top: 5px">SOSIRE CU 18%</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="animation: rise .6s .3s ease-out both">
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.17 195)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2l-9 19-2-8-8-2Z"/></svg>
+      <span style="flex: 1; font-size: 16px; color: oklch(0.78 0.17 195)">Trimite prima oprire în mașină</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.17 195)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid oklch(0.97 0 0 / 8%); padding: 14px 0 26px 0">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.78 0.17 195)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Încărc.</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Mai mult</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

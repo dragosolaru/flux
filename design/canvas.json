@@ -1,62 +1,72 @@
 {
   "pages": [
-    { "id": "page-1", "name": "Direction" },
-    { "id": "page-2", "name": "Today & fixes" }
+    { "id": "page-1", "name": "Instrument" },
+    { "id": "page-2", "name": "Other directions" },
+    { "id": "page-3", "name": "Today & fixes" }
   ],
   "artboards": [
-    { "file": "DirectionInstrument.dc.html", "title": "A · Instrument — leading", "page": "page-1", "x": 0, "y": 0, "w": 390, "h": 844 },
-    { "file": "InstrumentCommands.dc.html", "title": "A · Instrument — commands", "page": "page-1", "x": 490, "y": 0, "w": 390, "h": 900 },
-    { "file": "DirectionEditorial.dc.html", "title": "B · Editorial", "page": "page-1", "x": 980, "y": 0, "w": 390, "h": 844 },
-    { "file": "DirectionAmbient.dc.html", "title": "C · Ambient", "page": "page-1", "x": 1470, "y": 0, "w": 390, "h": 844 },
+    { "file": "InstrumentFoundations.dc.html", "title": "The system", "page": "page-1", "x": 0, "y": 0, "w": 900, "h": 1180 },
 
-    { "file": "Main.dc.html", "title": "Dashboard — today", "page": "page-2", "x": 0, "y": 0, "w": 390, "h": 844 },
-    { "file": "Commands.dc.html", "title": "Commands — today", "page": "page-2", "x": 490, "y": 0, "w": 390, "h": 1180 },
-    { "file": "FindCar.dc.html", "title": "Find my car — today", "page": "page-2", "x": 980, "y": 0, "w": 390, "h": 844 },
-    { "file": "DashboardV2.dc.html", "title": "Dashboard — fixed", "page": "page-2", "x": 0, "y": 1340, "w": 390, "h": 844 },
-    { "file": "DashboardAsleep.dc.html", "title": "Dashboard — car asleep", "page": "page-2", "x": 490, "y": 1340, "w": 390, "h": 844 },
-    { "file": "CommandsV2.dc.html", "title": "Commands — fixed", "page": "page-2", "x": 980, "y": 1340, "w": 390, "h": 1180 },
-    { "file": "FindCarV2.dc.html", "title": "Find my car — fixed", "page": "page-2", "x": 1470, "y": 1340, "w": 390, "h": 844 }
+    { "file": "DirectionInstrument.dc.html", "title": "Dashboard", "page": "page-1", "x": 1000, "y": 0, "w": 390, "h": 844 },
+    { "file": "InstrumentCommands.dc.html", "title": "Commands", "page": "page-1", "x": 1490, "y": 0, "w": 390, "h": 900 },
+    { "file": "InstrumentFindCar.dc.html", "title": "Find my car", "page": "page-1", "x": 1980, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "InstrumentCharging.dc.html", "title": "Charging", "page": "page-1", "x": 1000, "y": 1300, "w": 390, "h": 844 },
+    { "file": "InstrumentTrip.dc.html", "title": "Trip", "page": "page-1", "x": 1490, "y": 1300, "w": 390, "h": 844 },
+    { "file": "InstrumentCosts.dc.html", "title": "Costs", "page": "page-1", "x": 1980, "y": 1300, "w": 390, "h": 844 },
+    { "file": "InstrumentGarage.dc.html", "title": "Garage", "page": "page-1", "x": 2470, "y": 1300, "w": 390, "h": 844 },
+
+    { "file": "DirectionEditorial.dc.html", "title": "B · Editorial", "page": "page-2", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "DirectionAmbient.dc.html", "title": "C · Ambient", "page": "page-2", "x": 490, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "Main.dc.html", "title": "Dashboard — today", "page": "page-3", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "Commands.dc.html", "title": "Commands — today", "page": "page-3", "x": 490, "y": 0, "w": 390, "h": 1180 },
+    { "file": "FindCar.dc.html", "title": "Find my car — today", "page": "page-3", "x": 980, "y": 0, "w": 390, "h": 844 },
+    { "file": "DashboardV2.dc.html", "title": "Dashboard — fixed", "page": "page-3", "x": 0, "y": 1340, "w": 390, "h": 844 },
+    { "file": "DashboardAsleep.dc.html", "title": "Car asleep — fixed", "page": "page-3", "x": 490, "y": 1340, "w": 390, "h": 844 },
+    { "file": "CommandsV2.dc.html", "title": "Commands — fixed", "page": "page-3", "x": 980, "y": 1340, "w": 390, "h": 1180 },
+    { "file": "FindCarV2.dc.html", "title": "Find my car — fixed", "page": "page-3", "x": 1470, "y": 1340, "w": 390, "h": 844 }
   ],
   "annotations": [
     {
-      "id": "brief",
+      "id": "sys-note",
       "page": "page-1",
       "x": 0,
       "y": -230,
-      "w": 460,
-      "text": "THREE DIRECTIONS, NOT THREE SHADES\n\nEach explores a different axis, and each would take the app somewhere the other two would not. Pick one and it becomes the whole app — every screen, not just this one.\n\nThe other page holds today's screens and the targeted fixes. That work stands whichever direction you pick; it is about defects, not about taste."
+      "w": 900,
+      "text": "INSTRUMENT — seven screens from one system\n\nRead the sheet on the left first. Every screen to the right is assembled from it and adds nothing: the same 56px row, the same four sizes, the same two faces, the same 8% hairline. There is not one card, shadow or rounded panel in the whole set.\n\nThat is the test of a direction. If a new screen needs a new component, either the screen is wrong or the system is incomplete — and so far neither has been."
     },
     {
-      "id": "dir-a",
+      "id": "sys-arc",
       "page": "page-1",
-      "x": 0,
-      "y": 900,
-      "w": 460,
-      "text": "A · INSTRUMENT — what I would ship\n\nOne object is the interface. The 270° arc is the charge, the tick on it is your limit, the number sits inside it. Everything else is a hairline table — there is not a single card, shadow or rounded panel on the screen.\n\nSpace Grotesk with Geist Mono for every number. Cyan oklch(0.78 0.17 195) as the only accent; amber carries the battery because amber IS the state.\n\nMotion earns its place: the arc sweeps to the value in 1.1s on a cubic-bezier(.22,1,.36,1), the limit tick lands after it, rows rise in sequence. One reveal, then stillness.\n\nWHY: a car is an instrument, and this is the only direction where the aesthetic and the data are the same decision. It also survives sunlight — hairlines and large type beat translucent panels outdoors, which is where this app is used.\n\nTRADEOFF: austere. There is nothing decorative to like, so it lives or dies on the typography being right. And a 270° arc reads worse than a bar for fine differences — 24% vs 27% is not distinguishable at a glance.\n\nProven on a second screen beside it: the command set in the same language — no cards, values as a scale, state as a right-aligned mono label."
+      "x": 1000,
+      "y": 2200,
+      "w": 900,
+      "text": "WHERE THE ARC IS ALLOWED\n\nTwice in the app, and both times it is the subject: charge on the dashboard, session progress on charging. Anywhere else it would be ornament pretending to be an instrument.\n\nThe garage is the proof it scales: at 46px the same arc becomes a row ornament that still carries the number, so two cars read at a glance without a second component being invented for them.\n\nWhat it deliberately does NOT do: the trip screen has four charging stops and no arcs at all — a route is a sequence, so it gets a spine and per-stop SOC bars. Costs has bars, because money over time is a comparison, not a level. Using the arc there would have been style over meaning."
     },
     {
-      "id": "dir-b",
+      "id": "sys-honest",
       "page": "page-1",
-      "x": 980,
-      "y": 900,
-      "w": 420,
-      "text": "B · EDITORIAL\n\nThe data is set like print. Instrument Serif at 132px, a strict left column, hairline rules, actions as text with an arrow — no buttons at all. Warm near-black, single amber accent.\n\nWHY: nothing else in the category looks like this, and it makes the app feel considered rather than technical. The serif numeral is genuinely beautiful at that size.\n\nTRADEOFF: the boldest and the riskiest. Text-as-button is a real usability cost on a phone — nothing signals tappability except position, and a 48px text row is easy to miss while walking. It also fights the product: this is a utility you open for four seconds, not something you read."
+      "x": 1980,
+      "y": 2200,
+      "w": 880,
+      "text": "WHAT I AM STILL UNSURE ABOUT\n\n· The arc reads a level, not a difference. 24% and 27% look the same. If precision matters more than character, the dashboard hero becomes a bar and the direction survives — the arc is the most replaceable part of it.\n\n· Space Grotesk 300 at 64px+ is thin. It holds on an OLED phone in shade; in direct sun it may need 400. That is a decision to make on a real screen outdoors, not here.\n\n· Rows with no fill rely entirely on the 8% hairline for structure. On a cheap panel with a blue-light filter that hairline can disappear. Worth testing before committing.\n\nNot yet drawn in this language: documents, insights, energy, settings, debug. They are all list screens and derive directly from the row — but I have not drawn them, so I am not claiming they are done."
     },
     {
-      "id": "dir-c",
-      "page": "page-1",
-      "x": 1470,
-      "y": 900,
-      "w": 420,
-      "text": "C · AMBIENT\n\nThe field is the state: a soft radial light behind a wireframe car, amber when low, emerald while charging, breathing on a 7s loop. Controls are frosted glass floating at thumb height. Sora, thin weights, generous air.\n\nWHY: this is what people mean by 'an app from the future', and it is the most immediately likeable of the three. State is legible before you read anything.\n\nTRADEOFF: it is also the closest to what everyone else ships — glass and glow are the current default, so the distinctiveness fades fast. Translucency loses contrast in daylight, and a breathing glow behind a battery reading can read as decoration rather than information. If you pick this, the glow must always mean something."
-    },
-    {
-      "id": "fixes",
+      "id": "others",
       "page": "page-2",
       "x": 0,
       "y": -150,
       "w": 460,
-      "text": "TODAY, AND THE TARGETED FIXES\n\nRebuilt from the real components and tokens — Geist, the dark oklch ramp, 10/12/16px radii, 44px targets.\n\nThese fixes are defects, not taste: the car-asleep state that today deletes the screen, commands the car will refuse being offered confidently, the walking distance set at 11px grey. They are worth doing whichever direction wins."
+      "text": "THE TWO I DID NOT TAKE\n\nKept because the choice should stay visible, and because either could be re-skinned onto the same structure if you prefer it. Their tradeoffs are unchanged: Editorial costs real tappability on a phone, Ambient looks like everything else shipping right now."
+    },
+    {
+      "id": "fixes",
+      "page": "page-3",
+      "x": 0,
+      "y": -150,
+      "w": 460,
+      "text": "TODAY, AND THE TARGETED FIXES\n\nThese are defects, not taste — the car-asleep state that deletes the screen, commands the car will refuse being offered confidently, the walking distance set at 11px grey.\n\nWorth shipping whichever direction wins, and cheaper to ship before a redesign than during one."
     }
   ],
   "launch": { "view": "canvas", "page": "page-1" }

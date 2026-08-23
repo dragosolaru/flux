@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.78 0.17 195); }
+    a:hover { color: oklch(0.86 0.17 195); }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+    @keyframes grow { from { transform: scaleY(0); } }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: oklch(0.08 0.01 240); color: oklch(0.97 0 0); font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 24px; box-sizing: border-box; overflow: hidden">
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 20px; animation: rise .5s ease-out both">
+    <span style="font-size: 15px; font-weight: 500">Costuri</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">Ultimele 6 luni</span>
+  </div>
+
+  <!-- The one number that matters: cost per kilometre -->
+  <div style="margin-top: 26px; animation: rise .6s .1s ease-out both">
+    <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">Cost pe kilometru</div>
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 2px">
+      <span style="font-size: 64px; font-weight: 300; line-height: .9; letter-spacing: -0.045em; font-variant-numeric: tabular-nums">0.21</span>
+      <span style="font-size: 18px; font-weight: 300; color: oklch(0.62 0.02 240)">lei</span>
+      <span style="flex: 1"></span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: oklch(0.72 0.17 155)">−63% vs benzină</span>
+    </div>
+  </div>
+
+  <!-- Monthly bars: hairline, no axis chrome -->
+  <div style="margin-top: 28px; animation: rise .6s .2s ease-out both">
+    <div style="display: flex; align-items: flex-end; gap: 10px; height: 108px">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 42%; background: oklch(0.97 0 0 / 14%); transform-origin: bottom; animation: grow .7s .25s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.50 0.02 240)">MAR</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 58%; background: oklch(0.97 0 0 / 14%); transform-origin: bottom; animation: grow .7s .3s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.50 0.02 240)">APR</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 51%; background: oklch(0.97 0 0 / 14%); transform-origin: bottom; animation: grow .7s .35s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.50 0.02 240)">MAI</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 74%; background: oklch(0.97 0 0 / 14%); transform-origin: bottom; animation: grow .7s .4s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.50 0.02 240)">IUN</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 66%; background: oklch(0.97 0 0 / 14%); transform-origin: bottom; animation: grow .7s .45s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.50 0.02 240)">IUL</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px"><div style="width: 100%; height: 88%; background: oklch(0.78 0.17 195); transform-origin: bottom; animation: grow .7s .5s cubic-bezier(.22,1,.36,1) both"></div><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; color: oklch(0.78 0.17 195)">AUG</span></div>
+    </div>
+    <div style="height: 1px; background: oklch(0.97 0 0 / 8%); margin-top: 2px"></div>
+    <div style="display: flex; justify-content: space-between; margin-top: 7px">
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.1em; color: oklch(0.50 0.02 240)">MEDIE 268 LEI</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.1em; color: oklch(0.78 0.17 195)">AUGUST 341 LEI</span>
+    </div>
+  </div>
+
+  <!-- Split: where the money went -->
+  <div style="margin-top: 26px; animation: rise .6s .3s ease-out both">
+    <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">Din ce</div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); margin-top: 8px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg>
+      <span style="flex: 1; font-size: 16px">Acasă</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-variant-numeric: tabular-nums">214 lei</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+      <span style="flex: 1; font-size: 16px">Public</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-variant-numeric: tabular-nums">127 lei</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%); opacity: .55">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.80 0.17 75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <span style="flex: 1; font-size: 16px">2 facturi de verificat</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.45 0.02 240)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="animation: rise .6s .4s ease-out both">
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.17 195)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span style="flex: 1; font-size: 16px; color: oklch(0.78 0.17 195)">Adaugă o factură</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">FOTO SAU EMAIL</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid oklch(0.97 0 0 / 8%); padding: 14px 0 26px 0">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Încărc.</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.78 0.17 195)">Mai mult</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

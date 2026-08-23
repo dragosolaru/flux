@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.78 0.17 195); }
+    a:hover { color: oklch(0.86 0.17 195); }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: oklch(0.08 0.01 240); color: oklch(0.97 0 0); font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 24px; box-sizing: border-box; overflow: hidden">
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 20px; animation: rise .5s ease-out both">
+    <span style="font-size: 15px; font-weight: 500">Garaj</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">2 mașini</span>
+  </div>
+
+  <!-- Each car is a row with its own miniature arc. The arc scales down and still reads. -->
+  <div style="margin-top: 20px; animation: rise .5s .08s ease-out both">
+    <div style="display: flex; align-items: center; gap: 16px; padding: 18px 0; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="46" height="46" viewBox="0 0 300 300" style="flex-shrink: 0">
+        <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.97 0 0 / 10%)" stroke-width="14" stroke-dasharray="518 173" stroke-linecap="round" transform="rotate(135 150 150)"/>
+        <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.80 0.17 75)" stroke-width="20" stroke-dasharray="124 567" stroke-linecap="round" transform="rotate(135 150 150)"/>
+      </svg>
+      <div style="flex: 1; min-width: 0">
+        <div style="display: flex; align-items: baseline; gap: 8px">
+          <span style="font-size: 17px; font-weight: 500">Black Panther</span>
+          <span style="width: 5px; height: 5px; border-radius: 9999px; background: oklch(0.78 0.17 195)"></span>
+        </div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240); margin-top: 3px">MODEL 3 LR · 5YJ3…1169 · 77 816 KM</div>
+      </div>
+      <div style="text-align: right; flex-shrink: 0">
+        <div style="font-size: 22px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums">24%</div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.55 0.02 240); margin-top: 3px">109 km</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px; padding: 18px 0; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%); opacity: .55">
+      <svg width="46" height="46" viewBox="0 0 300 300" style="flex-shrink: 0">
+        <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.97 0 0 / 10%)" stroke-width="14" stroke-dasharray="518 173" stroke-linecap="round" transform="rotate(135 150 150)"/>
+        <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.72 0.17 155)" stroke-width="20" stroke-dasharray="440 251" stroke-linecap="round" transform="rotate(135 150 150)"/>
+      </svg>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 17px; font-weight: 500">Demo Model Y</div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240); margin-top: 3px">SIMULATOR · FĂRĂ MAȘINĂ REALĂ</div>
+      </div>
+      <div style="text-align: right; flex-shrink: 0">
+        <div style="font-size: 22px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums">85%</div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; color: oklch(0.55 0.02 240); margin-top: 3px">402 km</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-car connection state — the thing that actually goes wrong -->
+  <div style="margin-top: 26px; animation: rise .6s .18s ease-out both">
+    <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">Black Panther · conexiune</div>
+
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); margin-top: 8px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.72 0.17 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+      <span style="flex: 1; font-size: 16px">Cheie virtuală</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.72 0.17 155)">ÎMPERECHEATĂ</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.72 0.17 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+      <span style="flex: 1; font-size: 16px">Permisiuni</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.72 0.17 155)">9 / 9</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+      <span style="flex: 1; font-size: 16px">Tarif discount Tesla</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">DA</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.20 25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      <span style="flex: 1; font-size: 16px">Deconectează</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.68 0.20 25)">REVOCĂ ACCESUL</span>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="animation: rise .6s .3s ease-out both">
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.17 195)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span style="flex: 1; font-size: 16px; color: oklch(0.78 0.17 195)">Conectează altă mașină</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; color: oklch(0.55 0.02 240)">FĂRĂ COST</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid oklch(0.97 0 0 / 8%); padding: 14px 0 26px 0">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Încărc.</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.78 0.17 195)">Mai mult</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
