@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.97 0 0); }
+    a:hover { color: oklch(0.80 0.15 60); }
+    @keyframes fade { from { opacity: 0; } }
+    @keyframes lift { from { opacity: 0; transform: translateY(14px); } }
+    @keyframes draw { from { transform: scaleX(0); } }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: oklch(0.12 0.008 60); color: oklch(0.95 0.005 60); font-family: Geist, ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 26px; box-sizing: border-box; overflow: hidden">
+
+  <!-- Masthead -->
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 24px; animation: fade .5s ease-out both">
+    <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 19px; letter-spacing: 0.01em">Flux</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: oklch(0.62 0.01 60)">Marți · 12 aug</span>
+  </div>
+  <div style="height: 1px; background: oklch(0.95 0.005 60 / 20%); margin-top: 12px; transform-origin: left; animation: draw .7s .1s cubic-bezier(.22,1,.36,1) both"></div>
+
+  <!-- The number is the layout. Nothing frames it. -->
+  <div style="margin-top: 34px; animation: lift .7s .15s cubic-bezier(.22,1,.36,1) both">
+    <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.62 0.01 60)">Baterie</div>
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-top: -6px">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 132px; line-height: .92; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">24</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 34px; color: oklch(0.62 0.01 60)">%</span>
+    </div>
+    <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 26px; color: oklch(0.80 0.15 60); margin-top: 2px">o sută nouă kilometri</div>
+  </div>
+
+  <!-- Rule + limit, read as a footnote to the number -->
+  <div style="margin-top: 22px; animation: fade .6s .35s ease-out both">
+    <div style="position: relative; height: 1px; background: oklch(0.95 0.005 60 / 20%)">
+      <div style="position: absolute; left: 0; top: -1px; height: 3px; width: 24%; background: oklch(0.80 0.15 60); transform-origin: left; animation: draw .9s .4s cubic-bezier(.22,1,.36,1) both"></div>
+      <div style="position: absolute; left: 80%; top: -4px; width: 1px; height: 9px; background: oklch(0.95 0.005 60 / 55%)"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 7px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.62 0.01 60)">
+      <span>Acum</span><span>Limită 80</span>
+    </div>
+  </div>
+
+  <!-- A definition list, set like a colophon -->
+  <div style="margin-top: 30px; animation: lift .6s .45s ease-out both">
+    <div style="display: flex; align-items: baseline; gap: 12px; padding: 11px 0; border-top: 1px solid oklch(0.95 0.005 60 / 14%)">
+      <span style="flex: 1; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.62 0.01 60)">Temperatură</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 22px; font-variant-numeric: tabular-nums">32° / 24°</span>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 12px; padding: 11px 0; border-top: 1px solid oklch(0.95 0.005 60 / 14%)">
+      <span style="flex: 1; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.62 0.01 60)">Poziție</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 22px">Βρασνά</span>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 12px; padding: 11px 0; border-top: 1px solid oklch(0.95 0.005 60 / 14%); border-bottom: 1px solid oklch(0.95 0.005 60 / 14%)">
+      <span style="flex: 1; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.62 0.01 60)">Distanță pe jos</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 22px; color: oklch(0.80 0.15 60); font-variant-numeric: tabular-nums">180 m</span>
+    </div>
+  </div>
+
+  <!-- Actions as set text, not buttons -->
+  <div style="margin-top: 26px; display: flex; flex-direction: column; gap: 2px; animation: lift .6s .55s ease-out both">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 48px">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 27px">Blochează</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.01 60)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 48px">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 27px">Pornește clima</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.01 60)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 48px">
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 27px; color: oklch(0.80 0.15 60)">Găsește mașina</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.80 0.15 60)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="display: flex; gap: 22px; padding: 14px 0 28px 0; border-top: 1px solid oklch(0.95 0.005 60 / 20%); animation: fade .6s .65s ease-out both">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.52 0.01 60)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.52 0.01 60)">Încărcare</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.52 0.01 60)">Mai mult</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

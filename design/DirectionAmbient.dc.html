@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600&family=Geist+Mono:wght@400&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.72 0.16 155); }
+    a:hover { color: oklch(0.82 0.16 155); }
+    @keyframes breathe { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: .8; transform: scale(1.05); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+    @keyframes fade { from { opacity: 0; } }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: oklch(0.09 0.015 260); color: oklch(0.97 0 0); font-family: Sora, ui-sans-serif, system-ui, sans-serif; overflow: hidden">
+
+  <!-- The field IS the state. Amber because the battery is low; it would be emerald while charging. -->
+  <div style="position: absolute; left: 50%; top: 210px; width: 620px; height: 620px; margin-left: -310px; border-radius: 9999px;
+       background: radial-gradient(closest-side, oklch(0.80 0.17 75 / 26%), oklch(0.80 0.17 75 / 6%) 55%, transparent 72%);
+       filter: blur(18px); animation: breathe 7s ease-in-out infinite"></div>
+
+  <!-- Header -->
+  <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 0 24px; animation: fade .6s ease-out both">
+    <span style="font-size: 15px; font-weight: 400; letter-spacing: -0.01em">Black Panther</span>
+    <span style="display: flex; align-items: center; gap: 7px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.72 0.16 155)">
+      <span style="width: 5px; height: 5px; border-radius: 9999px; background: oklch(0.72 0.16 155); box-shadow: 0 0 8px oklch(0.72 0.16 155)"></span>Live
+    </span>
+  </div>
+
+  <!-- The car as a silhouette, floating in its own light -->
+  <div style="position: relative; display: flex; justify-content: center; margin-top: 52px; animation: rise .8s .1s cubic-bezier(.22,1,.36,1) both">
+    <svg width="250" height="96" viewBox="0 0 250 96" fill="none">
+      <path d="M18 68h214M32 68c0-8 6-14 14-14s14 6 14 14M190 68c0-8 6-14 14-14s14 6 14 14"
+            stroke="oklch(0.97 0 0 / 22%)" stroke-width="1.25" stroke-linecap="round"/>
+      <path d="M22 62c-4-10 2-20 12-22l24-18c6-4 14-6 22-6h46c8 0 16 2 22 6l24 18c10 2 16 12 12 22"
+            stroke="oklch(0.97 0 0 / 55%)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M66 24h44l16 14H54Z" stroke="oklch(0.80 0.17 75 / 70%)" stroke-width="1.25" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- The number, weightless -->
+  <div style="position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 18px; animation: rise .8s .2s cubic-bezier(.22,1,.36,1) both">
+    <div style="display: flex; align-items: flex-start; gap: 4px">
+      <span style="font-size: 96px; font-weight: 200; line-height: .88; letter-spacing: -0.05em; font-variant-numeric: tabular-nums">24</span>
+      <span style="font-size: 22px; font-weight: 300; margin-top: 10px; color: oklch(0.66 0.02 260)">%</span>
+    </div>
+    <div style="font-size: 15px; font-weight: 300; color: oklch(0.66 0.02 260); margin-top: 4px">109 km rămași</div>
+  </div>
+
+  <!-- Three values, no containers, just light on dark -->
+  <div style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 34px; padding: 0 24px; animation: rise .8s .32s cubic-bezier(.22,1,.36,1) both">
+    <div style="text-align: center">
+      <div style="font-size: 22px; font-weight: 200; font-variant-numeric: tabular-nums">32°</div>
+      <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: oklch(0.55 0.02 260); margin-top: 4px">Afară</div>
+    </div>
+    <div style="text-align: center">
+      <div style="font-size: 22px; font-weight: 200; font-variant-numeric: tabular-nums">24°</div>
+      <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: oklch(0.55 0.02 260); margin-top: 4px">Habitaclu</div>
+    </div>
+    <div style="text-align: center">
+      <div style="font-size: 22px; font-weight: 200; font-variant-numeric: tabular-nums">80%</div>
+      <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: oklch(0.55 0.02 260); margin-top: 4px">Limită</div>
+    </div>
+  </div>
+
+  <!-- Find the car: the one thing that gets a surface -->
+  <div style="position: relative; margin: 30px 24px 0 24px; display: flex; align-items: center; gap: 14px; border-radius: 20px; background: oklch(1 0 0 / 5%); backdrop-filter: blur(24px); border: 1px solid oklch(1 0 0 / 8%); padding: 15px 16px; animation: rise .8s .42s cubic-bezier(.22,1,.36,1) both">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.72 0.16 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+    <span style="flex: 1; min-width: 0">
+      <span style="display: block; font-size: 15px; font-weight: 400">Găsește mașina</span>
+      <span style="display: block; font-size: 12px; font-weight: 300; color: oklch(0.66 0.02 260)">180 m · Βρασνά</span>
+    </span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.55 0.02 260)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+  </div>
+
+  <!-- Controls: glass, floating, thumb-height -->
+  <div style="position: absolute; left: 24px; right: 24px; bottom: 96px; display: flex; gap: 10px; animation: rise .8s .52s cubic-bezier(.22,1,.36,1) both">
+    <div style="flex: 1; height: 60px; border-radius: 20px; background: oklch(1 0 0 / 5%); backdrop-filter: blur(24px); border: 1px solid oklch(1 0 0 / 8%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="font-size: 10px; font-weight: 300; color: oklch(0.66 0.02 260)">Blochează</span>
+    </div>
+    <div style="flex: 1; height: 60px; border-radius: 20px; background: oklch(1 0 0 / 5%); backdrop-filter: blur(24px); border: 1px solid oklch(1 0 0 / 8%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 16.4a6 6 0 0 1-8.6-7l5.4 1.5a6 6 0 0 1 7-8.6l-1.5 5.4a6 6 0 0 1 8.6 7l-5.4-1.5a6 6 0 0 1-7 8.6l1.5-5.4Z"/><circle cx="12" cy="12" r="1.5"/></svg>
+      <span style="font-size: 10px; font-weight: 300; color: oklch(0.66 0.02 260)">Climă</span>
+    </div>
+    <div style="flex: 1; height: 60px; border-radius: 20px; background: oklch(1 0 0 / 5%); backdrop-filter: blur(24px); border: 1px solid oklch(1 0 0 / 8%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span style="font-size: 10px; font-weight: 300; color: oklch(0.66 0.02 260)">Tot</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 28px; display: flex; justify-content: center; gap: 26px; animation: fade .6s .62s ease-out both">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.72 0.16 155)">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.45 0.02 260)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.45 0.02 260)">Încărcare</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.45 0.02 260)">Mai mult</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
