@@ -1,0 +1,57 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Dashboard — today", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "Commands.dc.html", "title": "Commands — today", "x": 490, "y": 0, "w": 390, "h": 1180 },
+    { "file": "FindCar.dc.html", "title": "Find my car — today", "x": 980, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "DashboardV2.dc.html", "title": "Dashboard — proposed", "x": 0, "y": 1340, "w": 390, "h": 844 },
+    { "file": "DashboardAsleep.dc.html", "title": "Dashboard — car asleep", "x": 490, "y": 1340, "w": 390, "h": 844 },
+    { "file": "CommandsV2.dc.html", "title": "Commands — proposed", "x": 980, "y": 1340, "w": 390, "h": 1180 },
+    { "file": "FindCarV2.dc.html", "title": "Find my car — proposed", "x": 1470, "y": 1340, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    {
+      "id": "row-today",
+      "x": 0,
+      "y": -150,
+      "w": 420,
+      "text": "TODAY — rebuilt from the real components and tokens.\n\nGeist / Geist Mono, background oklch(0.10 0.02 265), card 0.16, primary oklch(0.62 0.19 250), radii 10/12/16px, 44px minimum targets. Nothing here is invented."
+    },
+    {
+      "id": "row-proposed",
+      "x": 0,
+      "y": 1190,
+      "w": 420,
+      "text": "PROPOSED — one change per problem, same vocabulary.\n\nEvery proposal came from reading the real source, not from taste. The reasoning sits in each artboard's comments."
+    },
+    {
+      "id": "note-dash",
+      "x": 0,
+      "y": 2230,
+      "w": 420,
+      "text": "DASHBOARD\n\n· Live badge becomes the sleep control — the 68px explainer block goes.\n· Find-my-car moves ABOVE the actions: walking to the car, it is the primary target.\n· Actions 48 → 56px, lower on screen, inside the one-handed arc.\n· SOC rail 2 → 4px on a brighter track; km and limit read along it.\n· Three tiles that earn it. Odometer is not a 2-second need; location and last-seen were duplicates.\n· The disclosure gets a different SHAPE. The primary tint is reserved for 'this is running on the car'."
+    },
+    {
+      "id": "note-asleep",
+      "x": 490,
+      "y": 2230,
+      "w": 420,
+      "text": "CAR ASLEEP — the most common state\n\nvehicle_data answers 408 most of the time, and today that replaces the whole screen with an error card. But the cache still holds the last reading, and 'where did I park' is exactly what you need then.\n\nThe reading stays, dimmed. The error is one row. Find-my-car keeps working on the last known position."
+    },
+    {
+      "id": "note-cmd",
+      "x": 980,
+      "y": 2570,
+      "w": 420,
+      "text": "COMMANDS\n\n· isOnline and chargingState are already in VehicleState and read nowhere. A command the car will refuse is disabled WITH ITS REASON, not offered confidently.\n· Grouping finished: charge limit, amps and schedule live inside Charging; the temperature stepper inside Climate. They were four sections adrift.\n· Inactive buttons bg-muted/40 over card is ~L 0.18 — invisible outdoors. Full bg-muted, border-white/10.\n· No fetch timeout today: a slow command and a dead one look identical forever. 30s abort, and at 8s the button says what it is waiting for.\n· Venting and disabling Sentry join the confirm list."
+    },
+    {
+      "id": "note-find",
+      "x": 1470,
+      "y": 2230,
+      "w": 420,
+      "text": "FIND MY CAR\n\n· The distance was 11px grey — the smallest thing on a screen that exists to show it. Now 24px semibold, the title drops to a 10px label.\n· A compass arrow beats a line: a dashed bearing only helps if you know which way you are facing.\n· The position gets a timestamp. A fix from when the car fell asleep eight hours ago reads identically to one from 30 seconds ago.\n· The blue dot gets its GPS accuracy circle. An 18px dot implies metre precision; a car park gives 40."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

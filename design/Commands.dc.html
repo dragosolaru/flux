@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.62 0.19 250); }
+    a:hover { color: oklch(0.70 0.19 250); }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 1180px; background: oklch(0.10 0.02 265); color: oklch(0.97 0 0); font-family: Geist, ui-sans-serif, system-ui, sans-serif; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+  <div>
+    <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em">Comenzi</div>
+    <div style="font-size: 13px; color: oklch(0.60 0.02 265); margin-top: 2px">Controlează-ți mașina de la distanță.</div>
+  </div>
+
+  <!-- Quick row (CommandPanel) -->
+  <div style="display: flex; gap: 12px">
+    <div style="width: 44px; height: 44px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 60%); display: flex; align-items: center; justify-content: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div style="width: 44px; height: 44px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 60%); display: flex; align-items: center; justify-content: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 16.4a6 6 0 0 1-8.6-7l5.4 1.5a6 6 0 0 1 7-8.6l-1.5 5.4a6 6 0 0 1 8.6 7l-5.4-1.5a6 6 0 0 1-7 8.6l1.5-5.4Z"/><circle cx="12" cy="12" r="1.5"/></svg>
+    </div>
+    <div style="width: 44px; height: 44px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 60%); display: flex; align-items: center; justify-content: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+    </div>
+    <div style="width: 44px; height: 44px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 60%); display: flex; align-items: center; justify-content: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/></svg>
+    </div>
+  </div>
+
+  <!-- Group: Încărcare -->
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: oklch(0.60 0.02 265)">Încărcare</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 12px; border: 1px solid oklch(0.62 0.19 250 / 50%); background: oklch(0.62 0.19 250 / 15%); padding: 0 12px; font-size: 14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="m10 9-2 3h3l-2 3"/></svg>
+        <span>Oprește</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 40%); padding: 0 12px; font-size: 14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M9 3v4M15 3v4M6 7h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V7Z"/></svg>
+        <span>Deschide port</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group: Climatizare -->
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: oklch(0.60 0.02 265)">Climatizare</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 40%); padding: 0 12px; font-size: 14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"/></svg>
+        <span>Dezgheț maxim</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group: Securitate -->
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: oklch(0.60 0.02 265)">Securitate</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 40%); padding: 0 12px; font-size: 14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/></svg>
+        <span>Pornește Sentry</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 40%); padding: 0 12px; font-size: 14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m6 3 14 9-14 9V3Z"/></svg>
+        <span>Pornire</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chip row: charge limit -->
+  <div style="display: flex; flex-direction: column; gap: 8px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 20%); padding: 12px">
+    <div style="font-size: 14px">Limită de încărcare</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 0 12px; font-size: 12px; color: oklch(0.60 0.02 265)">50%</div>
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 0 12px; font-size: 12px; color: oklch(0.60 0.02 265)">60%</div>
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 0 12px; font-size: 12px; color: oklch(0.60 0.02 265)">70%</div>
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(0.62 0.19 250 / 50%); background: oklch(0.62 0.19 250 / 15%); padding: 0 12px; font-size: 12px; font-weight: 600">80%</div>
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 0 12px; font-size: 12px; color: oklch(0.60 0.02 265)">90%</div>
+      <div style="display: flex; align-items: center; height: 36px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 0 12px; font-size: 12px; color: oklch(0.60 0.02 265)">100%</div>
+    </div>
+  </div>
+
+  <!-- Stepper: cabin temperature -->
+  <div style="display: flex; flex-direction: column; gap: 8px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 20%); padding: 12px">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+      <span>Temperatură în habitaclu</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+      </div>
+      <div style="flex: 1; text-align: center; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 18px; font-variant-numeric: tabular-nums">21°C</div>
+      <div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <div style="flex-shrink: 0; min-height: 44px; display: flex; align-items: center; border-radius: 12px; background: oklch(0.62 0.19 250); color: oklch(0.98 0 0); padding: 0 16px; font-size: 14px; font-weight: 600">Aplică</div>
+    </div>
+  </div>
+
+  <!-- Navigate row -->
+  <div style="display: flex; flex-direction: column; gap: 8px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265 / 20%); padding: 12px">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Trimite la navigație</span>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <div style="flex: 1; min-height: 44px; display: flex; align-items: center; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.10 0.02 265); padding: 0 12px; font-size: 14px; color: oklch(0.60 0.02 265)">Adresă sau loc</div>
+      <div style="flex-shrink: 0; min-height: 44px; display: flex; align-items: center; border-radius: 12px; background: oklch(0.62 0.19 250); color: oklch(0.98 0 0); padding: 0 16px; font-size: 14px; font-weight: 600">Trimite</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

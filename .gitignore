@@ -50,3 +50,7 @@ next-env.d.ts
 /playwright/.cache/
 .claude/settings.local.json
 .superpowers/
+
+# Seeded canvas output — regenerate with the design skill's seeder from the
+# .dc.html working files beside it. ~2 MB, and it changes wholesale every seed.
+design/flux-screens.html

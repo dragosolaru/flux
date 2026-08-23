@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.62 0.19 250); }
+    a:hover { color: oklch(0.70 0.19 250); }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: oklch(0.14 0.01 265); color: oklch(0.97 0 0); font-family: Geist, ui-sans-serif, system-ui, sans-serif; overflow: hidden">
+
+  <!-- Map ground -->
+  <div style="position: absolute; inset: 0; background:
+      repeating-linear-gradient(0deg, oklch(0.17 0.012 265) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(90deg, oklch(0.17 0.012 265) 0 1px, transparent 1px 64px),
+      oklch(0.135 0.012 265)"></div>
+  <div style="position: absolute; left: -40px; top: 300px; width: 470px; height: 26px; background: oklch(0.19 0.012 265); transform: rotate(-8deg)"></div>
+  <div style="position: absolute; left: 120px; top: -60px; width: 22px; height: 980px; background: oklch(0.19 0.012 265); transform: rotate(6deg)"></div>
+
+  <!-- Dashed bearing line -->
+  <svg style="position: absolute; inset: 0" width="390" height="844">
+    <line x1="150" y1="560" x2="248" y2="392" stroke="#22c55e" stroke-width="3" stroke-dasharray="6 8" stroke-linecap="round" opacity="0.9"/>
+  </svg>
+
+  <!-- User dot -->
+  <div style="position: absolute; left: 141px; top: 551px; width: 18px; height: 18px; border-radius: 9999px; background: #3b82f6; border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45)"></div>
+
+  <!-- Car pin -->
+  <div style="position: absolute; left: 235px; top: 379px; width: 26px; height: 26px; border-radius: 9999px; background: #22c55e; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+  </div>
+
+  <!-- Find-my-car banner -->
+  <div style="position: absolute; left: 12px; right: 12px; top: 12px; display: flex; align-items: center; gap: 8px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265 / 95%); backdrop-filter: blur(20px); padding: 8px 12px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.18 162)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+    <div style="flex: 1; min-width: 0">
+      <div style="font-size: 14px; font-weight: 500">Mașina ta</div>
+      <div style="font-size: 11px; color: oklch(0.60 0.02 265)">180 m pe jos</div>
+    </div>
+    <div style="flex-shrink: 0; min-height: 44px; display: flex; align-items: center; gap: 6px; border-radius: 12px; background: oklch(0.62 0.19 250); color: oklch(0.98 0 0); padding: 0 12px; font-size: 14px; font-weight: 600">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.4a4 4 0 0 1 1-2.6l4-4.5"/><path d="M16 20v-3a4 4 0 0 0-1-2.6L11 10"/><circle cx="14" cy="4" r="2"/></svg>
+      Pe jos
+    </div>
+  </div>
+
+  <!-- Mode card pushed below the banner -->
+  <div style="position: absolute; left: 12px; right: 12px; top: 80px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265 / 95%); backdrop-filter: blur(20px); padding: 4px">
+    <div style="display: flex; gap: 2px; padding: 2px">
+      <div style="flex: 1; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: oklch(0.62 0.19 250 / 15%); color: oklch(0.62 0.19 250); font-size: 13px; font-weight: 500">Explorează</div>
+      <div style="flex: 1; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 13px; color: oklch(0.60 0.02 265)">Planifică</div>
+    </div>
+  </div>
+
+  <!-- Locate button -->
+  <div style="position: absolute; right: 12px; bottom: 158px; width: 44px; height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265 / 90%); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+  </div>
+
+  <!-- Bottom nav -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 22px; display: flex; justify-content: center">
+    <div style="display: flex; align-items: center; gap: 4px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 6px">
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
+      <div style="display: flex; align-items: center; gap: 6px; border-radius: 9999px; background: oklch(0.62 0.19 250 / 15%); padding: 8px 16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>
+        <span style="font-size: 13px; font-weight: 500; color: oklch(0.62 0.19 250)">Hartă</span>
+      </div>
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"/><path d="M6 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1"/><path d="M11 7 8 12h4l-3 5"/></svg></div>
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

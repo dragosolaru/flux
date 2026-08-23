@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.62 0.19 250); }
+    a:hover { color: oklch(0.70 0.19 250); }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: oklch(0.10 0.02 265); color: oklch(0.97 0 0); font-family: Geist, ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- Top bar -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px 16px">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <svg width="16" height="18" viewBox="0 0 16 18" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="2" stroke-linecap="round"><path d="M2 16V2h9l-3 6h5L4 16"/></svg>
+      <span style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em">Flux</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+      <span style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em">Black Panther</span>
+    </div>
+    <div style="width: 32px; height: 32px; border-radius: 9999px; background: oklch(0.22 0.015 265)"></div>
+  </div>
+
+  <!-- Hero -->
+  <div style="padding: 16px 16px 0 16px">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+      <span style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em">Black Panther</span>
+      <span style="display: flex; align-items: center; gap: 6px; border-radius: 9999px; background: oklch(0.68 0.18 162 / 12%); padding: 4px 10px; font-size: 12px; color: oklch(0.68 0.18 162)">
+        <span style="width: 6px; height: 6px; border-radius: 9999px; background: oklch(0.68 0.18 162)"></span>Live
+      </span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <div style="font-size: 72px; font-weight: 100; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">24<span style="font-size: 20px; color: oklch(0.60 0.02 265); margin-left: 4px">%</span></div>
+      <div style="font-size: 18px; font-weight: 300; color: oklch(0.60 0.02 265); font-variant-numeric: tabular-nums">109 km</div>
+    </div>
+
+    <!-- SOC rail, 2px, with the charge-limit tick -->
+    <div style="position: relative; margin-top: 16px; height: 2px; border-radius: 9999px; background: oklch(0.22 0.015 265); overflow: hidden">
+      <div style="height: 100%; width: 24%; border-radius: 9999px; background: oklch(0.75 0.18 85)"></div>
+    </div>
+    <div style="position: relative; height: 0"><div style="position: absolute; top: -2px; left: 80%; width: 1px; height: 2px; background: oklch(0.97 0 0 / 40%)"></div></div>
+  </div>
+
+  <!-- Sleep control -->
+  <div style="margin: 16px 16px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 12px">
+    <div style="display: flex; align-items: flex-start; gap: 8px; min-width: 0">
+      <span style="margin-top: 5px; width: 8px; height: 8px; border-radius: 9999px; background: oklch(0.68 0.18 162); flex-shrink: 0"></span>
+      <span style="font-size: 13px; line-height: 1.35; color: oklch(0.60 0.02 265)">Live updates on — this keeps the car awake.</span>
+    </div>
+    <button style="flex-shrink: 0; min-height: 44px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.22 0.015 265); color: oklch(0.97 0 0); padding: 0 14px; font-size: 14px; font-family: inherit">Let it sleep</button>
+  </div>
+
+  <!-- Quick actions -->
+  <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px">
+    <div style="width: 48px; height: 48px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z"/><circle cx="12" cy="12" r="1.5"/></svg>
+    </div>
+    <div style="width: 48px; height: 48px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div style="width: 48px; height: 48px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"/><path d="M6 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1"/><path d="M11 7 8 12h4l-3 5"/></svg>
+    </div>
+    <div style="width: 48px; height: 48px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+  </div>
+
+  <!-- Stat chips -->
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 20px 16px 0 16px">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 12px 8px; text-align: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span style="font-size: 17px; font-weight: 100; line-height: 1; font-variant-numeric: tabular-nums">40.70</span>
+      <span style="font-size: 11px; line-height: 1.2; color: oklch(0.60 0.02 265)">LOCAȚIE</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 12px 8px; text-align: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.75 0.18 85)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+      <span style="font-size: 17px; font-weight: 100; line-height: 1; font-variant-numeric: tabular-nums">32°C</span>
+      <span style="font-size: 11px; line-height: 1.2; color: oklch(0.60 0.02 265)">TEMP</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 12px 8px; text-align: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+      <span style="font-size: 17px; font-weight: 100; line-height: 1; font-variant-numeric: tabular-nums">77816</span>
+      <span style="font-size: 11px; line-height: 1.2; color: oklch(0.60 0.02 265)">ODOMETRU</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 12px 8px; text-align: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+      <span style="font-size: 17px; font-weight: 100; line-height: 1; font-variant-numeric: tabular-nums">acum</span>
+      <span style="font-size: 11px; line-height: 1.2; color: oklch(0.60 0.02 265)">VĂZUT</span>
+    </div>
+  </div>
+
+  <!-- Location row -->
+  <div style="margin: 12px 16px 0 16px; display: flex; align-items: center; gap: 12px; border-radius: 12px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 10px 12px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+    <span style="flex: 1; min-width: 0">
+      <span style="display: block; font-size: 14px; font-weight: 500">40.70, 23.65</span>
+      <span style="display: block; font-size: 12px; color: oklch(0.60 0.02 265)">Găsește mașina</span>
+    </span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m9 18 6-6-6-6"/></svg>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <!-- Bottom nav pill -->
+  <div style="display: flex; justify-content: center; padding-bottom: 22px">
+    <div style="display: flex; align-items: center; gap: 4px; border-radius: 9999px; border: 1px solid oklch(1 0 0 / 6%); background: oklch(0.16 0.015 265); padding: 6px">
+      <div style="display: flex; align-items: center; gap: 6px; border-radius: 9999px; background: oklch(0.62 0.19 250 / 15%); padding: 8px 16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.62 0.19 250)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2l.64-2.54a6 6 0 0 0-.4-4.06l-1.1-2.4A2 2 0 0 0 18.32 7H5.68a2 2 0 0 0-1.82 1l-1.1 2.4a6 6 0 0 0-.4 4.06L3 17h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+        <span style="font-size: 13px; font-weight: 500; color: oklch(0.62 0.19 250)">Mașina</span>
+      </div>
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg></div>
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"/><path d="M6 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1"/><path d="M11 7 8 12h4l-3 5"/></svg></div>
+      <div style="padding: 8px 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.60 0.02 265)" stroke-width="1.75" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
