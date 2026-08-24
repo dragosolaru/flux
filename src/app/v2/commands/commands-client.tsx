@@ -80,7 +80,11 @@ export function CommandsV2Client() {
   const brand = (vehicle?.brand ?? "tesla") as BrandKey;
   const isLive = vehicle?.dataSource === "live";
 
-  const { data: state } = useVehicle(vehicleId, isLive);
+  // poll: false. Every control here reflects state the car reports, but
+  // useVehicleCommand invalidates ["vehicle", id] on settle, so the screen
+  // refreshes after a command without an interval that keeps the car awake for
+  // as long as someone has the screen open.
+  const { data: state } = useVehicle(vehicleId, isLive, false);
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, isError, error } = useVehicleCommand();
 

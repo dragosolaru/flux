@@ -47,7 +47,8 @@ export function ChargersV2Client() {
   const { data: vehicles } = useVehicles();
   const vehicleId = selectedVehicleId ?? "";
   const vehicle = vehicles?.find((v) => v.id === vehicleId);
-  const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live");
+  // poll: false. Only used as a fallback map centre when location is denied.
+  const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live", false);
 
   const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
   const [minKw, setMinKw] = useState(0);

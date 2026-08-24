@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import * as vehiclesApi from "@/lib/api/vehicles";
+import type { VehicleState } from "@/types/vehicle";
 
 /**
  * Polling stops on its own after this long without the page being touched.
@@ -20,6 +21,35 @@ import * as vehiclesApi from "@/lib/api/vehicles";
 const IDLE_PAUSE_MS = 10 * 60 * 1000;
 
 const ACTIVITY_EVENTS = ["pointerdown", "keydown", "visibilitychange"] as const;
+
+/** How often a screen that is allowed to poll asks the car again. */
+export const POLL_INTERVAL_MS = 30_000;
+
+/**
+ * Whether a poll is allowed right now — the whole rule, in one pure function so
+ * it can be tested and so no screen can quietly get it wrong.
+ *
+ * A poll on a sleeping Tesla wakes it (see fetchVehicleData), and a car kept
+ * from deep sleep loses roughly ten times more charge per idle day. So the
+ * default answer is no, and every yes has to be argued for at the call site.
+ */
+export function pollInterval(input: {
+  /** The screen asked to keep refreshing. */
+  poll: boolean;
+  /** A linked car, i.e. one that can be woken. */
+  live: boolean;
+  /** Polling has not been switched off by hand or by the idle timer. */
+  active: boolean;
+  status: "pending" | "success" | "error";
+}): number | false {
+  if (!input.poll) return false;
+  if (input.live && !input.active) return false;
+  // Stop after a failure instead of retrying every 30 s forever. A car we
+  // cannot reach is asleep, out of signal, or unlinked — none of which a timer
+  // fixes, and each attempt still tries to wake it.
+  if (input.status === "error") return false;
+  return POLL_INTERVAL_MS;
+}
 
 export interface VehiclePolling {
   /** False once polling has stopped, whether by idling out or by hand. */
@@ -45,8 +75,20 @@ export interface VehiclePolling {
  *              — the trip planner reading the battery to plan from — pass
  *              false: they get the cached value, or one fetch, and never start
  *              an interval that keeps the car awake while someone plans.
+ *
+ *              A predicate may be passed instead, evaluated against the last
+ *              state the car reported. That is how the charging screen refreshes
+ *              only while a session is running: a charging car is already awake,
+ *              so polling it costs nothing, and one that has finished is left
+ *              alone. Expressing it as a predicate rather than a piece of
+ *              component state avoids the chicken-and-egg of needing the data to
+ *              decide whether to fetch the data.
  */
-export function useVehicle(vehicleId: string, live = true, poll = true) {
+export function useVehicle(
+  vehicleId: string,
+  live = true,
+  poll: boolean | ((state: VehicleState | undefined) => boolean) = true,
+) {
   // Only a linked car can be kept awake; the simulator has nothing to disturb,
   // so mock vehicles keep polling exactly as before.
   const [active, setActive] = useState(true);
@@ -110,17 +152,13 @@ export function useVehicle(vehicleId: string, live = true, poll = true) {
   const query = useQuery({
     queryKey: ["vehicle", vehicleId],
     queryFn: () => vehiclesApi.getState(vehicleId),
-    refetchInterval: (q) => {
-      if (!poll) return false;
-      if (live && !active) return false;
-      // Stop after a failure instead of retrying every 30 s forever. A car we
-      // cannot reach is asleep, out of signal, or unlinked — none of which a
-      // timer fixes, and each attempt still tries to wake it. The error card's
-      // Retry is the way back, which also makes resuming a decision rather
-      // than something that happens silently in the background.
-      if (q.state.status === "error") return false;
-      return 30_000;
-    },
+    refetchInterval: (q) =>
+      pollInterval({
+        poll: typeof poll === "function" ? poll(q.state.data) : poll,
+        live,
+        active,
+        status: q.state.status,
+      }),
     staleTime: 20_000,
     enabled: !!vehicleId,
   });

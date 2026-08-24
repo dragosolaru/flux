@@ -86,7 +86,15 @@ export function ChargingClient({
     vehicleId === initialVehicleId ? initialHistory : undefined,
   );
 
-  const { data, isLoading, isError } = useVehicle(vehicleId);
+  // Polled ONLY while a session is running. A charging car is awake anyway —
+  // the session is what keeps it up — so refreshing costs nothing. A car that
+  // has finished, or was never plugged in, is left to sleep: this screen used
+  // to poll it every 30 s for ten minutes just for being open.
+  const { data, isLoading, isError } = useVehicle(
+    vehicleId,
+    true,
+    (s) => s?.chargingState === "charging",
+  );
   const { mutate, isPending } = useVehicleCommand();
   const { data: caps } = useCapabilities();
   const syncMutation = useChargingHistorySync(vehicleId);

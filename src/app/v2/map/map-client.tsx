@@ -53,7 +53,9 @@ export function MapV2Client() {
   const vehicle = vehicles?.find((v) => v.id === vehicleId);
   const isLive = vehicle?.dataSource === "live";
 
-  const { data: state } = useVehicle(vehicleId, isLive);
+  // poll: false. Where the car is parked does not change while it is parked,
+  // and this screen is opened precisely when the car is asleep somewhere.
+  const { data: state } = useVehicle(vehicleId, isLive, false);
   const { mutate, isPending, variables } = useVehicleCommand();
 
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);

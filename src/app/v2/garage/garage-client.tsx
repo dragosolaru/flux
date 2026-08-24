@@ -36,10 +36,16 @@ function CarRow({
   last?: boolean;
 }) {
   const tv = useTranslations("v2");
-  // Only the selected car is polled. Reading every car's state to draw a
-  // garage list would wake every linked car at once, which is the opposite of
-  // what a list screen should cost.
-  const { data } = useVehicle(selected ? vehicle.id : "", false);
+  // A list screen never polls: reading every car's state on a timer would keep
+  // every linked car awake at once, which is the opposite of what a list should
+  // cost. `live` is passed truthfully as well — it was hardcoded false, which
+  // told the hook there was nothing to disturb and disabled the idle cut-off on
+  // exactly the cars that needed it.
+  const { data } = useVehicle(
+    selected ? vehicle.id : "",
+    vehicle.dataSource === "live",
+    false,
+  );
   const soc = typeof data?.batteryLevel === "number" ? Math.round(data.batteryLevel) : null;
 
   return (

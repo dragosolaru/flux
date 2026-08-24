@@ -52,7 +52,15 @@ export function ChargingV2Client({
   const vehicle = vehicles?.find((v) => v.id === vehicleId);
   const isLive = vehicle?.dataSource === "live";
 
-  const { data: state } = useVehicle(vehicleId, isLive);
+  // Polled ONLY while charging. A charging car is awake anyway — the session
+  // is what is keeping it up — so refreshing costs nothing. A plugged-in car
+  // that has finished, or an unplugged one, is left alone. The first fetch
+  // still happens; only the interval is conditional.
+  const { data: state } = useVehicle(
+    vehicleId,
+    isLive,
+    (s) => s?.chargingState === "charging",
+  );
   const { mutate, isPending, variables } = useVehicleCommand();
   const { data: history = [] } = useChargingHistory(
     vehicleId,

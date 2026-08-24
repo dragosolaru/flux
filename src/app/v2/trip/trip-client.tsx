@@ -127,7 +127,9 @@ export function TripV2Client() {
   const { data: vehicles } = useVehicles();
   const vehicleId = selectedVehicleId ?? "";
   const vehicle = vehicles?.find((v) => v.id === vehicleId);
-  const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live");
+  // poll: false. The planner needs the battery once, to plan from — an
+  // interval here would keep a linked car awake for as long as someone plans.
+  const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live", false);
 
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [destination, setDestination] = useState<GeoPoint | null>(null);

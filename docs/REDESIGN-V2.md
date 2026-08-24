@@ -180,6 +180,36 @@ Fixed in the **real** app, not only in `/v2`.
 | # | Screen | What was wrong | Fixed in |
 | --- | --- | --- | --- |
 | 1 | `/charging` | The page fetched charging history server-side for the **first** vehicle by `created_at`, while the client rendered live state for the **selected** one. With two cars linked, the sessions listed belonged to a different car than the battery above them, and nothing on screen said so. | `GET /api/vehicles/[vehicleId]/charging-history` (new, auth + ownership checked), `src/hooks/useChargingHistory.ts`, and both the v1 and v2 charging screens now key the query on the selected vehicle. The server rows are initial data for that one car only. |
+| 2 | every `/v2` screen | Every v2 screen called `useVehicle(id, isLive)` without the third argument, so opening Commands, the trip planner, find-my-car or the charger list started a 30-second poll against a parked car. A poll on a sleeping Tesla wakes it, and a car kept out of deep sleep loses roughly ten times more charge per idle day. The garage was worst: it passed `live: false`, which told the hook there was nothing to disturb and disabled the idle cut-off on exactly the linked cars that needed it. | Only the dashboard polls now. Charging polls **only while a session is running** — a charging car is awake anyway. Everything else reads the value once; `useVehicleCommand` already invalidates the query after a command, so the screens stay current without an interval. |
+| 3 | `/commands`, `/charging` (v1) | The same defect predated the redesign: both polled a live car every 30 s for ten minutes each time the screen was opened, just for being open. | Same rule applied. `/commands` passes `poll: false`, `/charging` polls only while charging. |
+| 4 | `/v2` (all) | The bottom nav was the last child of a flex column, so it only reached the bottom when the content above happened to fill the viewport. On settings, a one-car garage or an empty document list it floated in the middle of the page. | The nav is `fixed` to the viewport and `Screen` reserves `--v2-nav-h` so nothing lands underneath it. Its links also gained a 44px touch target. |
+| 5 | `/v2` (map, chargers) | Rows linking to Google Maps used `next/link`, which navigates in place. Installed as a PWA there is no back button, so a walking route handed the app's only window to Google Maps. | `Row` renders a plain `<a target="_blank" rel="noreferrer">` for any `http` destination. |
+
+---
+
+## The polling rule
+
+`pollInterval()` in `src/hooks/useVehicle.ts` is the whole rule, as one pure
+function, pinned by `src/hooks/__tests__/poll-interval.test.ts`. It is a battery
+bill rather than a preference, so it is tested rather than commented:
+
+- A screen that did not ask to poll never polls. This outranks everything else.
+- A **live** car whose polling has been paused — by hand or by the ten-minute
+  idle timer — is left alone. A simulator is not: there is nothing to disturb.
+- After a failure, polling stops. Each retry still tries to wake the car, and no
+  timer fixes a car that is asleep, out of signal, or unlinked.
+
+`poll` also accepts a predicate over the last reported state. That is how the
+charging screens refresh only while a session is running, without the
+chicken-and-egg of needing the data to decide whether to fetch the data.
+
+Who polls, and why:
+
+| Screen | Polls | Why |
+| --- | --- | --- |
+| `/v2/dashboard`, `/dashboard` | yes | Live state is the point of the screen, and it carries the visible "let it sleep" control plus the idle cut-off. |
+| `/v2/charging`, `/charging` | only while charging | The session is already keeping the car awake. |
+| everything else | no | One fetch. Commands refresh through the invalidation `useVehicleCommand` already does. |
 
 ---
 

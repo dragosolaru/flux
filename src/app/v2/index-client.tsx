@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Mono, Row, Rows, Screen, ScreenHeader, SectionLabel } from "@/components/v2/instrument";
+import { NavBar } from "@/components/v2/nav";
 import { V2_SCREENS } from "./screens";
 
 /**
@@ -61,6 +62,7 @@ export function V2IndexClient() {
           <Mono className="text-muted-foreground underline underline-offset-4">/debug</Mono>
         </Link>
       </div>
+      <NavBar />
     </Screen>
   );
 }

@@ -79,7 +79,11 @@ function VehicleCommands({
   name: string;
   brand: VehicleBrand;
 }) {
-  const { data } = useVehicle(id);
+  // poll: false — useVehicleCommand invalidates the vehicle query after every
+  // command, so the panel stays current without an interval. It used to refresh
+  // every 30 s for ten minutes each time this screen was opened, waking a
+  // sleeping car to tell it nothing had changed.
+  const { data } = useVehicle(id, true, false);
 
   return (
     <motion.div variants={cardVariants}>

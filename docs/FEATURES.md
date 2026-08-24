@@ -894,6 +894,22 @@ Tailwind utility renders in the Instrument palette inside that subtree with no
 second vocabulary. It is dark-only on purpose: a light version of a hairline
 over near-black is a different design, not a tint.
 
+**Polling:** `pollInterval()` in `src/hooks/useVehicle.ts` is the whole rule, in
+one pure function pinned by `src/hooks/__tests__/poll-interval.test.ts`. Only
+the dashboard polls; the charging screens poll **only while a session is
+running** (a charging car is awake anyway); everything else reads the value
+once and stays current through the invalidation `useVehicleCommand` already
+does. `poll` accepts a predicate over the last reported state so a screen can
+depend on the car's condition without needing the data to decide whether to
+fetch the data. A poll on a sleeping Tesla wakes it, and a car kept out of deep
+sleep loses roughly ten times more charge per idle day — this is a battery bill,
+not a preference.
+
+**The nav is `fixed`,** not the last child of a flex column, and `Screen`
+reserves `--v2-nav-h` at the bottom so nothing lands underneath it. As a flex
+child it only reached the bottom of the screen when the content above happened
+to fill the viewport.
+
 **Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
 removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and
 the pending counter are **not** animations and are never removed — a command
