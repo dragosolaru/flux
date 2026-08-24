@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.78 0.17 195); }
+    a:hover { color: oklch(0.86 0.17 195); }
+    .rule { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 11px 0; border-top: 1px solid oklch(0.97 0 0 / 8%); }
+    .k { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.55 0.02 240); }
+    .v { font-size: 13px; color: oklch(0.80 0.01 240); line-height: 1.5; }
+  </style>
+</helmet>
+
+<div style="width: 900px; height: 1240px; background: oklch(0.08 0.01 240); color: oklch(0.97 0 0); font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; padding: 40px; box-sizing: border-box">
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid oklch(0.97 0 0 / 14%); padding-bottom: 14px">
+    <span style="font-size: 24px; font-weight: 500; letter-spacing: -0.02em">Fluid on a phone — the rules</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.55 0.02 240)">375 · 390 · 430 · 768</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; margin-top: 26px">
+
+    <div style="display: flex; flex-direction: column; gap: 26px">
+
+      <div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">08 · What flexes, what never does</div>
+        <div style="margin-top: 6px">
+          <div class="rule"><span class="k">Never flexes</span><span class="v">Row height 56px. Tap targets 44px. Hairline 1px. The four type sizes. A phone is not a small desktop — shrinking a control is how a design becomes unusable rather than compact.</span></div>
+          <div class="rule"><span class="k">Flexes</span><span class="v">The gutter, the arc, and the space between sections. Everything else holds its size and lets the container breathe around it.</span></div>
+          <div class="rule"><span class="k">Gutter</span><span class="v"><code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">clamp(16px, 6vw, 28px)</code> — 22px at 375, 23px at 390, 26px at 430. One expression, no breakpoints.</span></div>
+          <div class="rule"><span class="k">The arc</span><span class="v"><code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">min(72vw, 300px)</code>. It is the one element allowed to scale with the viewport, because it is the one element that is purely a picture of a number.</span></div>
+          <div class="rule"><span class="k">The hero number</span><span class="v"><code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">clamp(64px, 21vw, 92px)</code>. Never smaller than 64 — at that size it stops being the hero and the screen loses its subject.</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">09 · Where the height goes</div>
+        <div style="margin-top: 6px">
+          <div class="rule"><span class="k">375 · SE, mini</span><span class="v">667–812pt tall. The arc drops to 270px and the three-value table loses its top padding. Nothing is removed — a small phone gets the same screen, tighter.</span></div>
+          <div class="rule"><span class="k">430 · Pro Max</span><span class="v">The extra 90pt goes to the gap ABOVE the action rows, not into the arc. Actions stay anchored to the bottom third where the thumb is; a taller phone must not push them further away.</span></div>
+          <div class="rule"><span class="k">Landscape</span><span class="v">Two columns: instrument left, rows right. The only layout change in the whole system, and it earns itself — a 390×844 column rotated is unreadable.</span></div>
+          <div class="rule"><span class="k">768+ · tablet</span><span class="v">The column caps at 480px and centres. Do not stretch rows to 700px; a 56px row that wide has its label and its value in different postcodes.</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">10 · Safe areas — non-negotiable</div>
+        <div style="margin-top: 6px">
+          <div class="rule"><span class="k">Bottom</span><span class="v"><code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">env(safe-area-inset-bottom)</code> plus 14px. The home indicator swallows a bare 20px of padding, and the nav is the thing it swallows.</span></div>
+          <div class="rule"><span class="k">Top</span><span class="v">Nothing painted in the status bar's space, and no fake status bar drawn. iOS renders the real one on top; a painted one reads as doubled.</span></div>
+          <div class="rule"><span class="k">Keyboard</span><span class="v">The address field on the trip screen scrolls into view above the keyboard rather than the page jumping. <code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">dvh</code>, never <code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">vh</code> — Safari's toolbar makes vh lie.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 26px">
+
+      <div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">11 · Fluid means the touch answers, not that things slide</div>
+        <div style="margin-top: 6px">
+          <div class="rule"><span class="k">Press</span><span class="v">Row background to 5% white in 80ms. Instant enough to feel like the surface, not an animation. No scale, no ripple — a 56px row that shrinks under the thumb is a card pretending to be a button.</span></div>
+          <div class="rule"><span class="k">Commit</span><span class="v">The state label on the right crossfades in 160ms. That is the whole feedback: the row already said BLOCATĂ, now it says DEBLOCATĂ. No toast for something visible on screen.</span></div>
+          <div class="rule"><span class="k">Waiting</span><span class="v">The label goes amber and counts: <code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.80 0.17 75)">TRIMIT… 3s</code>. A spinner says something is happening; a counter says how long it has been, which is the question after five seconds.</span></div>
+          <div class="rule"><span class="k">Arriving</span><span class="v">Arc sweep 1100ms, rows stagger 120ms — once, on first paint. A returning navigation replays nothing; the screen is already yours.</span></div>
+          <div class="rule"><span class="k">Number change</span><span class="v">Tabular digits crossfade in place, 200ms. Never a slot-machine roll — the reading must be legible at every frame, because someone is reading it while walking.</span></div>
+          <div class="rule"><span class="k">Reduced motion</span><span class="v"><code style="font-family:'Geist Mono',monospace;font-size:11px;color:oklch(0.78 0.17 195)">prefers-reduced-motion</code> removes the sweep and the stagger, keeps the crossfades. Feedback is not decoration and never gets cut.</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.50 0.02 240)">12 · Easy to use, specifically</div>
+        <div style="margin-top: 6px">
+          <div class="rule"><span class="k">One thumb</span><span class="v">Everything you tap lives below 55% of the screen height. The instrument owns the top and is read, not touched.</span></div>
+          <div class="rule"><span class="k">One tap</span><span class="v">Values commit on tap — no Apply. The only exception is temperature, where the stepper needs a settling moment, and confirmation, which exists to be slow.</span></div>
+          <div class="rule"><span class="k">No hidden state</span><span class="v">Every row carries its own state on the right. Nothing requires opening a screen to learn whether it is on.</span></div>
+          <div class="rule"><span class="k">Refusals say why</span><span class="v">A disabled row keeps its reason beside it. "Nu e conectată" is an answer; a greyed button is a shrug.</span></div>
+          <div class="rule"><span class="k">Scroll is honest</span><span class="v">No screen in the set scrolls past two viewports. If it would, it is two screens.</span></div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid oklch(0.97 0 0 / 14%); padding-top: 14px">
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: oklch(0.80 0.17 75)">Only glass decides these</div>
+        <div style="font-size: 13px; color: oklch(0.80 0.01 240); line-height: 1.6; margin-top: 8px">
+          Everything above is written to be implementable, not to be admired. Three of these numbers are guesses until the app is open outdoors on a real phone: the 64px hero floor, the 72vw arc, and whether an 8% hairline survives a blue-light filter.<br><br>
+          The artboards beside this one are 375 and 430 so the rules are visible rather than asserted — but an artboard is a picture. The next honest step is one screen in code.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.78 0.17 195); }
+    a:hover { color: oklch(0.86 0.17 195); }
+    @keyframes sweep { from { stroke-dashoffset: 691; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+    .dim { position: absolute; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 8px; letter-spacing: 0.1em; color: oklch(0.78 0.17 195); }
+    .band { position: absolute; background: oklch(0.78 0.17 195 / 9%); }
+  </style>
+</helmet>
+
+<!-- 430 × 932 — iPhone Pro Max. The extra height is NOT given to the arc. -->
+<div style="position: relative; width: 430px; height: 932px; background: oklch(0.08 0.01 240); color: oklch(0.97 0 0); font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- gutter: clamp(16px, 6vw, 28px) → 26px -->
+  <div class="band" style="left: 0; top: 0; bottom: 0; width: 26px"></div>
+  <div class="band" style="right: 0; top: 0; bottom: 0; width: 26px"></div>
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 20px 26px 0 26px; animation: rise .5s ease-out both">
+    <span style="font-size: 15px; font-weight: 500; letter-spacing: -0.01em">Black Panther</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.78 0.17 195)">Live</span>
+  </div>
+
+  <!-- arc: min(72vw, 300px) → 72vw is 310, so the 300 cap holds. It stops growing here. -->
+  <div style="position: relative; display: flex; justify-content: center; margin-top: 28px">
+    <svg width="300" height="300" viewBox="0 0 300 300">
+      <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.97 0 0 / 8%)" stroke-width="1.5"
+              stroke-dasharray="518 173" stroke-linecap="round" transform="rotate(135 150 150)"/>
+      <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.80 0.17 75)" stroke-width="4"
+              stroke-dasharray="124 567" stroke-linecap="round" transform="rotate(135 150 150)"
+              style="animation: sweep 1.1s cubic-bezier(.22,1,.36,1) both"/>
+      <circle cx="150" cy="150" r="110" fill="none" stroke="oklch(0.97 0 0 / 45%)" stroke-width="10"
+              stroke-dasharray="2 689" stroke-dashoffset="-414" transform="rotate(135 150 150)"/>
+    </svg>
+
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; animation: rise .6s .15s ease-out both">
+      <div style="display: flex; align-items: flex-start; gap: 3px">
+        <!-- clamp(64px, 21vw, 92px) → 90px -->
+        <span style="font-size: 90px; font-weight: 300; line-height: .9; letter-spacing: -0.045em; font-variant-numeric: tabular-nums">24</span>
+        <span style="font-size: 21px; font-weight: 400; margin-top: 9px; color: oklch(0.62 0.02 240)">%</span>
+      </div>
+      <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; letter-spacing: 0.04em; color: oklch(0.62 0.02 240); font-variant-numeric: tabular-nums">109 km</div>
+    </div>
+
+    <div style="position: absolute; right: 34px; top: 74px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em; color: oklch(0.62 0.02 240)">80</div>
+
+    <div style="position: absolute; left: 65px; right: 65px; top: 4px; height: 1px; background: oklch(0.78 0.17 195 / 45%)"></div>
+    <span class="dim" style="left: 50%; transform: translateX(-50%); top: 8px">300 · PLAFON ATINS</span>
+  </div>
+
+  <div style="margin-top: 12px; padding: 0 26px; animation: rise .6s .3s ease-out both">
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <div style="padding: 14px 0; border-right: 1px solid oklch(0.97 0 0 / 8%)">
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">Afară</div>
+        <div style="font-size: 21px; font-weight: 300; margin-top: 3px; font-variant-numeric: tabular-nums">32°</div>
+      </div>
+      <div style="padding: 14px 0 14px 16px; border-right: 1px solid oklch(0.97 0 0 / 8%)">
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">Habitaclu</div>
+        <div style="font-size: 21px; font-weight: 300; margin-top: 3px; font-variant-numeric: tabular-nums">24°</div>
+      </div>
+      <div style="padding: 14px 0 14px 16px">
+        <div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.55 0.02 240)">Stare</div>
+        <div style="font-size: 21px; font-weight: 300; margin-top: 3px">Parcată</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- the extra height of a Pro Max lands HERE, as nothing -->
+  <div style="flex: 1; position: relative">
+    <div style="position: absolute; left: 26px; top: 50%; right: 26px; height: 1px; background: oklch(0.78 0.17 195 / 22%)"></div>
+    <span class="dim" style="left: 50%; transform: translate(-50%, -50%); top: 50%; background: oklch(0.08 0.01 240); padding: 0 8px">256 GOL — AICI SE DUCE ÎNĂLȚIMEA</span>
+  </div>
+
+  <div style="position: relative; padding: 0 26px; animation: rise .6s .42s ease-out both">
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="flex: 1; font-size: 16px">Blochează</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em; color: oklch(0.55 0.02 240)">BLOCATĂ</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.97 0 0)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 16.4a6 6 0 0 1-8.6-7l5.4 1.5a6 6 0 0 1 7-8.6l-1.5 5.4a6 6 0 0 1 8.6 7l-5.4-1.5a6 6 0 0 1-7 8.6l1.5-5.4Z"/><circle cx="12" cy="12" r="1.5"/></svg>
+      <span style="flex: 1; font-size: 16px">Climatizare</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em; color: oklch(0.55 0.02 240)">OPRITĂ</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; border-top: 1px solid oklch(0.97 0 0 / 8%); border-bottom: 1px solid oklch(0.97 0 0 / 8%)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.17 195)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span style="flex: 1; font-size: 16px">Găsește mașina</span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: oklch(0.78 0.17 195); font-variant-numeric: tabular-nums">180 m</span>
+    </div>
+
+    <div style="position: absolute; left: 6px; top: 0; height: 56px; width: 1px; background: oklch(0.78 0.17 195 / 45%)"></div>
+    <span class="dim" style="left: 10px; top: 22px">56 · ACELAȘI CA LA 375</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid oklch(0.97 0 0 / 8%); padding: 14px 26px 0 26px; animation: rise .6s .54s ease-out both">
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.78 0.17 195)">Mașina</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Hartă</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Încărc.</span>
+    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.45 0.02 240)">Mai mult</span>
+  </div>
+
+  <!-- safe area: env(safe-area-inset-bottom) 34 + 14 -->
+  <div style="position: relative; height: 48px">
+    <div class="band" style="left: 0; right: 0; bottom: 0; height: 34px"></div>
+    <span class="dim" style="left: 26px; bottom: 12px">ENV(SAFE-AREA-INSET-BOTTOM) 34 + 14</span>
+  </div>
+
+  <!-- thumb line: 55% of height -->
+  <div style="position: absolute; left: 0; right: 0; top: 513px; height: 1px; background: oklch(0.80 0.17 75 / 35%)"></div>
+  <span class="dim" style="right: 30px; top: 518px; color: oklch(0.80 0.17 75)">55% — TOT CE SE ATINGE E SUB LINIE</span>
+
+  <span class="dim" style="left: 4px; top: 400px">26</span>
+  <span class="dim" style="right: 4px; top: 400px">26</span>
+</div>
+</x-dc>
+</body>
+</html>

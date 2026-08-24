@@ -16,6 +16,10 @@
     { "file": "InstrumentCosts.dc.html", "title": "Costs", "page": "page-1", "x": 1980, "y": 1300, "w": 390, "h": 844 },
     { "file": "InstrumentGarage.dc.html", "title": "Garage", "page": "page-1", "x": 2470, "y": 1300, "w": 390, "h": 844 },
 
+    { "file": "InstrumentResponsive.dc.html", "title": "Fluid on a phone", "page": "page-1", "x": 0, "y": 2700, "w": 900, "h": 1240 },
+    { "file": "InstrumentDash375.dc.html", "title": "375 · SE", "page": "page-1", "x": 1000, "y": 2700, "w": 375, "h": 667 },
+    { "file": "InstrumentDash430.dc.html", "title": "430 · Pro Max", "page": "page-1", "x": 1475, "y": 2700, "w": 430, "h": 932 },
+
     { "file": "DirectionEditorial.dc.html", "title": "B · Editorial", "page": "page-2", "x": 0, "y": 0, "w": 390, "h": 844 },
     { "file": "DirectionAmbient.dc.html", "title": "C · Ambient", "page": "page-2", "x": 490, "y": 0, "w": 390, "h": 844 },
 
@@ -51,6 +55,14 @@
       "y": 2200,
       "w": 880,
       "text": "WHAT I AM STILL UNSURE ABOUT\n\n· The arc reads a level, not a difference. 24% and 27% look the same. If precision matters more than character, the dashboard hero becomes a bar and the direction survives — the arc is the most replaceable part of it.\n\n· Space Grotesk 300 at 64px+ is thin. It holds on an OLED phone in shade; in direct sun it may need 400. That is a decision to make on a real screen outdoors, not here.\n\n· Rows with no fill rely entirely on the 8% hairline for structure. On a cheap panel with a blue-light filter that hairline can disappear. Worth testing before committing.\n\nNot yet drawn in this language: documents, insights, energy, settings, debug. They are all list screens and derive directly from the row — but I have not drawn them, so I am not claiming they are done."
+    },
+    {
+      "id": "sys-responsive",
+      "page": "page-1",
+      "x": 0,
+      "y": 2470,
+      "w": 900,
+      "text": "FLUID AND EASY ON A PHONE\n\nThe sheet on the left is the rules; the two phones beside it are the same dashboard with those rules applied at the smallest and largest sizes we support. The cyan bands and labels ON the phones are measurements, not interface — they are there so the rules can be checked rather than believed.\n\nWhat the pair is meant to prove: the 56px row, the four type sizes and the hairline are identical at 375 and at 430. Only the gutter (22 → 26) and the arc (270 → 300) move, and the arc stops at 300 rather than growing with the screen.\n\nWhat it also exposes: at 430 there are 256px of empty between the values and the actions. That is deliberate — the actions stay in the thumb's reach instead of drifting up with the screen — but if it reads as unfinished on real glass, the fix is to raise the arc cap, not to invent a row to fill it."
     },
     {
       "id": "others",
