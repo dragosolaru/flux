@@ -1246,5 +1246,52 @@
       "title": "Flux teszt értesítés",
       "body": "A push értesítések működnek."
     }
+  },
+  "v2": {
+    "nav": {
+      "car": "Autó",
+      "map": "Térkép",
+      "charging": "Töltés",
+      "more": "Több"
+    },
+    "live": "Élő",
+    "paused": "Szünetel",
+    "demo": "Demó",
+    "sending": "Küldés…",
+    "outside": "Kint",
+    "cabin": "Utastér",
+    "status": "Állapot",
+    "motion_parked": "Parkol",
+    "motion_driving": "Halad",
+    "motion_charging": "Tölt",
+    "motion_plugged": "Csatlakoztatva",
+    "state_locked": "Zárva",
+    "state_unlocked": "Nyitva",
+    "state_on": "Be",
+    "state_off": "Ki",
+    "no_answer": "Nincs válasz",
+    "no_position": "Nincs pozíció",
+    "live_updates": "Élő frissítés",
+    "index_title": "Flux v2",
+    "index_intro": "Az újratervezés, az alkalmazás mellett futva. Ugyanazok az adatok és parancsok — csak a képernyők újak. Semmi itt nem ronthatja el azt, amit naponta használsz.",
+    "index_screens": "Képernyők",
+    "index_ready": "Kész",
+    "index_soon": "Még nem",
+    "index_compare": "Összehasonlítás",
+    "index_back_to_app": "Vissza a jelenlegi alkalmazáshoz",
+    "index_note": "Nyisd meg ugyanazt a képernyőt mindkettőben, és telefonon ítélj, ne laptopon. Amit az újratervezés közben hibásnak találunk, azt a valódi alkalmazásban is javítjuk, nem csak itt.",
+    "screens": {
+      "dashboard": "Autó",
+      "commands": "Parancsok",
+      "map": "Térkép és autókeresés",
+      "charging": "Töltés",
+      "trip": "Útvonal",
+      "costs": "Költségek",
+      "garage": "Garázs",
+      "documents": "Dokumentumok",
+      "insights": "Elemzések",
+      "energy": "Energia",
+      "settings": "Beállítások"
+    }
   }
 }

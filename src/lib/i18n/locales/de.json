@@ -1246,5 +1246,52 @@
       "title": "Flux-Testbenachrichtigung",
       "body": "Push-Benachrichtigungen funktionieren."
     }
+  },
+  "v2": {
+    "nav": {
+      "car": "Auto",
+      "map": "Karte",
+      "charging": "Laden",
+      "more": "Mehr"
+    },
+    "live": "Live",
+    "paused": "Pausiert",
+    "demo": "Demo",
+    "sending": "Sende…",
+    "outside": "Außen",
+    "cabin": "Innen",
+    "status": "Status",
+    "motion_parked": "Geparkt",
+    "motion_driving": "Fährt",
+    "motion_charging": "Lädt",
+    "motion_plugged": "Angesteckt",
+    "state_locked": "Verriegelt",
+    "state_unlocked": "Entriegelt",
+    "state_on": "An",
+    "state_off": "Aus",
+    "no_answer": "Keine Antwort",
+    "no_position": "Keine Position",
+    "live_updates": "Live-Updates",
+    "index_title": "Flux v2",
+    "index_intro": "Das Redesign, parallel zur App. Gleiche Daten, gleiche Befehle — nur die Bildschirme sind neu. Nichts hiervon kann kaputtmachen, was du täglich nutzt.",
+    "index_screens": "Bildschirme",
+    "index_ready": "Fertig",
+    "index_soon": "Noch nicht",
+    "index_compare": "Vergleichen",
+    "index_back_to_app": "Zurück zur aktuellen App",
+    "index_note": "Öffne denselben Bildschirm in beiden und urteile am Telefon, nicht am Laptop. Was beim Redesign an Fehlern auffällt, wird auch in der echten App behoben, nicht nur hier.",
+    "screens": {
+      "dashboard": "Auto",
+      "commands": "Befehle",
+      "map": "Karte & Auto finden",
+      "charging": "Laden",
+      "trip": "Route",
+      "costs": "Kosten",
+      "garage": "Garage",
+      "documents": "Dokumente",
+      "insights": "Auswertungen",
+      "energy": "Energie",
+      "settings": "Einstellungen"
+    }
   }
 }

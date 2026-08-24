@@ -38,6 +38,7 @@
 - [23. Platform endpoints & infra](#23-platform-endpoints--infra)
 - [24. Security hardening](#24-security-hardening)
 - [25. Testing](#25-testing)
+- [26. v2 redesign (`/v2`)](#26-v2-redesign-v2)
 
 ---
 
@@ -851,3 +852,61 @@ have billed thirteen vehicle-document types to the energy quota.
 - **Helpers:** `e2e/helpers/a11y.ts` (`visibleControls`, `targetSizeViolations`, `unnamedControls`, `nestedInteractives`), `e2e/helpers/diagnostics.ts` (`collectDiagnostics`, `gotoSettled`), `e2e/helpers/auth.ts`.
 - **`test.fail()` convention:** open UI bugs get a spec marked `test.fail()`, so the suite stays green while the bug is open and turns red the moment it is fixed — that is the signal to drop the marker and keep the spec as a regression test. Currently open: the 44×44 AAA touch-target gap (`mobile tap targets`); the 24×24 AA floor is enforced for real.
 - **Sandbox escape hatch:** `PLAYWRIGHT_CHROMIUM_PATH` overrides the browser binary when the image ships a Chromium that does not match the managed download; `PLAYWRIGHT_BASE_URL` skips the managed `webServer`. Note `reuseExistingServer` is on outside CI — a server left running against a stale `.next` will produce phantom missing-chunk failures.
+
+---
+
+## 26. v2 redesign (`/v2`)
+
+**What:** the Instrument redesign, running **beside** the shipping app instead of
+replacing it. Same auth, same `VehicleProvider`, same hooks, same API routes —
+only the presentation is new. Nothing under `/v2` can break `/dashboard`, and
+the two can be opened on the same phone and compared screen by screen.
+
+**How to use it:** open `/v2`. It lists every screen and whether it exists yet
+(read from `V2_SCREENS`, so the list cannot claim more than has been built) and
+links back to the current app for comparison. Individual screens live at
+`/v2/<screen>`.
+
+**The direction, in one paragraph:** one instrument (a 270° arc) where a number
+IS a level; everything else is a 56px full-width row on an 8% hairline. No card,
+no shadow, no rounded panel anywhere. Two faces (Space Grotesk, Geist Mono),
+four type sizes. Every row carries its own state on the right, so nothing has to
+be opened to learn whether it is on, and a disabled row prints the reason beside
+it rather than being silently grey.
+
+**Responsive rules** (drawn in the canvas, implemented as CSS custom properties):
+
+| Never flexes | Flexes |
+| --- | --- |
+| row height 56px, tap targets 44px | `--v2-gutter: clamp(16px, 6vw, 28px)` |
+| the 1px hairline | `--v2-arc: min(72vw, 300px)` |
+| the four type sizes | `--v2-hero: clamp(64px, 21vw, 92px)` |
+
+`dvh`, never `vh` (Safari's toolbar makes `vh` lie); the nav pads
+`env(safe-area-inset-bottom) + 14px`. Extra height on a tall phone goes to the
+gap **above** the action rows, never into the arc, so the actions stay in the
+thumb's reach instead of drifting up with the screen.
+
+**Theming:** `.v2` in `globals.css` redefines the *same* token names the rest of
+the app uses (`--background`, `--primary`, `--border`, …), so every existing
+Tailwind utility renders in the Instrument palette inside that subtree with no
+second vocabulary. It is dark-only on purpose: a light version of a hairline
+over near-black is a different design, not a tint.
+
+**Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
+removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and
+the pending counter are **not** animations and are never removed — a command
+that takes eight seconds must still say so.
+
+**Key files:** `src/app/v2/layout.tsx` (auth + Space Grotesk + `.v2` scope),
+`src/app/v2/page.tsx` (index), `src/app/v2/screens.ts` (the checklist),
+`src/app/v2/dashboard/`, `src/components/v2/instrument.tsx` (all primitives:
+`Screen`, `ScreenHeader`, `Row`, `Rows`, `Arc`, `ArcMini`, `HeroValue`,
+`ValueTable`, `Mono`, `SectionLabel`), `src/components/v2/nav.tsx`,
+the `.v2` block in `src/app/globals.css`, the `v2` i18n namespace in all five
+locales, and `design/` (the canvas the direction was designed in).
+
+**Dependencies:** `next/font/google` (Space Grotesk), next-intl, TanStack Query
+via the existing hooks. No new runtime dependency.
+
+**Progress and defects found while porting:** `docs/REDESIGN-V2.md`.

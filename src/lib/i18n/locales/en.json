@@ -1246,5 +1246,52 @@
       "title": "Flux test notification",
       "body": "Push notifications are working."
     }
+  },
+  "v2": {
+    "nav": {
+      "car": "Car",
+      "map": "Map",
+      "charging": "Charge",
+      "more": "More"
+    },
+    "live": "Live",
+    "paused": "Paused",
+    "demo": "Demo",
+    "sending": "Sending…",
+    "outside": "Outside",
+    "cabin": "Cabin",
+    "status": "Status",
+    "motion_parked": "Parked",
+    "motion_driving": "Driving",
+    "motion_charging": "Charging",
+    "motion_plugged": "Plugged in",
+    "state_locked": "Locked",
+    "state_unlocked": "Unlocked",
+    "state_on": "On",
+    "state_off": "Off",
+    "no_answer": "No answer",
+    "no_position": "No position",
+    "live_updates": "Live updates",
+    "index_title": "Flux v2",
+    "index_intro": "The redesign, running beside the app. Same data, same commands — only the screens are new. Nothing here can break what you use every day.",
+    "index_screens": "Screens",
+    "index_ready": "Ready",
+    "index_soon": "Not yet",
+    "index_compare": "Compare",
+    "index_back_to_app": "Back to the current app",
+    "index_note": "Open the same screen in both and judge on the phone, not on a laptop. Anything broken that turns up while redesigning gets fixed in the real app too, not only here.",
+    "screens": {
+      "dashboard": "Car",
+      "commands": "Commands",
+      "map": "Map & find my car",
+      "charging": "Charging",
+      "trip": "Trip",
+      "costs": "Costs",
+      "garage": "Garage",
+      "documents": "Documents",
+      "insights": "Insights",
+      "energy": "Energy",
+      "settings": "Settings"
+    }
   }
 }

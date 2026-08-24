@@ -1246,5 +1246,52 @@
       "title": "Notificare de test Flux",
       "body": "Notificările push funcționează."
     }
+  },
+  "v2": {
+    "nav": {
+      "car": "Mașina",
+      "map": "Hartă",
+      "charging": "Încărc.",
+      "more": "Mai mult"
+    },
+    "live": "Live",
+    "paused": "Pe pauză",
+    "demo": "Demo",
+    "sending": "Trimit…",
+    "outside": "Afară",
+    "cabin": "Habitaclu",
+    "status": "Stare",
+    "motion_parked": "Parcată",
+    "motion_driving": "În mers",
+    "motion_charging": "Încarcă",
+    "motion_plugged": "În priză",
+    "state_locked": "Blocată",
+    "state_unlocked": "Deblocată",
+    "state_on": "Pornită",
+    "state_off": "Oprită",
+    "no_answer": "Nu răspunde",
+    "no_position": "Fără poziție",
+    "live_updates": "Actualizări live",
+    "index_title": "Flux v2",
+    "index_intro": "Redesignul, care rulează lângă aplicație. Aceleași date, aceleași comenzi — doar ecranele sunt noi. Nimic de aici nu poate strica ce folosești zilnic.",
+    "index_screens": "Ecrane",
+    "index_ready": "Gata",
+    "index_soon": "Urmează",
+    "index_compare": "Compară",
+    "index_back_to_app": "Înapoi la aplicația curentă",
+    "index_note": "Deschide același ecran în ambele și judecă pe telefon, nu pe laptop. Ce găsim stricat în timpul redesignului reparăm și în aplicația reală, nu doar aici.",
+    "screens": {
+      "dashboard": "Mașina",
+      "commands": "Comenzi",
+      "map": "Hartă și găsește mașina",
+      "charging": "Încărcare",
+      "trip": "Traseu",
+      "costs": "Costuri",
+      "garage": "Garaj",
+      "documents": "Documente",
+      "insights": "Analize",
+      "energy": "Energie",
+      "settings": "Setări"
+    }
   }
 }

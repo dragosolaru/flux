@@ -139,6 +139,14 @@ export const ROADMAP: Milestone[] = [
   },
   {
     gate: 3,
+    goal: "The redesign — every screen rebuilt in the Instrument direction",
+    nextStep:
+      "Open /v2 on the phone beside the live app and judge it screen by screen. One screen is ported at a time; status and findings live in docs/REDESIGN-V2.md.",
+    cost:
+      "Two versions of every screen is a cost that only pays off if it ends. Each ported screen must either replace its original or be deleted — a permanent /v2 is the worst outcome of the three.",
+  },
+  {
+    gate: 3,
     goal: "Real-time stall availability",
     nextStep:
       "NDW already carries live availabilities[] for the Netherlands, free. Prove the UI on one country before paying for a commercial feed.",

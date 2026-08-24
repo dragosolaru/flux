@@ -1246,5 +1246,52 @@
       "title": "Notification de test Flux",
       "body": "Les notifications push fonctionnent."
     }
+  },
+  "v2": {
+    "nav": {
+      "car": "Voiture",
+      "map": "Carte",
+      "charging": "Charge",
+      "more": "Plus"
+    },
+    "live": "Live",
+    "paused": "En pause",
+    "demo": "Démo",
+    "sending": "Envoi…",
+    "outside": "Extérieur",
+    "cabin": "Habitacle",
+    "status": "État",
+    "motion_parked": "Garée",
+    "motion_driving": "En route",
+    "motion_charging": "En charge",
+    "motion_plugged": "Branchée",
+    "state_locked": "Verrouillée",
+    "state_unlocked": "Déverrouillée",
+    "state_on": "Activée",
+    "state_off": "Arrêtée",
+    "no_answer": "Pas de réponse",
+    "no_position": "Pas de position",
+    "live_updates": "Mises à jour live",
+    "index_title": "Flux v2",
+    "index_intro": "La refonte, en parallèle de l'app. Mêmes données, mêmes commandes — seuls les écrans changent. Rien ici ne peut casser ce que tu utilises tous les jours.",
+    "index_screens": "Écrans",
+    "index_ready": "Prêt",
+    "index_soon": "Pas encore",
+    "index_compare": "Comparer",
+    "index_back_to_app": "Retour à l'app actuelle",
+    "index_note": "Ouvre le même écran dans les deux et juge sur le téléphone, pas sur un portable. Ce qu'on trouve de cassé pendant la refonte est corrigé aussi dans la vraie app, pas seulement ici.",
+    "screens": {
+      "dashboard": "Voiture",
+      "commands": "Commandes",
+      "map": "Carte et localisation",
+      "charging": "Charge",
+      "trip": "Trajet",
+      "costs": "Coûts",
+      "garage": "Garage",
+      "documents": "Documents",
+      "insights": "Analyses",
+      "energy": "Énergie",
+      "settings": "Réglages"
+    }
   }
 }
