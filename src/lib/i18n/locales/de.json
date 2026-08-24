@@ -423,7 +423,8 @@
     "contacting_car": "Verbindung zum Auto…",
     "pair_key_title": "Dieses Auto hat seinen Virtual Key nicht gekoppelt",
     "pair_key_hint": "Tippe für die Kopplungsseite und bestätige in der Tesla-App. Eine Bestätigung pro Auto.",
-    "find_car": "Auto finden"
+    "find_car": "Auto finden",
+    "polling_off_everywhere": "Updates sind überall aus — das Auto wird in Ruhe gelassen"
   },
   "charging": {
     "page_title": "Laden",
@@ -1331,6 +1332,13 @@
     },
     "pick_both_points": "Beide Punkte wählen",
     "planning": "Berechne…",
-    "plan_first": "Erst planen"
+    "plan_first": "Erst planen",
+    "asleep": "Schläft",
+    "undisturbed": "In Ruhe gelassen",
+    "wake_car": "Auto wecken",
+    "waking": "Wecke…",
+    "woke_up": "Das Auto ist wach",
+    "wake_failed": "Wecken fehlgeschlagen",
+    "reading_from": "Letzter Stand"
   }
 }

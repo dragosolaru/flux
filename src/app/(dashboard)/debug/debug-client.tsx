@@ -23,6 +23,8 @@ import {
 import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
+import { SleepPanel } from "@/components/debug/SleepPanel";
+import { useSleepMode } from "@/lib/vehicle-sleep";
 
 interface ChargerStats {
   total: number;
@@ -261,6 +263,10 @@ export function DebugClient() {
   // Panels are closed by default so the page opens as a status screen rather
   // than a wall of controls — it is read on a phone far more often than acted on.
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  // Declared with the other hooks: this component has early returns for its
+  // loading and error states, and a hook below them runs in a different order
+  // on the renders that take those paths.
+  const sleeping = useSleepMode();
   const [apiPath, setApiPath] = useState("/api/chargers/stats");
   const [apiResult, setApiResult] = useState<unknown>(null);
   // Several routes worth poking at are POST-only; GET on them returns 405.
@@ -1846,6 +1852,19 @@ export function DebugClient() {
           Report
         </button>
       </div>
+
+      {/* First, because "is the app keeping my car awake" is the question you
+          open this panel to answer, and the switch that stops it must not be
+          three sections down. */}
+      <Panel
+        title="Somnul mașinii"
+        badge={sleeping ? "oprit" : "normal"}
+        tone={sleeping ? "ok" : "muted"}
+        open={open.sleep ?? true}
+        onToggle={() => toggle("sleep")}
+      >
+        <SleepPanel />
+      </Panel>
 
       <Panel
         title="Migrations"

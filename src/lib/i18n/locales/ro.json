@@ -423,7 +423,8 @@
     "contacting_car": "Contactăm mașina…",
     "pair_key_title": "Mașina nu are Cheia Virtuală împerecheată",
     "pair_key_hint": "Apasă pentru pagina de împerechere, apoi aprobă în aplicația Tesla. O aprobare pentru fiecare mașină.",
-    "find_car": "Găsește mașina"
+    "find_car": "Găsește mașina",
+    "polling_off_everywhere": "Actualizările sunt oprite peste tot — mașina e lăsată în pace"
   },
   "charging": {
     "page_title": "Încărcare",
@@ -1331,6 +1332,13 @@
     },
     "pick_both_points": "Alege ambele puncte",
     "planning": "Calculez…",
-    "plan_first": "Planifică întâi"
+    "plan_first": "Planifică întâi",
+    "asleep": "Doarme",
+    "undisturbed": "Lăsată în pace",
+    "wake_car": "Trezește mașina",
+    "waking": "Trezesc…",
+    "woke_up": "Mașina e trează",
+    "wake_failed": "Nu am putut trezi mașina",
+    "reading_from": "Ultima citire"
   }
 }

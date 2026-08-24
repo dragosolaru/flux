@@ -37,6 +37,7 @@ import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BrandKey } from "@/lib/brands/types";
 import { mockLocationLabel } from "@/lib/mock/location-label";
+import { setSleepMode, useSleepMode } from "@/lib/vehicle-sleep";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 import Link from "next/link";
@@ -203,12 +204,15 @@ function HeroCard({
 function SleepControl({
   active,
   pausedByIdle,
+  sleeping,
   onPause,
   onResume,
   t,
 }: {
   active: boolean;
   pausedByIdle: boolean;
+  /** The app-wide switch, which outranks this hook's own idle state. */
+  sleeping: boolean;
   onPause: () => void;
   onResume: () => void;
   t: ReturnType<typeof useTranslations>;
@@ -221,9 +225,11 @@ function SleepControl({
       <p className="min-w-0 flex-1 text-xs text-muted-foreground">
         {active
           ? t("polling_active")
-          : pausedByIdle
-            ? t("polling_paused_idle")
-            : t("polling_paused")}
+          : sleeping
+            ? t("polling_off_everywhere")
+            : pausedByIdle
+              ? t("polling_paused_idle")
+              : t("polling_paused")}
       </p>
       <button
         onClick={active ? onPause : onResume}
@@ -616,6 +622,7 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
   const needsTeslaReauth =
     error instanceof ApiError && error.code === "TESLA_REAUTH_REQUIRED";
   const td = useTranslations("dashboard");
+  const sleeping = useSleepMode();
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
 
   // Ambient body tinting based on battery state
@@ -702,8 +709,14 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
               <SleepControl
                 active={polling.active}
                 pausedByIdle={polling.pausedByIdle}
-                onPause={polling.pause}
+                sleeping={sleeping}
+                // The app-wide switch, not this hook's own pause. The old one
+                // lived in component state, so it covered a single mounted hook
+                // and died on the next navigation — a control that looked like
+                // a promise and was not one.
+                onPause={() => setSleepMode(true)}
                 onResume={() => {
+                  setSleepMode(false);
                   polling.resume();
                   void refetch();
                 }}

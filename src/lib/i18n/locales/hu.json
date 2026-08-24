@@ -423,7 +423,8 @@
     "contacting_car": "Kapcsolódás az autóhoz…",
     "pair_key_title": "Ez az autó nem párosította a virtuális kulcsot",
     "pair_key_hint": "Koppints a párosítási oldalért, majd hagyd jóvá a Tesla appban. Autónként egy jóváhagyás.",
-    "find_car": "Autó megkeresése"
+    "find_car": "Autó megkeresése",
+    "polling_off_everywhere": "A frissítések mindenhol ki vannak kapcsolva — az autót békén hagyjuk"
   },
   "charging": {
     "page_title": "Töltés",
@@ -1331,6 +1332,13 @@
     },
     "pick_both_points": "Válaszd ki mindkét pontot",
     "planning": "Számolok…",
-    "plan_first": "Előbb tervezz"
+    "plan_first": "Előbb tervezz",
+    "asleep": "Alszik",
+    "undisturbed": "Békén hagyva",
+    "wake_car": "Autó ébresztése",
+    "waking": "Ébresztés…",
+    "woke_up": "Az autó ébren van",
+    "wake_failed": "Nem sikerült felébreszteni",
+    "reading_from": "Utolsó mérés"
   }
 }

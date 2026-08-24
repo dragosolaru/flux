@@ -5,6 +5,7 @@ import {
   teslaProxyBaseUrl,
 } from "./constants";
 import { getValidAccessToken, TeslaAuthError } from "./tokens";
+import { recordTeslaCall } from "./call-log";
 import type {
   TeslaCommand,
   TeslaCommandResponse,
@@ -49,11 +50,41 @@ async function wakeVehicle(params: {
   }).catch(() => null);
 }
 
+/**
+ * The car is asleep and we chose not to wake it.
+ *
+ * A distinct error rather than a failure, because it is the normal state of a
+ * parked car and the caller's right answer is "show the last known reading",
+ * not "something went wrong".
+ */
+export class TeslaAsleepError extends Error {
+  constructor() {
+    super("Vehicle is asleep");
+    this.name = "TeslaAsleepError";
+  }
+}
+
+/**
+ * @param allowWake  send wake_up when the car answers 408.
+ *
+ *   Defaults to FALSE, and that default is the single most important line in
+ *   this file for battery life. Tesla answers vehicle_data with 408 while the
+ *   car is asleep; this function used to respond by POSTing wake_up and
+ *   retrying. That made every read a wake — so opening any screen pulled a
+ *   parked car out of deep sleep, no matter how carefully the client avoided
+ *   polling. Reducing the interval could never fix that, because the interval
+ *   was never the mechanism.
+ *
+ *   Only a deliberate act by the driver passes true: the wake endpoint behind
+ *   the "wake the car" row, and a command, which is meaningless against a
+ *   sleeping car.
+ */
 export async function fetchVehicleData(params: {
   vehicleId: string;
   userId: string;
   teslaVehicleId: number;
   displayName: string;
+  allowWake?: boolean;
 }): Promise<VehicleState> {
   const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
 
@@ -64,8 +95,14 @@ export async function fetchVehicleData(params: {
     cache: "no-store",
   });
 
-  // If asleep (408) try a single wake_up + short retry before failing.
+  await recordTeslaCall("read");
+
+  // 408 means asleep. Waking it is now something the driver asks for, not
+  // something a page load does on their behalf.
   if (res.status === 408) {
+    if (!params.allowWake) throw new TeslaAsleepError();
+
+    await recordTeslaCall("wake");
     await wakeVehicle({
       accessToken,
       region,
@@ -76,6 +113,7 @@ export async function fetchVehicleData(params: {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
+    await recordTeslaCall("read");
   }
 
   if (!res.ok) {

@@ -11,7 +11,8 @@ import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
 import { createInitialSnapshot } from "@/lib/mock/seed";
 import { seedMockHistory } from "@/lib/mock/seed-history";
 import { recordBatteryHealth } from "@/lib/battery-health";
-import { fetchVehicleData } from "@/lib/tesla/api";
+import { fetchVehicleData, TeslaAsleepError } from "@/lib/tesla/api";
+import { loadLastKnown, saveLastKnown } from "@/lib/tesla/last-known";
 import { TeslaAuthError } from "@/lib/tesla/tokens";
 import { errorContext, recordDebugLog } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -60,12 +61,20 @@ export async function GET(
   if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
     if (vehicle.brand === "tesla" && vehicle.tesla_vehicle_id) {
       try {
+        // allowWake is NOT passed: a background read must never pull a parked
+        // car out of sleep. Waking is what POST /wake is for, and only a
+        // driver's tap reaches it.
         const state = await fetchVehicleData({
           vehicleId: vehicle.id,
           userId: session.user.id,
           teslaVehicleId: vehicle.tesla_vehicle_id,
           displayName: vehicle.display_name,
         });
+        // Stored so the next read of a sleeping car has something true to
+        // return instead of having to wake it.
+        after(saveLastKnown(supabase, vehicle.id, state).catch((err: unknown) => {
+          console.error("[saveLastKnown]", vehicle.id, err);
+        }));
         if (state.batteryHealthPct != null) {
           const soh = state.batteryHealthPct;
           after(recordBatteryHealth(supabase, vehicle.id, soh).catch((err: unknown) => {
@@ -74,6 +83,21 @@ export async function GET(
         }
         return NextResponse.json(state);
       } catch (err) {
+        // Asleep is not a failure — it is the normal state of a parked car.
+        // Hand back what it last told us, with isOnline false and the age of
+        // the reading on it, and let the screen say so.
+        if (err instanceof TeslaAsleepError) {
+          const lastKnown = await loadLastKnown(supabase, {
+            id: vehicle.id,
+            brand: vehicle.brand,
+            display_name: vehicle.display_name,
+          });
+          if (lastKnown) return NextResponse.json(lastKnown);
+          return NextResponse.json(
+            { message: "Vehicle is asleep", code: "VEHICLE_ASLEEP" },
+            { status: 503 },
+          );
+        }
         const msg = err instanceof Error ? err.message : "Live fetch failed";
         // A revoked authorisation and an unreachable car both used to return
         // 502 "Live fetch failed", so the app told someone who had revoked

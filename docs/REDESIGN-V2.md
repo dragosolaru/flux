@@ -187,6 +187,32 @@ Fixed in the **real** app, not only in `/v2`.
 
 ---
 
+## Waking, and why the polling rule was only half the answer
+
+Reducing polling was necessary and not sufficient. Tesla answers `vehicle_data`
+with **408** while the car is asleep, and `fetchVehicleData` responded by POSTing
+`wake_up` and retrying. So *every read was a wake*: one screen opening pulled a
+parked car out of deep sleep, and no amount of `poll: false` could have changed
+that, because the interval was never the mechanism.
+
+Three changes, in order of how much they matter:
+
+1. **`allowWake` defaults to false.** Only `POST /api/vehicles/[id]/wake` passes
+   true, behind a driver's tap, rate-limited to ten an hour. A background read of
+   a sleeping car now throws `TeslaAsleepError` instead of waking it.
+2. **The state route answers "asleep" with the last known reading** — `isOnline:
+   false`, `lastSeenAt` carrying its age — instead of a failure. This needed live
+   readings to be stored at all, which they were not: `vehicle_snapshots` was
+   written by the simulator only. That absence is *why* the wake existed.
+3. **One persisted switch** (`flux:letItSleep`) replaces the per-hook pause,
+   which covered a single mounted hook and died on the next navigation.
+
+And the part that makes it checkable rather than merely claimed: `/debug` counts
+what actually reached Tesla, per hour, for 24 hours. `wake` should be zero on a
+day nobody pressed the button; anything else is a bug with a timestamp on it.
+
+---
+
 ## The polling rule
 
 `pollInterval()` in `src/hooks/useVehicle.ts` is the whole rule, as one pure

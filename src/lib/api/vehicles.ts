@@ -73,6 +73,15 @@ export function sendCommand(
   });
 }
 
+/**
+ * Wake the car. The ONLY call in the app that may pull it out of sleep — every
+ * read passes allowWake:false server-side — so it belongs behind a deliberate
+ * tap and nothing else.
+ */
+export function wake(vehicleId: string): Promise<VehicleState> {
+  return apiFetch<VehicleState>(`${BASE}/${vehicleId}/wake`, { method: "POST" });
+}
+
 export function getChargingHistory<T>(vehicleId: string): Promise<T[]> {
   return apiFetch<T[]>(`${BASE}/${vehicleId}/charging-history`);
 }

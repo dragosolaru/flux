@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import * as vehiclesApi from "@/lib/api/vehicles";
+import { useSleepMode } from "@/lib/vehicle-sleep";
 import type { VehicleState } from "@/types/vehicle";
 
 /**
@@ -89,6 +90,10 @@ export function useVehicle(
   live = true,
   poll: boolean | ((state: VehicleState | undefined) => boolean) = true,
 ) {
+  // The app-wide switch. Persisted and shared across screens and tabs, unlike
+  // `active` below, which is this hook instance's own idle state.
+  const sleepMode = useSleepMode();
+
   // Only a linked car can be kept awake; the simulator has nothing to disturb,
   // so mock vehicles keep polling exactly as before.
   const [active, setActive] = useState(true);
@@ -115,7 +120,7 @@ export function useVehicle(
   }, [armIdleTimer]);
 
   useEffect(() => {
-    if (!live) return;
+    if (!live || sleepMode) return;
     // Guarded, because `active` is a dependency: pause() flips it, the effect
     // re-runs, and an unguarded re-arm started a fresh countdown on an already
     // paused hook. Ten minutes later it set pausedByIdle, and the next tap
@@ -147,24 +152,27 @@ export function useVehicle(
       for (const e of ACTIVITY_EVENTS) document.removeEventListener(e, onActivity);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [live, active, pausedByIdle, armIdleTimer, resume]);
+  }, [live, sleepMode, active, pausedByIdle, armIdleTimer, resume]);
 
   const query = useQuery({
     queryKey: ["vehicle", vehicleId],
     queryFn: () => vehiclesApi.getState(vehicleId),
     refetchInterval: (q) =>
       pollInterval({
-        poll: typeof poll === "function" ? poll(q.state.data) : poll,
+        poll: (typeof poll === "function" ? poll(q.state.data) : poll) && !sleepMode,
         live,
         active,
         status: q.state.status,
       }),
     staleTime: 20_000,
-    enabled: !!vehicleId,
+    // Sleep mode stops the fetch itself, not just the interval. Anything less
+    // would leave "let it sleep" meaning "poll less often", which is not what
+    // the words say.
+    enabled: !!vehicleId && !(live && sleepMode),
   });
 
   const polling: VehiclePolling = {
-    active: live ? active : true,
+    active: live ? active && !sleepMode : true,
     pausedByIdle,
     pause,
     resume,

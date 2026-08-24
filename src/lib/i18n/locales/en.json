@@ -423,7 +423,8 @@
     "contacting_car": "Contacting the car…",
     "pair_key_title": "This car has not paired its Virtual Key",
     "pair_key_hint": "Tap to open the pairing page, then approve in the Tesla app. One approval per car.",
-    "find_car": "Find the car"
+    "find_car": "Find the car",
+    "polling_off_everywhere": "Updates are off everywhere — the car is left alone"
   },
   "charging": {
     "page_title": "Charging",
@@ -1331,6 +1332,13 @@
     },
     "pick_both_points": "Pick both points",
     "planning": "Planning…",
-    "plan_first": "Plan first"
+    "plan_first": "Plan first",
+    "asleep": "Asleep",
+    "undisturbed": "Left alone",
+    "wake_car": "Wake the car",
+    "waking": "Waking…",
+    "woke_up": "The car is awake",
+    "wake_failed": "Couldn't wake the car",
+    "reading_from": "Last reading"
   }
 }
