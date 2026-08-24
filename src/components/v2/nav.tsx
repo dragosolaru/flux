@@ -8,14 +8,22 @@ import { useTranslations } from "next-intl";
  * Four labels on a hairline. Not a pill, nothing floats, no icons — at this
  * size an icon is a guess and a word is not.
  *
- * FIXED to the viewport, not the last child of a flex column. As a flex child
- * it only reached the bottom of the screen when the content above it happened
- * to fill the height, so on every short screen — settings, garage with one car,
- * an empty documents list — it floated in the middle of the page. `Screen`
- * reserves `--v2-nav-h` at the bottom so nothing ends up underneath it.
+ * `sticky` + `mt-auto`, deliberately, rather than `fixed`:
  *
- * The gutter is repeated here because a fixed element is positioned against the
- * viewport and no longer inherits the screen's padding.
+ *   · `mt-auto` pushes it to the bottom when the content above is short, which
+ *     a plain flex child does not do — that is why it floated mid-page on
+ *     settings and on a one-car garage.
+ *   · `sticky bottom-0` keeps it against the viewport while long content
+ *     scrolls underneath.
+ *   · Being IN FLOW is the point. A `fixed` nav is out of flow, so the screen
+ *     has to reserve its height as a separate constant — and the moment the
+ *     nav's own padding changed, the two numbers disagreed and it covered the
+ *     last row. Sticky occupies the space it needs, so there is no second
+ *     number to keep in step.
+ *
+ * It bleeds past the screen gutter and re-applies it inside, so content
+ * scrolling underneath cannot show through at the edges — the map is
+ * full-bleed and would otherwise appear in two slivers beside the labels.
  */
 const TABS = [
   { key: "car", href: "/v2/dashboard" },
@@ -30,11 +38,15 @@ export function NavBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-background pt-3.5"
+      className="sticky bottom-0 z-40 mt-auto grid grid-cols-4 border-t border-border bg-background"
       style={{
+        marginLeft: "calc(var(--v2-gutter) * -1)",
+        marginRight: "calc(var(--v2-gutter) * -1)",
         paddingLeft: "var(--v2-gutter)",
         paddingRight: "var(--v2-gutter)",
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
+        // The home indicator swallows a bare 20px, and the nav is what it
+        // swallows.
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)",
       }}
     >
       {TABS.map((tab) => {
@@ -43,7 +55,9 @@ export function NavBar() {
           <Link
             key={tab.key}
             href={tab.href}
-            className="min-h-11 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors duration-[80ms]"
+            // 44px of touch, without a taller bar: the height comes from the
+            // target, not from padding stacked on top of it.
+            className="flex min-h-11 items-center font-mono text-[10px] uppercase tracking-[0.12em] transition-colors duration-[80ms]"
             style={{
               fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
               color: active ? "var(--primary)" : "var(--v2-faint)",

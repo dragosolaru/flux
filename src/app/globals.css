@@ -398,10 +398,6 @@ input[type="range"].soc-slider::-moz-range-track {
   --v2-arc: min(72vw, 300px);
   --v2-hero: clamp(64px, 21vw, 92px);
 
-  /* The fixed nav's own height, reserved at the bottom of every screen:
-     14px above the labels + their line + 14px below + the home indicator. */
-  --v2-nav-h: calc(env(safe-area-inset-bottom) + 52px);
-
   /* two greys below muted-foreground: secondary readings, and inactive nav */
   --v2-soft: oklch(0.62 0.02 240);
   --v2-faint: oklch(0.45 0.02 240);

@@ -24,13 +24,7 @@ export function Screen({ children }: { children: ReactNode }) {
   return (
     <div
       className="flex min-h-dvh flex-col"
-      style={{
-        paddingLeft: "var(--v2-gutter)",
-        paddingRight: "var(--v2-gutter)",
-        // Room for the fixed nav, which is out of flow. Without this the last
-        // row of a long screen sits underneath it.
-        paddingBottom: "var(--v2-nav-h)",
-      }}
+      style={{ paddingLeft: "var(--v2-gutter)", paddingRight: "var(--v2-gutter)" }}
     >
       {children}
     </div>
