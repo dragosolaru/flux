@@ -73,6 +73,10 @@ export function sendCommand(
   });
 }
 
+export function getChargingHistory<T>(vehicleId: string): Promise<T[]> {
+  return apiFetch<T[]>(`${BASE}/${vehicleId}/charging-history`);
+}
+
 export function syncChargingHistory(
   vehicleId: string,
 ): Promise<ChargingHistorySyncResult> {

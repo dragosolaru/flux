@@ -1292,6 +1292,37 @@
       "insights": "Analize",
       "energy": "Energie",
       "settings": "Setări"
+    },
+    "state_open": "Deschise",
+    "state_closed": "Închise",
+    "waiting_for_car": "Aștept mașina",
+    "group_settings": "Setări",
+    "group_preferences": "Preferințe",
+    "group_car": "Mașina",
+    "group_account": "Cont",
+    "not_set": "Nesetat",
+    "simulator": "Simulator",
+    "connection": "Conexiune",
+    "virtual_key": "Cheie virtuală",
+    "paired": "Împerecheată",
+    "not_paired": "Neîmperecheată",
+    "not_applicable": "N/A",
+    "data_source": "Sursă date",
+    "no_extra_cost": "Fără cost",
+    "last_months": "Ultimele {count} luni",
+    "vs_petrol": "−{pct}% vs benzină",
+    "average": "Medie",
+    "from_what": "Din ce",
+    "photo_or_email": "Foto sau email",
+    "needs_telemetry": "Necesită telemetrie",
+    "you": "Tu",
+    "where": "Unde",
+    "find_it": "Găsește-o",
+    "index_handoff": "Predat lui v1",
+    "handoff": {
+      "planner": "Planificare în v1",
+      "upload": "Încărcare în v1",
+      "editing": "Editare în v1"
     }
   }
 }

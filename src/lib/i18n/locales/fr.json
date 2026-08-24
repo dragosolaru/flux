@@ -1292,6 +1292,37 @@
       "insights": "Analyses",
       "energy": "Énergie",
       "settings": "Réglages"
+    },
+    "state_open": "Ouvertes",
+    "state_closed": "Fermées",
+    "waiting_for_car": "J'attends la voiture",
+    "group_settings": "Réglages",
+    "group_preferences": "Préférences",
+    "group_car": "Voiture",
+    "group_account": "Compte",
+    "not_set": "Non défini",
+    "simulator": "Simulateur",
+    "connection": "Connexion",
+    "virtual_key": "Clé virtuelle",
+    "paired": "Appairée",
+    "not_paired": "Non appairée",
+    "not_applicable": "N/D",
+    "data_source": "Source des données",
+    "no_extra_cost": "Sans surcoût",
+    "last_months": "{count} derniers mois",
+    "vs_petrol": "−{pct}% vs essence",
+    "average": "Moyenne",
+    "from_what": "D'où",
+    "photo_or_email": "Photo ou e-mail",
+    "needs_telemetry": "Nécessite la télémétrie",
+    "you": "Toi",
+    "where": "Où",
+    "find_it": "La trouver",
+    "index_handoff": "Confié à v1",
+    "handoff": {
+      "planner": "Planificateur en v1",
+      "upload": "Envoi en v1",
+      "editing": "Édition en v1"
     }
   }
 }

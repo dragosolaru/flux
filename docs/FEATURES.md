@@ -597,6 +597,7 @@ The brand rule exists because sources disagree about *which field* holds the net
 - **`apiFetch` error messages:** HTTP/2 carries no reason phrase, so `res.statusText` is `""` for everything Vercel serves. The fallback chain used `??`, which skips only null/undefined — the empty string won, and any error without a JSON body (a 504 from an exceeded `maxDuration`, above all) reached the UI as an empty message. Callers written `msg || t("some_hint")` then rendered their hint as if it were a diagnosis: a planner timeout surfaced as "try a higher battery percentage". Now `||`, with the status appended (`"Request failed (504)"`). Pinned by `src/lib/__tests__/api-fetch.test.ts`.
 - **Typed API client layer (`src/lib/api/`):** all client HTTP calls go through one typed module per resource (`vehicles`, `chargers`, `documents`, `me`, `tariffs`, `costs`, `trip`); `apiFetch` (`src/lib/api-fetch.ts`) is imported only here. `apiFetch` redirects to `/login` on client 401.
 - **Rate limiting:** `checkRateLimit(userId, bucket, max)` in `src/lib/rate-limit.ts` (Upstash Redis).
+- **`GET /api/vehicles/[vehicleId]/charging-history`** returns the stored sessions for one car. Added because `/charging` had no way to ask per car: the page fetched history for the FIRST vehicle by `created_at` while the client rendered live state for the SELECTED one, so with two cars linked the list belonged to a different car than the battery above it. Auth + ownership checked before the query — `charging_sessions` carries no `user_id` of its own. Read through `useChargingHistory(vehicleId)`.
 - **Debug badges count what their panel contains.** One number — every error row in `debug_logs` — was rendered as both *"44 errors logged"* on **Check the sources**, a panel that displayed no logs at all, and *"44 failed runs"* on **Charger activity**, where every recent run had status `ok`. So the panel announced 44 problems and offered no way to read one, and the number it announced was not measuring either thing it named. Logs are grouped three ways now (Tesla / charger connectors / everything else), the connector group renders inside the panel whose badge counts it, that badge distinguishes today from older, and failed runs come from `recentRuns`. Stale matters here: all 44 were four days old, from connectors that have since recovered.
 - **Log context is readable on a phone.** Entries dumped `JSON.stringify(context)` on one line, which for a Tesla error is a serialised stack of minified webpack chunk paths with the one useful sentence buried inside it. `detail` is shown as prose, the remaining fields as `key=value`, and the stack sits behind a tap — it has never once helped, the frames being minified.
 - **The to-do list lives in the panel, grouped by gate.** `/debug` → *Where we are* renders `src/lib/roadmap.ts`: gate 1 *before a second car is linked*, gate 2 *before anyone pays*, gate 3 *what differentiates the product*, each with a per-gate "N left" count. Items that can be checked against the running deployment are; the rest report as manual. Every item that is not merely a task carries a `cost` — what breaks if it is skipped — because on a flat list "add the Stripe keys" and "the signing proxy is an open relay" looked like peers. **Copy progress report** carries the gates and the costs too, so the list survives being pasted into a message. Long form: `docs/NEXT-STEPS.md`.
@@ -898,11 +899,20 @@ removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and
 the pending counter are **not** animations and are never removed — a command
 that takes eight seconds must still say so.
 
+**Screens:** `/v2/dashboard`, `/v2/commands`, `/v2/map` (find my car),
+`/v2/charging`, `/v2/costs`, `/v2/garage`, `/v2/documents`, `/v2/insights`,
+`/v2/energy`, `/v2/settings`, `/v2/more`. The trip planner has no v2 route — v1
+already merged it into `/map?mode=plan`, and `/v2` links straight there. Some
+screens deliberately hand one job back to v1 (the planner, file upload, every
+settings editor); those rows are labelled `v1` so the boundary is visible rather
+than a dead end.
+
 **Key files:** `src/app/v2/layout.tsx` (auth + Space Grotesk + `.v2` scope),
 `src/app/v2/page.tsx` (index), `src/app/v2/screens.ts` (the checklist),
-`src/app/v2/dashboard/`, `src/components/v2/instrument.tsx` (all primitives:
-`Screen`, `ScreenHeader`, `Row`, `Rows`, `Arc`, `ArcMini`, `HeroValue`,
-`ValueTable`, `Mono`, `SectionLabel`), `src/components/v2/nav.tsx`,
+`src/app/v2/*/`, `src/components/v2/instrument.tsx` (all primitives:
+`Screen`, `Bleed`, `ScreenHeader`, `Row`, `Rows`, `Arc`, `ArcMini`, `HeroValue`,
+`Bars`, `ValueTable`, `ChipRow`, `StepperRow`, `TimeRow`, `Mono`,
+`SectionLabel`), `src/components/v2/nav.tsx`,
 the `.v2` block in `src/app/globals.css`, the `v2` i18n namespace in all five
 locales, and `design/` (the canvas the direction was designed in).
 

@@ -52,6 +52,18 @@ function toneClass(tone: "muted" | "accent" | "amber" | "green" | "red"): string
   return "text-muted-foreground";
 }
 
+/**
+ * Cancels the screen gutter for one child — a map or an image that has to touch
+ * both edges. The only thing in the system allowed to break the margin.
+ */
+export function Bleed({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ marginLeft: "calc(var(--v2-gutter) * -1)", marginRight: "calc(var(--v2-gutter) * -1)" }}>
+      {children}
+    </div>
+  );
+}
+
 /** Fills the space between the content above it and the rows below. */
 export function Spacer() {
   return <div className="flex-1" />;
@@ -202,6 +214,202 @@ export function Rows({ children, className = "" }: { children: ReactNode; classN
 }
 
 // ---------------------------------------------------------------------------
+// Settings that live inside a row
+// ---------------------------------------------------------------------------
+
+/**
+ * A setting with a handful of real answers, as tappable values.
+ *
+ * Not a slider: charge limit had eleven stops across 298px inside a vertically
+ * scrolling page, on a control iOS often reads as a scroll gesture. Tapping the
+ * value IS the command, so there is no Apply step either.
+ */
+export function ChipRow({
+  label,
+  unit,
+  values,
+  current,
+  busy,
+  busyLabel,
+  onPick,
+  last,
+}: {
+  label: string;
+  unit: string;
+  values: number[];
+  current: number | null;
+  busy?: boolean;
+  busyLabel?: string;
+  onPick: (value: number) => void;
+  last?: boolean;
+}) {
+  return (
+    <div className={`border-t border-border py-3.5 ${last ? "border-b" : ""}`}>
+      <div className="flex items-baseline justify-between">
+        <span className="text-base">{label}</span>
+        {busy ? (
+          <PendingCounter label={busyLabel ?? "…"} />
+        ) : (
+          <Mono className="text-muted-foreground">
+            {current != null ? `${current}${unit}` : "—"}
+          </Mono>
+        )}
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {values.map((v) => {
+          const active = current === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onPick(v)}
+              disabled={busy}
+              className={[
+                "min-h-11 min-w-11 px-3 font-mono text-[13px] tabular-nums",
+                "border transition-colors duration-[80ms] disabled:opacity-50",
+                active
+                  ? "border-primary text-primary"
+                  : "border-border text-muted-foreground active:bg-white/5",
+              ].join(" ")}
+              style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+            >
+              {v}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Minus / value / plus, then Apply.
+ *
+ * The one place in the system where a value does not commit on tap: a stepper
+ * needs a settling moment, and sending a command per degree would spend the
+ * command quota on the way from 18 to 24.
+ */
+export function StepperRow({
+  label,
+  value,
+  min,
+  max,
+  unit,
+  busy,
+  busyLabel,
+  action,
+  onChange,
+  onApply,
+  last,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit: string;
+  busy?: boolean;
+  busyLabel?: string;
+  action: string;
+  onChange: (value: number) => void;
+  onApply: (value: number) => void;
+  last?: boolean;
+}) {
+  return (
+    <div className={`border-t border-border py-3 ${last ? "border-b" : ""}`}>
+      <div className="flex items-center gap-3">
+        <span className="min-w-0 flex-1 truncate text-base">{label}</span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={busy || value <= min}
+          aria-label="−"
+          className="size-11 border border-border text-lg transition-colors duration-[80ms] active:bg-white/5 disabled:opacity-40"
+        >
+          −
+        </button>
+        <span className="w-14 text-center text-xl font-light tabular-nums">
+          {value}
+          {unit}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={busy || value >= max}
+          aria-label="+"
+          className="size-11 border border-border text-lg transition-colors duration-[80ms] active:bg-white/5 disabled:opacity-40"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => onApply(value)}
+          disabled={busy}
+          className="min-h-11 px-3 transition-colors duration-[80ms] active:bg-white/5 disabled:opacity-50"
+        >
+          {busy ? (
+            <PendingCounter label={busyLabel ?? "…"} />
+          ) : (
+            <Mono className="text-primary">{action}</Mono>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** A time, then Apply. Native time input — nobody wants a custom clock. */
+export function TimeRow({
+  label,
+  value,
+  busy,
+  busyLabel,
+  action,
+  onChange,
+  onApply,
+  last,
+}: {
+  label: string;
+  value: string;
+  busy?: boolean;
+  busyLabel?: string;
+  action: string;
+  onChange: (value: string) => void;
+  onApply: (value: string) => void;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 border-t border-border ${last ? "border-b" : ""}`}
+      style={{ minHeight: "var(--v2-row)" }}
+    >
+      <span className="min-w-0 flex-1 truncate text-base">{label}</span>
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        // 15px, not smaller: iOS zooms the page on focus below 16px, and a
+        // zoomed page on a phone is a layout the design never accounted for.
+        className="min-h-11 bg-transparent text-right text-[15px] tabular-nums outline-none"
+        style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+      />
+      <button
+        type="button"
+        onClick={() => onApply(value)}
+        disabled={busy}
+        className="min-h-11 px-2 transition-colors duration-[80ms] active:bg-white/5 disabled:opacity-50"
+      >
+        {busy ? (
+          <PendingCounter label={busyLabel ?? "…"} />
+        ) : (
+          <Mono className="text-primary">{action}</Mono>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // The arc — allowed exactly where a number IS a level
 // ---------------------------------------------------------------------------
 
@@ -311,6 +519,71 @@ export function ArcMini({ value, color = "var(--chart-3)" }: { value: number; co
         strokeDasharray={`${filled} ${CIRC - filled}`} transform="rotate(135 150 150)"
       />
     </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bars — for a comparison over time, where the arc would be style over meaning
+// ---------------------------------------------------------------------------
+
+/**
+ * Money or energy per month. Deliberately NOT an arc: an arc reads a level, and
+ * a series of months is a comparison. Using the house instrument here would
+ * have been decoration pretending to be information.
+ *
+ * No axis, no gridlines, no tooltip. The two numbers under it — the average and
+ * the current month — are the whole reading.
+ */
+export function Bars({
+  items,
+  footerLeft,
+  footerRight,
+}: {
+  items: { key: string; label: string; value: number }[];
+  footerLeft?: string;
+  footerRight?: string;
+}) {
+  if (items.length === 0) return null;
+  const max = Math.max(...items.map((i) => i.value), 0);
+
+  return (
+    <div>
+      <div className="flex h-[108px] items-end gap-2.5">
+        {items.map((item, i) => {
+          const last = i === items.length - 1;
+          // A zero-value month must still be visible as a month that happened,
+          // so the floor is 2px rather than nothing at all.
+          const pct = max > 0 ? Math.max(2, (item.value / max) * 100) : 2;
+          return (
+            <div key={item.key} className="flex flex-1 flex-col items-center gap-2">
+              <div
+                className="w-full origin-bottom"
+                style={{
+                  height: `${pct}%`,
+                  background: last ? "var(--primary)" : "oklch(0.97 0 0 / 14%)",
+                }}
+              />
+              <span
+                className="font-mono text-[9px] uppercase"
+                style={{
+                  fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                  color: last ? "var(--primary)" : "var(--v2-faint)",
+                }}
+              >
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-0.5 h-px bg-border" />
+      {(footerLeft || footerRight) && (
+        <div className="mt-1.5 flex justify-between">
+          <Mono className="text-muted-foreground">{footerLeft}</Mono>
+          <Mono className="text-primary">{footerRight}</Mono>
+        </div>
+      )}
+    </div>
   );
 }
 

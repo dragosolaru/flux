@@ -121,3 +121,58 @@ export async function POST(
     );
   }
 }
+
+/**
+ * The stored sessions for ONE vehicle.
+ *
+ * Added because `/charging` had no way to ask for them per car: the page
+ * fetched history server-side for the FIRST vehicle by `created_at`, while the
+ * client rendered live state for the SELECTED one. With two cars linked, the
+ * sessions on screen belonged to a different car than the battery above them,
+ * and nothing said so.
+ */
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ vehicleId: string }> },
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { vehicleId } = await params;
+  if (!z.string().uuid().safeParse(vehicleId).success) {
+    return NextResponse.json({ message: "Invalid vehicleId" }, { status: 400 });
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  // Ownership first: charging_sessions has no user_id of its own, so the only
+  // thing standing between a session row and another account is this check.
+  const { data: vehicle } = await supabase
+    .from("vehicles")
+    .select("id")
+    .eq("id", vehicleId)
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  if (!vehicle) {
+    return NextResponse.json({ message: "Vehicle not found" }, { status: 404 });
+  }
+
+  const { data, error } = await supabase
+    .from("charging_sessions")
+    .select(
+      "id, started_at, ended_at, energy_added_kwh, start_soc, end_soc, network, cost_eur, cost_ron, max_charging_rate_kw, location_name",
+    )
+    .eq("vehicle_id", vehicleId)
+    .order("started_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    recordDebugLog("error", "vehicles/charging-history", error.message);
+    return NextResponse.json({ message: "Query failed" }, { status: 500 });
+  }
+
+  return NextResponse.json(data ?? []);
+}

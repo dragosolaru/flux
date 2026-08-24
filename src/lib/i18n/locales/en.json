@@ -1292,6 +1292,37 @@
       "insights": "Insights",
       "energy": "Energy",
       "settings": "Settings"
+    },
+    "state_open": "Open",
+    "state_closed": "Closed",
+    "waiting_for_car": "Waiting for the car",
+    "group_settings": "Settings",
+    "group_preferences": "Preferences",
+    "group_car": "Car",
+    "group_account": "Account",
+    "not_set": "Not set",
+    "simulator": "Simulator",
+    "connection": "Connection",
+    "virtual_key": "Virtual Key",
+    "paired": "Paired",
+    "not_paired": "Not paired",
+    "not_applicable": "N/A",
+    "data_source": "Data source",
+    "no_extra_cost": "No extra cost",
+    "last_months": "Last {count} months",
+    "vs_petrol": "−{pct}% vs petrol",
+    "average": "Average",
+    "from_what": "From what",
+    "photo_or_email": "Photo or email",
+    "needs_telemetry": "Needs telemetry",
+    "you": "You",
+    "where": "Where",
+    "find_it": "Find it",
+    "index_handoff": "Handed to v1",
+    "handoff": {
+      "planner": "Planner in v1",
+      "upload": "Upload in v1",
+      "editing": "Editing in v1"
     }
   }
 }

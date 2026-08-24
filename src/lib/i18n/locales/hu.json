@@ -1292,6 +1292,37 @@
       "insights": "Elemzések",
       "energy": "Energia",
       "settings": "Beállítások"
+    },
+    "state_open": "Nyitva",
+    "state_closed": "Zárva",
+    "waiting_for_car": "Várok az autóra",
+    "group_settings": "Beállítások",
+    "group_preferences": "Beállítások",
+    "group_car": "Autó",
+    "group_account": "Fiók",
+    "not_set": "Nincs beállítva",
+    "simulator": "Szimulátor",
+    "connection": "Kapcsolat",
+    "virtual_key": "Virtuális kulcs",
+    "paired": "Párosítva",
+    "not_paired": "Nincs párosítva",
+    "not_applicable": "N/A",
+    "data_source": "Adatforrás",
+    "no_extra_cost": "Nincs többletköltség",
+    "last_months": "Utolsó {count} hónap",
+    "vs_petrol": "−{pct}% vs benzin",
+    "average": "Átlag",
+    "from_what": "Miből",
+    "photo_or_email": "Fotó vagy e-mail",
+    "needs_telemetry": "Telemetria kell",
+    "you": "Te",
+    "where": "Hol",
+    "find_it": "Megkeresés",
+    "index_handoff": "Átadva a v1-nek",
+    "handoff": {
+      "planner": "Tervező a v1-ben",
+      "upload": "Feltöltés a v1-ben",
+      "editing": "Szerkesztés a v1-ben"
     }
   }
 }

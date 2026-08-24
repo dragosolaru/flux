@@ -1292,6 +1292,37 @@
       "insights": "Auswertungen",
       "energy": "Energie",
       "settings": "Einstellungen"
+    },
+    "state_open": "Offen",
+    "state_closed": "Geschlossen",
+    "waiting_for_car": "Warte auf das Auto",
+    "group_settings": "Einstellungen",
+    "group_preferences": "Präferenzen",
+    "group_car": "Auto",
+    "group_account": "Konto",
+    "not_set": "Nicht gesetzt",
+    "simulator": "Simulator",
+    "connection": "Verbindung",
+    "virtual_key": "Virtueller Schlüssel",
+    "paired": "Gekoppelt",
+    "not_paired": "Nicht gekoppelt",
+    "not_applicable": "N/V",
+    "data_source": "Datenquelle",
+    "no_extra_cost": "Ohne Aufpreis",
+    "last_months": "Letzte {count} Monate",
+    "vs_petrol": "−{pct}% vs Benzin",
+    "average": "Schnitt",
+    "from_what": "Woraus",
+    "photo_or_email": "Foto oder E-Mail",
+    "needs_telemetry": "Braucht Telemetrie",
+    "you": "Du",
+    "where": "Wo",
+    "find_it": "Finden",
+    "index_handoff": "An v1 übergeben",
+    "handoff": {
+      "planner": "Planer in v1",
+      "upload": "Upload in v1",
+      "editing": "Bearbeiten in v1"
     }
   }
 }

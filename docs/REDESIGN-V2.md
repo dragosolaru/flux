@@ -33,19 +33,29 @@ copy is deleted. This is a staging area, not a second app.
 Read from `src/app/v2/screens.ts` — the `/v2` index renders the same list, so it
 cannot drift.
 
-| Screen | v2 | Compare with |
-| --- | --- | --- |
-| Car (dashboard) | done | `/dashboard` |
-| Commands | — | `/commands` |
-| Map & find my car | — | `/map` |
-| Charging | — | `/charging` |
-| Trip | — | `/trip` |
-| Costs | — | `/costs` |
-| Garage | — | `/garage` |
-| Documents | — | `/documents` |
-| Insights | — | `/insights` |
-| Energy | — | `/energy` |
-| Settings | — | `/settings` |
+| Screen | v2 | Compare with | Hands back to v1 |
+| --- | --- | --- | --- |
+| Car (dashboard) | `/v2/dashboard` | `/dashboard` | — |
+| Commands | `/v2/commands` | `/commands` | — |
+| Find my car | `/v2/map` | `/map` | the trip planner |
+| Charging | `/v2/charging` | `/charging` | — |
+| Costs | `/v2/costs` | `/costs` | — |
+| Garage | `/v2/garage` | `/garage` | adding a car |
+| Documents | `/v2/documents` | `/documents` | upload + OCR review |
+| Insights | `/v2/insights` | `/insights` | — |
+| Energy | `/v2/energy` | `/energy` | — |
+| Settings | `/v2/settings` | `/settings` | every editor |
+
+**Trip has no v2 route on purpose.** `/trip` in the shipping app already
+redirects to `/map?mode=plan` — the two planners were merged after a feature
+landed on one screen only three times in a row. `/v2` links straight to that
+mode rather than adding a stub whose only job is to forward.
+
+"Hands back to v1" is not a shortcut, it is the boundary. Redrawing a file
+picker, a geocoding search or an account-deletion confirmation in a direction
+nobody has used outdoors yet would double the surface under review and put a
+second path to a destructive action in the app. Those rows say `v1` on them, so
+the handoff is visible rather than a dead end.
 
 `/debug` is deliberately not on the list. It is a tool, not a product screen, and
 it is the one place where density beats composure.
@@ -87,18 +97,50 @@ yet, and shipping a half-drawn version of them would make the comparison
 dishonest. They are the next thing on this screen, not an omission that has been
 forgotten.
 
-**Defects found while porting:** none yet on this screen — the v1 dashboard was
-worked over heavily in the August remediation pass. Anything found from here on
-gets a row in the table below.
+**Defects found while porting:** none on this screen — the v1 dashboard was
+worked over heavily in the August remediation pass.
+
+---
+
+## Ported: the other nine
+
+- **Commands (`/v2/commands`).** One column instead of a two-column grid of
+  bordered buttons. Two columns halves the width available to a label, so
+  several locales truncate at ~13 characters and a cut label is a button you
+  have to guess at; the longest German string fits now. Every toggle carries its
+  state on the right (`PORNITĂ` / `OPRITĂ`), so the screen answers the question
+  you opened it to ask. Charge limit and amps are tappable values, temperature
+  is a stepper with Apply — the one control in the system that does not commit
+  on tap, because sending a command per degree would spend the quota on the way
+  from 18 to 24.
+- **Find my car (`/v2/map`).** Its own screen. In v1 this is a banner floating
+  over a canvas shared with the explorer and the planner; here the map is the
+  top 46% and the rows below are the distance, the walk handoff, the address,
+  and honk/flash. The walking route is still handed to the phone's own maps app
+  — a real pavement route needs a pedestrian router we do not have.
+- **Charging (`/v2/charging`).** The arc's second legitimate home: a session is
+  a level filling up. Green while charging regardless of level, because the
+  number is going the right way whatever it reads.
+- **Costs (`/v2/costs`).** Bars, not an arc — money over months is a comparison,
+  not a level, and using the house instrument there would have been style over
+  meaning. The "vs petrol" figure is only printed when both sides are known.
+- **Garage (`/v2/garage`).** The proof the direction scales: the same arc at
+  46px becomes a row ornament that still carries the number, so two cars read at
+  a glance without a second component being invented. Only the selected car is
+  polled — drawing every car's state would wake every linked car at once.
+- **Documents, Insights, Energy, Settings.** List screens, derived directly from
+  the row. Insights states plainly that SoH and vampire drain need Fleet
+  Telemetry rather than printing a zero that looks like a reading.
 
 ---
 
 ## Defects found while redesigning
 
-Fixed in the **real** app, not only in `/v2`. Empty until the first one lands.
+Fixed in the **real** app, not only in `/v2`.
 
 | # | Screen | What was wrong | Fixed in |
 | --- | --- | --- | --- |
+| 1 | `/charging` | The page fetched charging history server-side for the **first** vehicle by `created_at`, while the client rendered live state for the **selected** one. With two cars linked, the sessions listed belonged to a different car than the battery above them, and nothing on screen said so. | `GET /api/vehicles/[vehicleId]/charging-history` (new, auth + ownership checked), `src/hooks/useChargingHistory.ts`, and both the v1 and v2 charging screens now key the query on the selected vehicle. The server rows are initial data for that one car only. |
 
 ---
 

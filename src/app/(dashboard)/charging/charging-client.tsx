@@ -34,10 +34,12 @@ import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { minutesFromMidnight, minutesToHhmm } from "@/lib/time";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
-import type { ChargingSessionRow } from "./page";
+import { useChargingHistory, type ChargingSessionRow } from "@/hooks/useChargingHistory";
 
 interface ChargingClientProps {
   initialHistory: ChargingSessionRow[];
+  /** Which car the server rows belong to. */
+  initialVehicleId: string;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -68,13 +70,21 @@ function ringColor(chargingState: string | null | undefined): string {
 
 export function ChargingClient({
   initialHistory,
+  initialVehicleId,
 }: ChargingClientProps) {
   const { selectedVehicleId } = useVehicleContext();
   const { data: vehicles } = useVehicles();
   const vehicleId = selectedVehicleId ?? "";
   const vehicle = vehicles?.find((v) => v.id === vehicleId);
   const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
-  const history = initialHistory;
+  // Keyed on the SELECTED vehicle. The page can only fetch for one car
+  // server-side, so its rows are the initial data for that car and nothing
+  // more — otherwise the sessions on screen belonged to a different car than
+  // the battery above them.
+  const { data: history = [] } = useChargingHistory(
+    vehicleId,
+    vehicleId === initialVehicleId ? initialHistory : undefined,
+  );
 
   const { data, isLoading, isError } = useVehicle(vehicleId);
   const { mutate, isPending } = useVehicleCommand();

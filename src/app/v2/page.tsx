@@ -29,8 +29,14 @@ export default function V2IndexPage() {
             <Row
               key={screen.key}
               label={t(`screens.${screen.label}`)}
-              value={screen.done ? t("index_ready") : t("index_soon")}
-              valueTone={screen.done ? "accent" : "muted"}
+              value={
+                screen.handoff
+                  ? t(`handoff.${screen.handoff}`)
+                  : screen.done
+                    ? t("index_ready")
+                    : t("index_soon")
+              }
+              valueTone={screen.handoff ? "amber" : screen.done ? "accent" : "muted"}
               href={screen.href ?? undefined}
               disabled={!screen.done}
               reason={t("index_soon")}

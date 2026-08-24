@@ -370,7 +370,9 @@ input[type="range"].soc-slider::-moz-range-track {
 .v2 {
   --background: oklch(0.08 0.01 240);
   --foreground: oklch(0.97 0 0);
-  --card: oklch(0.08 0.01 240);
+  /* Lifted a step off the ground so a reused dialog or sheet from the rest of
+     the app does not render black-on-black. No /v2 screen uses bg-card itself. */
+  --card: oklch(0.11 0.01 240);
   --card-foreground: oklch(0.97 0 0);
   --popover: oklch(0.11 0.01 240);
   --popover-foreground: oklch(0.97 0 0);
