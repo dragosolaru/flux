@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -13,6 +14,7 @@ import {
   SectionLabel,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -89,6 +91,7 @@ export function GarageV2Client() {
   const tv = useTranslations("v2");
   const { selectedVehicleId, setSelectedVehicleId } = useVehicleContext();
   const { data: vehicles, isLoading } = useVehicles();
+  const [adding, setAdding] = useState(false);
 
   const list = vehicles ?? [];
   const selected = list.find((v) => v.id === selectedVehicleId);
@@ -154,16 +157,20 @@ export function GarageV2Client() {
       <div className="mt-7 pb-8">
         <Rows>
           {/* Stated on the row, because "does a second car cost more" is the
-              first question anyone with two cars asks, and the answer is no. */}
+              first question anyone with two cars asks, and the answer is no.
+              The modal is v1's — it owns the brand/scenario choices and the
+              create call, and a second one would drift from it. */}
           <Row
             icon={<Plus strokeWidth={1.5} className="text-primary" />}
             label={<span className="text-primary">{tg("add_vehicle")}</span>}
             value={tv("no_extra_cost")}
-            href="/garage"
+            onClick={() => setAdding(true)}
             last
           />
         </Rows>
       </div>
+
+      <AddVehicleModal open={adding} onOpenChange={setAdding} />
 
       <NavBar />
     </Screen>

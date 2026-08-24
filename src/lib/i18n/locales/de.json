@@ -1291,7 +1291,9 @@
       "documents": "Dokumente",
       "insights": "Auswertungen",
       "energy": "Energie",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "chargers": "Ladesäulen in der Nähe",
+      "login": "Anmelden"
     },
     "state_open": "Offen",
     "state_closed": "Geschlossen",
@@ -1322,7 +1324,13 @@
     "handoff": {
       "planner": "Planer in v1",
       "upload": "Upload in v1",
-      "editing": "Bearbeiten in v1"
-    }
+      "editing": "Bearbeiten in v1",
+      "map": "Karte in v1",
+      "review": "Prüfung in v1",
+      "account": "Konto in v1"
+    },
+    "pick_both_points": "Beide Punkte wählen",
+    "planning": "Berechne…",
+    "plan_first": "Erst planen"
   }
 }

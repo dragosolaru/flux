@@ -1291,7 +1291,9 @@
       "documents": "Documents",
       "insights": "Insights",
       "energy": "Energy",
-      "settings": "Settings"
+      "settings": "Settings",
+      "chargers": "Chargers nearby",
+      "login": "Sign in"
     },
     "state_open": "Open",
     "state_closed": "Closed",
@@ -1322,7 +1324,13 @@
     "handoff": {
       "planner": "Planner in v1",
       "upload": "Upload in v1",
-      "editing": "Editing in v1"
-    }
+      "editing": "Editing in v1",
+      "map": "Map in v1",
+      "review": "Review in v1",
+      "account": "Account in v1"
+    },
+    "pick_both_points": "Pick both points",
+    "planning": "Planning…",
+    "plan_first": "Plan first"
   }
 }

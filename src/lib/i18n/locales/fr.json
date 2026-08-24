@@ -1291,7 +1291,9 @@
       "documents": "Documents",
       "insights": "Analyses",
       "energy": "Énergie",
-      "settings": "Réglages"
+      "settings": "Réglages",
+      "chargers": "Bornes à proximité",
+      "login": "Connexion"
     },
     "state_open": "Ouvertes",
     "state_closed": "Fermées",
@@ -1322,7 +1324,13 @@
     "handoff": {
       "planner": "Planificateur en v1",
       "upload": "Envoi en v1",
-      "editing": "Édition en v1"
-    }
+      "editing": "Édition en v1",
+      "map": "Carte en v1",
+      "review": "Vérification en v1",
+      "account": "Compte en v1"
+    },
+    "pick_both_points": "Choisis les deux points",
+    "planning": "Calcul…",
+    "plan_first": "Planifie d'abord"
   }
 }

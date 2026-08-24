@@ -37,25 +37,43 @@ cannot drift.
 | --- | --- | --- | --- |
 | Car (dashboard) | `/v2/dashboard` | `/dashboard` | — |
 | Commands | `/v2/commands` | `/commands` | — |
-| Find my car | `/v2/map` | `/map` | the trip planner |
+| Find my car | `/v2/map` | `/map` | — |
+| Trip planner | `/v2/trip` | `/map?mode=plan` | — |
+| Chargers nearby | `/v2/chargers` | `/charging-map` | the map view |
 | Charging | `/v2/charging` | `/charging` | — |
 | Costs | `/v2/costs` | `/costs` | — |
-| Garage | `/v2/garage` | `/garage` | adding a car |
-| Documents | `/v2/documents` | `/documents` | upload + OCR review |
+| Garage | `/v2/garage` | `/garage` | — |
+| Documents | `/v2/documents` | `/documents` | reviewing a parsed document |
 | Insights | `/v2/insights` | `/insights` | — |
 | Energy | `/v2/energy` | `/energy` | — |
-| Settings | `/v2/settings` | `/settings` | every editor |
+| Settings | `/v2/settings` | `/settings` | account + notifications |
+| Sign in / register | `/v2/login`, `/v2/register` | `/login`, `/register` | — |
 
-**Trip has no v2 route on purpose.** `/trip` in the shipping app already
-redirects to `/map?mode=plan` — the two planners were merged after a feature
-landed on one screen only three times in a row. `/v2` links straight to that
-mode rather than adding a stub whose only job is to forward.
+Four handoffs remain, and each is deliberate rather than unfinished:
 
-"Hands back to v1" is not a shortcut, it is the boundary. Redrawing a file
-picker, a geocoding search or an account-deletion confirmation in a direction
-nobody has used outdoors yet would double the surface under review and put a
-second path to a destructive action in the app. Those rows say `v1` on them, so
-the handoff is visible rather than a dead end.
+- **Reviewing a parsed document** is a form with money in it. Two editors for
+  the same rows would drift, and the drift would be in amounts.
+- **Account deletion and notification channels** stay on v1: a second path to a
+  destructive action is a second path to get it wrong, and the typed-confirmation
+  guard already lives there.
+- **The charging map view** — the list answers "which one, how far, how fast"
+  better than a map does; the map is still one row away for when you need to see
+  the shape of a city.
+- **The v1 charger/station detail sheets** are reused where they fit rather than
+  redrawn.
+
+Everything else that was a handoff in the first pass is now real in `/v2`:
+locale and currency commit on tap, home location uses v1's geocoding picker
+inline, documents upload through a native picker with the same 10 MB ceiling,
+and the garage opens v1's AddVehicleModal rather than navigating away.
+
+**The auth guard does not live in `src/app/v2/layout.tsx`.** Every page under it
+calls `auth()` itself. A shared guard would have needed an exception carved out
+for `/v2/login` and `/v2/register`, and a conditional guard is one refactor away
+from guarding nothing. `LoginForm` is reused unchanged — it owns the
+`callbackUrl` validation that stops an open redirect — with one added
+`defaultCallbackUrl` prop that is validated by the same rule as the query
+parameter.
 
 `/debug` is deliberately not on the list. It is a tool, not a product screen, and
 it is the one place where density beats composure.
@@ -131,6 +149,27 @@ worked over heavily in the August remediation pass.
 - **Documents, Insights, Energy, Settings.** List screens, derived directly from
   the row. Insights states plainly that SoH and vampire drain need Fleet
   Telemetry rather than printing a zero that looks like a reading.
+
+---
+
+## Ported in the second pass
+
+- **Trip planner (`/v2/trip`).** The route as a vertical spine: each stop
+  carries the SoC it arrives on, the SoC it leaves with, and the power. Not
+  arcs — a route is a sequence, and four arcs down a screen would be the house
+  instrument used as decoration. Composed from the same pieces v1 uses
+  (`tripApi.plan`, `GeocodingSearch`, `shareNavigation`, the precondition
+  helpers), so no planning logic is forked. Preconditioning is decided from
+  EVERY stop that needs it, via `routeNeedsPreconditioning` — deciding it from
+  the first stop is a bug this app has already had once.
+- **Chargers nearby (`/v2/chargers`).** A sorted list, not a map. Standing
+  somewhere with 12% left, the question is "which one, how far, how fast" —
+  three values a list answers directly and a map makes you pinch at. Falls back
+  to the car's position when location is denied, which needs no permission and
+  is the next most useful centre.
+- **Sign in / register (`/v2/login`, `/v2/register`).** A wordmark, a hairline,
+  the form, one link. The three blurred colour blobs behind v1's auth screen are
+  the only decoration left in the app, and the direction has none anywhere else.
 
 ---
 

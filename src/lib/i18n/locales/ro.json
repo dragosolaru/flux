@@ -1291,7 +1291,9 @@
       "documents": "Documente",
       "insights": "Analize",
       "energy": "Energie",
-      "settings": "Setări"
+      "settings": "Setări",
+      "chargers": "Încărcătoare aproape",
+      "login": "Autentificare"
     },
     "state_open": "Deschise",
     "state_closed": "Închise",
@@ -1322,7 +1324,13 @@
     "handoff": {
       "planner": "Planificare în v1",
       "upload": "Încărcare în v1",
-      "editing": "Editare în v1"
-    }
+      "editing": "Editare în v1",
+      "map": "Harta în v1",
+      "review": "Verificare în v1",
+      "account": "Cont în v1"
+    },
+    "pick_both_points": "Alege ambele puncte",
+    "planning": "Calculez…",
+    "plan_first": "Planifică întâi"
   }
 }

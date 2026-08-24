@@ -8,15 +8,24 @@ import { useTranslations } from "next-intl";
 
 interface LoginFormProps {
   mode: "login" | "register";
+  /**
+   * Where to land when the URL carries no `callbackUrl`. Exists so the /v2
+   * auth screens land back in /v2 instead of bouncing the visitor into the
+   * version they were not using. Validated exactly like the URL parameter.
+   */
+  defaultCallbackUrl?: string;
 }
 
-export function LoginForm({ mode }: LoginFormProps) {
+export function LoginForm({ mode, defaultCallbackUrl = "/dashboard" }: LoginFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const params = useSearchParams();
-  const rawCallbackUrl = params.get("callbackUrl") ?? "/dashboard";
+  // The default is validated too: a caller passing an absolute URL must not be
+  // able to do what the query parameter is stopped from doing.
+  const fallback = defaultCallbackUrl.startsWith("/") ? defaultCallbackUrl : "/dashboard";
+  const rawCallbackUrl = params.get("callbackUrl") ?? fallback;
   // Only allow same-site relative paths — never an absolute/external URL.
-  const callbackUrl = rawCallbackUrl.startsWith("/") ? rawCallbackUrl : "/dashboard";
+  const callbackUrl = rawCallbackUrl.startsWith("/") ? rawCallbackUrl : fallback;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);

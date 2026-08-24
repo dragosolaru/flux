@@ -1291,7 +1291,9 @@
       "documents": "Dokumentumok",
       "insights": "Elemzések",
       "energy": "Energia",
-      "settings": "Beállítások"
+      "settings": "Beállítások",
+      "chargers": "Töltők a közelben",
+      "login": "Bejelentkezés"
     },
     "state_open": "Nyitva",
     "state_closed": "Zárva",
@@ -1322,7 +1324,13 @@
     "handoff": {
       "planner": "Tervező a v1-ben",
       "upload": "Feltöltés a v1-ben",
-      "editing": "Szerkesztés a v1-ben"
-    }
+      "editing": "Szerkesztés a v1-ben",
+      "map": "Térkép a v1-ben",
+      "review": "Ellenőrzés a v1-ben",
+      "account": "Fiók a v1-ben"
+    },
+    "pick_both_points": "Válaszd ki mindkét pontot",
+    "planning": "Számolok…",
+    "plan_first": "Előbb tervezz"
   }
 }

@@ -900,12 +900,19 @@ the pending counter are **not** animations and are never removed — a command
 that takes eight seconds must still say so.
 
 **Screens:** `/v2/dashboard`, `/v2/commands`, `/v2/map` (find my car),
-`/v2/charging`, `/v2/costs`, `/v2/garage`, `/v2/documents`, `/v2/insights`,
-`/v2/energy`, `/v2/settings`, `/v2/more`. The trip planner has no v2 route — v1
-already merged it into `/map?mode=plan`, and `/v2` links straight there. Some
-screens deliberately hand one job back to v1 (the planner, file upload, every
-settings editor); those rows are labelled `v1` so the boundary is visible rather
-than a dead end.
+`/v2/trip`, `/v2/chargers`, `/v2/charging`, `/v2/costs`, `/v2/garage`,
+`/v2/documents`, `/v2/insights`, `/v2/energy`, `/v2/settings`, `/v2/more`, plus
+`/v2/login` and `/v2/register`. Four jobs are deliberately still v1's: reviewing
+a parsed document, account deletion, notification channels, and the charging-map
+view. Those rows are labelled `v1` so the boundary is visible rather than a dead
+end.
+
+**No auth guard in `src/app/v2/layout.tsx`** — every page under it calls
+`auth()` itself. A shared guard would need an exception carved out for
+`/v2/login` and `/v2/register`, and a conditional guard is one refactor away
+from guarding nothing. `LoginForm` is reused unchanged (it owns the
+`callbackUrl` open-redirect check) with one added `defaultCallbackUrl` prop,
+validated by the same rule as the query parameter.
 
 **Key files:** `src/app/v2/layout.tsx` (auth + Space Grotesk + `.v2` scope),
 `src/app/v2/page.tsx` (index), `src/app/v2/screens.ts` (the checklist),
