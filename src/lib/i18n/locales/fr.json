@@ -1317,7 +1317,6 @@
     "average": "Moyenne",
     "from_what": "D'où",
     "photo_or_email": "Photo ou e-mail",
-    "needs_telemetry": "Nécessite la télémétrie",
     "you": "Toi",
     "where": "Où",
     "find_it": "La trouver",
@@ -1339,6 +1338,7 @@
     "waking": "Réveil…",
     "woke_up": "La voiture est réveillée",
     "wake_failed": "Impossible de la réveiller",
-    "reading_from": "Dernier relevé"
+    "reading_from": "Dernier relevé",
+    "needs_driving": "Nécessite plus de trajets"
   }
 }

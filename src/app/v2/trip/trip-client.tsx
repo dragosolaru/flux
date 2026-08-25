@@ -15,6 +15,7 @@ import {
   SectionLabel,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { GeocodingSearch, type GeoPoint } from "@/components/trip/GeocodingSearch";
 import { useCreateSavedRoute, useSavedRoutes } from "@/hooks/useSavedRoutes";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -184,6 +185,7 @@ export function TripV2Client() {
   return (
     <Screen>
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={t("title")}
         meta={state?.batteryLevel != null ? `${Math.round(state.batteryLevel)}%` : undefined}
       />

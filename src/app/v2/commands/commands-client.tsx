@@ -29,6 +29,7 @@ import {
   TimeRow,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { ConfirmCommandDialog, SENSITIVE_COMMANDS } from "@/components/vehicle/ConfirmCommandDialog";
 import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -241,6 +242,7 @@ export function CommandsV2Client() {
       />
 
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={t("title")}
         meta={vehicle ? (vehicle.nickname ?? vehicle.displayName) : undefined}
       />

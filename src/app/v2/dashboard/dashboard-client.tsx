@@ -17,6 +17,7 @@ import {
   ValueTable,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { useVehicles } from "@/hooks/useVehicles";
@@ -95,7 +96,7 @@ export function DashboardV2Client() {
   return (
     <Screen>
       <ScreenHeader
-        title={vehicle ? (vehicle.nickname ?? vehicle.displayName) : ""}
+        title={<VehicleSwitch compact />}
         meta={
           !isLive
             ? t("demo")

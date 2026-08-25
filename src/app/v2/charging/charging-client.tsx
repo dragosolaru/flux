@@ -17,6 +17,7 @@ import {
   ValueTable,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useChargingHistory, type ChargingSessionRow } from "@/hooks/useChargingHistory";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
@@ -86,6 +87,7 @@ export function ChargingV2Client({
   return (
     <Screen>
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={tc("page_title")}
         meta={charging ? tv("motion_charging") : tv("state_off")}
         metaTone={charging ? "green" : "muted"}

@@ -15,6 +15,7 @@ import {
   SectionLabel,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import * as chargersApi from "@/lib/api/chargers";
 import * as vehiclesApi from "@/lib/api/vehicles";
 import { haversineMeters } from "@/lib/chargers/dedup";
@@ -122,6 +123,7 @@ export function ChargersV2Client() {
   return (
     <Screen>
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={t("nearby_title")}
         meta={
           centre == null

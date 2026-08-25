@@ -15,6 +15,7 @@ import {
   SectionLabel,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { haversineMeters } from "@/lib/chargers/dedup";
 import { mockLocationLabel } from "@/lib/mock/location-label";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -90,6 +91,7 @@ export function MapV2Client() {
   return (
     <Screen>
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={t("find_car_title")}
         meta={
           meters != null
@@ -175,8 +177,7 @@ export function MapV2Client() {
           <Row
             icon={<RouteIcon strokeWidth={1.5} className="text-primary" />}
             label={<span className="text-primary">{tm("tab_plan")}</span>}
-            value="v1"
-            href="/map?mode=plan"
+            href="/v2/trip"
             last
           />
         </Rows>

@@ -1317,7 +1317,6 @@
     "average": "Átlag",
     "from_what": "Miből",
     "photo_or_email": "Fotó vagy e-mail",
-    "needs_telemetry": "Telemetria kell",
     "you": "Te",
     "where": "Hol",
     "find_it": "Megkeresés",
@@ -1339,6 +1338,7 @@
     "waking": "Ébresztés…",
     "woke_up": "Az autó ébren van",
     "wake_failed": "Nem sikerült felébreszteni",
-    "reading_from": "Utolsó mérés"
+    "reading_from": "Utolsó mérés",
+    "needs_driving": "Több vezetés kell"
   }
 }

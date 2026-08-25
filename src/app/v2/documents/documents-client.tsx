@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Row, Rows, Screen, ScreenHeader, SectionLabel } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useDocuments, useUploadDocument } from "@/hooks/useDocuments";
 import { useVehicleContext } from "@/contexts/vehicle";
 import type { Document, DocumentStatus } from "@/types/costs";
@@ -71,6 +72,7 @@ export function DocumentsV2Client() {
   return (
     <Screen>
       <ScreenHeader
+        switcher={<VehicleSwitch />}
         title={t("heading")}
         meta={isLoading ? undefined : String(documents.length)}
       />

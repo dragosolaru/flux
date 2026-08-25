@@ -31,15 +31,37 @@ export function Screen({ children }: { children: ReactNode }) {
   );
 }
 
-export function ScreenHeader({ title, meta, metaTone = "muted" }: {
-  title: string;
+/**
+ * @param title     a string, or the vehicle switcher itself on the one screen
+ *                  whose title IS the car.
+ * @param switcher  passed by every screen whose data belongs to ONE car, so
+ *                  which car is selected is visible and changeable without
+ *                  going to the garage first. Passed in rather than imported
+ *                  here: the switcher reads the vehicle list, and a primitives
+ *                  file that fetches would put a query behind every Row.
+ */
+export function ScreenHeader({
+  title,
+  meta,
+  metaTone = "muted",
+  switcher,
+}: {
+  title: ReactNode;
   meta?: string;
   metaTone?: "muted" | "accent" | "amber" | "green";
+  switcher?: ReactNode;
 }) {
   return (
-    <div className="v2-rise flex items-baseline justify-between pt-5">
-      <span className="min-w-0 truncate text-[15px] font-medium tracking-[-0.01em]">{title}</span>
-      {meta && <Mono className={`ml-3 shrink-0 ${toneClass(metaTone)}`}>{meta}</Mono>}
+    <div className="v2-rise flex min-h-11 items-center justify-between gap-3 pt-4">
+      {typeof title === "string" ? (
+        <span className="min-w-0 truncate text-[15px] font-medium tracking-[-0.01em]">{title}</span>
+      ) : (
+        title
+      )}
+      <span className="flex min-w-0 shrink-0 items-center gap-3">
+        {switcher}
+        {meta && <Mono className={toneClass(metaTone)}>{meta}</Mono>}
+      </span>
     </div>
   );
 }

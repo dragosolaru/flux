@@ -1317,7 +1317,6 @@
     "average": "Schnitt",
     "from_what": "Woraus",
     "photo_or_email": "Foto oder E-Mail",
-    "needs_telemetry": "Braucht Telemetrie",
     "you": "Du",
     "where": "Wo",
     "find_it": "Finden",
@@ -1339,6 +1338,7 @@
     "waking": "Wecke…",
     "woke_up": "Das Auto ist wach",
     "wake_failed": "Wecken fehlgeschlagen",
-    "reading_from": "Letzter Stand"
+    "reading_from": "Letzter Stand",
+    "needs_driving": "Braucht mehr Fahrten"
   }
 }

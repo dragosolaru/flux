@@ -12,7 +12,9 @@ import {
   ValueTable,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useStats } from "@/hooks/useStats";
+import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicleContext } from "@/contexts/vehicle";
 
 export function InsightsV2Client() {
@@ -21,6 +23,10 @@ export function InsightsV2Client() {
   const { selectedVehicleId } = useVehicleContext();
   const vehicleId = selectedVehicleId ?? "";
   const { data, isLoading } = useStats(vehicleId);
+  // State of health comes from the car, not from the trip statistics — it is a
+  // property of the pack, and the stats endpoint has never carried it.
+  const { data: vehicleState } = useVehicle(vehicleId, true, false);
+  const soh = vehicleState?.batteryHealthPct ?? null;
 
   const months = (data?.mileageByMonth ?? []).slice(-6);
 
@@ -36,7 +42,11 @@ export function InsightsV2Client() {
 
   return (
     <Screen>
-      <ScreenHeader title={t("title")} meta={t("period_all")} />
+      <ScreenHeader
+        switcher={<VehicleSwitch />}
+        title={t("title")}
+        meta={t("period_all")}
+      />
 
       <div className="mt-6">
         <SectionLabel>{t("avg_wh_per_km")}</SectionLabel>
@@ -78,15 +88,17 @@ export function InsightsV2Client() {
       <div className="mt-7 pb-8">
         <SectionLabel>{t("battery_title")}</SectionLabel>
         <Rows className="mt-2">
-          {/* Both of these are honestly unavailable on a polled Tesla: SoH is
-              not exposed, and vampire drain cannot be measured by polling
-              because every measurement wakes the car. The rows say so rather
-              than printing a zero that looks like a reading. */}
+          {/* Each row reads its OWN field. This one used to decide whether to
+              show state-of-health from the vampire-drain value, and then claim
+              "needs telemetry" — while the same car reports 84.7% and the v1
+              screen shows it. Two separate mistakes in four lines: the wrong
+              source, and a confident explanation for the wrong result. */}
           <Row
             label={t("battery_soh")}
-            value={data?.vampireDrainPctPerH != null ? undefined : tv("needs_telemetry")}
-            disabled={data?.vampireDrainPctPerH == null}
-            reason={tv("needs_telemetry")}
+            value={soh != null ? `${soh.toFixed(1)}%` : undefined}
+            valueTone={soh != null && soh < 85 ? "amber" : "muted"}
+            disabled={soh == null}
+            reason={tv("needs_driving")}
           />
           <Row
             label={t("vampire_drain")}
@@ -96,7 +108,7 @@ export function InsightsV2Client() {
                 : undefined
             }
             disabled={data?.vampireDrainPctPerH == null}
-            reason={tv("needs_telemetry")}
+            reason={tv("needs_driving")}
             last
           />
         </Rows>

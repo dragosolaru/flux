@@ -1317,7 +1317,6 @@
     "average": "Medie",
     "from_what": "Din ce",
     "photo_or_email": "Foto sau email",
-    "needs_telemetry": "Necesită telemetrie",
     "you": "Tu",
     "where": "Unde",
     "find_it": "Găsește-o",
@@ -1339,6 +1338,7 @@
     "waking": "Trezesc…",
     "woke_up": "Mașina e trează",
     "wake_failed": "Nu am putut trezi mașina",
-    "reading_from": "Ultima citire"
+    "reading_from": "Ultima citire",
+    "needs_driving": "Necesită mai mult rulaj"
   }
 }

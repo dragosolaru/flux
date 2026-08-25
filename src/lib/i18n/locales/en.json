@@ -1317,7 +1317,6 @@
     "average": "Average",
     "from_what": "From what",
     "photo_or_email": "Photo or email",
-    "needs_telemetry": "Needs telemetry",
     "you": "You",
     "where": "Where",
     "find_it": "Find it",
@@ -1339,6 +1338,7 @@
     "waking": "Waking…",
     "woke_up": "The car is awake",
     "wake_failed": "Couldn't wake the car",
-    "reading_from": "Last reading"
+    "reading_from": "Last reading",
+    "needs_driving": "Needs more driving"
   }
 }

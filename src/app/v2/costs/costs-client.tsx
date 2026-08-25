@@ -13,6 +13,7 @@ import {
   SectionLabel,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
+import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useCosts } from "@/hooks/useCosts";
 import { useVehicleContext } from "@/contexts/vehicle";
 
@@ -48,7 +49,8 @@ export function CostsV2Client() {
 
   return (
     <Screen>
-      <ScreenHeader title={t("page_title")} meta={tv("last_months", { count: months.length })} />
+      <ScreenHeader
+        switcher={<VehicleSwitch />} title={t("page_title")} meta={tv("last_months", { count: months.length })} />
 
       <div className="mt-6">
         <SectionLabel>{t("kpi_cost_per_km")}</SectionLabel>
@@ -114,7 +116,7 @@ export function CostsV2Client() {
             icon={<Plus strokeWidth={1.5} className="text-primary" />}
             label={<span className="text-primary">{t("add_receipt")}</span>}
             value={tv("photo_or_email")}
-            href="/documents"
+            href="/v2/documents"
             last
           />
         </Rows>
