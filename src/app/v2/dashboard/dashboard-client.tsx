@@ -239,7 +239,7 @@ export function DashboardV2Client() {
             valueTone="accent"
             href={
               state?.latitude != null && state.longitude != null
-                ? `/map?lat=${state.latitude}&lng=${state.longitude}&car=1`
+                ? "/v2/map"
                 : undefined
             }
             disabled={state?.latitude == null}

@@ -1251,9 +1251,9 @@
   "v2": {
     "nav": {
       "car": "Autó",
-      "map": "Térkép",
       "charging": "Töltés",
-      "more": "Több"
+      "more": "Több",
+      "commands": "Parancsok"
     },
     "live": "Élő",
     "paused": "Szünetel",
@@ -1350,6 +1350,7 @@
     "period_from": "Ettől",
     "period_to": "Eddig",
     "save_document": "Javítások mentése",
-    "nothing_to_save": "Nincs mit menteni"
+    "nothing_to_save": "Nincs mit menteni",
+    "stations_nearby": "Töltők a közelben"
   }
 }

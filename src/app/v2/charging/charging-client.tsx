@@ -1,5 +1,6 @@
 "use client";
 
+import { Zap } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -117,6 +118,19 @@ export function ChargingV2Client({
 
       <div className="mt-3.5">
         <ValueTable items={values} />
+      </div>
+
+      {/* Directly under the session, because "where do I get more" is the other
+          half of the same question and used to be two taps into another tab. */}
+      <div className="mt-5">
+        <Rows>
+          <Row
+            icon={<Zap strokeWidth={1.5} className="text-primary" />}
+            label={<span className="text-primary">{tv("stations_nearby")}</span>}
+            href="/v2/chargers"
+            last
+          />
+        </Rows>
       </div>
 
       {state && (

@@ -1251,9 +1251,9 @@
   "v2": {
     "nav": {
       "car": "Mașina",
-      "map": "Hartă",
       "charging": "Încărc.",
-      "more": "Mai mult"
+      "more": "Mai mult",
+      "commands": "Comenzi"
     },
     "live": "Live",
     "paused": "Pe pauză",
@@ -1350,6 +1350,7 @@
     "period_from": "De la",
     "period_to": "Până la",
     "save_document": "Salvează corecțiile",
-    "nothing_to_save": "Nimic de salvat"
+    "nothing_to_save": "Nimic de salvat",
+    "stations_nearby": "Stații în apropiere"
   }
 }

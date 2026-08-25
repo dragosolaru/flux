@@ -1251,9 +1251,9 @@
   "v2": {
     "nav": {
       "car": "Voiture",
-      "map": "Carte",
       "charging": "Charge",
-      "more": "Plus"
+      "more": "Plus",
+      "commands": "Commandes"
     },
     "live": "Live",
     "paused": "En pause",
@@ -1350,6 +1350,7 @@
     "period_from": "Du",
     "period_to": "Au",
     "save_document": "Enregistrer les corrections",
-    "nothing_to_save": "Rien à enregistrer"
+    "nothing_to_save": "Rien à enregistrer",
+    "stations_nearby": "Bornes à proximité"
   }
 }

@@ -222,6 +222,25 @@ on their behalf.
 
 ---
 
+## The tab bar
+
+Four tabs: **Mașina · Comenzi · Încărcare · Mai mult**.
+
+"Find my car" held the second slot until it was pointed out that it is asked
+once a week at most — and it is already a row on the dashboard, which is where
+you are when you want it. Commands are why the app gets opened on a cold
+morning. A tab bar is four decisions about frequency, not four categories of
+feature.
+
+Charging holds both halves of one topic: this car's session, and where to get
+more. "Stații în apropiere" is a row directly under the session, because
+"where do I get more" used to be two taps into a different tab.
+
+`TABS` in `src/components/v2/nav.tsx` is one array. If a week of use says
+something else belongs there, it is a one-line change.
+
+---
+
 ## Defects found while redesigning
 
 Fixed in the **real** app, not only in `/v2`.
@@ -232,6 +251,9 @@ Fixed in the **real** app, not only in `/v2`.
 | 2 | every `/v2` screen | Every v2 screen called `useVehicle(id, isLive)` without the third argument, so opening Commands, the trip planner, find-my-car or the charger list started a 30-second poll against a parked car. A poll on a sleeping Tesla wakes it, and a car kept out of deep sleep loses roughly ten times more charge per idle day. The garage was worst: it passed `live: false`, which told the hook there was nothing to disturb and disabled the idle cut-off on exactly the linked cars that needed it. | Only the dashboard polls now. Charging polls **only while a session is running** — a charging car is awake anyway. Everything else reads the value once; `useVehicleCommand` already invalidates the query after a command, so the screens stay current without an interval. |
 | 3 | `/commands`, `/charging` (v1) | The same defect predated the redesign: both polled a live car every 30 s for ten minutes each time the screen was opened, just for being open. | Same rule applied. `/commands` passes `poll: false`, `/charging` polls only while charging. |
 | 4 | `/v2` (all) | The bottom nav was the last child of a flex column, so it only reached the bottom when the content above happened to fill the viewport. On settings, a one-car garage or an empty document list it floated in the middle of the page. | First attempt: `fixed` plus a reserved `--v2-nav-h`. See #6 — that fix was wrong. |
+| 9 | `/v2/chargers` | Tapping a station **on the map** selected it correctly and rendered its detail *below the list* — three screens further down. The tap read as doing nothing. | The detail is a bottom sheet (`Sheet`, now shared with the vehicle switcher): a selection made at the bottom of the screen shows its answer where the finger already is. |
+| 10 | `/v2/chargers` | The power filter offered a chip reading **0**, meaning "any power". A chip reading 0 asks for chargers of no power at all — the opposite of what it does. | `ChipRow` takes a `format`, and 0 renders as `TOATE`. |
+| 11 | `/v2/dashboard` | The find-my-car row still linked to v1's `/map?lat=…&car=1`. Third instance of the same class: a link written before its v2 destination existed. | Points at `/v2/map`. |
 | 7 | `/v2/insights` | The state-of-health row decided whether to show a value from the **vampire-drain** field, and when that was null claimed "needs telemetry". The same car reports 84.7% SoH and the v1 screen shows it. Two mistakes in four lines: the wrong source, and a confident explanation for the wrong result. | Each row reads its own field. SoH comes from `batteryHealthPct` on the vehicle state, vampire drain from the stats endpoint. The `needs_telemetry` key is deleted — the claim it made was false. |
 | 8 | `/v2/map`, `/v2/costs` | Two rows still pointed at v1 (`/map?mode=plan`, `/documents`) after the v2 planner and the v2 document uploader were built. Written before those existed and never revisited. | Repointed to `/v2/trip` and `/v2/documents`. The three remaining v1 links are deliberate and each labelled `v1` on the row. |
 | 6 | `/v2` (all) | The `fixed` nav's height and the padding reserved for it were **two numbers that had to agree**. Giving the links their 44px touch target in the same change made the nav 69px while the reserve stayed 52px, so it covered 17px of the last row — "Actualizări live" vanished behind it. | `sticky bottom-0` + `mt-auto`, in flow. `mt-auto` puts it at the bottom when content is short; `sticky` holds it against the viewport when content is long; being in flow means it occupies exactly the space it needs and there is **no second number**. The class of bug is gone rather than the instance. Measured in a real browser at 375/390/430, short and long, mid-scroll and at the end — and the same measurement was run against the broken version first, to confirm it fails. Pinned by `e2e/v2-nav.spec.ts`. |

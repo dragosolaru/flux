@@ -16,6 +16,7 @@ import {
   Screen,
   ScreenHeader,
   SectionLabel,
+  Sheet,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
 import { VehicleSwitch } from "@/components/v2/vehicle-switch";
@@ -31,6 +32,12 @@ import type { Charger } from "@/lib/chargers/types";
 const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
 const POWER_STEPS = [0, 50, 150, 350];
+
+/** Street and town, when the source carried them. Never a half-address. */
+function addressLine(charger: Charger): string | null {
+  const parts = [charger.address?.street, charger.address?.city].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
 
 function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters / 10) * 10} m`;
@@ -151,6 +158,10 @@ export function ChargersV2Client() {
           values={POWER_STEPS}
           current={minKw}
           onPick={setMinKw}
+          // 0 is not a power, it is the absence of a filter. A chip reading "0"
+          // asks for chargers of no power at all, which is the opposite of what
+          // it does.
+          format={(v) => (v === 0 ? t("filter_all") : `${v} kW`)}
           last
         />
       </div>
@@ -213,43 +224,77 @@ export function ChargersV2Client() {
       </div>
 
       {selected && (
-        <div className="mt-7">
-          <SectionLabel>{selected.name ?? t("station_fallback")}</SectionLabel>
-          <Rows className="mt-2">
-            <Row
-              label={t("connectors_label")}
-              value={
-                selected.connectors.length > 0
-                  ? selected.connectors.map((c) => c.type).join(" · ")
-                  : undefined
-              }
-              disabled={selected.connectors.length === 0}
-              reason={t("status_unknown")}
-            />
-            <Row
-              label={t("status")}
-              value={
-                selected.availability === "offline" ? t("out_of_service") : t("operational")
-              }
-              valueTone={selected.availability === "offline" ? "red" : "green"}
-            />
-            <Row
-              icon={<Send strokeWidth={1.5} className="text-primary" />}
-              label={<span className="text-primary">{t("send_to_car")}</span>}
-              pending={sendTo.isPending}
-              pendingLabel={tv("sending")}
-              disabled={vehicleId === ""}
-              reason={tv("no_answer")}
-              onClick={() => sendTo.mutate(selected)}
-            />
-            <Row
-              icon={<Navigation strokeWidth={1.5} />}
-              label={t("directions")}
-              href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
-              last
-            />
-          </Rows>
-        </div>
+        // A sheet, not a section below the list. The selection can be made on
+        // the map — three screens above this point — and rendering the answer
+        // further down made a tap on a pin look like it did nothing.
+        <Sheet onClose={() => setSelected(null)} label={selected.name ?? t("station_fallback")}>
+          <div className="pb-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 truncate text-[17px] font-medium">
+                {selected.name ?? t("station_fallback")}
+              </span>
+              <Mono className="shrink-0 text-primary">
+                {selected.maxPowerKw != null ? `${Math.round(selected.maxPowerKw)} kW` : "—"}
+              </Mono>
+            </div>
+            {selected.operator && (
+              <div className="mt-1">
+                <Mono className="text-muted-foreground">{selected.operator}</Mono>
+              </div>
+            )}
+
+            <Rows className="mt-4">
+              <Row
+                label={t("distance_km")}
+                value={
+                  centre ? formatDistance(haversineMeters(centre, selected)) : undefined
+                }
+                disabled={centre == null}
+                reason={t("location_error")}
+              />
+              <Row
+                label={t("connectors_label")}
+                value={
+                  selected.connectors.length > 0
+                    ? selected.connectors.map((c) => c.type.toUpperCase()).join(" · ")
+                    : undefined
+                }
+                disabled={selected.connectors.length === 0}
+                reason={t("status_unknown")}
+              />
+              <Row
+                label={t("status")}
+                value={selected.availability === "offline" ? t("out_of_service") : t("operational")}
+                valueTone={selected.availability === "offline" ? "red" : "green"}
+              />
+              <Row
+                label={t("address_unknown")}
+                value={addressLine(selected) ?? undefined}
+                disabled={addressLine(selected) == null}
+                reason={t("address_unknown")}
+                last
+              />
+            </Rows>
+
+            <Rows className="mt-4">
+              <Row
+                icon={<Send strokeWidth={1.5} className="text-primary" />}
+                label={<span className="text-primary">{t("send_to_car")}</span>}
+                pending={sendTo.isPending}
+                pendingLabel={tv("sending")}
+                disabled={vehicleId === ""}
+                reason={tv("no_answer")}
+                onClick={() => sendTo.mutate(selected)}
+              />
+              <Row
+                icon={<Navigation strokeWidth={1.5} />}
+                label={t("directions")}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
+                last
+              />
+            </Rows>
+          </div>
+        </Sheet>
       )}
 
       <div className="mt-7 pb-8">

@@ -1251,9 +1251,9 @@
   "v2": {
     "nav": {
       "car": "Car",
-      "map": "Map",
       "charging": "Charge",
-      "more": "More"
+      "more": "More",
+      "commands": "Controls"
     },
     "live": "Live",
     "paused": "Paused",
@@ -1350,6 +1350,7 @@
     "period_from": "From",
     "period_to": "To",
     "save_document": "Save the corrections",
-    "nothing_to_save": "Nothing to save"
+    "nothing_to_save": "Nothing to save",
+    "stations_nearby": "Chargers nearby"
   }
 }

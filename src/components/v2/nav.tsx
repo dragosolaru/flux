@@ -25,9 +25,20 @@ import { useTranslations } from "next-intl";
  * scrolling underneath cannot show through at the edges — the map is
  * full-bleed and would otherwise appear in two slivers beside the labels.
  */
+/**
+ * The four things opened most often, in that order.
+ *
+ * "Find my car" used to hold the second slot. It is asked once a week at most,
+ * and it is already a row on the dashboard — while commands are the reason the
+ * app is opened on a cold morning. A tab bar is four decisions about frequency,
+ * not four categories of feature.
+ *
+ * Charging covers both halves of one topic: this car's session, and where to
+ * get more. The nearby stations are a row at the top of that screen.
+ */
 const TABS = [
   { key: "car", href: "/v2/dashboard" },
-  { key: "map", href: "/v2/map" },
+  { key: "commands", href: "/v2/commands" },
   { key: "charging", href: "/v2/charging" },
   { key: "more", href: "/v2/more" },
 ] as const;

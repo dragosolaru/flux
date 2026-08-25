@@ -4,8 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { ArcMini, Mono, Row, Rows } from "@/components/v2/instrument";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { ArcMini, Mono, Row, Rows, Sheet } from "@/components/v2/instrument";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -97,32 +96,10 @@ function VehicleSheet({
 }) {
   const tg = useTranslations("garage");
   const tn = useTranslations("nav");
-  const ref = useFocusTrap<HTMLDivElement>(onClose);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={tn("select_vehicle")}
-      className="fixed inset-0 z-[1200] flex items-end bg-black/60"
-      onClick={onClose}
-    >
-      <div
-        ref={ref}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full border-t border-border bg-background"
-        style={{
-          paddingLeft: "var(--v2-gutter)",
-          paddingRight: "var(--v2-gutter)",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 18px)",
-        }}
-      >
-        {/* A grab handle, because this comes up from the bottom edge and the
-            gesture to dismiss it has to be suggested by something. */}
-        <div className="flex justify-center py-3">
-          <span className="h-1 w-10 rounded-full bg-white/15" />
-        </div>
-
+    <Sheet onClose={onClose} label={tn("select_vehicle")}>
+      <div>
         <Rows>
           {vehicles.map((vehicle, i) => (
             <VehicleRow
@@ -146,7 +123,7 @@ function VehicleSheet({
           </Rows>
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 }
 

@@ -1251,9 +1251,9 @@
   "v2": {
     "nav": {
       "car": "Auto",
-      "map": "Karte",
       "charging": "Laden",
-      "more": "Mehr"
+      "more": "Mehr",
+      "commands": "Befehle"
     },
     "live": "Live",
     "paused": "Pausiert",
@@ -1350,6 +1350,7 @@
     "period_from": "Von",
     "period_to": "Bis",
     "save_document": "Korrekturen speichern",
-    "nothing_to_save": "Nichts zu speichern"
+    "nothing_to_save": "Nichts zu speichern",
+    "stations_nearby": "Ladesäulen in der Nähe"
   }
 }

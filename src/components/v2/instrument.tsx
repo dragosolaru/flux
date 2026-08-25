@@ -250,6 +250,54 @@ export function Rows({ children, className = "" }: { children: ReactNode; classN
   return <div className={className}>{children}</div>;
 }
 
+/**
+ * A panel that comes up from the bottom edge.
+ *
+ * Exists because a selection made at the bottom of the screen — a marker on a
+ * map, a row in a list — has to show its result where the finger already is.
+ * The charger detail used to render below the list, so tapping a pin on the map
+ * put the answer three screens further down and the tap read as doing nothing.
+ *
+ * Deliberately square-cornered and hairline-topped, like everything else: it is
+ * the same surface arriving from a different direction, not a card.
+ */
+export function Sheet({
+  onClose,
+  label,
+  children,
+}: {
+  onClose: () => void;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      className="fixed inset-0 z-[1200] flex items-end bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[80dvh] w-full overflow-y-auto border-t border-border bg-background"
+        style={{
+          paddingLeft: "var(--v2-gutter)",
+          paddingRight: "var(--v2-gutter)",
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 18px)",
+        }}
+      >
+        {/* A grab handle: this arrives from the bottom edge, and the gesture to
+            dismiss it has to be suggested by something. */}
+        <div className="flex justify-center py-3">
+          <span className="h-1 w-10 rounded-full bg-white/15" />
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Settings that live inside a row
 // ---------------------------------------------------------------------------
@@ -269,6 +317,7 @@ export function ChipRow({
   busy,
   busyLabel,
   onPick,
+  format,
   last,
 }: {
   label: string;
@@ -278,6 +327,12 @@ export function ChipRow({
   busy?: boolean;
   busyLabel?: string;
   onPick: (value: number) => void;
+  /**
+   * How a value reads. Needed where a number is a stand-in for a word: a power
+   * filter of 0 means "any", and a chip saying "0" claims the opposite — that
+   * you are asking for chargers of no power at all.
+   */
+  format?: (value: number) => string;
   last?: boolean;
 }) {
   return (
@@ -288,7 +343,7 @@ export function ChipRow({
           <PendingCounter label={busyLabel ?? "…"} />
         ) : (
           <Mono className="text-muted-foreground">
-            {current != null ? `${current}${unit}` : "—"}
+            {current == null ? "—" : format ? format(current) : `${current}${unit}`}
           </Mono>
         )}
       </div>
@@ -310,7 +365,7 @@ export function ChipRow({
               ].join(" ")}
               style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
             >
-              {v}
+              {format ? format(v) : v}
             </button>
           );
         })}

@@ -4,11 +4,11 @@ import {
   Car,
   FileText,
   Gauge,
+  MapPin,
   Plug,
   Receipt,
   Route,
   Settings as SettingsIcon,
-  Wrench,
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -32,8 +32,8 @@ export function MoreV2Client() {
       <div className="mt-6">
         <SectionLabel>{t("section.car")}</SectionLabel>
         <Rows className="mt-2">
+          <Row icon={<MapPin strokeWidth={1.5} />} label={t("map")} href="/v2/map" />
           <Row icon={<Car strokeWidth={1.5} />} label={t("garage")} href="/v2/garage" />
-          <Row icon={<Wrench strokeWidth={1.5} />} label={t("commands")} href="/v2/commands" />
           <Row icon={<FileText strokeWidth={1.5} />} label={t("documents")} href="/v2/documents" last />
         </Rows>
       </div>
