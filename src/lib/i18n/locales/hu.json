@@ -1339,6 +1339,17 @@
     "woke_up": "Az autó ébren van",
     "wake_failed": "Nem sikerült felébreszteni",
     "reading_from": "Utolsó mérés",
-    "needs_driving": "Több vezetés kell"
+    "needs_driving": "Több vezetés kell",
+    "add_demo_car": "Demó autó hozzáadása",
+    "demo_car_name": "Demó autó",
+    "demo_car_added": "Demó autó hozzáadva",
+    "demo_car_failed": "Nem sikerült hozzáadni a demó autót",
+    "loading": "Betöltés…",
+    "document_not_found": "Ez a dokumentum már nem létezik",
+    "attributed_to_car": "Ebből az autó",
+    "period_from": "Ettől",
+    "period_to": "Eddig",
+    "save_document": "Javítások mentése",
+    "nothing_to_save": "Nincs mit menteni"
   }
 }

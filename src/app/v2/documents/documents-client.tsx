@@ -91,7 +91,7 @@ export function DocumentsV2Client() {
                 label={documentTitle(doc, t("processing_type_placeholder"))}
                 value={statusLabel(doc.status)}
                 valueTone={statusTone(doc.status)}
-                href="/documents"
+                href={`/v2/documents/${doc.id}`}
                 last={i === working.length - 1}
               />
             ))}
@@ -109,7 +109,7 @@ export function DocumentsV2Client() {
                 label={documentTitle(doc, t("type_other"))}
                 value={statusLabel(doc.status)}
                 valueTone={statusTone(doc.status)}
-                href="/documents"
+                href={`/v2/documents/${doc.id}`}
                 last={i === shown.length - 1}
               />
             ))}

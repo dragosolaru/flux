@@ -49,18 +49,19 @@ cannot drift.
 | Settings | `/v2/settings` | `/settings` | account + notifications |
 | Sign in / register | `/v2/login`, `/v2/register` | `/login`, `/register` | — |
 
-Four handoffs remain, and each is deliberate rather than unfinished:
+Two handoffs remain, and both are deliberate rather than unfinished:
 
-- **Reviewing a parsed document** is a form with money in it. Two editors for
-  the same rows would drift, and the drift would be in amounts.
 - **Account deletion and notification channels** stay on v1: a second path to a
   destructive action is a second path to get it wrong, and the typed-confirmation
   guard already lives there.
-- **The charging map view** — the list answers "which one, how far, how fast"
-  better than a map does; the map is still one row away for when you need to see
-  the shape of a city.
 - **The v1 charger/station detail sheets** are reused where they fit rather than
   redrawn.
+
+Closed since: **reviewing a parsed document** now lives at
+`/v2/documents/[documentId]` — it edits in place and commits once, and shows only
+the fields the PATCH route accepts, because a field the API will not store is a
+field that silently discards a correction. **The charger map** is now a toggle on
+`/v2/chargers` rather than a link to v1; the list is still what opens first.
 
 Everything else that was a handoff in the first pass is now real in `/v2`:
 locale and currency commit on tap, home location uses v1's geocoding picker
@@ -198,6 +199,26 @@ Three decisions worth stating:
   whose own width comes from its content, which collapsed the car name to
   nothing beside a long screen title. Measured at 375/390/430 with long names
   and long titles.
+
+---
+
+## The asleep screen
+
+A parked Tesla is asleep most of the time, so this is the state the dashboard is
+in whenever you open it casually — and it used to render exactly like a live one
+with a different word in the corner. Now:
+
+- **The arc goes grey.** Colouring a memory green says the battery is fine
+  *now*; grey says "this is the last thing it told us".
+- **One line under the hero carries the age**: `ULTIMA CITIRE · ACUM 3 H`.
+  Without it every value above reads as current, and none of them is.
+- **The wake row is first, not last.** It is the only action that changes
+  anything about the rows under it, and putting it after them asks the driver to
+  read four stale values before being told they are stale.
+
+Commands stay enabled while asleep: sending one is a deliberate act, and Tesla
+waking the car to obey it is what the driver asked for. Only *reads* are refused
+on their behalf.
 
 ---
 

@@ -1339,6 +1339,17 @@
     "woke_up": "Das Auto ist wach",
     "wake_failed": "Wecken fehlgeschlagen",
     "reading_from": "Letzter Stand",
-    "needs_driving": "Braucht mehr Fahrten"
+    "needs_driving": "Braucht mehr Fahrten",
+    "add_demo_car": "Demo-Auto hinzufügen",
+    "demo_car_name": "Demo-Auto",
+    "demo_car_added": "Demo-Auto hinzugefügt",
+    "demo_car_failed": "Demo-Auto konnte nicht hinzugefügt werden",
+    "loading": "Lädt…",
+    "document_not_found": "Dieses Dokument existiert nicht mehr",
+    "attributed_to_car": "Davon das Auto",
+    "period_from": "Von",
+    "period_to": "Bis",
+    "save_document": "Korrekturen speichern",
+    "nothing_to_save": "Nichts zu speichern"
   }
 }

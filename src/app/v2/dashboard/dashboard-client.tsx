@@ -28,12 +28,31 @@ import { setSleepMode, useSleepMode } from "@/lib/vehicle-sleep";
 import * as vehiclesApi from "@/lib/api/vehicles";
 import type { CommandName } from "@/types/history";
 
-/** SOC → arc colour. Charging is its own state and outranks the level. */
-function arcColor(soc: number, charging: boolean): string {
+/**
+ * SOC → arc colour.
+ *
+ * An asleep car outranks everything: the number on screen is a memory, not a
+ * reading, and colouring a memory green says the battery is fine *now*. Grey
+ * says "this is the last thing it told us", which is the truth.
+ */
+function arcColor(soc: number, charging: boolean, asleep: boolean): string {
+  if (asleep) return "var(--v2-soft)";
   if (charging) return "var(--chart-2)";
   if (soc > 50) return "var(--chart-2)";
   if (soc > 20) return "var(--chart-3)";
   return "var(--destructive)";
+}
+
+/** "acum 3 h" — how old the reading is, in the coarsest unit that is honest. */
+function ageLabel(iso: string | null | undefined, t: (k: string, v?: Record<string, number>) => string): string | null {
+  if (!iso) return null;
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (!Number.isFinite(minutes) || minutes < 0) return null;
+  if (minutes < 2) return t("time_now");
+  if (minutes < 60) return t("time_min_ago", { m: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("time_hour_ago", { h: hours });
+  return t("time_day_ago", { d: Math.floor(hours / 24) });
 }
 
 export function DashboardV2Client() {
@@ -55,6 +74,7 @@ export function DashboardV2Client() {
   // The car reports it is not online, so what is on screen is the last reading
   // rather than the current one.
   const asleep = state != null && state.isOnline === false;
+  const lastReadingAge = asleep ? ageLabel(state.lastSeenAt ?? state.recordedAt, td) : null;
 
   const wake = useMutation({
     mutationFn: () => vehiclesApi.wake(vehicleId),
@@ -111,11 +131,11 @@ export function DashboardV2Client() {
         metaTone={!isLive ? "amber" : sleeping || asleep ? "muted" : polling.active ? "accent" : "muted"}
       />
 
-      <div className="mt-6">
+      <div className={`mt-6 ${asleep ? "opacity-70" : ""}`}>
         <Arc
           value={soc ?? 0}
           limit={state?.chargeLimit}
-          color={arcColor(soc ?? 0, charging)}
+          color={arcColor(soc ?? 0, charging, asleep)}
           animate={soc != null}
         >
           {soc == null ? (
@@ -135,6 +155,15 @@ export function DashboardV2Client() {
             <Mono className="text-chart-2">
               {td("charging_active")}
               {state?.chargingRateKw != null && ` · ${state.chargingRateKw.toFixed(1)} kW`}
+            </Mono>
+          </div>
+        )}
+        {asleep && lastReadingAge && (
+          // The one line that turns a stale screen into an honest one. Without
+          // it every value above reads as current, and none of them is.
+          <div className="mt-1 text-center">
+            <Mono className="text-muted-foreground">
+              {`${t("reading_from")} · ${lastReadingAge}`}
             </Mono>
           </div>
         )}
@@ -161,6 +190,21 @@ export function DashboardV2Client() {
         </Rows>
       ) : (
         <Rows>
+          {isLive && asleep && !sleeping && (
+            // First, not last. It is the only action that changes anything
+            // about the rows under it, and putting it after them asks the
+            // driver to read four stale values before being told they are
+            // stale.
+            <Row
+              icon={<Sunrise strokeWidth={1.5} className="text-chart-3" />}
+              label={t("wake_car")}
+              value={t("asleep")}
+              valueTone="amber"
+              pending={wake.isPending}
+              pendingLabel={t("waking")}
+              onClick={() => wake.mutate()}
+            />
+          )}
           <Row
             icon={state?.isLocked === false ? <Unlock strokeWidth={1.5} /> : <Lock strokeWidth={1.5} />}
             label={state?.isLocked === false ? tc("lock") : tc("unlock")}
@@ -202,20 +246,6 @@ export function DashboardV2Client() {
             reason={t("no_position")}
             last={!isLive}
           />
-          {isLive && asleep && !sleeping && (
-            // Only shown when the car is actually asleep. Waking costs real
-            // battery, so it is an action the driver chooses — nothing in the
-            // app does it on their behalf any more.
-            <Row
-              icon={<Sunrise strokeWidth={1.5} className="text-chart-3" />}
-              label={t("wake_car")}
-              value={state?.lastSeenAt ? t("reading_from") : undefined}
-              valueTone="amber"
-              pending={wake.isPending}
-              pendingLabel={t("waking")}
-              onClick={() => wake.mutate()}
-            />
-          )}
           {isLive && (
             // The app-wide switch, on the screen where the car is. Persisted:
             // turning it off here keeps it off on every other screen, in every

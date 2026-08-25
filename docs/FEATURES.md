@@ -921,11 +921,17 @@ that takes eight seconds must still say so.
 
 **Screens:** `/v2/dashboard`, `/v2/commands`, `/v2/map` (find my car),
 `/v2/trip`, `/v2/chargers`, `/v2/charging`, `/v2/costs`, `/v2/garage`,
-`/v2/documents`, `/v2/insights`, `/v2/energy`, `/v2/settings`, `/v2/more`, plus
-`/v2/login` and `/v2/register`. Four jobs are deliberately still v1's: reviewing
-a parsed document, account deletion, notification channels, and the charging-map
-view. Those rows are labelled `v1` so the boundary is visible rather than a dead
-end.
+`/v2/documents` (+ `/v2/documents/[documentId]` to correct a parsed one),
+`/v2/insights`, `/v2/energy`, `/v2/settings`, `/v2/more`, plus `/v2/login` and
+`/v2/register`. Two jobs are deliberately still v1's: account deletion and
+notification channels. Those rows are labelled `v1` so the boundary is visible
+rather than a dead end.
+
+**Switching cars:** `VehicleSwitch` sits in the header of every vehicle-scoped
+screen — the dashboard's title *is* the switcher, elsewhere it is a mono chip
+left of the state. It renders nothing with one car, and the sheet it opens reads
+only the selected car, so opening a chooser never contacts every linked vehicle.
+The garage carries a one-tap **demo car** row for testing with two.
 
 **No auth guard in `src/app/v2/layout.tsx`** — every page under it calls
 `auth()` itself. A shared guard would need an exception carved out for

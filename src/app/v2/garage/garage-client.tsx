@@ -1,7 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { FlaskConical, Plus } from "lucide-react";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 import {
@@ -15,6 +17,7 @@ import {
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
 import { AddVehicleModal } from "@/components/onboarding/AddVehicleModal";
+import { apiFetch } from "@/lib/api-fetch";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -98,6 +101,30 @@ export function GarageV2Client() {
   const { selectedVehicleId, setSelectedVehicleId } = useVehicleContext();
   const { data: vehicles, isLoading } = useVehicles();
   const [adding, setAdding] = useState(false);
+  const queryClient = useQueryClient();
+
+  // One tap, no form. The full modal asks for model, year, nickname and a
+  // driving scenario — all reasonable for a car you intend to keep, all in the
+  // way when you want a second car for five minutes to see how the app behaves
+  // with two. A simulator costs nothing and touches no real vehicle.
+  const addDemo = useMutation({
+    mutationFn: () =>
+      apiFetch("/api/vehicles", {
+        method: "POST",
+        body: JSON.stringify({
+          brand: "tesla",
+          nickname: tv("demo_car_name"),
+          model: "Model Y",
+          year: new Date().getFullYear(),
+          scenarioId: "commuter",
+        }),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      toast.success(tv("demo_car_added"));
+    },
+    onError: () => toast.error(tv("demo_car_failed")),
+  });
 
   const list = vehicles ?? [];
   const selected = list.find((v) => v.id === selectedVehicleId);
@@ -171,6 +198,14 @@ export function GarageV2Client() {
             label={<span className="text-primary">{tg("add_vehicle")}</span>}
             value={tv("no_extra_cost")}
             onClick={() => setAdding(true)}
+          />
+          <Row
+            icon={<FlaskConical strokeWidth={1.5} />}
+            label={tv("add_demo_car")}
+            value={tv("simulator")}
+            pending={addDemo.isPending}
+            pendingLabel={tv("sending")}
+            onClick={() => addDemo.mutate()}
             last
           />
         </Rows>

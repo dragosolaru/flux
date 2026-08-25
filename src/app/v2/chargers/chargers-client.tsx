@@ -1,13 +1,16 @@
 "use client";
 
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Navigation, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
+  Bleed,
   ChipRow,
+  Mono,
   Row,
   Rows,
   Screen,
@@ -24,6 +27,8 @@ import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import type { Charger } from "@/lib/chargers/types";
+
+const StationMap = dynamic(() => import("@/components/charging-map/StationMap"), { ssr: false });
 
 const POWER_STEPS = [0, 50, 150, 350];
 
@@ -119,6 +124,10 @@ export function ChargersV2Client() {
   });
 
   const [selected, setSelected] = useState<Charger | null>(null);
+  // List first, map on request. The list answers "which one, how far, how fast"
+  // without a gesture; the map answers "what is the shape of this city", which
+  // is a real question but not the one you have with 12% left.
+  const [showMap, setShowMap] = useState(false);
 
   return (
     <Screen>
@@ -146,8 +155,35 @@ export function ChargersV2Client() {
         />
       </div>
 
+      {showMap && centre && (
+        <Bleed>
+          <div className="mt-4 h-[42dvh] w-full">
+            <StationMap
+              stations={chargers}
+              center={centre}
+              selected={selected}
+              onSelect={setSelected}
+              userLocation={here}
+              isFetching={isLoading}
+            />
+          </div>
+        </Bleed>
+      )}
+
       <div className="mt-6">
-        <SectionLabel>{t("nearby_title")}</SectionLabel>
+        <div className="flex items-baseline justify-between">
+          <SectionLabel>{t("nearby_title")}</SectionLabel>
+          <button
+            type="button"
+            onClick={() => setShowMap((v) => !v)}
+            disabled={centre == null}
+            className="min-h-11 transition-colors duration-[80ms] active:opacity-60 disabled:opacity-40"
+          >
+            <Mono className="text-primary">
+              {showMap ? t("list_button") : t("map_button")}
+            </Mono>
+          </button>
+        </div>
         {nearest.length === 0 ? (
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {centre == null ? t("location_error") : t("no_results")}
@@ -217,10 +253,7 @@ export function ChargersV2Client() {
       )}
 
       <div className="mt-7 pb-8">
-        <Rows>
-          <Row label={t("map_button")} value="v1" href="/charging-map" last />
-        </Rows>
-        <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{t("disclaimer")}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{t("disclaimer")}</p>
       </div>
 
       <NavBar />

@@ -1339,6 +1339,17 @@
     "woke_up": "La voiture est réveillée",
     "wake_failed": "Impossible de la réveiller",
     "reading_from": "Dernier relevé",
-    "needs_driving": "Nécessite plus de trajets"
+    "needs_driving": "Nécessite plus de trajets",
+    "add_demo_car": "Ajouter une voiture démo",
+    "demo_car_name": "Voiture démo",
+    "demo_car_added": "Voiture démo ajoutée",
+    "demo_car_failed": "Impossible d'ajouter la voiture démo",
+    "loading": "Chargement…",
+    "document_not_found": "Ce document n'existe plus",
+    "attributed_to_car": "Dont la voiture",
+    "period_from": "Du",
+    "period_to": "Au",
+    "save_document": "Enregistrer les corrections",
+    "nothing_to_save": "Rien à enregistrer"
   }
 }

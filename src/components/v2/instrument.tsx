@@ -394,6 +394,57 @@ export function StepperRow({
   );
 }
 
+/**
+ * A value you can correct, in place.
+ *
+ * The right-hand side of a row becomes an input rather than opening a form: the
+ * screen already lists the value, and a form would show it a second time in a
+ * different place. Editing where you read is the shortest possible correction.
+ *
+ * There is no per-field save — the screen commits once, because a document is
+ * corrected as a whole and five separate saves would be five chances to leave
+ * it half-fixed.
+ */
+export function InputRow({
+  label,
+  value,
+  onChange,
+  unit,
+  type = "text",
+  placeholder,
+  last,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  unit?: string;
+  type?: "text" | "number" | "date";
+  placeholder?: string;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 border-t border-border ${last ? "border-b" : ""}`}
+      style={{ minHeight: "var(--v2-row)" }}
+    >
+      <span className="min-w-0 flex-1 truncate text-base">{label}</span>
+      <input
+        type={type}
+        inputMode={type === "number" ? "decimal" : undefined}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        // 15px, not smaller: iOS zooms the page on focus below 16px, and a
+        // zoomed page is a layout the design never accounted for.
+        className="min-h-11 w-[46%] bg-transparent text-right text-[15px] tabular-nums outline-none placeholder:text-muted-foreground/50"
+        style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+      />
+      {unit && <Mono className="shrink-0 text-muted-foreground">{unit}</Mono>}
+    </div>
+  );
+}
+
 /** A time, then Apply. Native time input — nobody wants a custom clock. */
 export function TimeRow({
   label,

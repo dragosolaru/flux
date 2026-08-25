@@ -1339,6 +1339,17 @@
     "woke_up": "The car is awake",
     "wake_failed": "Couldn't wake the car",
     "reading_from": "Last reading",
-    "needs_driving": "Needs more driving"
+    "needs_driving": "Needs more driving",
+    "add_demo_car": "Add a demo car",
+    "demo_car_name": "Demo car",
+    "demo_car_added": "Demo car added",
+    "demo_car_failed": "Couldn't add the demo car",
+    "loading": "Loading…",
+    "document_not_found": "This document no longer exists",
+    "attributed_to_car": "Of which the car",
+    "period_from": "From",
+    "period_to": "To",
+    "save_document": "Save the corrections",
+    "nothing_to_save": "Nothing to save"
   }
 }

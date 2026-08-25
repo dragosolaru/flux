@@ -1339,6 +1339,17 @@
     "woke_up": "Mașina e trează",
     "wake_failed": "Nu am putut trezi mașina",
     "reading_from": "Ultima citire",
-    "needs_driving": "Necesită mai mult rulaj"
+    "needs_driving": "Necesită mai mult rulaj",
+    "add_demo_car": "Adaugă o mașină demo",
+    "demo_car_name": "Mașină demo",
+    "demo_car_added": "Mașină demo adăugată",
+    "demo_car_failed": "Nu am putut adăuga mașina demo",
+    "loading": "Se încarcă…",
+    "document_not_found": "Documentul nu mai există",
+    "attributed_to_car": "Din care mașina",
+    "period_from": "De la",
+    "period_to": "Până la",
+    "save_document": "Salvează corecțiile",
+    "nothing_to_save": "Nimic de salvat"
   }
 }
