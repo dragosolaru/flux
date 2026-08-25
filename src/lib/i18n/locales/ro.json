@@ -1311,7 +1311,6 @@
     "not_paired": "Neîmperecheată",
     "not_applicable": "N/A",
     "data_source": "Sursă date",
-    "no_extra_cost": "Fără cost",
     "last_months": "Ultimele {count} luni",
     "vs_petrol": "−{pct}% vs benzină",
     "average": "Medie",
@@ -1351,6 +1350,10 @@
     "period_to": "Până la",
     "save_document": "Salvează corecțiile",
     "nothing_to_save": "Nimic de salvat",
-    "stations_nearby": "Stații în apropiere"
+    "stations_nearby": "Stații în apropiere",
+    "locating": "Te localizez…",
+    "show_on_map": "Vezi pe hartă",
+    "route_here": "Traseu până acolo",
+    "car_position": "Mașina"
   }
 }

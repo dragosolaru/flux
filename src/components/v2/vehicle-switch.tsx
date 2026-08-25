@@ -139,10 +139,15 @@ function VehicleRow({
   last?: boolean;
 }) {
   const tv = useTranslations("v2");
-  // Only the car already selected is read. Fetching every car's state to draw
-  // this list would contact each linked car the moment you opened a chooser —
-  // the exact opposite of what a chooser should cost.
-  const { data } = useVehicle(selected ? vehicle.id : "", vehicle.dataSource === "live", false);
+  // A LINKED car is read only when it is already the selected one — fetching
+  // every car to draw a chooser would contact each of them the moment you
+  // opened it, which is the opposite of what a chooser should cost.
+  //
+  // A simulator is read either way: it contacts nothing and costs nothing, and
+  // a chooser where the other car shows "—" is a chooser that cannot be used to
+  // compare, which is most of the reason to open it.
+  const readable = selected || vehicle.dataSource === "mock";
+  const { data } = useVehicle(readable ? vehicle.id : "", vehicle.dataSource === "live", false);
   const soc = typeof data?.batteryLevel === "number" ? Math.round(data.batteryLevel) : null;
 
   return (

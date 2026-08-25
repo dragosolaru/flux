@@ -123,7 +123,11 @@ export function GarageV2Client() {
       void queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       toast.success(tv("demo_car_added"));
     },
-    onError: () => toast.error(tv("demo_car_failed")),
+    // The server's own message, not a generic one. It says WHICH limit was hit
+    // and what to do about it; replacing that with "couldn't add the demo car"
+    // is how a refusal becomes a mystery.
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error && err.message ? err.message : tv("demo_car_failed")),
   });
 
   const list = vehicles ?? [];
@@ -196,7 +200,6 @@ export function GarageV2Client() {
           <Row
             icon={<Plus strokeWidth={1.5} className="text-primary" />}
             label={<span className="text-primary">{tg("add_vehicle")}</span>}
-            value={tv("no_extra_cost")}
             onClick={() => setAdding(true)}
           />
           <Row

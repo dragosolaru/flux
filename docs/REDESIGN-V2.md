@@ -236,6 +236,11 @@ Charging holds both halves of one topic: this car's session, and where to get
 more. "Stații în apropiere" is a row directly under the session, because
 "where do I get more" used to be two taps into a different tab.
 
+A station in the list opens a sheet with **Vezi pe hartă** (centres the map on
+it) and **Traseu până acolo** (hands it to the planner as the destination, with
+the car's own position as the origin — the planner knows the battery and where
+it will need to stop, which a maps app cannot).
+
 `TABS` in `src/components/v2/nav.tsx` is one array. If a week of use says
 something else belongs there, it is a one-line change.
 
@@ -251,6 +256,9 @@ Fixed in the **real** app, not only in `/v2`.
 | 2 | every `/v2` screen | Every v2 screen called `useVehicle(id, isLive)` without the third argument, so opening Commands, the trip planner, find-my-car or the charger list started a 30-second poll against a parked car. A poll on a sleeping Tesla wakes it, and a car kept out of deep sleep loses roughly ten times more charge per idle day. The garage was worst: it passed `live: false`, which told the hook there was nothing to disturb and disabled the idle cut-off on exactly the linked cars that needed it. | Only the dashboard polls now. Charging polls **only while a session is running** — a charging car is awake anyway. Everything else reads the value once; `useVehicleCommand` already invalidates the query after a command, so the screens stay current without an interval. |
 | 3 | `/commands`, `/charging` (v1) | The same defect predated the redesign: both polled a live car every 30 s for ten minutes each time the screen was opened, just for being open. | Same rule applied. `/commands` passes `poll: false`, `/charging` polls only while charging. |
 | 4 | `/v2` (all) | The bottom nav was the last child of a flex column, so it only reached the bottom when the content above happened to fill the viewport. On settings, a one-car garage or an empty document list it floated in the middle of the page. | First attempt: `fixed` plus a reserved `--v2-nav-h`. See #6 — that fix was wrong. |
+| 12 | Adding any second car | `canAddVehicle` counted **all** active vehicles against a limit of one, but `POST /api/vehicles` only ever creates simulators — so "add a demo car" was refused by a limit written for real cars, and the free tier could never have two of anything. The garage's own row said `FĂRĂ COST` beside it, which was true about Tesla's side and false about ours. | Simulators and linked cars are limited separately: 1 linked car, up to 3 simulators, on the free tier. A mock car uses no Tesla quota and exists so the app can be tried — including tried with two cars, which is the only way to find out whether the switcher works. Reactivation checks the limit for the kind of vehicle it actually is. The false label is deleted. |
+| 13 | `/v2/garage` | The failure above surfaced as "couldn't add the demo car". The server had sent a specific, actionable message and the toast discarded it — which is how a refusal became a mystery. | The server's message is shown when there is one. |
+| 14 | `/v2/chargers` | "No stations found" appeared a second after the screen opened, while the phone was still being asked where it was. Locating and empty were the same state. | Three states told apart — locating, loading, empty — and the loading one is skeleton rows rather than a sentence that gets replaced by rows and moves everything under it. |
 | 9 | `/v2/chargers` | Tapping a station **on the map** selected it correctly and rendered its detail *below the list* — three screens further down. The tap read as doing nothing. | The detail is a bottom sheet (`Sheet`, now shared with the vehicle switcher): a selection made at the bottom of the screen shows its answer where the finger already is. |
 | 10 | `/v2/chargers` | The power filter offered a chip reading **0**, meaning "any power". A chip reading 0 asks for chargers of no power at all — the opposite of what it does. | `ChipRow` takes a `format`, and 0 renders as `TOATE`. |
 | 11 | `/v2/dashboard` | The find-my-car row still linked to v1's `/map?lat=…&car=1`. Third instance of the same class: a link written before its v2 destination existed. | Points at `/v2/map`. |

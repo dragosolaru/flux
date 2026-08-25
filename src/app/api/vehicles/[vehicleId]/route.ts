@@ -50,15 +50,26 @@ export async function PATCH(
     return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
   }
 
-  // Reactivation check: free tier slot limit
+  const supabase = createSupabaseAdminClient();
+
+  // Reactivation check: free tier slot limit, for the kind of vehicle this
+  // actually is. Checking it as a linked car refuses a simulator against a
+  // limit that was never about simulators.
   if (isActive === true) {
-    const check = await canAddVehicle(userId);
+    const { data: existing } = await supabase
+      .from("vehicles")
+      .select("data_source")
+      .eq("id", vehicleId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    const kind = (existing as { data_source?: string } | null)?.data_source === "mock"
+      ? "mock"
+      : "live";
+    const check = await canAddVehicle(userId, kind);
     if (!check.allowed) {
-      return NextResponse.json({ error: "free_tier_limit" }, { status: 403 });
+      return NextResponse.json({ error: "free_tier_limit", message: check.message }, { status: 403 });
     }
   }
-
-  const supabase = createSupabaseAdminClient();
 
   // Ownership check
   const { data: vehicle } = await supabase

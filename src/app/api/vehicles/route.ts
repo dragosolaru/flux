@@ -137,7 +137,10 @@ export async function POST(req: NextRequest) {
 
   const supabase = createSupabaseAdminClient();
 
-  const vehicleCheck = await canAddVehicle(userId);
+  // This route creates simulators only (data_source: "mock" below); a real car
+  // arrives through the Tesla connect flow. Passing that explicitly keeps the
+  // demo limit and the linked-car limit from being the same number.
+  const vehicleCheck = await canAddVehicle(userId, "mock");
   if (!vehicleCheck.allowed) {
     return NextResponse.json({ message: vehicleCheck.message }, { status: 402 });
   }

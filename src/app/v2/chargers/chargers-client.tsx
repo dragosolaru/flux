@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Navigation, Send } from "lucide-react";
+import { Map, Navigation, Route as RouteIcon, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -65,14 +65,24 @@ export function ChargersV2Client() {
 
   const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
   const [minKw, setMinKw] = useState(0);
+  // Three states, not two: still asking the phone where we are, asked and
+  // refused, or done. Collapsing the first into the last is what printed
+  // "no stations found" a second after the screen opened.
+  const [locating, setLocating] = useState(true);
 
   // Silent one-shot locate. On denial the screen falls back to the car's own
   // position, which is the next most useful centre and needs no permission.
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      queueMicrotask(() => setLocating(false));
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => undefined,
+      (pos) => {
+        setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => setLocating(false),
       { timeout: 5000, maximumAge: 60_000 },
     );
   }, []);
@@ -131,6 +141,13 @@ export function ChargersV2Client() {
   });
 
   const [selected, setSelected] = useState<Charger | null>(null);
+  /** The station the map is centred on, when it was opened from a list row. */
+  const [focused, setFocused] = useState<Charger | null>(null);
+
+  // "Nothing found" is a conclusion. It may only be drawn once we know where we
+  // are AND the query has come back — anything earlier is a guess presented as
+  // an answer.
+  const busy = locating || (centre != null && isLoading);
   // List first, map on request. The list answers "which one, how far, how fast"
   // without a gesture; the map answers "what is the shape of this city", which
   // is a real question but not the one you have with 12% left.
@@ -142,13 +159,15 @@ export function ChargersV2Client() {
         switcher={<VehicleSwitch />}
         title={t("nearby_title")}
         meta={
-          centre == null
-            ? t("location_error")
-            : isLoading
-              ? t("loading")
-              : t("stations_count", { count: chargers.length })
+          locating
+            ? tv("locating")
+            : centre == null
+              ? t("location_error")
+              : isLoading
+                ? t("loading")
+                : t("stations_count", { count: chargers.length })
         }
-        metaTone={centre == null ? "amber" : "muted"}
+        metaTone={!locating && centre == null ? "amber" : "muted"}
       />
 
       <div className="mt-4">
@@ -171,7 +190,7 @@ export function ChargersV2Client() {
           <div className="mt-4 h-[42dvh] w-full">
             <StationMap
               stations={chargers}
-              center={centre}
+              center={focused ?? centre}
               selected={selected}
               onSelect={setSelected}
               userLocation={here}
@@ -195,7 +214,24 @@ export function ChargersV2Client() {
             </Mono>
           </button>
         </div>
-        {nearest.length === 0 ? (
+        {busy ? (
+          // Skeleton rows, not a sentence. The list is about to be rows, and a
+          // paragraph that gets replaced by rows moves everything underneath it.
+          <div className="mt-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex items-center border-t border-border"
+                style={{ minHeight: "var(--v2-row)" }}
+              >
+                <span
+                  className="h-3 animate-pulse rounded bg-white/10"
+                  style={{ width: `${58 - i * 6}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : nearest.length === 0 ? (
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {centre == null ? t("location_error") : t("no_results")}
           </p>
@@ -285,6 +321,25 @@ export function ChargersV2Client() {
                 disabled={vehicleId === ""}
                 reason={tv("no_answer")}
                 onClick={() => sendTo.mutate(selected)}
+              />
+              <Row
+                icon={<Map strokeWidth={1.5} />}
+                label={tv("show_on_map")}
+                onClick={() => {
+                  setFocused(selected);
+                  setShowMap(true);
+                  setSelected(null);
+                }}
+              />
+              <Row
+                icon={<RouteIcon strokeWidth={1.5} />}
+                label={tv("route_here")}
+                // The planner, with this station already as the destination —
+                // it knows the car's battery and where it will need to stop,
+                // which a maps app cannot.
+                href={`/v2/trip?lat=${selected.lat}&lng=${selected.lng}&name=${encodeURIComponent(
+                  selected.name ?? t("station_fallback"),
+                )}`}
               />
               <Row
                 icon={<Navigation strokeWidth={1.5} />}

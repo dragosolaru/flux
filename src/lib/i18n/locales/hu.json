@@ -1311,7 +1311,6 @@
     "not_paired": "Nincs párosítva",
     "not_applicable": "N/A",
     "data_source": "Adatforrás",
-    "no_extra_cost": "Nincs többletköltség",
     "last_months": "Utolsó {count} hónap",
     "vs_petrol": "−{pct}% vs benzin",
     "average": "Átlag",
@@ -1351,6 +1350,10 @@
     "period_to": "Eddig",
     "save_document": "Javítások mentése",
     "nothing_to_save": "Nincs mit menteni",
-    "stations_nearby": "Töltők a közelben"
+    "stations_nearby": "Töltők a közelben",
+    "locating": "Helymeghatározás…",
+    "show_on_map": "Mutasd a térképen",
+    "route_here": "Útvonal ide",
+    "car_position": "Az autó"
   }
 }

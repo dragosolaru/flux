@@ -1311,7 +1311,6 @@
     "not_paired": "Nicht gekoppelt",
     "not_applicable": "N/V",
     "data_source": "Datenquelle",
-    "no_extra_cost": "Ohne Aufpreis",
     "last_months": "Letzte {count} Monate",
     "vs_petrol": "−{pct}% vs Benzin",
     "average": "Schnitt",
@@ -1351,6 +1350,10 @@
     "period_to": "Bis",
     "save_document": "Korrekturen speichern",
     "nothing_to_save": "Nichts zu speichern",
-    "stations_nearby": "Ladesäulen in der Nähe"
+    "stations_nearby": "Ladesäulen in der Nähe",
+    "locating": "Standort…",
+    "show_on_map": "Auf der Karte zeigen",
+    "route_here": "Route dorthin planen",
+    "car_position": "Das Auto"
   }
 }

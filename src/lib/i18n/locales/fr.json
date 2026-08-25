@@ -1311,7 +1311,6 @@
     "not_paired": "Non appairée",
     "not_applicable": "N/D",
     "data_source": "Source des données",
-    "no_extra_cost": "Sans surcoût",
     "last_months": "{count} derniers mois",
     "vs_petrol": "−{pct}% vs essence",
     "average": "Moyenne",
@@ -1351,6 +1350,10 @@
     "period_to": "Au",
     "save_document": "Enregistrer les corrections",
     "nothing_to_save": "Rien à enregistrer",
-    "stations_nearby": "Bornes à proximité"
+    "stations_nearby": "Bornes à proximité",
+    "locating": "Localisation…",
+    "show_on_map": "Voir sur la carte",
+    "route_here": "Planifier un trajet",
+    "car_position": "La voiture"
   }
 }

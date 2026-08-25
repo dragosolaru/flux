@@ -47,8 +47,23 @@ export async function getSubscriptionTier(userId: string): Promise<SubscriptionT
   return (await isOwnerAccount(supabase, userId)) ? "pro" : "free";
 }
 
+/**
+ * How many simulators a free account may keep.
+ *
+ * Simulators are not counted against the one-car limit: a mock vehicle uses no
+ * Tesla quota, contacts no car, and exists so the app can be tried — including
+ * tried with two cars, which is the only way to find out whether the switcher
+ * works. Counting a demo against a paid limit charges for the trial.
+ *
+ * Capped rather than unlimited because each one seeds ~12 months of history on
+ * first read, so they are cheap to serve and not free to store.
+ */
+const FREE_MOCK_VEHICLES = 3;
+
 export async function canAddVehicle(
   userId: string,
+  /** Simulators and real cars are limited separately — see FREE_MOCK_VEHICLES. */
+  dataSource: "mock" | "live" = "live",
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
   const tier = await getSubscriptionTier(userId);
   if (tier !== "free") return { allowed: true };
@@ -58,12 +73,23 @@ export async function canAddVehicle(
     .from("vehicles")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("data_source", dataSource);
+
+  if (dataSource === "mock") {
+    if ((count ?? 0) >= FREE_MOCK_VEHICLES) {
+      return {
+        allowed: false,
+        message: `Free tier allows ${FREE_MOCK_VEHICLES} demo cars. Delete one, or upgrade to Pro.`,
+      };
+    }
+    return { allowed: true };
+  }
 
   if ((count ?? 0) >= 1) {
     return {
       allowed: false,
-      message: "Free tier allows 1 vehicle. Upgrade to Pro for unlimited vehicles.",
+      message: "Free tier allows 1 linked car. Upgrade to Pro for unlimited vehicles.",
     };
   }
   return { allowed: true };

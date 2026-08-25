@@ -1311,7 +1311,6 @@
     "not_paired": "Not paired",
     "not_applicable": "N/A",
     "data_source": "Data source",
-    "no_extra_cost": "No extra cost",
     "last_months": "Last {count} months",
     "vs_petrol": "−{pct}% vs petrol",
     "average": "Average",
@@ -1351,6 +1350,10 @@
     "period_to": "To",
     "save_document": "Save the corrections",
     "nothing_to_save": "Nothing to save",
-    "stations_nearby": "Chargers nearby"
+    "stations_nearby": "Chargers nearby",
+    "locating": "Locating…",
+    "show_on_map": "Show on the map",
+    "route_here": "Plan a route here",
+    "car_position": "The car"
   }
 }

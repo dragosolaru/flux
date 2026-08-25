@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { Bookmark, Send } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -132,8 +133,20 @@ export function TripV2Client() {
   // interval here would keep a linked car awake for as long as someone plans.
   const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live", false);
 
+  // A destination handed over from the charger list. Read once, as the initial
+  // value — not synced, or arriving here from a charger would overwrite a
+  // destination the driver had already changed.
+  const params = useSearchParams();
+  const handedOver = ((): GeoPoint | null => {
+    const lat = Number(params.get("lat"));
+    const lng = Number(params.get("lng"));
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (lat === 0 && lng === 0) return null;
+    return { lat, lng, name: params.get("name") ?? "" };
+  })();
+
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
-  const [destination, setDestination] = useState<GeoPoint | null>(null);
+  const [destination, setDestination] = useState<GeoPoint | null>(handedOver);
   const [plan, setPlan] = useState<TripPlan | null>(null);
 
   const { data: saved = [] } = useSavedRoutes();
@@ -141,12 +154,25 @@ export function TripV2Client() {
 
   const startSoc = state?.batteryLevel ?? 80;
 
+  // Where the car is, as the origin, unless the driver has picked one. Arriving
+  // from a charger with only a destination and an empty origin makes the Plan
+  // row refuse for a reason that is not the driver's fault.
+  const carPoint: GeoPoint | null =
+    state?.latitude != null && state.longitude != null
+      ? { lat: state.latitude, lng: state.longitude, name: tv("car_position") }
+      : null;
+  const effectiveOrigin = origin ?? carPoint;
+
   const planMutation = useMutation({
     mutationFn: () => {
-      if (!origin || !destination) throw new Error("missing-points");
+      if (!effectiveOrigin || !destination) throw new Error("missing-points");
       return tripApi.plan<TripPlan>({
         vehicleId: vehicleId || undefined,
-        origin: { lat: origin.lat, lng: origin.lng, label: origin.name },
+        origin: {
+          lat: effectiveOrigin.lat,
+          lng: effectiveOrigin.lng,
+          label: effectiveOrigin.name,
+        },
         destination: { lat: destination.lat, lng: destination.lng, label: destination.name },
         startSoc,
         arrivalSocPct: 10,
@@ -180,7 +206,7 @@ export function TripV2Client() {
     onError: () => toast.error(t("share_error")),
   });
 
-  const canPlan = origin != null && destination != null && !planMutation.isPending;
+  const canPlan = effectiveOrigin != null && destination != null && !planMutation.isPending;
 
   return (
     <Screen>
@@ -201,7 +227,7 @@ export function TripV2Client() {
           <div className="min-w-0 flex-1">
             <GeocodingSearch
               placeholder={t("origin_placeholder")}
-              value={origin}
+              value={effectiveOrigin}
               onChange={setOrigin}
               bias={
                 state?.latitude != null && state.longitude != null
@@ -220,7 +246,7 @@ export function TripV2Client() {
               placeholder={t("destination_placeholder")}
               value={destination}
               onChange={setDestination}
-              bias={origin ? { lat: origin.lat, lng: origin.lng } : null}
+              bias={effectiveOrigin ? { lat: effectiveOrigin.lat, lng: effectiveOrigin.lng } : null}
             />
           </div>
         </div>
@@ -281,16 +307,16 @@ export function TripV2Client() {
             value={saved.length > 0 ? String(saved.length) : undefined}
             pending={createRoute.isPending}
             pendingLabel={tv("sending")}
-            disabled={plan == null || origin == null || destination == null}
+            disabled={plan == null || effectiveOrigin == null || destination == null}
             reason={tv("plan_first")}
             onClick={() => {
-              if (!plan || !origin || !destination) return;
+              if (!plan || !effectiveOrigin || !destination) return;
               createRoute.mutate(
                 {
-                  name: `${origin.name} → ${destination.name}`,
-                  origin_label: origin.name,
-                  origin_lat: origin.lat,
-                  origin_lng: origin.lng,
+                  name: `${effectiveOrigin.name} → ${destination.name}`,
+                  origin_label: effectiveOrigin.name,
+                  origin_lat: effectiveOrigin.lat,
+                  origin_lng: effectiveOrigin.lng,
                   destination_label: destination.name,
                   destination_lat: destination.lat,
                   destination_lng: destination.lng,
