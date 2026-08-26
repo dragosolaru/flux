@@ -102,7 +102,9 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
   const sending = tv("sending");
   // The screen where the refusals happen. Shown before the groups, because a
   // row that cannot work is worse than a row that is missing.
-  const needsPairing = isLive && vehicle?.virtualKeyPaired === false && virtualKeyUrl != null;
+  const keyRefused = error instanceof Error && error.message === "error_vcp_required";
+  const needsPairing =
+    isLive && virtualKeyUrl != null && (vehicle?.virtualKeyPaired === false || keyRefused);
 
   function send(cmd: CommandName, args?: Record<string, unknown>) {
     mutate({ vehicleId, command: cmd, args });

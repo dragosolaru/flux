@@ -16,9 +16,9 @@
 export type Gate = 1 | 2 | 3;
 
 export const GATES: Record<Gate, string> = {
-  1: "Before a second person's car is linked",
-  2: "Before anyone pays",
-  3: "What actually differentiates the product",
+  1: "Înainte să conectăm mașina altcuiva",
+  2: "Înainte să plătească cineva",
+  3: "Ce diferențiază de fapt produsul",
 };
 
 export interface Milestone {
@@ -40,116 +40,116 @@ export interface Milestone {
   check?: (c: Record<string, boolean | string>) => boolean;
 }
 
-export const GOAL = "Real customers driving on Flux, with their own Tesla linked.";
+export const GOAL = "Clienți reali care conduc cu Flux, cu Tesla lor conectată.";
 
 export const ROADMAP: Milestone[] = [
   // ---- Gate 1 -------------------------------------------------------------
   {
     gate: 1,
-    goal: "Charger data good enough to plan a real trip",
+    goal: "Date despre stații suficient de bune pentru un traseu real",
     nextStep:
-      "Re-import France with the per-plug grouping fixed, then run dedupe until it reports 0.",
+      "Reimportă Franța cu gruparea per priză reparată, apoi rulează deduplicarea până raportează 0.",
     check: (c) => c.tomtomKey === true && c.openChargeMapKey === true,
   },
   {
     gate: 1,
-    goal: "Tesla linked and commands working",
-    nextStep: "Done — partner registered, proxy deployed, commands confirmed on the car.",
+    goal: "Tesla conectată și comenzile funcționează",
+    nextStep: "Gata — cont partener înregistrat, proxy pornit, comenzi confirmate pe mașină.",
     check: (c) => c.teslaLive === true && c.teslaProxy === true,
   },
   {
     gate: 1,
-    goal: "The signing proxy refuses strangers (T10)",
+    goal: "Proxy-ul de semnare refuză străinii (T10)",
     nextStep:
-      "Shared secret header checked in Caddy before reverse_proxy, set on the container and as TESLA_PROXY_SECRET in Vercel. About twenty lines.",
+      "Un header cu secret comun verificat în Caddy înainte de reverse_proxy, setat pe container și ca TESLA_PROXY_SECRET în Vercel. Vreo douăzeci de linii.",
     cost:
-      "It is an open relay. Anyone who finds the hostname and holds a valid Tesla token for a paired account can have your private key sign commands, on your quota. Your partner account is the one Tesla suspends.",
+      "E un releu deschis. Oricine găsește hostname-ul și are un token Tesla valid pentru un cont împerecheat poate pune cheia ta privată să semneze comenzi, pe cota ta. Contul tău de partener e cel pe care Tesla îl suspendă.",
   },
   {
     gate: 1,
-    goal: "Fleet API quota survives more than one user (T6)",
+    goal: "Cota Fleet API rezistă la mai mult de un utilizator (T6)",
     nextStep:
-      "An app-wide rate bucket inside fetchVehicleData/sendVehicleCommand, plus a 20-30s Redis cache of vehicle_data per vehicle so tabs and routes share one upstream call.",
+      "O limită globală în fetchVehicleData/sendVehicleCommand, plus un cache Redis de 20-30s pentru vehicle_data per mașină, ca taburile și rutele să împartă un singur apel.",
     cost:
-      "Limits are per user; Tesla counts per partner account. One open dashboard already sits at its own ceiling, so ten users put the app at ten times whatever Tesla allows — and it throttles everyone at once.",
+      "Limitele sunt per utilizator; Tesla numără per cont de partener. Un singur dashboard deschis stă deja la plafonul lui, deci zece utilizatori pun aplicația la de zece ori cât permite Tesla — și ea limitează pe toată lumea deodată.",
   },
   {
     gate: 1,
-    goal: "Show which cars Tesla bills at the discounted rate",
+    goal: "Arată ce mașini le taxează Tesla la tarif redus",
     nextStep:
-      "fleet_status already returns discounted_device_data per VIN and we already call it from Check pairing — surface the flag. One field.",
+      "fleet_status returnează deja discounted_device_data per VIN și îl apelăm deja din Verifică împerecherea — trebuie doar afișat. Un singur câmp.",
     cost:
-      "Tesla bills the partner account per request, not per car, so cost tracking has to be per vehicle and per request volume. Cheap to add now, guesswork once there are many cars. See docs/SCALING-AND-COSTS.md.",
+      "Tesla taxează contul de partener per cerere, nu per mașină, deci urmărirea costurilor trebuie făcută per mașină și per volum de cereri. Ieftin de adăugat acum, ghiceală când sunt multe mașini. Vezi docs/SCALING-AND-COSTS.md.",
   },
   {
     gate: 1,
-    goal: "Commands work on a sleeping car (T3/T4)",
+    goal: "Comenzile funcționează pe o mașină adormită (T3/T4)",
     nextStep:
-      "GET /api/1/vehicles/{id} first (cheap, does not wake); if not online, wake_up DIRECT — never through the proxy — poll with 2/4/8/15s backoff, then send. Distinct VEHICLE_ASLEEP code.",
+      "Întâi GET /api/1/vehicles/{id} (ieftin, nu trezește); dacă nu e online, wake_up DIRECT — niciodată prin proxy — apoi verifici cu pauze de 2/4/8/15s și trimiți. Cod VEHICLE_ASLEEP distinct.",
     cost:
-      "Cars sleep most of the time, and the logs already show vehicle_data 408 vehicle unavailable. Roughly half of real command attempts fail with no explanation.",
+      "Mașinile dorm mai tot timpul, iar logurile arată deja vehicle_data 408 vehicle unavailable. Cam jumătate din comenzile reale eșuează fără nicio explicație.",
   },
 
   // ---- Gate 2 -------------------------------------------------------------
   {
     gate: 2,
-    goal: "Cost Intelligence reports the right money (C1-C5)",
+    goal: "Costurile raportează suma corectă (C1-C5)",
     nextStep:
-      "Decide the single meaning of energy_costs.cost_ron first, then fix all four together: attribution filters network IS NULL to find HOME charging, the whole household bill lands on the car when no session matches, /api/costs multiplies by the attribution fraction a second time, and the billing period drops its last day. A migration will be needed for stored rows.",
+      "Întâi decide un singur înțeles pentru energy_costs.cost_ron, apoi repară toate patru împreună: atribuirea filtrează network IS NULL ca să găsească încărcarea ACASĂ, toată factura casei ajunge pe mașină când nu se potrivește nicio sesiune, /api/costs înmulțește a doua oară cu fracția de atribuire, iar perioada de facturare își pierde ultima zi. Va fi nevoie de o migrație pentru rândurile deja salvate.",
     cost:
-      "The number the product exists to produce is wrong and nothing reports it. People do not complain — they stop trusting it.",
+      "Numărul pentru care există produsul e greșit și nimic nu semnalează asta. Oamenii nu reclamă — pur și simplu nu mai au încredere.",
   },
   {
     gate: 2,
-    goal: "Subscription limits enforced",
-    nextStep: "Done — 5 energy and 10 vehicle documents a month, restored in f408593.",
+    goal: "Limitele de abonament sunt aplicate",
+    nextStep: "Gata — 5 documente de energie și 10 de mașină pe lună, restaurate în f408593.",
     check: () => true,
   },
   {
     gate: 2,
-    goal: "Paid plans can actually be bought",
-    nextStep: "Add the Stripe live keys and the two price IDs.",
+    goal: "Planurile plătite chiar pot fi cumpărate",
+    nextStep: "Adaugă cheile Stripe de producție și cele două price ID-uri.",
     check: (c) => c.stripe === true,
   },
   {
     gate: 2,
-    goal: "A second user can verify their email",
+    goal: "Un al doilea utilizator își poate verifica emailul",
     nextStep:
-      "One button in Settings calling POST /api/account/verify-email, one banner while profiles.email_verified_at is null. Needs RESEND_API_KEY and RESEND_FROM.",
+      "Un buton în Setări care apelează POST /api/account/verify-email și un banner cât timp profiles.email_verified_at e null. Are nevoie de RESEND_API_KEY și RESEND_FROM.",
     cost:
-      "The API works and nothing calls it. You are exempt via ADMIN_EMAILS, so the first real user hits 403 EMAIL_NOT_VERIFIED on document recovery with no way out.",
+      "API-ul funcționează și nu-l apelează nimic. Tu ești exceptat prin ADMIN_EMAILS, deci primul utilizator real primește 403 EMAIL_NOT_VERIFIED la recuperarea documentelor, fără nicio ieșire.",
   },
 
   // ---- Gate 3 -------------------------------------------------------------
   {
     gate: 3,
-    goal: "Fleet Telemetry — the car streams instead of being polled",
+    goal: "Fleet Telemetry — mașina transmite în loc să fie interogată",
     nextStep:
-      "An mTLS receiver on the same host as the signing proxy, plus a fleet_telemetry_config call per vehicle. Comparable in size to the proxy work.",
+      "Un receptor mTLS pe același host cu proxy-ul de semnare, plus un apel fleet_telemetry_config per mașină. Cam cât a fost munca la proxy.",
     cost:
-      "The only route to real charging history (dx/charging/history is 403 on personal accounts), real consumption, and vampire drain — which polling cannot measure, because each measurement wakes the car. Every Tesla app polls; almost none stream. This is the differentiator.",
+      "Singura cale către istoric real de încărcare, consum real și pierdere vampirică — pe care interogarea nu o poate măsura, pentru că fiecare măsurătoare trezește mașina. Toate aplicațiile Tesla interoghează; aproape niciuna nu ascultă un flux. Ăsta e diferențiatorul.",
   },
   {
     gate: 3,
-    goal: "Own domain, off Vercel",
+    goal: "Domeniu propriu, plecat de pe Vercel",
     nextStep:
-      "Buy the domain now; do the move and the domain change TOGETHER when Fleet Telemetry forces it. Full order of operations in docs/HOSTING-AND-DOMAIN.md.",
+      "Cumpără domeniul acum; fă mutarea și schimbarea de domeniu ÎMPREUNĂ, când Fleet Telemetry o va impune. Ordinea completă în docs/HOSTING-AND-DOMAIN.md.",
     cost:
-      "Changing the domain re-registers the partner account and UNPAIRS every car — the key, the redirect URI and the _ak link are all bound to it. Cheap with one car, expensive with customers. Vercel is also what makes the proxy public (T10) and what makes Fleet Telemetry impossible.",
+      "Schimbarea domeniului reînregistrează contul de partener și DESPERECHEAZĂ fiecare mașină — cheia, redirect URI-ul și linkul _ak sunt toate legate de el. Ieftin cu o mașină, scump cu clienți. Vercel e și motivul pentru care proxy-ul e public (T10) și pentru care Fleet Telemetry e imposibil.",
   },
   {
     gate: 3,
-    goal: "The redesign — every screen rebuilt in the Instrument direction",
+    goal: "Redesignul — fiecare ecran refăcut în direcția Instrument",
     nextStep:
-      "Open /v2 on the phone beside the live app and judge it screen by screen. One screen is ported at a time; status and findings live in docs/REDESIGN-V2.md.",
+      "Deschide /v2 pe telefon lângă aplicația live și judecă ecran cu ecran. Se portează câte un ecran; starea și ce s-a găsit sunt în docs/REDESIGN-V2.md.",
     cost:
-      "Two versions of every screen is a cost that only pays off if it ends. Each ported screen must either replace its original or be deleted — a permanent /v2 is the worst outcome of the three.",
+      "Două versiuni ale fiecărui ecran sunt un cost care se plătește doar dacă se termină. Fiecare ecran portat trebuie ori să-l înlocuiască pe original, ori să fie șters — un /v2 permanent e cel mai prost dintre cele trei rezultate.",
   },
   {
     gate: 3,
-    goal: "Real-time stall availability",
+    goal: "Disponibilitatea prizelor în timp real",
     nextStep:
-      "NDW already carries live availabilities[] for the Netherlands, free. Prove the UI on one country before paying for a commercial feed.",
+      "NDW are deja availabilities[] live pentru Olanda, gratis. Dovedește interfața pe o singură țară înainte să plătești un flux comercial.",
   },
 ];
 

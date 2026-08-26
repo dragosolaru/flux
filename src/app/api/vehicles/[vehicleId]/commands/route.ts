@@ -212,6 +212,22 @@ export async function POST(
       }
       const notPaired = /has not been paired with the vehicle/i.test(msg);
       const unsigned = msg.includes("Vehicle Command Protocol required");
+      if (notPaired) {
+        // The flag was a one-way latch: set true by the first accepted command
+        // and never cleared. So a car whose key was removed afterwards kept
+        // reporting itself as paired for good, every command failed, and the
+        // one prompt that says what to do about it stayed hidden — because it
+        // is shown on `virtual_key_paired === false`.
+        //
+        // The car saying "your public key has not been paired" is the most
+        // authoritative signal that exists; Tesla offers no way to ask. It is
+        // recorded, so the flag means "is paired" rather than "was, once".
+        await supabase
+          .from("vehicles")
+          .update({ virtual_key_paired: false })
+          .eq("id", vehicle.id)
+          .eq("user_id", session.user.id);
+      }
       if (notPaired || unsigned) {
         // notPaired can only happen once signing is working, so it always means
         // "pair the key" regardless of how the env looks.

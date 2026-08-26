@@ -67,7 +67,7 @@ export function DashboardV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | n
   const isLive = vehicle?.dataSource === "live";
 
   const { data: state, isLoading, isError, error, refetch, polling } = useVehicle(vehicleId, isLive);
-  const { mutate, isPending, variables } = useVehicleCommand();
+  const { mutate, isPending, variables, error: commandError } = useVehicleCommand();
   const sleeping = useSleepMode();
   const queryClient = useQueryClient();
 
@@ -91,7 +91,14 @@ export function DashboardV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | n
   // Every signed command fails with "your public key has not been paired with
   // the vehicle" until this is done, and nothing in /v2 said so — the driver saw
   // controls that all refused for a reason printed nowhere.
-  const needsPairing = isLive && vehicle?.virtualKeyPaired === false && virtualKeyUrl != null;
+  //
+  // Two ways to know, and the second is why this row was invisible: the flag is
+  // only corrected once a command has failed AND the vehicles query has
+  // refetched. The error already in hand says the same thing immediately.
+  const keyRefused =
+    commandError instanceof Error && commandError.message === "error_vcp_required";
+  const needsPairing =
+    isLive && virtualKeyUrl != null && (vehicle?.virtualKeyPaired === false || keyRefused);
 
   const wake = useMutation({
     mutationFn: () => vehiclesApi.wake(vehicleId),

@@ -53,11 +53,11 @@ interface DebugLog {
 interface MigrationRow {
   id: string;
   description: string;
-  status: "applied" | "unknown";
+  status: "applied" | "necunoscut";
   appliedAt: string | null;
 }
 
-interface MigrationsPayload {
+interface MigrațiiPayload {
   bootstrapped: boolean;
   migrations: MigrationRow[];
 }
@@ -232,9 +232,9 @@ export function DebugClient() {
     staleTime: 10_000,
   });
 
-  const migrations = useQuery<MigrationsPayload>({
+  const migrations = useQuery<MigrațiiPayload>({
     queryKey: ["debug-migrations"],
-    queryFn: () => apiFetch<MigrationsPayload>("/api/internal/debug/migrations"),
+    queryFn: () => apiFetch<MigrațiiPayload>("/api/internal/debug/migrations"),
     staleTime: 10_000,
   });
 
@@ -334,7 +334,7 @@ export function DebugClient() {
     const all = [...byKey.values()];
     const isTesla = (scope: string) =>
       scope.startsWith("tesla/") || scope.startsWith("vehicles/");
-    // A charger connector, i.e. exactly what the "Check the sources" panel is
+    // A charger connector, i.e. exactly what the "Verifică sursele" panel is
     // about. Splitting these out is what lets that panel's badge count the
     // thing the panel contains — it used to count every error in the table,
     // Tesla included, on a panel that displayed none of them.
@@ -428,7 +428,7 @@ export function DebugClient() {
     }
   }
 
-  async function applyAllMigrations() {
+  async function applyAllMigrații() {
     const list = migrations.data?.migrations ?? [];
     setRunning("all-migrations");
     setLastError(null);
@@ -544,7 +544,7 @@ export function DebugClient() {
           .slice(0, 200);
         body = {
           nonJson: true,
-          contentType: contentType.split(";")[0] || "unknown",
+          contentType: contentType.split(";")[0] || "necunoscut",
           bytes: text.length,
           excerpt,
           ...(res.status === 404
@@ -799,7 +799,7 @@ export function DebugClient() {
             " otherwise the car would pair a key the proxy does not hold.",
         );
       }
-      // Whatever the last Check status returned, if one was run. The key match
+      // Whatever the last Verifică starea returned, if one was run. The key match
       // is the question every "not paired" failure turns into, and it is
       // otherwise buried in a raw JSON dump further down the page.
       const pr = partnerResult as PartnerResult | null;
@@ -836,7 +836,7 @@ export function DebugClient() {
       if (fleetStatus) {
         for (const c of fleetStatus.cars) {
           out.push(
-            `fleet_status "${c.vehicle}" …${c.vin.slice(-6)} · paired ${c.paired ?? "unknown"}` +
+            `fleet_status "${c.vehicle}" …${c.vin.slice(-6)} · paired ${c.paired ?? "necunoscut"}` +
               (c.commandProtocolRequired != null ? ` · signing required ${c.commandProtocolRequired}` : "") +
               (c.firmware ? ` · fw ${c.firmware}` : "") +
               (c.error ? ` · ${c.error}` : ""),
@@ -960,7 +960,7 @@ export function DebugClient() {
     return (
       <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
-        Loading diagnostics…
+        Se încarcă diagnosticul…
       </div>
     );
   }
@@ -968,11 +968,9 @@ export function DebugClient() {
   if (isError || !data) {
     return (
       <div className="m-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm">
-        <p className="font-semibold text-destructive">Diagnostics unavailable</p>
+        <p className="font-semibold text-destructive">Diagnosticul nu e disponibil</p>
         <p className="mt-1 text-muted-foreground">
-          This panel needs your e-mail listed in the <code>ADMIN_EMAILS</code> environment
-          variable on Vercel, then a redeploy.
-        </p>
+          Panoul are nevoie de emailul tău în variabila <code>ADMIN_EMAILS</code>de pe Vercel, apoi un redeploy.</p>
       </div>
     );
   }
@@ -1031,7 +1029,7 @@ export function DebugClient() {
             className="flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-sm text-muted-foreground"
           >
             <Copy className="size-4" />
-            Raw JSON
+            JSON brut
           </button>
         </div>
       </div>
@@ -1039,7 +1037,7 @@ export function DebugClient() {
       {copyFallback && (
         <section className="space-y-2 rounded-xl border border-border p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">Tap inside, select all, copy.</p>
+            <p className="text-xs text-muted-foreground">Atinge înăuntru, selectează tot, copiază.</p>
             <button
               onClick={() => setCopyFallback(null)}
               className="flex min-h-11 items-center px-2 text-sm text-muted-foreground hover:text-foreground"
@@ -1059,7 +1057,7 @@ export function DebugClient() {
       {/* ---- Status: the whole point of opening the page ---- */}
       {nextAction && (
         <section className="rounded-xl border border-primary/40 bg-primary/10 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-primary">Next step</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-primary">Pasul următor</p>
           <p className="mt-1 text-sm">{nextAction}</p>
         </section>
       )}
@@ -1068,7 +1066,7 @@ export function DebugClient() {
         <section className="space-y-3 rounded-xl border border-border p-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Where we are
+              Unde suntem
             </p>
             <p className="mt-0.5 text-sm font-semibold">{data.roadmap.goal}</p>
           </div>
@@ -1151,23 +1149,23 @@ export function DebugClient() {
       <section className="space-y-3 rounded-xl border border-border p-4">
         {c ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="Chargers" value={c.total.toLocaleString()} />
-            <Stat label="Operators" value={c.operators.toLocaleString()} bad={c.operators === 0} />
-            <Stat label="No country" value={c.no_country.toLocaleString()} bad={c.no_country > 0} />
+            <Stat label="Stații" value={c.total.toLocaleString()} />
+            <Stat label="Operatori" value={c.operators.toLocaleString()} bad={c.operators === 0} />
+            <Stat label="Fără țară" value={c.no_country.toLocaleString()} bad={c.no_country > 0} />
             <Stat
-              label="No operator"
+              label="Fără operator"
               value={c.no_operator.toLocaleString()}
               bad={c.total > 0 && c.no_operator === c.total}
             />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Stats unavailable — migration 035 may not be applied yet.
+            Statisticile nu sunt disponibile — probabil migrația 035 nu e aplicată.
           </p>
         )}
         <div className="flex flex-wrap gap-2">
           {data.sources.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No sources have contributed.</p>
+            <p className="text-sm text-muted-foreground">Nicio sursă n-a contribuit.</p>
           ) : (
             data.sources.map((s) => (
               <span key={s.source} className="rounded-full bg-muted px-2.5 py-1 text-xs">
@@ -1180,22 +1178,20 @@ export function DebugClient() {
 
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold">🚗 Car</h2>
-          <p className="text-xs text-muted-foreground">Whether we are contacting it, whether it is linked, and what went wrong.</p>
+          <h2 className="text-sm font-semibold">🚗 Mașina</h2>
+          <p className="text-xs text-muted-foreground">Dacă o contactăm, dacă e conectată, și ce a mers prost.</p>
         </div>
         <button
           onClick={() => copyReport("car")}
           className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground"
         >
-          <Copy className="size-3" />
-          Report
-        </button>
+          <Copy className="size-3" />Raport</button>
       </div>
 
       <Panel
-        title="Sleep & traffic to the car"
-        purpose="Is the app keeping the car awake? The switch, and a count of what actually reached it."
-        badge={sleeping ? "left alone" : "normal"}
+        title="Somnul și traficul spre mașină"
+        purpose="Ține aplicația mașina trează? Comutatorul, și câte cereri au ajuns efectiv la ea."
+        badge={sleeping ? "lăsată în pace" : "normal"}
         tone={sleeping ? "ok" : "muted"}
         open={open.sleep ?? true}
         onToggle={() => toggle("sleep")}
@@ -1205,15 +1201,15 @@ export function DebugClient() {
 
       {tesla && (
         <Panel
-          title="Go live with Tesla"
-        purpose="Every setting a real Tesla needs, in the order they block each other. The first unticked step is the one to do."
+          title="Pornirea cu Tesla"
+        purpose="Tot ce are nevoie o Tesla reală, în ordinea în care se blochează unele pe altele. Primul pas nebifat e cel de făcut."
           badge={tesla.nextStep ? `next: ${tesla.nextStep}` : "ready"}
           tone={tesla.nextStep ? "warn" : "ok"}
           open={open.tesla ?? false}
           onToggle={() => toggle("tesla")}
         >
           <p className="text-xs text-muted-foreground">
-            Ordered — each step is useless without the ones above it. Full procedure in
+            În ordine — fiecare pas e inutil fără cei de deasupra. Procedura completă în
             <code className="ml-1">docs/VEHICLE-CONNECTION.md</code>.
           </p>
           <ol className="space-y-1.5">
@@ -1233,7 +1229,7 @@ export function DebugClient() {
           </ol>
           <div className="space-y-2 border-t border-border/60 pt-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Command-signing keypair
+              Perechea de chei pentru semnarea comenzilor
             </p>
             <p className="text-xs text-muted-foreground">
               EC P-256, the curve Tesla requires. Generated here because the two
@@ -1246,14 +1242,11 @@ export function DebugClient() {
               <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-300">
                 A car is already linked. Replacing the pair means redoing{" "}
                 <strong>both</strong> halves in order: public key deployed and
-                confirmed served, <em>then</em> Register. Tesla re-fetches
-                /.well-known during registration, so registering while the old
-                key is still being served just re-registers the old one.
-              </p>
+                confirmed served, <em>then</em>Înregistrează. Tesla recitește /.well-known în timpul înregistrării, deci dacă înregistrezi cât timp se servește cheia veche, tot pe cea veche o reînregistrezi.</p>
             )}
 
             <IngestButton
-              label="Generate keypair"
+              label="Generează perechea"
               busy={running === "keypair"}
               disabled={running !== null}
               onClick={() => void generateKeypair()}
@@ -1275,35 +1268,27 @@ export function DebugClient() {
                     onClick={() => copyText(keypair.privateKeyBase64, "Private key")}
                     className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
                   >
-                    Copy private key (base64)
+                    Copiază cheia privată (base64)
                   </button>
                 </div>
 
                 <div className="space-y-1 border-t border-border/60 pt-2">
                   <div className="text-xs font-medium">
-                    2. Public half → <code>TESLA_PUBLIC_KEY</code> in Vercel
+                    2. Public half → <code>TESLA_PUBLIC_KEY</code> în Vercel
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Served at /.well-known/appspecific/com.tesla.3p.public-key.pem.
-                    Deploy this before registering the partner account — Tesla
-                    fetches it during registration.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Se servește la /.well-known/appspecific/com.tesla.3p.public-key.pem. Publică-l înainte să înregistrezi contul de partener — Tesla îl citește în timpul înregistrării.</p>
                   <button
                     onClick={() => copyText(keypair.publicKeyPem, "Public key")}
                     className="rounded-lg bg-secondary px-3 py-2 text-xs font-medium"
                   >
-                    Copy public key (PEM)
+                    Copiază cheia publică (PEM)
                   </button>
                   <pre className="-mx-1 mt-1 max-h-40 overflow-auto rounded bg-muted/40 p-2 text-[10px] leading-relaxed">
                     {keypair.publicKeyPem}
                   </pre>
                 </div>
 
-                <p className="text-xs text-amber-300">
-                  Both halves must come from this same generation. A private key
-                  paired with someone else&apos;s public half signs commands the
-                  car will refuse.
-                </p>
+                <p className="text-xs text-amber-300">Ambele jumătăți trebuie să vină din aceeași generare. O cheie privată pusă cu jumătatea publică a altcuiva semnează comenzi pe care mașina le refuză.</p>
               </div>
             )}
           </div>
@@ -1311,7 +1296,7 @@ export function DebugClient() {
           {refusedForKeyNotPaired && (
             <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/10 p-3">
               <p className="text-xs font-medium text-destructive">
-                The car refused a signed command: our key is not paired to it
+                Mașina a refuzat o comandă semnată: cheia noastră nu e împerecheată cu ea
               </p>
               <p className="text-xs text-muted-foreground">
                 Pairing again will not help if it has already been done. The car
@@ -1320,11 +1305,11 @@ export function DebugClient() {
                 paired a key we no longer own and rejects every signature.
               </p>
               <p className="text-xs text-muted-foreground">
-                Press <strong>Check status</strong> below. It lists all four keys —
+                Press <strong>Verifică starea</strong> below. It lists all four keys —
                 variable, domain, proxy, Tesla — and says which one is wrong. They
                 must all be the same value before pairing the car is worth doing;
                 pairing while they differ just stores a key the proxy cannot sign
-                with. <strong>Check pairing</strong> then confirms with Tesla
+                with. <strong>Verifică împerecherea</strong> then confirms with Tesla
                 whether the car took it.
               </p>
             </div>
@@ -1333,7 +1318,7 @@ export function DebugClient() {
           {tesla.virtualKeyUrl && (
             <div className="space-y-2 border-t border-border/60 pt-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Virtual Key
+                Cheia virtuală
               </p>
               <p className="text-xs text-muted-foreground">
                 The last step, and the only one that happens on the car rather than a
@@ -1362,7 +1347,7 @@ export function DebugClient() {
                   rel="noreferrer"
                   className="inline-block break-all rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
                 >
-                  Pair Virtual Key →
+                  Pair Cheia virtuală →
                 </a>
               )}
               <p className="break-all font-mono text-[10px] text-muted-foreground">
@@ -1374,12 +1359,12 @@ export function DebugClient() {
           {tesla.grants && tesla.grants.length > 0 && (
             <div className="space-y-2 border-t border-border/60 pt-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Granted permissions
+                Permisiuni acordate
               </p>
               <p className="text-xs text-muted-foreground">
                 Tesla&apos;s consent screen is a tickbox per permission, so a grant can come
                 back narrower than what was asked for. Anything missing here was unticked
-                during sign-in — reconnect and use &quot;Select all&quot;.
+                during sign-in — reconnect and use &quot;Selectează tot&quot;.
               </p>
               {tesla.grants.map((g) => (
                 <div key={g.vehicle} className="space-y-1">
@@ -1409,22 +1394,18 @@ export function DebugClient() {
 
           <div className="space-y-2 border-t border-border/60 pt-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Partner account (EU)
+              Cont de partener (UE)
             </p>
-            <p className="text-xs text-muted-foreground">
-              The one setup step with no environment variable behind it, so the list above
-              cannot see it. Tesla fetches the public key during registration — check status
-              first; register only once the key is being served.
-            </p>
+            <p className="text-xs text-muted-foreground">Singurul pas de configurare fără o variabilă de mediu în spate, deci lista de mai sus nu-l poate vedea. Tesla citește cheia publică în timpul înregistrării — verifică întâi starea; înregistrează abia după ce cheia se servește.</p>
             <div className="flex flex-wrap gap-2">
               <IngestButton
-                label="Check status"
+                label="Verifică starea"
                 busy={running === "partner:status"}
                 disabled={running !== null}
                 onClick={() => void teslaPartner("status")}
               />
               <IngestButton
-                label="Register"
+                label="Înregistrează"
                 busy={running === "partner:register"}
                 disabled={running !== null}
                 onClick={() => void teslaPartner("register")}
@@ -1434,7 +1415,7 @@ export function DebugClient() {
             {partnerResult != null && (
               <details>
                 <summary className="cursor-pointer text-[11px] text-muted-foreground">
-                  Raw response
+                  Răspuns brut
                 </summary>
                 <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
                   {JSON.stringify(partnerResult, null, 2)}
@@ -1445,7 +1426,7 @@ export function DebugClient() {
 
           <div className="space-y-2 border-t border-border/60 pt-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              What the domain publishes
+              Ce publică domeniul
             </p>
             <p className="text-xs text-muted-foreground">
               Opening the URL on a phone downloads a .pem nothing can read. This
@@ -1454,7 +1435,7 @@ export function DebugClient() {
               you want.
             </p>
             <IngestButton
-              label="Show published key"
+              label="Arată cheia publicată"
               busy={running === "published-keys"}
               disabled={running !== null}
               onClick={() => void showPublishedKeys()}
@@ -1490,15 +1471,15 @@ export function DebugClient() {
 
           <div className="space-y-2 border-t border-border/60 pt-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Is the car paired? (Tesla&apos;s answer)
+              E mașina împerecheată? (răspunsul Tesla)
             </p>
             <p className="text-xs text-muted-foreground">
-              Everything else here is inference — a command that worked once, a key
+              Tot restul here is inference — a command that worked once, a key
               added on a screen that never said whose. This asks Tesla directly
               whether the VIN is paired with the key registered for this domain.
             </p>
             <IngestButton
-              label="Check pairing"
+              label="Verifică împerecherea"
               busy={running === "fleet-status"}
               disabled={running !== null}
               onClick={() => void runFleetStatus()}
@@ -1521,14 +1502,14 @@ export function DebugClient() {
                               : "font-mono text-amber-400"
                         }
                       >
-                        {c.paired === true ? "paired" : c.paired === false ? "NOT paired" : "unknown"}
+                        {c.paired === true ? "paired" : c.paired === false ? "NEîmperecheată" : "necunoscut"}
                       </span>
                     </div>
                     <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                       …{c.vin.slice(-6)}
                       {c.firmware ? ` · fw ${c.firmware}` : ""}
                       {c.commandProtocolRequired != null
-                        ? ` · signing ${c.commandProtocolRequired ? "required" : "not required"}`
+                        ? ` · signing ${c.commandProtocolRequired ? "necesar" : "nu e necesar"}`
                         : ""}
                     </p>
                     {c.error && <p className="mt-0.5 text-[10px] text-destructive">{c.error}</p>}
@@ -1542,9 +1523,9 @@ export function DebugClient() {
       )}
 
       <Panel
-        title="Car activity"
-        purpose="Errors the car and the Tesla API produced. Empty here means a failed command never reached the server — or it worked."
-        badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "older" : "quiet"}
+        title="Activitatea mașinii"
+        purpose="Erorile produse de mașină și de API-ul Tesla. Gol aici înseamnă că o comandă eșuată n-a ajuns niciodată la server — sau că a funcționat."
+        badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "mai vechi" : "liniște"}
         tone={teslaFresh > 0 ? "warn" : undefined}
         open={open.carLog ?? false}
         onToggle={() => toggle("carLog")}
@@ -1556,9 +1537,9 @@ export function DebugClient() {
           whichever subsystem is noisiest — never the one being debugged.
         </p>
         <LogGroup
-          title="Tesla & vehicle"
+          title="Tesla și mașina"
           entries={groupedLogs.tesla}
-          emptyNote="Nothing logged. If you are waiting on a command failure to appear here, that means the command never reached the server — or it worked."
+          emptyNote="Nimic în jurnal. Dacă aștepți să apară aici o comandă eșuată, înseamnă că n-a ajuns la server — sau că a funcționat."
           dayMs={DAY_MS}
           now={generatedAtMs}
         />
@@ -1566,8 +1547,8 @@ export function DebugClient() {
 
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold">⚡ Chargers</h2>
-          <p className="text-xs text-muted-foreground">How many stations we hold, where they came from, and whether the feeds still answer.</p>
+          <h2 className="text-sm font-semibold">⚡ Stații</h2>
+          <p className="text-xs text-muted-foreground">Câte stații avem, de unde vin, și dacă sursele mai răspund.</p>
         </div>
         <button
           onClick={() => copyReport("chargers")}
@@ -1579,8 +1560,8 @@ export function DebugClient() {
       </div>
 
       <Panel
-        title="Populate chargers"
-        purpose="Import stations from the open data sources. Run this when coverage looks thin in a country."
+        title="Importă stații"
+        purpose="Importă stații din sursele de date deschise. Rulează când acoperirea pare subțire într-o țară."
         badge="import"
         open={open.populate ?? false}
         onToggle={() => toggle("populate")}
@@ -1627,7 +1608,7 @@ export function DebugClient() {
             disabled={running !== null}
             className="flex min-h-11 items-center rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
-            Select all
+            Selectează tot
           </button>
           <button
             onClick={() => setPickedCountries([])}
@@ -1659,30 +1640,23 @@ export function DebugClient() {
       </Panel>
 
       <Panel
-        title="Maintenance"
-        purpose="Dedupe and cleanup over stations already imported. Safe to re-run; each pass reports what it changed."
-        badge="dedupe · cache"
+        title="Întreținere"
+        purpose="Deduplicare și curățenie peste stațiile deja importate. Se poate rula de câte ori vrei; fiecare trecere raportează ce a schimbat."
+        badge="deduplicare · cache"
         open={open.maintain ?? false}
         onToggle={() => toggle("maintain")}
       >
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Collapses duplicates until nothing is left to merge. New duplicates are prevented at
-            ingest, so this is for rows stored before that.
-          </p>
+          <p className="text-xs text-muted-foreground">Unește duplicatele până nu mai are ce uni. Duplicatele noi sunt oprite la import, deci asta e pentru rândurile salvate înainte de asta.</p>
           <IngestButton
-            label="Collapse duplicates"
+            label="Unește duplicatele"
             busy={running === "dedupe"}
             disabled={running !== null}
             onClick={() => void runDedupe()}
           />
         </div>
         <div className="space-y-2 border-t border-border/60 pt-3">
-          <p className="text-xs text-muted-foreground">
-            Freshness cache — forgets that an area was imported so the next read re-ingests it
-            instead of waiting out the TTL (7 days per tile, 48 hours per country). Deletes no
-            stations.
-          </p>
+          <p className="text-xs text-muted-foreground">Cache-ul de prospețime — uită că o zonă a fost importată, ca următoarea citire să o reimporte în loc să aștepte expirarea (7 zile per zonă, 48 de ore per țară). Nu șterge nicio stație.</p>
           <div className="flex flex-wrap gap-2">
             {CORRIDOR.map((r) => (
               <IngestButton
@@ -1694,7 +1668,7 @@ export function DebugClient() {
               />
             ))}
             <IngestButton
-              label="Clear everything"
+              label="Golește tot"
               busy={running === "cache:all"}
               disabled={running !== null}
               onClick={() => void clearCache()}
@@ -1704,8 +1678,8 @@ export function DebugClient() {
       </Panel>
 
       <Panel
-        title="Check the sources"
-        purpose="Whether each upstream feed still answers, and what it last returned. Where to look when an import brings back nothing."
+        title="Verifică sursele"
+        purpose="Dacă fiecare sursă mai răspunde, și ce a returnat ultima dată. Aici te uiți când un import nu aduce nimic."
         badge={
           sourceErrorsFresh > 0
             ? `${sourceErrorsFresh} today`
@@ -1717,11 +1691,7 @@ export function DebugClient() {
         open={open.sources ?? false}
         onToggle={() => toggle("sources")}
       >
-        <p className="text-xs text-muted-foreground">
-          Probe queries each source for a small window and counts what came back — the combined
-          ingest cannot tell a dead connector from an empty area. Raw shows the upstream
-          response verbatim, which is what identifies a format change. Neither writes anything.
-        </p>
+        <p className="text-xs text-muted-foreground">Sonda interoghează fiecare sursă pe o fereastră mică și numără ce a venit — importul combinat nu poate deosebi un conector mort de o zonă goală. Brut arată răspunsul sursei cuvânt cu cuvânt, ceea ce identifică o schimbare de format. Niciuna nu scrie nimic.</p>
         <div className="flex flex-wrap gap-2">
           {CORRIDOR.map((r) => (
             <IngestButton
@@ -1771,7 +1741,7 @@ export function DebugClient() {
         )}
         <div className="space-y-2 border-t border-border/60 pt-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Raw upstream response
+            Răspunsul brut al sursei
           </p>
           <div className="flex flex-wrap gap-2">
             {["irve", "ndw", "ndw-nobbox", "austria", "bnetza", "bnetza-openapi"].map((id) => (
@@ -1792,34 +1762,34 @@ export function DebugClient() {
         </div>
 
         <LogGroup
-          title="Connector errors"
+          title="Erori de conector"
           entries={groupedLogs.sources}
-          emptyNote="No connector has logged an error."
+          emptyNote="Niciun conector n-a înregistrat vreo eroare."
           dayMs={DAY_MS}
           now={generatedAtMs}
         />
       </Panel>
 
       <Panel
-        title="Charger activity"
-        purpose="Recent import runs and what they wrote. The counts here are the ones the coverage numbers come from."
+        title="Activitatea importurilor"
+        purpose="Rulările recente de import și ce au scris. Din cifrele de aici vin numerele de acoperire."
         badge={failedRuns > 0 ? `${failedRuns} failed runs` : `${data.recentRuns.length} runs ok`}
         tone={failedRuns > 0 ? "warn" : undefined}
         open={open.chargerLog ?? false}
         onToggle={() => toggle("chargerLog")}
       >
         <LogGroup
-          title="Everything else"
+          title="Tot restul"
           entries={groupedLogs.other}
-          emptyNote="Nothing logged outside Tesla and the charger connectors."
+          emptyNote="Nimic în jurnal în afară de Tesla și conectorii de stații."
           dayMs={DAY_MS}
           now={generatedAtMs}
         />
         <p className="border-t border-border/60 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Ingest runs
+          Rulări de import
         </p>
         {data.recentRuns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No runs recorded.</p>
+          <p className="text-sm text-muted-foreground">Nicio rulare înregistrată.</p>
         ) : (
           <div className="-mx-4 max-h-72 overflow-auto px-4">
             <table className="w-full min-w-[420px] text-xs">
@@ -1856,8 +1826,8 @@ export function DebugClient() {
 
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold">📋 Progress</h2>
-          <p className="text-xs text-muted-foreground">What is left to build, and which database changes have been applied.</p>
+          <h2 className="text-sm font-semibold">📋 Progres</h2>
+          <p className="text-xs text-muted-foreground">Ce a mai rămas de construit, și ce modificări de bază de date s-au aplicat.</p>
         </div>
         <button
           onClick={() => copyReport("progress")}
@@ -1869,14 +1839,14 @@ export function DebugClient() {
       </div>
 
       <Panel
-        title="Migrations"
-        purpose="Which database changes have been applied. Re-applying is safe; order matters only where one replaces a function."
+        title="Migrații"
+        purpose="Ce modificări de bază de date s-au aplicat. Reaplicarea e sigură; ordinea contează doar unde una înlocuiește o funcție."
         badge={
           !migrations.data?.bootstrapped
-            ? "runner missing"
+            ? "runner lipsă"
             : unapplied.length > 0
               ? `${unapplied.length} to apply`
-              : "all applied"
+              : "toate aplicate"
         }
         tone={unapplied.length > 0 || !migrations.data?.bootstrapped ? "warn" : "ok"}
         open={open.migrations ?? unapplied.length > 0}
@@ -1884,16 +1854,14 @@ export function DebugClient() {
       >
         {migrations.data && !migrations.data.bootstrapped && (
           <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-            Runner not installed. Paste <code>supabase/migrations/037_...sql</code> into the
-            Supabase SQL editor once; every migration below then applies from here.
-          </p>
+            Runnerul nu e instalat. Lipește <code>supabase/migrations/037_...sql</code>o singură dată în editorul SQL Supabase; după aceea orice migrație de mai jos se aplică de aici.</p>
         )}
         <div className="flex flex-wrap gap-2">
           <IngestButton
-            label="Apply all"
+            label="Aplică tot"
             busy={running === "all-migrations"}
             disabled={running !== null}
-            onClick={() => void applyAllMigrations()}
+            onClick={() => void applyAllMigrații()}
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -1905,16 +1873,16 @@ export function DebugClient() {
 
         <div className="space-y-2 rounded-lg border border-border bg-card/60 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-medium">Row-level security</p>
+            <p className="text-xs font-medium">Securitate pe rând (RLS)</p>
             <div className="flex gap-2">
               <IngestButton
-                label="Check"
+                label="Verifică"
                 busy={running === "rls"}
                 disabled={running !== null}
                 onClick={() => void loadRls()}
               />
               <IngestButton
-                label="Enable everywhere"
+                label="Activează peste tot"
                 busy={running === "rls-fix"}
                 disabled={running !== null}
                 onClick={() => void fixRls()}
@@ -1942,7 +1910,7 @@ export function DebugClient() {
                   </p>
                   {e.grants.length === 0 ? (
                     <p className="text-[10px] text-muted-foreground">
-                      anon/authenticated hold no privileges on it
+                      anon/authenticated nu au niciun privilegiu pe el
                     </p>
                   ) : (
                     e.grants.map((g) => (
@@ -1985,7 +1953,7 @@ export function DebugClient() {
                   {m.status}
                 </span>
                 <IngestButton
-                  label="Apply"
+                  label="Aplică"
                   busy={running === m.id}
                   disabled={running !== null}
                   onClick={() => void applyMigration(m.id)}
@@ -1997,23 +1965,20 @@ export function DebugClient() {
       </Panel>
 
       <div className="pt-2">
-        <h2 className="text-sm font-semibold">⚙️ Setup</h2>
-        <p className="text-xs text-muted-foreground">
-          Which environment variables are set. Read-only — every value here is
-          changed in the hosting dashboard, not from this page.
-        </p>
+        <h2 className="text-sm font-semibold">⚙️ Configurare</h2>
+        <p className="text-xs text-muted-foreground">Ce variabile de mediu sunt setate. Doar citire — orice valoare de aici se schimbă în panoul de hosting, nu de aici.</p>
       </div>
 
       <Panel
-        title="Configuration"
-        purpose="Which environment variables the running deployment can see. Unset ones name what they block."
-        badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "all set"}
+        title="Configurare"
+        purpose="Ce variabile de mediu vede deployment-ul care rulează. Cele nesetate spun ce blochează."
+        badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "toate setate"}
         tone={unsetConfig.length > 0 ? "muted" : "ok"}
         open={open.config ?? false}
         onToggle={() => toggle("config")}
       >
         <p className="text-xs text-muted-foreground">
-          Presence only — no key values are ever sent to the browser.
+          Doar prezența — nicio valoare de cheie nu ajunge vreodată în browser.
         </p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(data.config).map(([k, v]) => {
@@ -2035,17 +2000,14 @@ export function DebugClient() {
       </Panel>
 
       <div className="pt-2">
-        <h2 className="text-sm font-semibold">🔧 Tools</h2>
-        <p className="text-xs text-muted-foreground">
-          One-off probes. No report button and no badges: nothing here describes
-          a state, it only does things when you press it.
-        </p>
+        <h2 className="text-sm font-semibold">🔧 Unelte</h2>
+        <p className="text-xs text-muted-foreground">Sonde de unică folosință. Fără buton de raport și fără etichete: nimic de aici nu descrie o stare, doar face lucruri când apeși.</p>
       </div>
 
 
       <Panel
-        title="Call an API route"
-        purpose="Send a request as yourself and read the raw answer. For checking a route without leaving the phone."
+        title="Apelează o rută API"
+        purpose="Trimite o cerere ca tine și citește răspunsul brut. Pentru a verifica o rută fără să lași telefonul."
         badge={apiMethod}
         open={open.api ?? false}
         onToggle={() => toggle("api")}
@@ -2103,7 +2065,7 @@ export function DebugClient() {
             className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3 font-mono text-xs"
           />
           <IngestButton
-            label="Send"
+            label="Trimite"
             busy={running === "api"}
             disabled={running !== null}
             onClick={() => void callApi()}
@@ -2117,16 +2079,13 @@ export function DebugClient() {
       </Panel>
 
       <Panel
-        title="Test OCR"
-        purpose="Run a document through the parser and see what it extracted, without saving anything."
-        badge="costs tokens"
+        title="Testează OCR"
+        purpose="Trece un document prin parser și vezi ce a extras, fără să salvezi nimic."
+        badge="costă tokeni"
         open={open.ocr ?? false}
         onToggle={() => toggle("ocr")}
       >
-        <p className="text-xs text-muted-foreground">
-          Runs a photo or PDF through the extraction prompt and shows what Claude returned.
-          Nothing is saved — no document, no upload, no cost record.
-        </p>
+        <p className="text-xs text-muted-foreground">Trece o poză sau un PDF prin promptul de extragere și arată ce a returnat Claude. Nu se salvează nimic — niciun document, niciun upload, nicio înregistrare de cost.</p>
         <div className="flex flex-wrap items-center gap-2">
           {(["energy", "car"] as const).map((v) => (
             <button
@@ -2138,7 +2097,7 @@ export function DebugClient() {
                   : "border-border bg-muted/40 text-muted-foreground"
               }`}
             >
-              {v === "energy" ? "Energy receipt" : "Car document"}
+              {v === "energy" ? "Bon de energie" : "Document de mașină"}
             </button>
           ))}
         </div>
@@ -2151,7 +2110,7 @@ export function DebugClient() {
           ) : (
             <>
               <Upload className="size-4" />
-              Choose a photo or PDF
+              Alege o poză sau un PDF
             </>
           )}
           <input
@@ -2386,7 +2345,7 @@ function KeyTable({
       {result.proxyPublicKeyPem && (
         <div className="space-y-1 rounded border border-border/60 bg-muted/20 p-2">
           <p className="text-[11px] text-muted-foreground">
-            The proxy&apos;s own public key. Paste it into <code>TESLA_PUBLIC_KEY</code>{" "}
+            Cheia publică a proxy-ului. Lipește-o în <code>TESLA_PUBLIC_KEY</code>{" "}
             to make everything adopt the key the proxy already signs with — that
             path needs no private key you might no longer have.
           </p>
@@ -2395,13 +2354,13 @@ function KeyTable({
               onClick={() => onCopy(result.proxyPublicKeyPem!, "Proxy public key")}
               className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
             >
-              Copy PEM
+              Copiază PEM
             </button>
             <button
               onClick={() => onCopy(result.proxyPublicKeyOneLine!, "Proxy public key (one line)")}
               className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
             >
-              Copy one-line (\n)
+              Copiază pe o linie (\n)
             </button>
           </div>
         </div>
@@ -2433,10 +2392,10 @@ function LogContext({ context }: { context: Record<string, unknown> | null }) {
 
   const detail = typeof context.detail === "string" ? context.detail : null;
   const rest = Object.fromEntries(
-    Object.entries(context).filter(([k]) => k !== "detail" && k !== "stack" && k !== "name"),
+    Object.entries(context).filter(([k]) => k !== "detail" && k !== "stiva" && k !== "name"),
   );
   const hasRest = Object.keys(rest).length > 0;
-  const hasStack = "stack" in context;
+  const hasStack = "stiva" in context;
 
   return (
     <div className="mt-1 space-y-1">
@@ -2456,7 +2415,7 @@ function LogContext({ context }: { context: Record<string, unknown> | null }) {
             onClick={() => setOpen((v) => !v)}
             className="text-[10px] underline decoration-dotted text-muted-foreground"
           >
-            {open ? "hide stack" : "stack"}
+            {open ? "ascunde stiva" : "stiva"}
           </button>
           {open && (
             <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all text-[10px] text-muted-foreground">
