@@ -1362,6 +1362,13 @@
     "pair_key": "Împerechează cheia virtuală",
     "pair_key_hint": "Deschide de pe telefonul cu aplicația Tesla, stând lângă mașină. Până când cheia e aprobată în mașină, orice comandă e refuzată.",
     "refresh_state": "reîmprospătează",
-    "updated": "Actualizat"
+    "updated": "Actualizat",
+    "climate_running": "clima pornită",
+    "sentry_on": "Sentry pornit",
+    "door_open": "o ușă deschisă",
+    "window_open": "un geam deschis",
+    "frunk_open": "portbagajul din față deschis",
+    "trunk_open": "portbagajul deschis",
+    "car_state_unknown": "Mașina nu și-a raportat starea"
   }
 }

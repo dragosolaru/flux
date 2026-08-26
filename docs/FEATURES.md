@@ -917,6 +917,16 @@ reserves `--v2-nav-h` at the bottom so nothing lands underneath it. As a flex
 child it only reached the bottom of the screen when the content above happened
 to fill the viewport.
 
+**The car diagram** (`src/components/v2/car-diagram.tsx`, on `/v2/commands`) is
+the system's second instrument. The arc's justification is "a number that IS a
+level"; this one's is **position** — `doorsOpen` and `windowsOpen` arrive per
+corner from both the Tesla adapter and the simulator, and all eight booleans
+were read and discarded because no row can say *which* window is down without
+becoming four rows. Lock, climate, charging and sentry are repeated from the
+rows below deliberately: rows are read one at a time to change something, the
+car is read at a glance to see whether you left something open. Anything the car
+has not reported is drawn fainter than "closed", never as closed.
+
 **Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
 removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and
 the pending counter are **not** animations and are never removed — a command

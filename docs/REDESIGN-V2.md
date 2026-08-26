@@ -247,6 +247,32 @@ on their behalf.
 
 ---
 
+## The car diagram
+
+`/v2/commands` opens with the car seen from above: doors that swing out when
+open, windows that colour a segment of the car's own side when down, a cabin
+that tints while the climate runs, a charge port that pulses while power flows,
+a sentry ring at the windscreen, and the whole outline in amber when the car is
+unlocked.
+
+It earns its place on **position**, which no row can carry: the eight per-corner
+door and window booleans were arriving from the car and being discarded, because
+"which window is down" would have needed four more rows.
+
+Three animations, each carrying a fact rather than polish — the outline draws
+itself once on arrival (removed under `prefers-reduced-motion`), the port pulses
+while charging and the cabin breathes while conditioning (both keep their state
+but stop moving). Door swings and window gaps are transitions, not loops: they
+are state changes, and a state change must survive reduced motion by arriving
+instantly rather than disappearing.
+
+**It was drawn against a rendered sheet of all eight states, not by reasoning
+about coordinates.** The first attempt was a capsule whose doors swung *into*
+the cabin — the rotation signs were reversed — and neither fault was visible
+from the source. Two iterations were thrown away before the third read as a car.
+
+---
+
 ## The tab bar
 
 Four tabs: **Mașina · Comenzi · Încărcare · Mai mult**.

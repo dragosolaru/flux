@@ -1362,6 +1362,13 @@
     "pair_key": "Virtuellen Schlüssel koppeln",
     "pair_key_hint": "Vom Telefon mit der Tesla-App öffnen, direkt am Auto stehend. Bis der Schlüssel im Auto bestätigt ist, wird jeder Befehl abgelehnt.",
     "refresh_state": "aktualisieren",
-    "updated": "Aktualisiert"
+    "updated": "Aktualisiert",
+    "climate_running": "Klima läuft",
+    "sentry_on": "Sentry an",
+    "door_open": "eine Tür offen",
+    "window_open": "ein Fenster offen",
+    "frunk_open": "Frunk offen",
+    "trunk_open": "Kofferraum offen",
+    "car_state_unknown": "Das Auto hat seinen Zustand nicht gemeldet"
   }
 }

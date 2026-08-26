@@ -1362,6 +1362,13 @@
     "pair_key": "Pair the Virtual Key",
     "pair_key_hint": "Open this from the phone that has the Tesla app, standing next to the car. Until the key is approved in the car, every command is refused.",
     "refresh_state": "refresh",
-    "updated": "Updated"
+    "updated": "Updated",
+    "climate_running": "climate running",
+    "sentry_on": "Sentry on",
+    "door_open": "a door open",
+    "window_open": "a window open",
+    "frunk_open": "frunk open",
+    "trunk_open": "boot open",
+    "car_state_unknown": "The car has not reported its state"
   }
 }

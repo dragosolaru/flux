@@ -1362,6 +1362,13 @@
     "pair_key": "Appairer la clé virtuelle",
     "pair_key_hint": "À ouvrir depuis le téléphone avec l'app Tesla, à côté de la voiture. Tant que la clé n'est pas approuvée, chaque commande est refusée.",
     "refresh_state": "actualiser",
-    "updated": "Actualisé"
+    "updated": "Actualisé",
+    "climate_running": "clim en marche",
+    "sentry_on": "Sentry actif",
+    "door_open": "une porte ouverte",
+    "window_open": "une vitre ouverte",
+    "frunk_open": "coffre avant ouvert",
+    "trunk_open": "coffre ouvert",
+    "car_state_unknown": "La voiture n'a pas signalé son état"
   }
 }

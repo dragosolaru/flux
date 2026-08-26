@@ -29,6 +29,7 @@ import {
   StepperRow,
   TimeRow,
 } from "@/components/v2/instrument";
+import { CarDiagram } from "@/components/v2/car-diagram";
 import { NavBar } from "@/components/v2/nav";
 import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { ConfirmCommandDialog, SENSITIVE_COMMANDS } from "@/components/vehicle/ConfirmCommandDialog";
@@ -275,6 +276,13 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
         switcher={<VehicleSwitch />}
         title={t("title")}
       />
+
+      {/* What is open and what is running, at a glance. Every value it shows is
+          also a row below — except the per-corner door and window state, which
+          arrives from the car and had nowhere to go. */}
+      <div className="mt-3">
+        <CarDiagram state={state} />
+      </div>
 
       {/* When these values are from. One tap re-reads — a deliberate act, so it
           is allowed to contact the car; nothing here happens on a timer. */}

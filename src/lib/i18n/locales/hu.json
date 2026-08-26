@@ -1362,6 +1362,13 @@
     "pair_key": "Virtuális kulcs párosítása",
     "pair_key_hint": "Nyisd meg a Tesla appot futtató telefonról, az autó mellett állva. Amíg a kulcs nincs jóváhagyva, minden parancs elutasításra kerül.",
     "refresh_state": "frissítés",
-    "updated": "Frissítve"
+    "updated": "Frissítve",
+    "climate_running": "klíma megy",
+    "sentry_on": "Sentry bekapcsolva",
+    "door_open": "egy ajtó nyitva",
+    "window_open": "egy ablak nyitva",
+    "frunk_open": "első csomagtartó nyitva",
+    "trunk_open": "csomagtartó nyitva",
+    "car_state_unknown": "Az autó nem jelentette az állapotát"
   }
 }

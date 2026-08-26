@@ -419,3 +419,36 @@ input[type="range"].soc-slider::-moz-range-track {
 @media (prefers-reduced-motion: reduce) {
   .v2-sweep, .v2-rise { animation: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   The car diagram. Three animations, each carrying a fact:
+
+   · v2-draw    — the outline draws itself once on arrival, like the arc sweep.
+                  Decoration, so reduced motion removes it entirely.
+   · v2-pulse   — power is flowing, or sentry is watching. A live process, so
+                  the movement IS the information and it stays under reduced
+                  motion as a static highlight rather than disappearing.
+   · v2-breathe — the cabin is being conditioned. Same reasoning as the pulse.
+
+   Door swings and window gaps are inline transitions rather than keyframes:
+   they are state changes, not loops, and a state change must survive reduced
+   motion — arriving instantly instead of gliding.
+   --------------------------------------------------------------------------- */
+@keyframes v2-car-draw { from { stroke-dashoffset: 1200; } }
+@keyframes v2-pulse    { 50% { opacity: 0.35; } }
+@keyframes v2-breathe  { 50% { opacity: 0.05; } }
+
+.v2-car .v2-draw {
+  stroke-dasharray: 1200;
+  animation: v2-car-draw 1.2s cubic-bezier(.22, 1, .36, 1) both;
+}
+.v2-car .v2-pulse   { animation: v2-pulse 2s ease-in-out infinite; }
+.v2-car .v2-breathe { animation: v2-breathe 3.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The draw-in is polish and goes. The two loops carry a fact, so they stop
+     moving but keep the state they were announcing. */
+  .v2-car .v2-draw { animation: none; stroke-dasharray: none; }
+  .v2-car .v2-pulse, .v2-car .v2-breathe { animation: none; }
+  .v2-car * { transition: none !important; }
+}
