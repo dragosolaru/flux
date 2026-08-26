@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
+import { vehicleQueryPrefix } from "@/hooks/useVehicle";
 
 interface CommandInput {
   vehicleId: string;
@@ -19,6 +20,15 @@ interface CommandResult {
   result?: string;
   code?: string;
 }
+
+/**
+ * How long the car is given to apply a command before we read it back.
+ *
+ * Four seconds is what a lock/unlock takes to show up in vehicle_data in
+ * practice. Too short and the optimistic value is undone by a stale read; too
+ * long and a failed command sits looking successful.
+ */
+const RECONCILE_DELAY_MS = 4000;
 
 const MAPPED_ERROR_KEYS = [
   "error_rate_limit",
@@ -41,8 +51,8 @@ function commandErrorKey(status: number, data: CommandResult): string {
 }
 
 interface MutationContext {
-  previous: VehicleState | undefined;
-  key: readonly unknown[];
+  /** Every matching entry and its value, so a rollback restores all of them. */
+  previous: [readonly unknown[], VehicleState | undefined][];
 }
 
 // Map a command to the vehicle-state fields it changes so the UI reflects the
@@ -98,15 +108,20 @@ export function useVehicleCommand() {
       return data;
     },
     onMutate: async ({ vehicleId, command, args }) => {
-      const key = ["vehicle", vehicleId] as const;
+      // The PREFIX, not one exact key. A vehicle's state is cached under two
+      // keys — the live read and the cached-only one — and writing to a single
+      // hardcoded key patched an entry nothing was observing.
+      const prefix = vehicleQueryPrefix(vehicleId);
       // Stop in-flight refetches so they don't clobber the optimistic value.
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<VehicleState>(key);
+      await queryClient.cancelQueries({ queryKey: prefix });
+      const previous = queryClient.getQueriesData<VehicleState>({ queryKey: prefix });
       const patch = optimisticPatch(command, args);
-      if (previous && patch) {
-        queryClient.setQueryData<VehicleState>(key, { ...previous, ...patch });
+      if (patch) {
+        queryClient.setQueriesData<VehicleState>({ queryKey: prefix }, (current) =>
+          current ? { ...current, ...patch } : current,
+        );
       }
-      return { previous, key };
+      return { previous };
     },
     onSuccess: (data, _variables, context) => {
       if (data.success) {
@@ -114,24 +129,47 @@ export function useVehicleCommand() {
       } else {
         // Server rejected the command (HTTP 200, success:false) — undo the
         // optimistic change and surface the car-provided reason if any.
-        if (context?.previous) {
-          queryClient.setQueryData(context.key, context.previous);
-        }
+        rollback(queryClient, context);
         toast.error(data.message ?? data.result ?? t("error"));
       }
     },
     onError: (err, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(context.key, context.previous);
-      }
+      rollback(queryClient, context);
       const key = (MAPPED_ERROR_KEYS as readonly string[]).includes(err.message)
         ? (err.message as (typeof MAPPED_ERROR_KEYS)[number])
         : "error";
       toast.error(t(key));
     },
     onSettled: (_data, _err, variables) => {
-      // Reconcile with the real server state regardless of outcome.
-      queryClient.invalidateQueries({ queryKey: ["vehicle", variables.vehicleId] });
+      // Reconcile with the real server state regardless of outcome — but not
+      // instantly. Tesla acknowledges a command before the car has applied it,
+      // so a read fired the moment the request returns comes back with the OLD
+      // value and overwrites the optimistic one: you unlock the car and the row
+      // flips to UNLOCKED and then back to LOCKED.
+      //
+      // One delayed read rather than an immediate one plus a later correction:
+      // two reads is two calls to the car, and this is the hook every command
+      // goes through.
+      const patch = optimisticPatch(variables.command, variables.args);
+      const settle = () =>
+        queryClient.invalidateQueries({ queryKey: vehicleQueryPrefix(variables.vehicleId) });
+      if (patch) setTimeout(settle, RECONCILE_DELAY_MS);
+      else settle();
+      // And the vehicle LIST, which carries virtual_key_paired. The server
+      // clears or sets that flag on the command's outcome, so without this the
+      // pairing prompt stayed on screen after a successful pairing — the list
+      // is cached for a minute and nothing was asking it to look again.
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
     },
   });
+}
+
+/** Puts back every entry the optimistic patch touched. */
+function rollback(
+  queryClient: ReturnType<typeof useQueryClient>,
+  context: MutationContext | undefined,
+): void {
+  for (const [key, value] of context?.previous ?? []) {
+    if (value) queryClient.setQueryData(key, value);
+  }
 }

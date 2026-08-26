@@ -23,6 +23,19 @@ const IDLE_PAUSE_MS = 10 * 60 * 1000;
 
 const ACTIVITY_EVENTS = ["pointerdown", "keydown", "visibilitychange"] as const;
 
+/**
+ * Every cache entry for one vehicle's state, whatever mode it was read in.
+ *
+ * There are two — a live read and a cached-only one — and anything that writes
+ * to the cache has to reach both. Exported because `useVehicleCommand` wrote to
+ * `["vehicle", id]` while this hook read `["vehicle", id, "live"]`, so every
+ * optimistic update landed in an entry no screen was watching: a lock command
+ * left the row saying LOCKED until something else happened to refetch.
+ */
+export function vehicleQueryPrefix(vehicleId: string): readonly [string, string] {
+  return ["vehicle", vehicleId] as const;
+}
+
 /** How often a screen that is allowed to poll asks the car again. */
 export const POLL_INTERVAL_MS = 30_000;
 
@@ -165,7 +178,7 @@ export function useVehicle(
     // The key carries it: a cached-only answer and a live one are different
     // values, and sharing a key would let a stale "asleep" reading masquerade
     // as current the moment updates are switched back on.
-    queryKey: ["vehicle", vehicleId, cachedOnly ? "cached" : "live"],
+    queryKey: [...vehicleQueryPrefix(vehicleId), cachedOnly ? "cached" : "live"],
     queryFn: () => vehiclesApi.getState(vehicleId, cachedOnly),
     refetchInterval: (q) =>
       pollInterval({

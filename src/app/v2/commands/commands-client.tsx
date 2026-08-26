@@ -250,7 +250,6 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
       <ScreenHeader
         switcher={<VehicleSwitch />}
         title={t("title")}
-        meta={vehicle ? (vehicle.nickname ?? vehicle.displayName) : undefined}
       />
 
       {/* No skeleton rectangles: a row whose state is unknown is disabled and

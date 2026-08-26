@@ -18,7 +18,7 @@ import {
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
 import { VehicleSwitch } from "@/components/v2/vehicle-switch";
-import { useVehicle } from "@/hooks/useVehicle";
+import { useVehicle, vehicleQueryPrefix } from "@/hooks/useVehicle";
 import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
@@ -103,7 +103,7 @@ export function DashboardV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | n
   const wake = useMutation({
     mutationFn: () => vehiclesApi.wake(vehicleId),
     onSuccess: (fresh) => {
-      queryClient.setQueryData(["vehicle", vehicleId, "live"], fresh);
+      queryClient.setQueryData([...vehicleQueryPrefix(vehicleId), "live"], fresh);
       toast.success(t("woke_up"));
     },
     onError: () => toast.error(t("wake_failed")),
