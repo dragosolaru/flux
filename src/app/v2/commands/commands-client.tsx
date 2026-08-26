@@ -71,9 +71,33 @@ const MAPPED_ERRORS = [
  * characters, and a button whose text is cut is a button you have to guess at.
  * One column, full width, means the longest German string still fits.
  */
+/**
+ * How old the reading is, in the coarsest unit that is honest.
+ *
+ * This screen does not poll — deliberately, since polling wakes the car. So a
+ * car unlocked with the physical key, or from Tesla's own app, leaves every
+ * toggle here showing what was true when the screen was opened, with nothing
+ * saying so. A row that quietly reports the past is worse than one that admits
+ * it, because it looks exactly like one that is current.
+ */
+function ageLabel(
+  iso: string | null | undefined,
+  t: (key: string, values?: Record<string, number>) => string,
+): string | null {
+  if (!iso) return null;
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (!Number.isFinite(minutes) || minutes < 0) return null;
+  if (minutes < 2) return t("time_now");
+  if (minutes < 60) return t("time_min_ago", { m: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("time_hour_ago", { h: hours });
+  return t("time_day_ago", { d: Math.floor(hours / 24) });
+}
+
 export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | null }) {
   const t = useTranslations("commands");
   const tv = useTranslations("v2");
+  const td = useTranslations("dashboard");
 
   const { selectedVehicleId } = useVehicleContext();
   const { data: vehicles } = useVehicles();
@@ -86,7 +110,7 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
   // useVehicleCommand invalidates ["vehicle", id] on settle, so the screen
   // refreshes after a command without an interval that keeps the car awake for
   // as long as someone has the screen open.
-  const { data: state } = useVehicle(vehicleId, isLive, false);
+  const { data: state, isFetching, refetch } = useVehicle(vehicleId, isLive, false);
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, isError, error } = useVehicleCommand();
 
@@ -251,6 +275,23 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
         switcher={<VehicleSwitch />}
         title={t("title")}
       />
+
+      {/* When these values are from. One tap re-reads — a deliberate act, so it
+          is allowed to contact the car; nothing here happens on a timer. */}
+      {state && (
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+          className="mt-1 flex min-h-11 items-center gap-2 transition-opacity duration-[80ms] active:opacity-60 disabled:opacity-40"
+        >
+          <Mono className="text-muted-foreground">
+            {`${tv("updated")} ${ageLabel(state.recordedAt, td) ?? ""} · ${
+              isFetching ? tv("loading") : tv("refresh_state")
+            }`}
+          </Mono>
+        </button>
+      )}
 
       {/* No skeleton rectangles: a row whose state is unknown is disabled and
           says so, which is the truth and also stops a tap that would be sent
