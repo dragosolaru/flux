@@ -1,6 +1,6 @@
 "use client";
 
-import { Fan, Lock, MapPin, Moon, RadioTower, Sunrise, Unlock } from "lucide-react";
+import { Fan, Lock, MapPin, RadioTower, Sunrise, Unlock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -71,15 +71,27 @@ export function DashboardV2Client() {
   const sleeping = useSleepMode();
   const queryClient = useQueryClient();
 
-  // The car reports it is not online, so what is on screen is the last reading
-  // rather than the current one.
+  // Three different things, and the screen used to conflate the first two.
+  //
+  //   sleeping  — WE are not contacting the car. Deliberate, switched on by the
+  //               driver. Values on screen are the last ones we stored.
+  //   asleep    — we did contact it and it is asleep. Same staleness, different
+  //               cause, and only this one can be answered by waking it.
+  //   neither   — live.
+  //
+  // Saying "contacting the car…" while sleeping was the exact opposite of the
+  // truth: the whole point of the switch is that we are not.
   const asleep = state != null && state.isOnline === false;
-  const lastReadingAge = asleep ? ageLabel(state.lastSeenAt ?? state.recordedAt, td) : null;
+  const stale = sleeping || asleep;
+  const lastReadingAge = stale && state ? ageLabel(state.lastSeenAt ?? state.recordedAt, td) : null;
+  // A cached read of a car we have never stored fails with NO_CACHED_STATE.
+  // That is not an error, it is "nothing to show yet, and we are not asking".
+  const nothingStored = sleeping && isError;
 
   const wake = useMutation({
     mutationFn: () => vehiclesApi.wake(vehicleId),
     onSuccess: (fresh) => {
-      queryClient.setQueryData(["vehicle", vehicleId], fresh);
+      queryClient.setQueryData(["vehicle", vehicleId, "live"], fresh);
       toast.success(t("woke_up"));
     },
     onError: () => toast.error(t("wake_failed")),
@@ -100,17 +112,22 @@ export function DashboardV2Client() {
     state?.interiorTempC != null
       ? { key: "in", label: t("cabin"), value: `${state.interiorTempC.toFixed(0)}°` }
       : null,
-    {
-      key: "status",
-      label: t("status"),
-      value: charging
-        ? t("motion_charging")
-        : state?.motionState === "driving"
-          ? t("motion_driving")
-          : state?.motionState === "plugged-idle"
-            ? t("motion_plugged")
-            : t("motion_parked"),
-    },
+    // Only when the car actually told us. This fell through to "Parcată" for a
+    // null state, so a screen with no data at all still asserted the car was
+    // parked — a fabricated fact, printed in the same type as the real ones.
+    state != null
+      ? {
+          key: "status",
+          label: t("status"),
+          value: charging
+            ? t("motion_charging")
+            : state.motionState === "driving"
+              ? t("motion_driving")
+              : state.motionState === "plugged-idle"
+                ? t("motion_plugged")
+                : t("motion_parked"),
+        }
+      : null,
   ].filter((v) => v !== null);
 
   return (
@@ -131,16 +148,20 @@ export function DashboardV2Client() {
         metaTone={!isLive ? "amber" : sleeping || asleep ? "muted" : polling.active ? "accent" : "muted"}
       />
 
-      <div className={`mt-6 ${asleep ? "opacity-70" : ""}`}>
+      <div className={`mt-6 ${stale ? "opacity-70" : ""}`}>
         <Arc
           value={soc ?? 0}
           limit={state?.chargeLimit}
-          color={arcColor(soc ?? 0, charging, asleep)}
+          color={arcColor(soc ?? 0, charging, stale)}
           animate={soc != null}
         >
           {soc == null ? (
             <Mono className="text-muted-foreground">
-              {isError ? t("no_answer") : td("contacting_car")}
+              {sleeping
+                ? t("not_asking")
+                : isError
+                  ? t("no_answer")
+                  : td("contacting_car")}
             </Mono>
           ) : (
             <HeroValue
@@ -158,7 +179,14 @@ export function DashboardV2Client() {
             </Mono>
           </div>
         )}
-        {asleep && lastReadingAge && (
+        {nothingStored && (
+          // We are not asking, and we have never stored a reading for this car.
+          // Saying so beats an empty circle that looks like a failure.
+          <div className="mt-1 text-center">
+            <Mono className="text-muted-foreground">{t("nothing_stored")}</Mono>
+          </div>
+        )}
+        {stale && lastReadingAge && (
           // The one line that turns a stale screen into an honest one. Without
           // it every value above reads as current, and none of them is.
           <div className="mt-1 text-center">
@@ -175,7 +203,7 @@ export function DashboardV2Client() {
 
       <Spacer />
 
-      {isError ? (
+      {isError && !sleeping ? (
         // A failure is a row like any other. It says what happened and what the
         // one useful action is — no card, no icon the size of a fist.
         <Rows>
@@ -190,19 +218,32 @@ export function DashboardV2Client() {
         </Rows>
       ) : (
         <Rows>
-          {isLive && asleep && !sleeping && (
+          {isLive && stale && (
             // First, not last. It is the only action that changes anything
             // about the rows under it, and putting it after them asks the
             // driver to read four stale values before being told they are
             // stale.
+            //
+            // One row, two meanings, because from the driver's side it is one
+            // question: start looking at the car again. When WE stopped asking,
+            // that means switching updates back on — no command is sent and
+            // nothing wakes. When the CAR is asleep, it means wake_up.
             <Row
               icon={<Sunrise strokeWidth={1.5} className="text-chart-3" />}
-              label={t("wake_car")}
-              value={t("asleep")}
+              label={sleeping ? t("resume_updates") : t("wake_car")}
+              value={sleeping ? t("updates_off") : t("asleep")}
               valueTone="amber"
               pending={wake.isPending}
               pendingLabel={t("waking")}
-              onClick={() => wake.mutate()}
+              onClick={() => {
+                if (sleeping) {
+                  setSleepMode(false);
+                  polling.resume();
+                  void refetch();
+                  return;
+                }
+                wake.mutate();
+              }}
             />
           )}
           <Row
@@ -246,27 +287,22 @@ export function DashboardV2Client() {
             reason={t("no_position")}
             last={!isLive}
           />
-          {isLive && (
-            // The app-wide switch, on the screen where the car is. Persisted:
-            // turning it off here keeps it off on every other screen, in every
-            // tab, and after a reload.
+          {isLive && !sleeping && (
+            // The app-wide switch. Persisted: turning it off here keeps it off
+            // on every other screen, in every tab, and after a reload.
+            //
+            // The label stays put and the VALUE carries the state, like every
+            // other row in the app. Swapping the label too produced "Lăsată în
+            // pace — OPRITĂ", which reads as the leaving-alone being off.
             <Row
-              icon={sleeping ? <Moon strokeWidth={1.5} /> : <RadioTower strokeWidth={1.5} />}
-              label={sleeping ? t("undisturbed") : t("live_updates")}
-              value={sleeping ? t("state_off") : polling.active ? t("state_on") : t("state_off")}
-              valueTone={sleeping ? "muted" : polling.active ? "green" : "muted"}
+              icon={<RadioTower strokeWidth={1.5} />}
+              label={t("live_updates")}
+              value={polling.active ? t("state_on") : t("state_off")}
+              valueTone={polling.active ? "green" : "muted"}
               disabled={isLoading}
-              onClick={() => {
-                if (sleeping) {
-                  setSleepMode(false);
-                  polling.resume();
-                  void refetch();
-                } else {
-                  // The switch, not the per-hook pause: that one died on the
-                  // next navigation, so pressing it promised more than it did.
-                  setSleepMode(true);
-                }
-              }}
+              // The switch, not the per-hook pause: that one died on the next
+              // navigation, so pressing it promised more than it did.
+              onClick={() => setSleepMode(true)}
               last
             />
           )}

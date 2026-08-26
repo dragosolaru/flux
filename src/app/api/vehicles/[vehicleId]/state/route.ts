@@ -18,10 +18,21 @@ import { errorContext, recordDebugLog } from "@/lib/debug-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BrandKey } from "@/lib/brands/types";
 
+/**
+ * @query cached=1  answer from what we already stored and never contact the
+ *   car — not even to ask whether it is awake.
+ *
+ *   This is what "let it sleep" means. It used to be enforced in the client by
+ *   refusing to fetch at all, which stopped us reading our OWN database too:
+ *   the screen then had no values, so it printed "contacting the car" while
+ *   deliberately contacting nothing. Leaving the car alone and having nothing
+ *   to show are two different things, and only one of them is desirable.
+ */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ vehicleId: string }> },
 ) {
+  const cachedOnly = new URL(req.url).searchParams.get("cached") === "1";
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -59,6 +70,20 @@ export async function GET(
 
   // Live path: brand is in LIVE_INTEGRATIONS and vehicle is marked live
   if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
+    if (cachedOnly) {
+      // Not a fetch that happens to hit a cache — a promise not to reach for
+      // the car. Answered from vehicle_snapshots or not at all.
+      const lastKnown = await loadLastKnown(supabase, {
+        id: vehicle.id,
+        brand: vehicle.brand,
+        display_name: vehicle.display_name,
+      });
+      if (lastKnown) return NextResponse.json(lastKnown);
+      return NextResponse.json(
+        { message: "No stored reading", code: "NO_CACHED_STATE" },
+        { status: 503 },
+      );
+    }
     if (vehicle.brand === "tesla" && vehicle.tesla_vehicle_id) {
       try {
         // allowWake is NOT passed: a background read must never pull a parked

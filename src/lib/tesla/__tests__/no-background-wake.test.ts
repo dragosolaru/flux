@@ -45,6 +45,18 @@ describe("waking the car is opt-in", () => {
     expect(wake).toContain("allowWake: true");
   });
 
+  it("cached=1 answers from storage and never reaches for the car", () => {
+    const route = read("app/api/vehicles/[vehicleId]/state/route.ts");
+    // The branch must return BEFORE the live fetch, or "let it sleep" would
+    // still contact the car — which is the entire promise the switch makes.
+    const cachedBranch = route.indexOf("if (cachedOnly)");
+    const liveFetch = route.indexOf("fetchVehicleData(");
+    expect(cachedBranch).toBeGreaterThan(-1);
+    expect(liveFetch).toBeGreaterThan(-1);
+    expect(cachedBranch).toBeLessThan(liveFetch);
+    expect(route).toContain("loadLastKnown");
+  });
+
   it("the state route answers an asleep car from the last known reading", () => {
     const route = read("app/api/vehicles/[vehicleId]/state/route.ts");
     expect(route).toContain("TeslaAsleepError");

@@ -1354,6 +1354,10 @@
     "locating": "Locating…",
     "show_on_map": "Show on the map",
     "route_here": "Plan a route here",
-    "car_position": "The car"
+    "car_position": "The car",
+    "not_asking": "Not asking the car",
+    "nothing_stored": "No reading stored yet",
+    "resume_updates": "Look at the car again",
+    "updates_off": "Updates off"
   }
 }

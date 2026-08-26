@@ -53,6 +53,8 @@ export function pollInterval(input: {
 }
 
 export interface VehiclePolling {
+  /** True while the app is deliberately not contacting the car. */
+  sleeping: boolean;
   /** False once polling has stopped, whether by idling out or by hand. */
   active: boolean;
   /** True when it stopped on its own rather than being switched off. */
@@ -154,9 +156,17 @@ export function useVehicle(
     };
   }, [live, sleepMode, active, pausedByIdle, armIdleTimer, resume]);
 
+  // Sleep mode does not stop the screen from knowing things — it stops us from
+  // reaching for the CAR. The request still goes to our own server, which
+  // answers from the last stored reading and never calls Tesla.
+  const cachedOnly = live && sleepMode;
+
   const query = useQuery({
-    queryKey: ["vehicle", vehicleId],
-    queryFn: () => vehiclesApi.getState(vehicleId),
+    // The key carries it: a cached-only answer and a live one are different
+    // values, and sharing a key would let a stale "asleep" reading masquerade
+    // as current the moment updates are switched back on.
+    queryKey: ["vehicle", vehicleId, cachedOnly ? "cached" : "live"],
+    queryFn: () => vehiclesApi.getState(vehicleId, cachedOnly),
     refetchInterval: (q) =>
       pollInterval({
         poll: (typeof poll === "function" ? poll(q.state.data) : poll) && !sleepMode,
@@ -165,13 +175,14 @@ export function useVehicle(
         status: q.state.status,
       }),
     staleTime: 20_000,
-    // Sleep mode stops the fetch itself, not just the interval. Anything less
-    // would leave "let it sleep" meaning "poll less often", which is not what
-    // the words say.
-    enabled: !!vehicleId && !(live && sleepMode),
+    // Never retried on failure while asleep: the only failure a cached read has
+    // is "nothing stored yet", and asking again cannot change that.
+    retry: cachedOnly ? false : undefined,
+    enabled: !!vehicleId,
   });
 
   const polling: VehiclePolling = {
+    sleeping: cachedOnly,
     active: live ? active && !sleepMode : true,
     pausedByIdle,
     pause,

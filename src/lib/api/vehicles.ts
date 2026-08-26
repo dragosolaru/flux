@@ -28,8 +28,11 @@ export function list<T = VehicleListItem>(includeInactive = false): Promise<T[]>
   return apiFetch<T[]>(includeInactive ? `${BASE}?include_inactive=true` : BASE);
 }
 
-export function getState(vehicleId: string): Promise<VehicleState> {
-  return apiFetch<VehicleState>(`${BASE}/${vehicleId}/state`);
+export function getState(vehicleId: string, cachedOnly = false): Promise<VehicleState> {
+  // cached=1 is a promise not to reach for the car — see the route.
+  return apiFetch<VehicleState>(
+    `${BASE}/${vehicleId}/state${cachedOnly ? "?cached=1" : ""}`,
+  );
 }
 
 export function getStats(

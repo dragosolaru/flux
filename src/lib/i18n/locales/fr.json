@@ -1354,6 +1354,10 @@
     "locating": "Localisation…",
     "show_on_map": "Voir sur la carte",
     "route_here": "Planifier un trajet",
-    "car_position": "La voiture"
+    "car_position": "La voiture",
+    "not_asking": "On ne sollicite pas la voiture",
+    "nothing_stored": "Aucun relevé enregistré",
+    "resume_updates": "Regarder à nouveau",
+    "updates_off": "Mises à jour coupées"
   }
 }

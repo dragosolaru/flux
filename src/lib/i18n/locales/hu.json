@@ -1354,6 +1354,10 @@
     "locating": "Helymeghatározás…",
     "show_on_map": "Mutasd a térképen",
     "route_here": "Útvonal ide",
-    "car_position": "Az autó"
+    "car_position": "Az autó",
+    "not_asking": "Nem kérdezzük az autót",
+    "nothing_stored": "Még nincs mentett mérés",
+    "resume_updates": "Nézzük meg újra",
+    "updates_off": "Frissítések kikapcsolva"
   }
 }

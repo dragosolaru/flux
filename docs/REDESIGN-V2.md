@@ -202,6 +202,31 @@ Three decisions worth stating:
 
 ---
 
+## "Let it sleep" reads from us, not from the car
+
+The switch used to be enforced by refusing to fetch at all. That stopped us
+reading our **own** database as well, so the screen had no values and printed
+*"contacting the car…"* while deliberately contacting nothing — the exact
+opposite of what the switch promises.
+
+Leaving the car alone and having nothing to show are two different things.
+`GET /state?cached=1` is a promise not to reach for the car: it answers from
+`vehicle_snapshots` or returns `NO_CACHED_STATE`, and never calls Tesla. Sleep
+mode fetches with that flag instead of not fetching, so the screen shows real
+values with their age while no request ever leaves for the car. Pinned by
+`no-background-wake.test.ts`, which asserts the cached branch returns *before*
+the live fetch.
+
+Three states are now told apart where two were conflated:
+
+| | who stopped | what is on screen | the one action |
+| --- | --- | --- | --- |
+| **Lăsată în pace** | we did, deliberately | last stored reading, greyed, with its age | switch updates back on — nothing is woken |
+| **Doarme** | the car did | last stored reading, greyed, with its age | wake it |
+| live | nobody | current values | — |
+
+---
+
 ## The asleep screen
 
 A parked Tesla is asleep most of the time, so this is the state the dashboard is
@@ -256,6 +281,9 @@ Fixed in the **real** app, not only in `/v2`.
 | 2 | every `/v2` screen | Every v2 screen called `useVehicle(id, isLive)` without the third argument, so opening Commands, the trip planner, find-my-car or the charger list started a 30-second poll against a parked car. A poll on a sleeping Tesla wakes it, and a car kept out of deep sleep loses roughly ten times more charge per idle day. The garage was worst: it passed `live: false`, which told the hook there was nothing to disturb and disabled the idle cut-off on exactly the linked cars that needed it. | Only the dashboard polls now. Charging polls **only while a session is running** — a charging car is awake anyway. Everything else reads the value once; `useVehicleCommand` already invalidates the query after a command, so the screens stay current without an interval. |
 | 3 | `/commands`, `/charging` (v1) | The same defect predated the redesign: both polled a live car every 30 s for ten minutes each time the screen was opened, just for being open. | Same rule applied. `/commands` passes `poll: false`, `/charging` polls only while charging. |
 | 4 | `/v2` (all) | The bottom nav was the last child of a flex column, so it only reached the bottom when the content above happened to fill the viewport. On settings, a one-car garage or an empty document list it floated in the middle of the page. | First attempt: `fixed` plus a reserved `--v2-nav-h`. See #6 — that fix was wrong. |
+| 15 | `/v2/dashboard` | With "let it sleep" on, the screen said **CONTACTĂM MAȘINA…** — while the whole point of the switch is that we are not. `enabled: false` had stopped the query reaching our own server, not just the car. | `?cached=1` reads the stored snapshot and never calls Tesla; the centre reads *NU ÎNTREBĂM MAȘINA* when there is nothing stored, and the last reading with its age when there is. |
+| 16 | `/v2/dashboard` | The status row fell through to **Parcată** when `state` was null, so a screen with no data at all asserted the car was parked — a fabricated fact printed in the same type as the real ones. | The row only exists when the car reported. |
+| 17 | `/v2/dashboard` | The sleep row read *"Lăsată în pace — OPRITĂ"*, which parses as the leaving-alone being off. | The label stays put and the value carries the state, like every other row. While sleeping it is replaced by one amber row: *Vezi din nou mașina*. |
 | 12 | Adding any second car | `canAddVehicle` counted **all** active vehicles against a limit of one, but `POST /api/vehicles` only ever creates simulators — so "add a demo car" was refused by a limit written for real cars, and the free tier could never have two of anything. The garage's own row said `FĂRĂ COST` beside it, which was true about Tesla's side and false about ours. | Simulators and linked cars are limited separately: 1 linked car, up to 3 simulators, on the free tier. A mock car uses no Tesla quota and exists so the app can be tried — including tried with two cars, which is the only way to find out whether the switcher works. Reactivation checks the limit for the kind of vehicle it actually is. The false label is deleted. |
 | 13 | `/v2/garage` | The failure above surfaced as "couldn't add the demo car". The server had sent a specific, actionable message and the toast discarded it — which is how a refusal became a mystery. | The server's message is shown when there is one. |
 | 14 | `/v2/chargers` | "No stations found" appeared a second after the screen opened, while the phone was still being asked where it was. Locating and empty were the same state. | Three states told apart — locating, loading, empty — and the loading one is skeleton rows rather than a sentence that gets replaced by rows and moves everything under it. |
