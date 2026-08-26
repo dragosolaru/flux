@@ -266,10 +266,22 @@ but stop moving). Door swings and window gaps are transitions, not loops: they
 are state changes, and a state change must survive reduced motion by arriving
 instantly rather than disappearing.
 
-**It was drawn against a rendered sheet of all eight states, not by reasoning
-about coordinates.** The first attempt was a capsule whose doors swung *into*
-the cabin — the rotation signs were reversed — and neither fault was visible
-from the source. Two iterations were thrown away before the third read as a car.
+**Every proportion comes from the real car, not from taste.** A Model 3 is
+4694 × 1849 mm — **2.54 : 1**. The first drawing was 3.05 : 1, twenty per cent
+too long, which is exactly why it read as a capsule and is exactly the kind of
+thing that is invisible from source. `MM` in the component holds the real
+millimetres and every coordinate is derived from them: axles at the true
+overhang and wheelbase, mirrors at 2089/1849 of the body width, glasshouse at
+58% — a real one is nowhere near the 90% the second attempt used, which reads as
+a lid rather than as glass.
+
+**It was drawn against a rendered sheet of all eight states.** Three attempts
+were thrown away. Every fault was one only a picture shows:
+
+- doors rotating **into** the cabin — the left/right angle signs were swapped
+- a glasshouse at 90% of body width, reading as a lid
+- `opacity` on the glass elements instead of `fill-opacity`, so the whole shape
+  vanished — outline included — whenever the climate was off
 
 ---
 
