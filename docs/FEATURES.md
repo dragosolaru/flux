@@ -953,22 +953,49 @@ front axle (0.175 of the length ≈ the real 841mm overhang) or the front wheels
 stand outside the bodywork.
 
 **`/v2/commands` is grouped the way the Tesla app is** — by the part of the car,
-with the setting next to the switch that uses it. Every row that has a state
-field is a toggle showing where it is now (`BLOCATĂ` / `DEBLOCATĂ`, `PORNIT` /
-`OPRIT`, `DESCHIS` / `ÎNCHIS`) and sending the command that changes it, so
-"open charge port" and "close charge port" are one row, not two. Charge limit,
-amperage and both schedules sit inside **Încărcare**; the cabin temperature
-sits inside **Climatizare**. There is no longer a "Settings" block at the
-bottom — it put the charge limit several scroll-lengths from the charging
-switch it governs.
+with the setting next to the switch that uses it. Charge limit, amperage and
+both schedules sit inside **Încărcare**; the cabin temperature sits inside
+**Climatizare**. There is no longer a "Settings" block at the bottom — it put
+the charge limit several scroll-lengths from the charging switch it governs.
 
-Two rows are deliberately **not** toggles, because the car has no off for them:
-`honk` and `flash` are momentary, and `remote_start` opens a two-minute window
-that Tesla exposes no command to cancel. Remote start still reports whether the
-window is currently open; tapping it opens another one and never offers to
-close it. And a row whose underlying field is `null` prints **nothing** on the
-right rather than a default — "BLOCATĂ" under an unknown reads exactly like a
-reading, with no way to tell them apart.
+**Anything with a state is a switch; the one thing without a state is a
+button.** That split is the industry rule rather than a house preference: a
+control for two mutually exclusive states is a switch whose label *names the
+option*, while a label describing *what will happen* belongs on a button, with
+the state shown separately ([NN/G](https://www.nngroup.com/articles/toggle-switch-guidelines/)).
+
+The screen previously used the button pattern throughout — an imperative label
+(`Deblochează`) with the current state beside it (`BLOCATĂ`) — and was reported
+as misleading twice, the second time *after* the labels had already been fixed
+once. The labels were not the fault. The fault is that one tap changed both
+halves at once: the row renamed itself **and** the value flipped, so there was
+no fixed point to read the change against, and the control you were reaching
+for was no longer called what it had been called a second earlier. Tesla's own
+app has the same problem in the same place — its window control reads "Close"
+when a window is open and "Vent" when they are shut, which owners regularly ask
+about.
+
+So: `Blocare uși`, `Mod Sentry`, `Încărcare`, `Port de încărcare`,
+`Climatizare`, `Dezgheț maxim`, `Aerisire geamuri` — stable nouns that never
+change, each with a switch carrying both the state and the action, plus the
+state in one word for the cases where "on" is not self-evident (a switch cannot
+say by itself that *on* means *locked*). The icon stopped swapping with the
+state too; it was a third moving part repeating what the switch already said.
+`remote_start` is the sole button, because Tesla exposes no command to cancel a
+remote start — it is a two-minute window that expires on its own.
+
+The switch has **three** positions. `null` — the car has this field and has not
+reported it — is centred, with a dashed track, and prints no state word. A
+switch resting at "off" would be a claim, and it would look exactly like a
+reading. ARIA has the same trap: `role="switch"` accepts only true/false, so an
+unknown announced through it is flattened to "not checked"; the unknown case
+renders as `role="checkbox"` with `aria-checked="mixed"`, the role that carries
+a third state. Pinned by `src/components/v2/__tests__/toggle-row.test.tsx`.
+
+Unlocking still asks for confirmation (`SENSITIVE_COMMANDS`), so that one switch
+moves only after the dialog is accepted — locking is instant. A switch resting
+at unknown sends the command that turns it **on**, which for the doors means
+*lock*: the safe direction, and the one that needs no confirmation.
 
 **Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
 removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and

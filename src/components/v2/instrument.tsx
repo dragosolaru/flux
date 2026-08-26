@@ -246,6 +246,121 @@ export function Row({
   );
 }
 
+/**
+ * A row whose control IS its state.
+ *
+ * The screen used the other legitimate pattern — an imperative label
+ * ("Deblochează") with the current state beside it ("BLOCATĂ") — and it was
+ * reported as misleading twice, the second time after the labels had already
+ * been fixed once. The labels were not the fault. The fault is that a tap
+ * changes BOTH halves at once: the row renames itself *and* the value flips, so
+ * there is no fixed point to read the change against, and the control you were
+ * reaching for is no longer called what it was called a second ago.
+ *
+ * A switch splits those jobs. The label is a noun and never changes — you can
+ * find it by memory — and the switch carries state and action together, so one
+ * thing moves per tap. This is the standard rule rather than a preference: a
+ * control for two mutually exclusive states is a switch whose label names the
+ * option, while a label that describes what will happen belongs on a button.
+ * Both are here, and the difference between them is now visible: everything on
+ * this screen with a state is a switch, and the one thing without a state
+ * (remote start, which Tesla gives no way to cancel) is the only button.
+ *
+ * `on === null` is a third position, centred and faint. The car has this field
+ * and has not reported it; a switch resting at "off" would be a claim, and it
+ * would look exactly like a reading.
+ */
+export function ToggleRow({
+  icon,
+  label,
+  on,
+  state,
+  pending,
+  pendingLabel,
+  disabled,
+  reason,
+  onToggle,
+  last,
+}: {
+  icon?: ReactNode;
+  label: string;
+  on: boolean | null;
+  /** The state in one word. Absent when the car has not reported it. */
+  state?: string;
+  pending?: boolean;
+  pendingLabel?: string;
+  disabled?: boolean;
+  reason?: string;
+  onToggle: () => void;
+  last?: boolean;
+}) {
+  const known = on != null;
+  return (
+    <button
+      type="button"
+      // role="switch" has only two values in ARIA — "mixed" is not among them —
+      // so an unreported state is announced as a tri-state checkbox instead of
+      // being flattened to "not checked", which would be the same lie the
+      // centred knob exists to avoid.
+      role={known ? "switch" : "checkbox"}
+      aria-checked={known ? on : "mixed"}
+      onClick={onToggle}
+      disabled={disabled}
+      className={[
+        "flex w-full items-center gap-3.5 border-t border-border text-foreground",
+        "transition-colors duration-[80ms]",
+        last ? "border-b" : "",
+        disabled ? "opacity-45" : "active:bg-white/5",
+      ].join(" ")}
+      style={{ minHeight: "var(--v2-row)" }}
+    >
+      {icon !== undefined && (
+        <span className="flex size-[19px] shrink-0 items-center justify-center [&>svg]:size-[19px]">
+          {icon}
+        </span>
+      )}
+      <span className="min-w-0 flex-1 truncate text-left text-base">{label}</span>
+      {pending ? (
+        <PendingCounter label={pendingLabel ?? "…"} />
+      ) : reason && disabled ? (
+        <Mono className="text-muted-foreground">{reason}</Mono>
+      ) : state ? (
+        <Mono className={on ? "text-primary" : "text-muted-foreground"}>{state}</Mono>
+      ) : null}
+      <Switch on={on} />
+    </button>
+  );
+}
+
+/**
+ * 34×20, hairline, no fill — the same surface treatment as everything else
+ * here, which is why it is a border and a dot rather than the filled capsule
+ * every UI kit ships.
+ */
+function Switch({ on }: { on: boolean | null }) {
+  const left = on == null ? 10 : on ? 17 : 3;
+  return (
+    <span
+      className="relative block h-5 w-[34px] shrink-0 rounded-full border transition-colors duration-200"
+      style={{
+        borderColor: on ? "var(--primary)" : "var(--v2-faint)",
+        // Dashed for "not reported". Position alone was doing this job and the
+        // gap between the centre and the off position is seven pixels — on a
+        // phone that is not a difference, it is a rounding error.
+        borderStyle: on == null ? "dashed" : "solid",
+      }}
+    >
+      <span
+        className="absolute top-1/2 block size-3.5 -translate-y-1/2 rounded-full transition-all duration-200"
+        style={{
+          left,
+          backgroundColor: on == null ? "var(--v2-faint)" : on ? "var(--primary)" : "var(--v2-soft)",
+        }}
+      />
+    </span>
+  );
+}
+
 /** A group of rows. Only exists to close the last hairline. */
 export function Rows({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={className}>{children}</div>;

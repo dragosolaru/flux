@@ -7,13 +7,9 @@ import {
   Lock,
   Play,
   Plug,
-  PlugZap,
   Shield,
   Snowflake,
-  Square,
-  Unlock,
   Wind,
-  X,
 } from "lucide-react";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -28,6 +24,7 @@ import {
   SectionLabel,
   StepperRow,
   TimeRow,
+  ToggleRow,
 } from "@/components/v2/instrument";
 import { CarDiagram } from "@/components/v2/car-diagram";
 import { NavBar } from "@/components/v2/nav";
@@ -44,15 +41,31 @@ import type { CommandName } from "@/types/history";
 
 type Cap = keyof ReturnType<typeof useBrandCapabilities>["commands"];
 
-interface Action {
+/**
+ * A switch, or a button — and the screen now shows which is which.
+ *
+ * Everything here that has a state is a switch with a noun label that never
+ * changes. Everything without one is a button with an imperative label. That
+ * split is the standard rule, and following it removes the thing that made
+ * this screen read as misleading twice: with an imperative label plus a state
+ * beside it, one tap renamed the row AND flipped the value, so there was no
+ * fixed point to read the change against.
+ *
+ * The icon stays put for the same reason. It used to swap with the state —
+ * Lock became Unlock, Plug became PlugZap — which is a third moving part
+ * saying what the switch already says.
+ */
+interface RowSpec {
+  kind: "toggle" | "action";
   key: string;
+  /** For a toggle: the command that flips it from where it is now. */
   cmd: CommandName;
   cap: Cap;
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
-  /** null when the car has not reported the underlying state. */
-  on: boolean | null;
-  /** What the right of the row reads. Absent for one-shot commands. */
+  /** Toggles only. null when the car has this field and has not reported it. */
+  on?: boolean | null;
+  /** The state in one word. Absent when unknown. */
   state?: string;
   args?: Record<string, unknown>;
 }
@@ -129,7 +142,7 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
   const caps = useBrandCapabilities(brand);
   const { mutate, isPending, variables, isError, error } = useVehicleCommand();
 
-  const [confirming, setConfirming] = useState<Action | null>(null);
+  const [confirming, setConfirming] = useState<RowSpec | null>(null);
   // Seeded from the car, then left alone: re-syncing on every poll would drag a
   // control out from under a thumb.
   const [limit, setLimit] = useState<number | null>(null);
@@ -149,7 +162,7 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
     mutate({ vehicleId, command: cmd, args });
   }
 
-  function request(action: Action) {
+  function request(action: RowSpec) {
     if (SENSITIVE_COMMANDS.has(action.cmd)) {
       setConfirming(action);
       return;
@@ -174,39 +187,45 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
   const reads = (value: boolean | null | undefined, yes: string, no: string) =>
     value == null ? undefined : value ? yes : no;
 
-  const groups: { title: string; actions: Action[]; controls?: Control[] }[] = [
+  const groups: { title: string; actions: RowSpec[]; controls?: Control[] }[] = [
     {
       title: t("group_security"),
       actions: [
         {
+          // A switch resting at "off" sends the command that turns it on, so
+          // an unknown state (centre) locks rather than unlocks: the safe
+          // direction, and the one that needs no confirmation.
+          kind: "toggle",
           key: "lock",
-          cmd: state?.isLocked === false ? "lock" : "unlock",
-          cap: state?.isLocked === false ? "lock" : "unlock",
-          icon: state?.isLocked === false ? Unlock : Lock,
-          label: state?.isLocked === false ? t("lock") : t("unlock"),
+          cmd: state?.isLocked === true ? "unlock" : "lock",
+          cap: state?.isLocked === true ? "unlock" : "lock",
+          icon: Lock,
+          label: t("name_doors"),
           on: state?.isLocked ?? null,
-          state: reads(state?.isLocked, tv("state_locked"), tv("state_unlocked")),
+          state: reads(state?.isLocked, t("doors_locked"), t("doors_unlocked")),
         },
         {
+          kind: "toggle",
           key: "sentry",
-          cmd: state?.isSentryMode ? "deactivate_sentry" : "activate_sentry",
-          cap: state?.isSentryMode ? "deactivateSentry" : "activateSentry",
+          cmd: state?.isSentryMode === true ? "deactivate_sentry" : "activate_sentry",
+          cap: state?.isSentryMode === true ? "deactivateSentry" : "activateSentry",
           icon: Shield,
-          label: state?.isSentryMode ? t("deactivate_sentry") : t("activate_sentry"),
+          label: t("name_sentry"),
           on: state?.isSentryMode ?? null,
-          state: reads(state?.isSentryMode, on, off),
+          state: reads(state?.isSentryMode, t("sentry_state_on"), t("sentry_state_off")),
         },
         {
-          // Not a toggle, however much it looks like one here: Tesla has no
+          // The one button on the screen, and the reason the screen needed a
+          // visible difference between a button and a switch: Tesla has no
           // command that cancels a remote start. It is a two-minute window
-          // that expires on its own, so the row reports whether it is open and
-          // tapping it opens another one — it never offers to close it.
+          // that expires on its own, so this reports whether one is open and
+          // tapping it opens another — it never offers to close one.
+          kind: "action",
           key: "remote_start",
           cmd: "remote_start",
           cap: "remoteStart",
           icon: Play,
           label: t("remote_start"),
-          on: remoteStarted,
           state: reads(remoteStarted, on, off),
         },
       ],
@@ -215,22 +234,24 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
       title: t("group_charging"),
       actions: [
         {
+          kind: "toggle",
           key: "charging",
           cmd: charging ? "stop_charging" : "start_charging",
           cap: charging ? "stopCharging" : "startCharging",
-          icon: charging ? Square : BatteryCharging,
-          label: charging ? t("stop_charging") : t("start_charging"),
+          icon: BatteryCharging,
+          label: t("name_charging"),
           on: charging,
-          state: charging ? on : off,
+          state: charging ? t("charging_state_on") : t("charging_state_off"),
         },
         {
+          kind: "toggle",
           key: "charge_port",
-          cmd: portOpen ? "close_charge_port" : "open_charge_port",
-          cap: portOpen ? "closeChargePort" : "openChargePort",
-          icon: portOpen ? PlugZap : Plug,
-          label: portOpen ? t("close_charge_port") : t("open_charge_port"),
+          cmd: portOpen === true ? "close_charge_port" : "open_charge_port",
+          cap: portOpen === true ? "closeChargePort" : "openChargePort",
+          icon: Plug,
+          label: t("name_charge_port"),
           on: portOpen,
-          state: reads(portOpen, tv("state_open"), tv("state_closed")),
+          state: reads(portOpen, t("port_state_open"), t("port_state_closed")),
         },
       ],
       controls: [
@@ -331,23 +352,29 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
       title: t("group_climate"),
       actions: [
         {
+          kind: "toggle",
           key: "climate",
-          cmd: state?.isClimateOn ? "climate_off" : "climate_on",
-          cap: state?.isClimateOn ? "climateOff" : "climateOn",
+          cmd: state?.isClimateOn === true ? "climate_off" : "climate_on",
+          cap: state?.isClimateOn === true ? "climateOff" : "climateOn",
           icon: Fan,
-          label: state?.isClimateOn ? t("climate_off") : t("climate_on"),
+          label: t("name_climate"),
           on: state?.isClimateOn ?? null,
-          state: reads(state?.isClimateOn, on, off),
+          state: reads(state?.isClimateOn, t("climate_state_on"), t("climate_state_off")),
         },
         {
+          kind: "toggle",
           key: "precondition",
           cmd: "precondition_max",
           cap: "preconditionMax",
           icon: Snowflake,
-          label: state?.isBatteryPreconditioning ? t("precondition_max_off") : t("precondition_max"),
+          label: t("name_precondition"),
           on: state?.isBatteryPreconditioning ?? null,
-          state: reads(state?.isBatteryPreconditioning, on, off),
-          args: { on: !state?.isBatteryPreconditioning },
+          state: reads(
+            state?.isBatteryPreconditioning,
+            t("precondition_state_on"),
+            t("precondition_state_off"),
+          ),
+          args: { on: state?.isBatteryPreconditioning !== true },
         },
       ],
       controls: [
@@ -376,13 +403,14 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
       title: t("group_windows"),
       actions: [
         {
+          kind: "toggle",
           key: "windows",
-          cmd: windowsOpen ? "close_windows" : "vent_windows",
-          cap: windowsOpen ? "closeWindows" : "ventWindows",
-          icon: windowsOpen ? X : Wind,
-          label: windowsOpen ? t("close_windows") : t("vent_windows"),
+          cmd: windowsOpen === true ? "close_windows" : "vent_windows",
+          cap: windowsOpen === true ? "closeWindows" : "ventWindows",
+          icon: Wind,
+          label: t("name_windows"),
           on: windowsOpen,
-          state: reads(windowsOpen, tv("state_open"), tv("state_closed")),
+          state: reads(windowsOpen, t("windows_state_open"), t("windows_state_closed")),
         },
       ],
     },
@@ -470,26 +498,35 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
             <div key={group.title} className="mt-6">
               <SectionLabel>{group.title}</SectionLabel>
               <Rows className="mt-2">
-                {available.map((action, i) => (
-                  <Row
-                    key={action.key}
-                    icon={
-                      <action.icon
-                        strokeWidth={1.5}
-                        className={action.on ? "text-primary" : undefined}
-                      />
-                    }
-                    label={action.label}
-                    value={action.state}
-                    valueTone={action.on ? "accent" : "muted"}
-                    pending={inFlight(action.cmd)}
-                    pendingLabel={sending}
-                    disabled={!state || isPending}
-                    reason={!state ? tv("no_answer") : undefined}
-                    onClick={() => request(action)}
-                    last={available.length + controls.length === i + 1}
-                  />
-                ))}
+                {available.map((row, i) => {
+                  const shared = {
+                    key: row.key,
+                    icon: (
+                      <row.icon strokeWidth={1.5} className={row.on ? "text-primary" : undefined} />
+                    ),
+                    label: row.label,
+                    pending: inFlight(row.cmd),
+                    pendingLabel: sending,
+                    disabled: !state || isPending,
+                    reason: !state ? tv("no_answer") : undefined,
+                    last: available.length + controls.length === i + 1,
+                  };
+                  return row.kind === "toggle" ? (
+                    <ToggleRow
+                      {...shared}
+                      on={row.on ?? null}
+                      state={row.state}
+                      onToggle={() => request(row)}
+                    />
+                  ) : (
+                    <Row
+                      {...shared}
+                      value={row.state}
+                      valueTone="muted"
+                      onClick={() => request(row)}
+                    />
+                  );
+                })}
                 {controls.map((control, i) => (
                   <div key={control.key}>
                     {control.render(available.length + i === total - 1)}
