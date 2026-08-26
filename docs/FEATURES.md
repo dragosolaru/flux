@@ -912,10 +912,13 @@ fetch the data. A poll on a sleeping Tesla wakes it, and a car kept out of deep
 sleep loses roughly ten times more charge per idle day — this is a battery bill,
 not a preference.
 
-**The nav is `fixed`,** not the last child of a flex column, and `Screen`
-reserves `--v2-nav-h` at the bottom so nothing lands underneath it. As a flex
-child it only reached the bottom of the screen when the content above happened
-to fill the viewport.
+**The nav is `sticky bottom-0` with `mt-auto`,** in flow, not `fixed`. As the
+plain last child of a flex column it only reached the bottom when the content
+above happened to fill the viewport; `fixed` fixed that and introduced a second
+bug, because the nav's height and the padding reserved for it were two numbers
+that had to agree, and giving the links a 44px target changed one of them — the
+nav then covered the last row. In flow there is only one number. Pinned by
+`e2e/v2-nav.spec.ts`, which measures rather than reasons.
 
 **The car diagram** (`src/components/v2/car-diagram.tsx`, on `/v2/commands`) is
 the system's second instrument. The arc's justification is "a number that IS a
@@ -925,7 +928,30 @@ were read and discarded because no row can say *which* window is down without
 becoming four rows. Lock, climate, charging and sentry are repeated from the
 rows below deliberately: rows are read one at a time to change something, the
 car is read at a glance to see whether you left something open. Anything the car
-has not reported is drawn fainter than "closed", never as closed.
+has not reported is drawn fainter than "closed", never as closed. The charge
+port is drawn at the rear left, where it is: amber and swung clear of the body
+when the flap is open, green and pulsing while power is flowing. The `viewBox`
+is wider than the car (`-14 0 228 375`) because a door swings about ten units
+past the body and an SVG clips at its viewBox — on the one state that most needs
+to read at a glance, "you left a door open", the line was cut off at the edge.
+
+**`/v2/commands` is grouped the way the Tesla app is** — by the part of the car,
+with the setting next to the switch that uses it. Every row that has a state
+field is a toggle showing where it is now (`BLOCATĂ` / `DEBLOCATĂ`, `PORNIT` /
+`OPRIT`, `DESCHIS` / `ÎNCHIS`) and sending the command that changes it, so
+"open charge port" and "close charge port" are one row, not two. Charge limit,
+amperage and both schedules sit inside **Încărcare**; the cabin temperature
+sits inside **Climatizare**. There is no longer a "Settings" block at the
+bottom — it put the charge limit several scroll-lengths from the charging
+switch it governs.
+
+Two rows are deliberately **not** toggles, because the car has no off for them:
+`honk` and `flash` are momentary, and `remote_start` opens a two-minute window
+that Tesla exposes no command to cancel. Remote start still reports whether the
+window is currently open; tapping it opens another one and never offers to
+close it. And a row whose underlying field is `null` prints **nothing** on the
+right rather than a default — "BLOCATĂ" under an unknown reads exactly like a
+reading, with no way to tell them apart.
 
 **Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
 removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and

@@ -15,7 +15,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import { useState, type ComponentType } from "react";
+import { useState, type ComponentType, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -55,6 +55,20 @@ interface Action {
   /** What the right of the row reads. Absent for one-shot commands. */
   state?: string;
   args?: Record<string, unknown>;
+}
+
+/**
+ * A setting, not a command: charge limit, amperage, temperature, a schedule.
+ *
+ * These used to live in one "Settings" block at the bottom, which put the
+ * charge limit four scroll-lengths away from the charging switch it governs.
+ * They belong with the thing they configure, so a group now holds both, in one
+ * unbroken run of hairlines — hence `render(last)` rather than a plain node.
+ */
+interface Control {
+  key: string;
+  cap: Cap;
+  render: (last: boolean) => ReactNode;
 }
 
 const MAPPED_ERRORS = [
@@ -148,10 +162,19 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
 
   const charging = state?.chargingState === "charging";
   const windowsOpen = state?.windowsOpen ? Object.values(state.windowsOpen).some(Boolean) : null;
+  const portOpen = state?.isChargePortOpen ?? null;
+  const remoteStarted = state?.isRemoteStartActive ?? null;
   const on = tv("state_on");
   const off = tv("state_off");
 
-  const groups: { title: string; actions: Action[] }[] = [
+  // A row whose state the car has not reported says nothing on the right.
+  // Rendering "BLOCATĂ" for a null reads exactly like a reading, and there is
+  // no way to tell it from one — which is how a locked-looking row ended up on
+  // a car that had never told us either way.
+  const reads = (value: boolean | null | undefined, yes: string, no: string) =>
+    value == null ? undefined : value ? yes : no;
+
+  const groups: { title: string; actions: Action[]; controls?: Control[] }[] = [
     {
       title: t("group_security"),
       actions: [
@@ -162,7 +185,7 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           icon: state?.isLocked === false ? Unlock : Lock,
           label: state?.isLocked === false ? t("lock") : t("unlock"),
           on: state?.isLocked ?? null,
-          state: state?.isLocked === false ? tv("state_unlocked") : tv("state_locked"),
+          state: reads(state?.isLocked, tv("state_locked"), tv("state_unlocked")),
         },
         {
           key: "sentry",
@@ -171,15 +194,20 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           icon: Shield,
           label: state?.isSentryMode ? t("deactivate_sentry") : t("activate_sentry"),
           on: state?.isSentryMode ?? null,
-          state: state?.isSentryMode ? on : off,
+          state: reads(state?.isSentryMode, on, off),
         },
         {
+          // Not a toggle, however much it looks like one here: Tesla has no
+          // command that cancels a remote start. It is a two-minute window
+          // that expires on its own, so the row reports whether it is open and
+          // tapping it opens another one — it never offers to close it.
           key: "remote_start",
           cmd: "remote_start",
           cap: "remoteStart",
           icon: Play,
           label: t("remote_start"),
-          on: null,
+          on: remoteStarted,
+          state: reads(remoteStarted, on, off),
         },
       ],
     },
@@ -196,20 +224,106 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           state: charging ? on : off,
         },
         {
-          key: "port_open",
-          cmd: "open_charge_port",
-          cap: "openChargePort",
-          icon: PlugZap,
-          label: t("open_charge_port"),
-          on: null,
+          key: "charge_port",
+          cmd: portOpen ? "close_charge_port" : "open_charge_port",
+          cap: portOpen ? "closeChargePort" : "openChargePort",
+          icon: portOpen ? PlugZap : Plug,
+          label: portOpen ? t("close_charge_port") : t("open_charge_port"),
+          on: portOpen,
+          state: reads(portOpen, tv("state_open"), tv("state_closed")),
+        },
+      ],
+      controls: [
+        {
+          key: "charge_limit",
+          cap: "setChargeLimit",
+          render: (last) => (
+            <ChipRow
+              label={t("set_charge_limit")}
+              unit="%"
+              values={[50, 60, 70, 80, 90, 100]}
+              current={limit ?? state?.chargeLimit ?? null}
+              busy={inFlight("set_charge_limit")}
+              busyLabel={sending}
+              onPick={(v) => {
+                setLimit(v);
+                send("set_charge_limit", { percent: v });
+              }}
+              last={last}
+            />
+          ),
         },
         {
-          key: "port_close",
-          cmd: "close_charge_port",
-          cap: "closeChargePort",
-          icon: Plug,
-          label: t("close_charge_port"),
-          on: null,
+          key: "charge_amps",
+          cap: "setChargeAmps",
+          render: (last) => (
+            <ChipRow
+              label={t("set_charge_amps")}
+              unit="A"
+              // Tesla's own ladder. A slider offered 48 stops for a setting
+              // with eight real answers.
+              values={[5, 8, 12, 16, 24, 32, 40, 48]}
+              // Seeded from the car now that it reports the requested current.
+              // Before, no chip was lit on arrival, so the setting looked unset
+              // on a car that had one.
+              current={amps ?? state?.chargeAmps ?? null}
+              busy={inFlight("set_charge_amps")}
+              busyLabel={sending}
+              onPick={(v) => {
+                setAmps(v);
+                send("set_charge_amps", { amps: v });
+              }}
+              last={last}
+            />
+          ),
+        },
+        {
+          key: "schedule_charging",
+          cap: "scheduleCharging",
+          render: (last) => (
+            <TimeRow
+              label={t("schedule_charging")}
+              value={
+                chargeAt ??
+                (state?.scheduledChargingStartMinutes != null
+                  ? minutesToHhmm(state.scheduledChargingStartMinutes)
+                  : "23:00")
+              }
+              busy={inFlight("schedule_charging")}
+              busyLabel={sending}
+              action={t("apply")}
+              onChange={setChargeAt}
+              onApply={(v) => {
+                const time = minutesFromMidnight(v);
+                if (time != null) send("schedule_charging", { enable: true, time });
+              }}
+              last={last}
+            />
+          ),
+        },
+        {
+          key: "schedule_departure",
+          cap: "scheduleDeparture",
+          render: (last) => (
+            <TimeRow
+              label={t("schedule_departure")}
+              value={
+                departAt ??
+                (state?.scheduledDepartureMinutes != null
+                  ? minutesToHhmm(state.scheduledDepartureMinutes)
+                  : "08:00")
+              }
+              busy={inFlight("schedule_departure")}
+              busyLabel={sending}
+              action={t("apply")}
+              onChange={setDepartAt}
+              onApply={(v) => {
+                const time = minutesFromMidnight(v);
+                if (time != null) send("schedule_departure", { time });
+              }}
+              last={last}
+            />
+          ),
         },
       ],
     },
@@ -223,7 +337,7 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           icon: Fan,
           label: state?.isClimateOn ? t("climate_off") : t("climate_on"),
           on: state?.isClimateOn ?? null,
-          state: state?.isClimateOn ? on : off,
+          state: reads(state?.isClimateOn, on, off),
         },
         {
           key: "precondition",
@@ -232,8 +346,29 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           icon: Snowflake,
           label: state?.isBatteryPreconditioning ? t("precondition_max_off") : t("precondition_max"),
           on: state?.isBatteryPreconditioning ?? null,
-          state: state?.isBatteryPreconditioning ? on : off,
+          state: reads(state?.isBatteryPreconditioning, on, off),
           args: { on: !state?.isBatteryPreconditioning },
+        },
+      ],
+      controls: [
+        {
+          key: "climate_temp",
+          cap: "setClimateTemp",
+          render: (last) => (
+            <StepperRow
+              label={t("set_climate_temp")}
+              value={temp ?? Math.round(state?.driverTempC ?? 21)}
+              min={15}
+              max={28}
+              unit="°"
+              busy={inFlight("set_climate_temp")}
+              busyLabel={sending}
+              action={t("apply")}
+              onChange={setTemp}
+              onApply={(v) => send("set_climate_temp", { temp: v })}
+              last={last}
+            />
+          ),
         },
       ],
     },
@@ -247,18 +382,11 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
           icon: windowsOpen ? X : Wind,
           label: windowsOpen ? t("close_windows") : t("vent_windows"),
           on: windowsOpen,
-          state: windowsOpen ? tv("state_open") : tv("state_closed"),
+          state: reads(windowsOpen, tv("state_open"), tv("state_closed")),
         },
       ],
     },
   ];
-
-  const settingsAvailable =
-    caps.commands.setChargeLimit ||
-    caps.commands.setChargeAmps ||
-    caps.commands.setClimateTemp ||
-    caps.commands.scheduleCharging ||
-    caps.commands.scheduleDeparture;
 
   return (
     <Screen>
@@ -331,7 +459,13 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
       <div className="pb-8">
         {groups.map((group) => {
           const available = group.actions.filter((a) => caps.commands[a.cap]);
-          if (available.length === 0) return null;
+          // Controls read the car's current value, so they wait for one rather
+          // than showing a default that looks like a setting.
+          const controls = state
+            ? (group.controls ?? []).filter((c) => caps.commands[c.cap])
+            : [];
+          const total = available.length + controls.length;
+          if (total === 0) return null;
           return (
             <div key={group.title} className="mt-6">
               <SectionLabel>{group.title}</SectionLabel>
@@ -353,99 +487,18 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
                     disabled={!state || isPending}
                     reason={!state ? tv("no_answer") : undefined}
                     onClick={() => request(action)}
-                    last={i === available.length - 1}
+                    last={available.length + controls.length === i + 1}
                   />
+                ))}
+                {controls.map((control, i) => (
+                  <div key={control.key}>
+                    {control.render(available.length + i === total - 1)}
+                  </div>
                 ))}
               </Rows>
             </div>
           );
         })}
-
-        {settingsAvailable && state && (
-          <div className="mt-7">
-            <SectionLabel>{tv("group_settings")}</SectionLabel>
-            <div className="mt-2">
-              {caps.commands.setChargeLimit && (
-                <ChipRow
-                  label={t("set_charge_limit")}
-                  unit="%"
-                  values={[50, 60, 70, 80, 90, 100]}
-                  current={limit ?? state.chargeLimit ?? null}
-                  busy={inFlight("set_charge_limit")}
-                  busyLabel={sending}
-                  onPick={(v) => {
-                    setLimit(v);
-                    send("set_charge_limit", { percent: v });
-                  }}
-                />
-              )}
-              {caps.commands.setChargeAmps && (
-                <ChipRow
-                  label={t("set_charge_amps")}
-                  unit="A"
-                  // Tesla's own ladder. A slider offered 48 stops for a setting
-                  // with eight real answers.
-                  values={[5, 8, 12, 16, 24, 32, 40, 48]}
-                  current={amps}
-                  busy={inFlight("set_charge_amps")}
-                  busyLabel={sending}
-                  onPick={(v) => {
-                    setAmps(v);
-                    send("set_charge_amps", { amps: v });
-                  }}
-                />
-              )}
-              {caps.commands.setClimateTemp && (
-                <StepperRow
-                  label={t("set_climate_temp")}
-                  value={temp ?? Math.round(state.driverTempC ?? 21)}
-                  min={15}
-                  max={28}
-                  unit="°"
-                  busy={inFlight("set_climate_temp")}
-                  busyLabel={sending}
-                  action={t("apply")}
-                  onChange={setTemp}
-                  onApply={(v) => send("set_climate_temp", { temp: v })}
-                />
-              )}
-              {caps.commands.scheduleCharging && (
-                <TimeRow
-                  label={t("schedule_charging")}
-                  value={
-                    chargeAt ??
-                    (state.scheduledChargingStartMinutes != null
-                      ? minutesToHhmm(state.scheduledChargingStartMinutes)
-                      : "23:00")
-                  }
-                  busy={inFlight("schedule_charging")}
-                  busyLabel={sending}
-                  action={t("apply")}
-                  onChange={setChargeAt}
-                  onApply={(v) => {
-                    const time = minutesFromMidnight(v);
-                    if (time != null) send("schedule_charging", { enable: true, time });
-                  }}
-                />
-              )}
-              {caps.commands.scheduleDeparture && (
-                <TimeRow
-                  label={t("schedule_departure")}
-                  value={departAt ?? "08:00"}
-                  busy={inFlight("schedule_departure")}
-                  busyLabel={sending}
-                  action={t("apply")}
-                  onChange={setDepartAt}
-                  onApply={(v) => {
-                    const time = minutesFromMidnight(v);
-                    if (time != null) send("schedule_departure", { time });
-                  }}
-                  last
-                />
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Inline, not only a toast: this screen is tall enough that a toast can
             be scrolled past before it is read, leaving no trace of a failure. */}

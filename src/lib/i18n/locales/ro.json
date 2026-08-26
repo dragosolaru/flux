@@ -1299,7 +1299,6 @@
     "state_open": "Deschise",
     "state_closed": "Închise",
     "waiting_for_car": "Aștept mașina",
-    "group_settings": "Setări",
     "group_preferences": "Preferințe",
     "group_car": "Mașina",
     "group_account": "Cont",
@@ -1369,6 +1368,7 @@
     "window_open": "un geam deschis",
     "frunk_open": "portbagajul din față deschis",
     "trunk_open": "portbagajul deschis",
+    "charge_port_open": "portul de încărcare deschis",
     "car_state_unknown": "Mașina nu și-a raportat starea"
   }
 }

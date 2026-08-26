@@ -143,6 +143,20 @@ function applyChunk(
     }
   }
 
+  // The flap follows the cable: a car cannot charge with the port shut, and
+  // driving away is what closes it again. Leaving the two free to disagree is
+  // part of why the port commands looked broken — you could open the port on a
+  // car that was already charging and see nothing change.
+  if (state.motionState === "charging" || state.motionState === "plugged-idle") {
+    state.isChargePortOpen = true;
+  } else if (state.motionState === "driving") {
+    state.isChargePortOpen = false;
+    // Remote start is a window for getting in and driving off, and it ends the
+    // moment you do. Tesla also expires it after two minutes; the mock has no
+    // clock of its own, so driving is what closes it here.
+    state.isRemoteStartActive = false;
+  }
+
   // Climate settings from scenario step
   if (step.climateOn !== undefined) state.isClimateOn = step.climateOn;
   if (step.driverTempC !== undefined) state.driverTempC = step.driverTempC;
@@ -288,12 +302,12 @@ export function applyCommand(
         state.chargeLimit = Math.max(50, Math.min(100, args.percent));
       break;
     case "set_charge_amps":
-      break; // affects next tick's chargingRateKw; no-op for v1 mock
+      if (typeof args?.amps === "number") state.chargeAmps = args.amps;
+      break;
     case "start_charging":   state.chargingState = "charging"; break;
     case "stop_charging":    state.chargingState = "stopped";  break;
-    case "open_charge_port":
-    case "close_charge_port":
-      break; // no dedicated field yet
+    case "open_charge_port":  state.isChargePortOpen = true;  break;
+    case "close_charge_port": state.isChargePortOpen = false; break;
     case "vent_windows":
       state.windowsOpen = state.windowsOpen
         ? { ...state.windowsOpen, frontLeft: true, frontRight: true }
@@ -304,12 +318,15 @@ export function applyCommand(
       break;
     case "activate_sentry":   state.isSentryMode = true;   break;
     case "deactivate_sentry": state.isSentryMode = false;  break;
-    case "remote_start":      break;
+    case "remote_start":      state.isRemoteStartActive = true; break;
     case "schedule_charging":
       if (typeof args?.enable === "boolean") state.scheduledChargingEnabled = args.enable;
       if (typeof args?.time === "number") state.scheduledChargingStartMinutes = args.time;
       break;
-    case "schedule_departure": break; // no mock state mutation needed
+    case "schedule_departure":
+      state.scheduledDepartureEnabled = true;
+      if (typeof args?.time === "number") state.scheduledDepartureMinutes = args.time;
+      break;
     case "precondition_max":
       state.isBatteryPreconditioning = args?.on === true;
       break;

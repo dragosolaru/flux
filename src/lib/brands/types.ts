@@ -24,6 +24,8 @@ export interface TelemetryCapabilities {
   chargeLimit: boolean;
   chargingState: boolean;
   chargingRateKw: boolean;
+  chargeAmps: boolean;
+  chargePortOpen: boolean;
   timeToFullMinutes: boolean;
   batteryHealthPct: boolean;
   cellVoltages: boolean;
@@ -49,6 +51,7 @@ export interface TelemetryCapabilities {
   frunkOpen: boolean;
   sentryMode: boolean;
   dashcam: boolean;
+  remoteStartActive: boolean;
   // software / health
   softwareVersion: boolean;
   updateAvailable: boolean;

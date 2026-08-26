@@ -37,6 +37,14 @@ export interface TeslaChargeState {
   charge_limit_soc: number;
   charger_power: number; // kW
   time_to_full_charge: number;
+  /** The flap, not the cable: true while the port door is open. */
+  charge_port_door_open?: boolean | null;
+  /**
+   * The current the driver asked for, which is what a UI should show — the
+   * car reports `charge_amps` as the current it actually draws, and that is 0
+   * whenever it is not charging.
+   */
+  charge_current_request?: number | null;
 }
 
 export interface TeslaClimateState {
@@ -103,6 +111,8 @@ export interface TeslaVehicleState {
   tpms_pressure_fr?: number | null;
   tpms_pressure_rl?: number | null;
   tpms_pressure_rr?: number | null;
+  /** True during the two-minute window opened by remote_start_drive. */
+  remote_start?: boolean | null;
   /** "Recording" | "Unavailable" */
   dashcam_state?: string | null;
   software_update?: TeslaSoftwareUpdate | null;

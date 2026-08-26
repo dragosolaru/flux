@@ -167,12 +167,16 @@ export function mapVehicleData(
     chargeLimit: charge?.charge_limit_soc ?? null,
     chargingState: mapChargingState(charge?.charging_state ?? "Disconnected"),
     chargingRateKw: charge?.charger_power ?? null,
+    chargeAmps: charge?.charge_current_request ?? null,
+    isChargePortOpen: charge?.charge_port_door_open ?? null,
     timeToFullMinutes: charge?.time_to_full_charge != null
       ? Math.round(charge.time_to_full_charge * 60)
       : null,
-    // Live scheduled-charging readback not mapped yet (dormant adapter).
+    // Live schedule readback not mapped yet (dormant adapter).
     scheduledChargingEnabled: null,
     scheduledChargingStartMinutes: null,
+    scheduledDepartureEnabled: null,
+    scheduledDepartureMinutes: null,
     batteryHealthPct: estimateSoH(charge, r.vin),
     cellVoltages: null,
     // drive / motion
@@ -204,6 +208,7 @@ export function mapVehicleData(
     isTrunkOpen: isOpen(veh?.rt),
     isFrunkOpen: isOpen(veh?.ft),
     isSentryMode: veh?.sentry_mode ?? null,
+    isRemoteStartActive: veh?.remote_start ?? null,
     isDashcamRecording: veh?.dashcam_state != null
       ? veh.dashcam_state === "Recording"
       : null,

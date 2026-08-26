@@ -1299,7 +1299,6 @@
     "state_open": "Ouvertes",
     "state_closed": "Fermées",
     "waiting_for_car": "J'attends la voiture",
-    "group_settings": "Réglages",
     "group_preferences": "Préférences",
     "group_car": "Voiture",
     "group_account": "Compte",
@@ -1369,6 +1368,7 @@
     "window_open": "une vitre ouverte",
     "frunk_open": "coffre avant ouvert",
     "trunk_open": "coffre ouvert",
+    "charge_port_open": "trappe de charge ouverte",
     "car_state_unknown": "La voiture n'a pas signalé son état"
   }
 }

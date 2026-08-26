@@ -1299,7 +1299,6 @@
     "state_open": "Nyitva",
     "state_closed": "Zárva",
     "waiting_for_car": "Várok az autóra",
-    "group_settings": "Beállítások",
     "group_preferences": "Beállítások",
     "group_car": "Autó",
     "group_account": "Fiók",
@@ -1369,6 +1368,7 @@
     "window_open": "egy ablak nyitva",
     "frunk_open": "első csomagtartó nyitva",
     "trunk_open": "csomagtartó nyitva",
+    "charge_port_open": "töltőnyílás nyitva",
     "car_state_unknown": "Az autó nem jelentette az állapotát"
   }
 }

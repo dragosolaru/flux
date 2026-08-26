@@ -58,7 +58,7 @@ interface MutationContext {
 // Map a command to the vehicle-state fields it changes so the UI reflects the
 // new state instantly. Sub-2s feedback is the #1 driver of EV-app satisfaction
 // (JD Power 2025); the server response later confirms or rolls back.
-function optimisticPatch(
+export function optimisticPatch(
   command: CommandName,
   args?: Record<string, unknown> | null,
 ): Partial<VehicleState> | null {
@@ -75,10 +75,50 @@ function optimisticPatch(
       return { chargingState: "charging" };
     case "stop_charging":
       return { chargingState: "stopped" };
+    case "open_charge_port":
+      return { isChargePortOpen: true };
+    case "close_charge_port":
+      return { isChargePortOpen: false };
+    case "activate_sentry":
+      return { isSentryMode: true };
+    case "deactivate_sentry":
+      return { isSentryMode: false };
+    case "remote_start":
+      return { isRemoteStartActive: true };
+    case "vent_windows":
+      return {
+        windowsOpen: { frontLeft: true, frontRight: true, rearLeft: false, rearRight: false },
+      };
+    case "close_windows":
+      return {
+        windowsOpen: { frontLeft: false, frontRight: false, rearLeft: false, rearRight: false },
+      };
+    case "precondition_max":
+      return typeof args?.on === "boolean" ? { isBatteryPreconditioning: args.on } : null;
     case "set_charge_limit": {
       const limit = args?.percent;
       return typeof limit === "number" && limit >= 0 && limit <= 100
         ? { chargeLimit: limit }
+        : null;
+    }
+    case "set_charge_amps": {
+      const amps = args?.amps;
+      return typeof amps === "number" && amps >= 0 ? { chargeAmps: amps } : null;
+    }
+    case "set_climate_temp": {
+      const temp = args?.temp;
+      return typeof temp === "number" ? { driverTempC: temp } : null;
+    }
+    case "schedule_charging": {
+      const time = args?.time;
+      return typeof time === "number"
+        ? { scheduledChargingEnabled: args?.enable !== false, scheduledChargingStartMinutes: time }
+        : null;
+    }
+    case "schedule_departure": {
+      const time = args?.time;
+      return typeof time === "number"
+        ? { scheduledDepartureEnabled: true, scheduledDepartureMinutes: time }
         : null;
     }
     default:

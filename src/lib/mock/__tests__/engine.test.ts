@@ -21,9 +21,13 @@ function makeSnapshot(overrides: Partial<MockVehicleSnapshot> = {}): MockVehicle
     chargeLimit: 80,
     chargingState: "disconnected",
     chargingRateKw: null,
+    chargeAmps: 32,
+    isChargePortOpen: false,
     timeToFullMinutes: null,
     scheduledChargingEnabled: false,
     scheduledChargingStartMinutes: null,
+    scheduledDepartureEnabled: false,
+    scheduledDepartureMinutes: null,
     batteryHealthPct: null,
     cellVoltages: null,
     motionState: "parked",
@@ -46,6 +50,7 @@ function makeSnapshot(overrides: Partial<MockVehicleSnapshot> = {}): MockVehicle
     isTrunkOpen: null,
     isFrunkOpen: null,
     isSentryMode: false,
+    isRemoteStartActive: false,
     isDashcamRecording: null,
     isBatteryPreconditioning: null,
     softwareVersion: null,
@@ -253,5 +258,90 @@ describe("applyCommand", () => {
     const originalLocked = snap.state.isLocked;
     applyCommand(snap, "unlock", null, tesla);
     expect(snap.state.isLocked).toBe(originalLocked);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The commands that used to be accepted and then do nothing.
+//
+// Every one of these returned success and left the state untouched, so the
+// screen showed the old value back and the command read as broken — which is
+// exactly what it was reported as. They are pinned individually because the
+// failure mode is silent: a `break` with no assignment type-checks, lints and
+// passes every other test in this file.
+// ---------------------------------------------------------------------------
+
+describe("applyCommand — commands with observable state", () => {
+  it("open_charge_port opens the port", () => {
+    const result = applyCommand(makeSnapshot(), "open_charge_port", null, tesla);
+    expect(result.state.isChargePortOpen).toBe(true);
+  });
+
+  it("close_charge_port closes it again", () => {
+    const snap = makeSnapshot({ state: { ...makeSnapshot().state, isChargePortOpen: true } });
+    const result = applyCommand(snap, "close_charge_port", null, tesla);
+    expect(result.state.isChargePortOpen).toBe(false);
+  });
+
+  it("set_charge_amps stores the requested current", () => {
+    const result = applyCommand(makeSnapshot(), "set_charge_amps", { amps: 16 }, tesla);
+    expect(result.state.chargeAmps).toBe(16);
+  });
+
+  it("remote_start opens the drive window", () => {
+    const result = applyCommand(makeSnapshot(), "remote_start", null, tesla);
+    expect(result.state.isRemoteStartActive).toBe(true);
+  });
+
+  it("schedule_departure persists the time", () => {
+    const result = applyCommand(makeSnapshot(), "schedule_departure", { time: 480 }, tesla);
+    expect(result.state.scheduledDepartureEnabled).toBe(true);
+    expect(result.state.scheduledDepartureMinutes).toBe(480);
+  });
+
+  it("honk and flash still change nothing — they are momentary", () => {
+    const before = makeSnapshot();
+    expect(applyCommand(before, "honk", null, tesla).state).toEqual(before.state);
+    expect(applyCommand(before, "flash", null, tesla).state).toEqual(before.state);
+  });
+});
+
+describe("tick — port and remote start follow the car", () => {
+  it("a charging car has its port open", () => {
+    // Commuter scenario: 00:00 UTC is charging.
+    const snap = makeSnapshot({
+      lastTickAt: "2026-01-01T00:00:00Z",
+      state: { ...makeSnapshot().state, isChargePortOpen: false },
+    });
+    const result = tick(snap, new Date("2026-01-01T01:00:00Z"), tesla);
+    expect(result.state.chargingState).toBe("charging");
+    expect(result.state.isChargePortOpen).toBe(true);
+  });
+
+  it("driving away closes the port and ends the remote start", () => {
+    // Commuter scenario: 07:00 UTC is driving.
+    const snap = makeSnapshot({
+      lastTickAt: "2026-01-01T07:00:00Z",
+      state: {
+        ...makeSnapshot().state,
+        isChargePortOpen: true,
+        isRemoteStartActive: true,
+      },
+    });
+    const result = tick(snap, new Date("2026-01-01T07:30:00Z"), tesla);
+    expect(result.state.motionState).toBe("driving");
+    expect(result.state.isChargePortOpen).toBe(false);
+    expect(result.state.isRemoteStartActive).toBe(false);
+  });
+
+  it("a parked car keeps a port someone opened", () => {
+    // 17:30–24:00 is plugged-idle; 09:00 is parked in the commuter scenario.
+    const snap = makeSnapshot({
+      lastTickAt: "2026-01-01T09:00:00Z",
+      state: { ...makeSnapshot().state, isChargePortOpen: true },
+    });
+    const result = tick(snap, new Date("2026-01-01T09:30:00Z"), tesla);
+    expect(result.state.motionState).toBe("parked");
+    expect(result.state.isChargePortOpen).toBe(true);
   });
 });

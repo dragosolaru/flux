@@ -17,6 +17,8 @@ export function applyCapabilityMask(
     chargeLimit:        caps.chargeLimit        ? state.chargeLimit        : null,
     chargingState:      caps.chargingState      ? state.chargingState      : null,
     chargingRateKw:     caps.chargingRateKw     ? state.chargingRateKw     : null,
+    chargeAmps:         caps.chargeAmps         ? state.chargeAmps         : null,
+    isChargePortOpen:   caps.chargePortOpen     ? state.isChargePortOpen   : null,
     timeToFullMinutes:  caps.timeToFullMinutes  ? state.timeToFullMinutes  : null,
     batteryHealthPct:   caps.batteryHealthPct   ? state.batteryHealthPct   : null,
     cellVoltages:       caps.cellVoltages       ? state.cellVoltages       : null,
@@ -44,6 +46,7 @@ export function applyCapabilityMask(
     isFrunkOpen:        caps.frunkOpen          ? state.isFrunkOpen        : null,
     isSentryMode:       caps.sentryMode         ? state.isSentryMode       : null,
     isDashcamRecording: caps.dashcam            ? state.isDashcamRecording : null,
+    isRemoteStartActive: caps.remoteStartActive ? state.isRemoteStartActive : null,
     // software / health
     softwareVersion:    caps.softwareVersion    ? state.softwareVersion    : null,
     updateAvailable:    caps.updateAvailable    ? state.updateAvailable    : null,

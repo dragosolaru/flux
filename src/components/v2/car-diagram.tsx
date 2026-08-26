@@ -89,6 +89,7 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
   const sentry = state?.isSentryMode ?? null;
   const frunk = state?.isFrunkOpen ?? null;
   const trunk = state?.isTrunkOpen ?? null;
+  const port = state?.isChargePortOpen ?? null;
 
   // The whole outline carries the lock: the only state with a consequence
   // while you are not standing next to the car.
@@ -106,6 +107,7 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
     anyOpen(windows) ? t("window_open") : null,
     frunk ? t("frunk_open") : null,
     trunk ? t("trunk_open") : null,
+    port ? t("charge_port_open") : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -113,7 +115,11 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
   return (
     <div className="flex justify-center">
       <svg
-        viewBox="0 0 200 375"
+        // Wider than the car. A door swings to roughly 10 units past the body
+        // on each side, and an SVG clips at its viewBox — so on the one state
+        // that most needs to be legible, "you left a door open", the line was
+        // cut off at the edge. Found in a rendered sheet; invisible here.
+        viewBox="-14 0 228 375"
         role="img"
         aria-label={summary || t("car_state_unknown")}
         className="v2-car"
@@ -203,8 +209,10 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
           }}
         />
 
-        {/* Charge port — rear left on every Tesla. Pulses only while power is
-            actually flowing. */}
+        {/* Charge port — rear left on every Tesla. The flap swings clear of the
+            body when it is open, the same way the lids lift; green and pulsing
+            only while power is actually flowing, amber when it is standing open
+            on a car that is not charging. */}
         <rect
           x={X0 - 1}
           y={at(0.845)}
@@ -213,9 +221,12 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
           rx={3.5}
           fill="none"
           strokeWidth="2.2"
-          stroke={charging ? LIVE : IDLE}
+          stroke={charging ? LIVE : strokeFor(port)}
           className={charging ? "v2-pulse" : undefined}
-          style={{ transition: "stroke 200ms ease" }}
+          style={{
+            transform: port ? "translateX(-5px)" : "none",
+            transition: "transform 260ms cubic-bezier(.22,1,.36,1), stroke 200ms ease",
+          }}
         />
 
         {/* Sentry sits at the windscreen, because that is where it watches from.

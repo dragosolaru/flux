@@ -113,9 +113,13 @@ export async function loadLastKnown(
     chargeLimit: null,
     chargingState: row.is_charging ? "charging" : null,
     chargingRateKw: row.charging_rate_kw,
+    chargeAmps: null,
+    isChargePortOpen: null,
     timeToFullMinutes: null,
     scheduledChargingEnabled: null,
     scheduledChargingStartMinutes: null,
+    scheduledDepartureEnabled: null,
+    scheduledDepartureMinutes: null,
     batteryHealthPct: null,
     cellVoltages: null,
 
@@ -142,6 +146,7 @@ export async function loadLastKnown(
     isTrunkOpen: null,
     isFrunkOpen: null,
     isSentryMode: null,
+    isRemoteStartActive: null,
     isDashcamRecording: null,
     isBatteryPreconditioning: null,
 

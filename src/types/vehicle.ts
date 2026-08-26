@@ -86,10 +86,14 @@ export interface VehicleState {
   chargeLimit: number | null;         // 0–100 %
   chargingState: ChargingState | null;
   chargingRateKw: number | null;
+  chargeAmps: number | null;          // requested charging current, A
+  isChargePortOpen: boolean | null;
   timeToFullMinutes: number | null;
   // Scheduled charging — start time persisted so the UI reflects a saved schedule.
   scheduledChargingEnabled: boolean | null;
   scheduledChargingStartMinutes: number | null; // minutes after local midnight
+  scheduledDepartureEnabled: boolean | null;
+  scheduledDepartureMinutes: number | null;     // minutes after local midnight
   batteryHealthPct: number | null;    // SoH 0–100 %
   cellVoltages: number[] | null;      // per-cell volts (Tesla only)
 
@@ -121,6 +125,13 @@ export interface VehicleState {
   isFrunkOpen: boolean | null;
   isSentryMode: boolean | null;
   isDashcamRecording: boolean | null;
+  /**
+   * Remote start is a two-minute window in which the car can be driven without
+   * a key, not a mode you switch off — Tesla exposes no command to cancel it.
+   * So this is read-only: the row that sends it says whether it is currently
+   * live, and never offers to reverse it.
+   */
+  isRemoteStartActive: boolean | null;
   isBatteryPreconditioning: boolean | null;
 
   // --- software / health ----------------------------------------------
