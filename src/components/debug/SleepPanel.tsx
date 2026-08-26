@@ -74,7 +74,7 @@ export function SleepPanel() {
 
       <div className="space-y-2 rounded-lg border border-border bg-card/60 p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium">Ce am trimis la Tesla · ultimele 24h</p>
+          <p className="text-xs font-medium">Ce a ajuns la mașină · ultimele 24h</p>
           <button
             onClick={() => {
               setRefreshing(true);

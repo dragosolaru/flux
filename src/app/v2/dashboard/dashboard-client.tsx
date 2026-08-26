@@ -224,14 +224,16 @@ export function DashboardV2Client() {
             // driver to read four stale values before being told they are
             // stale.
             //
-            // One row, two meanings, because from the driver's side it is one
-            // question: start looking at the car again. When WE stopped asking,
-            // that means switching updates back on — no command is sent and
-            // nothing wakes. When the CAR is asleep, it means wake_up.
+            // Two states, two labels, and they must not be confusable. Switching
+            // updates back on sends NOTHING to the car; waking sends wake_up and
+            // costs battery. A single label covering both read as "wake" and
+            // produced a wake that never happened — and then a debug panel with
+            // no wake in it, which looked like the panel was broken.
             <Row
               icon={<Sunrise strokeWidth={1.5} className="text-chart-3" />}
               label={sleeping ? t("resume_updates") : t("wake_car")}
               value={sleeping ? t("updates_off") : t("asleep")}
+              // Only the wake half touches the car, so only it counts as one.
               valueTone="amber"
               pending={wake.isPending}
               pendingLabel={t("waking")}

@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
 import { GOAL, resolveRoadmap } from "@/lib/roadmap";
 import { TESLA_SCOPES, teslaProxyBaseUrl, teslaVirtualKeyUrl } from "@/lib/tesla/constants";
+import { readTeslaCalls } from "@/lib/tesla/call-log";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -216,6 +217,11 @@ export async function GET() {
     // from the object flipped "Tesla linked and commands working" from done
     // back to todo, which is a lie the panel told for a day.
     roadmap: { goal: GOAL, milestones: resolveRoadmap({ ...config, ...teslaConfig }) },
+    // In the copied report too, not only in the panel that renders it. The one
+    // question this panel exists to answer — did anything reach the car — was
+    // impossible to check from a pasted report, because the counts lived behind
+    // a second request the Copy button never made.
+    teslaCalls: await readTeslaCalls(),
     warnings,
   });
 }

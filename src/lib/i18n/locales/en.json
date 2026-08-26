@@ -1357,7 +1357,7 @@
     "car_position": "The car",
     "not_asking": "Not asking the car",
     "nothing_stored": "No reading stored yet",
-    "resume_updates": "Look at the car again",
+    "resume_updates": "Turn updates back on",
     "updates_off": "Updates off"
   }
 }

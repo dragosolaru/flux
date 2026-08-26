@@ -356,6 +356,14 @@ export async function sendVehicleCommand(params: {
   }
 
   const url = `${apiBase}/api/1/vehicles/${tag}/command/${params.command}`;
+
+  // Counted here, before the request leaves. A command is one of the three
+  // things that reach the car and wake it — and the debug panel showed a
+  // "commands" figure that was never incremented, so it read zero however many
+  // were sent. A counter that only counts some of what it names is worse than
+  // no counter: it makes the other numbers look trustworthy.
+  await recordTeslaCall("command");
+
   let res: Response;
   try {
     res = await fetch(url, {
