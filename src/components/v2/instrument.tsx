@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * The Instrument primitives. Every /v2 screen is assembled from these and adds
@@ -260,7 +261,23 @@ export function Rows({ children, className = "" }: { children: ReactNode; classN
  *
  * Deliberately square-cornered and hairline-topped, like everything else: it is
  * the same surface arriving from a different direction, not a card.
+ *
+ * **Rendered into `document.body`, always.** `position: fixed` resolves against
+ * the nearest ancestor that has a transform — and `.v2-rise`, the arrive-once
+ * animation on every ScreenHeader, has `transform` in its keyframes with
+ * `fill-mode: both`, so it stays a containing block after it finishes. The
+ * vehicle switcher lives in that header, so its sheet was laid out inside a
+ * 35px strip at the top of the page: no backdrop, and the car rows pushed out
+ * of view above it, leaving only "add a car" visible.
+ *
+ * Measured, not deduced — an overlay of 35px against a viewport of 844.
+ *
+ * A portal is the right answer even without that bug: a modal must not depend
+ * on what happens to be above it in the tree.
  */
+/** A store that never changes: the value only differs between server and client. */
+const subscribeNever = () => () => undefined;
+
 export function Sheet({
   onClose,
   label,
@@ -270,7 +287,17 @@ export function Sheet({
   label: string;
   children: ReactNode;
 }) {
-  return (
+  // `document` does not exist during the server render, and useSyncExternalStore
+  // answers "not yet" on the server and "yes" in the browser without a state
+  // write in an effect.
+  const mounted = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -294,7 +321,8 @@ export function Sheet({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
