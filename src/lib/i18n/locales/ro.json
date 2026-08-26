@@ -1358,6 +1358,8 @@
     "not_asking": "Nu întrebăm mașina",
     "nothing_stored": "Nicio citire salvată încă",
     "resume_updates": "Pornește actualizările",
-    "updates_off": "Actualizări oprite"
+    "updates_off": "Actualizări oprite",
+    "pair_key": "Împerechează cheia virtuală",
+    "pair_key_hint": "Deschide de pe telefonul cu aplicația Tesla, stând lângă mașină. Până când cheia e aprobată în mașină, orice comandă e refuzată."
   }
 }

@@ -1178,12 +1178,10 @@ export function DebugClient() {
         </div>
       </section>
 
-      {/* ---- Setup ---- */}
-
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold">🚗 Car</h2>
-          <p className="text-xs text-muted-foreground">Linking, permissions, the Virtual Key, and what commands did.</p>
+          <p className="text-xs text-muted-foreground">Whether we are contacting it, whether it is linked, and what went wrong.</p>
         </div>
         <button
           onClick={() => copyReport("car")}
@@ -1194,9 +1192,21 @@ export function DebugClient() {
         </button>
       </div>
 
+      <Panel
+        title="Sleep & traffic to the car"
+        purpose="Is the app keeping the car awake? The switch, and a count of what actually reached it."
+        badge={sleeping ? "left alone" : "normal"}
+        tone={sleeping ? "ok" : "muted"}
+        open={open.sleep ?? true}
+        onToggle={() => toggle("sleep")}
+      >
+        <SleepPanel />
+      </Panel>
+
       {tesla && (
         <Panel
           title="Go live with Tesla"
+        purpose="Every setting a real Tesla needs, in the order they block each other. The first unticked step is the one to do."
           badge={tesla.nextStep ? `next: ${tesla.nextStep}` : "ready"}
           tone={tesla.nextStep ? "warn" : "ok"}
           open={open.tesla ?? false}
@@ -1533,6 +1543,7 @@ export function DebugClient() {
 
       <Panel
         title="Car activity"
+        purpose="Errors the car and the Tesla API produced. Empty here means a failed command never reached the server — or it worked."
         badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "older" : "quiet"}
         tone={teslaFresh > 0 ? "warn" : undefined}
         open={open.carLog ?? false}
@@ -1556,7 +1567,7 @@ export function DebugClient() {
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold">⚡ Chargers</h2>
-          <p className="text-xs text-muted-foreground">Coverage, imports, source health.</p>
+          <p className="text-xs text-muted-foreground">How many stations we hold, where they came from, and whether the feeds still answer.</p>
         </div>
         <button
           onClick={() => copyReport("chargers")}
@@ -1569,6 +1580,7 @@ export function DebugClient() {
 
       <Panel
         title="Populate chargers"
+        purpose="Import stations from the open data sources. Run this when coverage looks thin in a country."
         badge="import"
         open={open.populate ?? false}
         onToggle={() => toggle("populate")}
@@ -1648,6 +1660,7 @@ export function DebugClient() {
 
       <Panel
         title="Maintenance"
+        purpose="Dedupe and cleanup over stations already imported. Safe to re-run; each pass reports what it changed."
         badge="dedupe · cache"
         open={open.maintain ?? false}
         onToggle={() => toggle("maintain")}
@@ -1692,6 +1705,7 @@ export function DebugClient() {
 
       <Panel
         title="Check the sources"
+        purpose="Whether each upstream feed still answers, and what it last returned. Where to look when an import brings back nothing."
         badge={
           sourceErrorsFresh > 0
             ? `${sourceErrorsFresh} today`
@@ -1788,6 +1802,7 @@ export function DebugClient() {
 
       <Panel
         title="Charger activity"
+        purpose="Recent import runs and what they wrote. The counts here are the ones the coverage numbers come from."
         badge={failedRuns > 0 ? `${failedRuns} failed runs` : `${data.recentRuns.length} runs ok`}
         tone={failedRuns > 0 ? "warn" : undefined}
         open={open.chargerLog ?? false}
@@ -1842,7 +1857,7 @@ export function DebugClient() {
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold">📋 Progress</h2>
-          <p className="text-xs text-muted-foreground">Where the project stands, and the database schema.</p>
+          <p className="text-xs text-muted-foreground">What is left to build, and which database changes have been applied.</p>
         </div>
         <button
           onClick={() => copyReport("progress")}
@@ -1853,21 +1868,9 @@ export function DebugClient() {
         </button>
       </div>
 
-      {/* First, because "is the app keeping my car awake" is the question you
-          open this panel to answer, and the switch that stops it must not be
-          three sections down. */}
-      <Panel
-        title="Somnul mașinii"
-        badge={sleeping ? "oprit" : "normal"}
-        tone={sleeping ? "ok" : "muted"}
-        open={open.sleep ?? true}
-        onToggle={() => toggle("sleep")}
-      >
-        <SleepPanel />
-      </Panel>
-
       <Panel
         title="Migrations"
+        purpose="Which database changes have been applied. Re-applying is safe; order matters only where one replaces a function."
         badge={
           !migrations.data?.bootstrapped
             ? "runner missing"
@@ -1994,15 +1997,16 @@ export function DebugClient() {
       </Panel>
 
       <div className="pt-2">
-        <h2 className="text-sm font-semibold">🔧 Tools</h2>
+        <h2 className="text-sm font-semibold">⚙️ Setup</h2>
         <p className="text-xs text-muted-foreground">
-          Configuration and one-off probes. No report button — nothing here
-          describes a state, it only does things.
+          Which environment variables are set. Read-only — every value here is
+          changed in the hosting dashboard, not from this page.
         </p>
       </div>
 
       <Panel
         title="Configuration"
+        purpose="Which environment variables the running deployment can see. Unset ones name what they block."
         badge={unsetConfig.length > 0 ? `${unsetConfig.length} unset` : "all set"}
         tone={unsetConfig.length > 0 ? "muted" : "ok"}
         open={open.config ?? false}
@@ -2030,8 +2034,18 @@ export function DebugClient() {
         </div>
       </Panel>
 
+      <div className="pt-2">
+        <h2 className="text-sm font-semibold">🔧 Tools</h2>
+        <p className="text-xs text-muted-foreground">
+          One-off probes. No report button and no badges: nothing here describes
+          a state, it only does things when you press it.
+        </p>
+      </div>
+
+
       <Panel
         title="Call an API route"
+        purpose="Send a request as yourself and read the raw answer. For checking a route without leaving the phone."
         badge={apiMethod}
         open={open.api ?? false}
         onToggle={() => toggle("api")}
@@ -2104,6 +2118,7 @@ export function DebugClient() {
 
       <Panel
         title="Test OCR"
+        purpose="Run a document through the parser and see what it extracted, without saving anything."
         badge="costs tokens"
         open={open.ocr ?? false}
         onToggle={() => toggle("ocr")}
@@ -2188,6 +2203,7 @@ export function DebugClient() {
 
 function Panel({
   title,
+  purpose,
   badge,
   tone,
   open,
@@ -2195,6 +2211,14 @@ function Panel({
   children,
 }: {
   title: string;
+  /**
+   * The question this panel answers, in one sentence.
+   *
+   * Every panel here was a title and a badge, so knowing what any of them was
+   * FOR required opening it and reading the contents — which is most of what
+   * made the page feel like a pile rather than a tool.
+   */
+  purpose?: string;
   badge?: string;
   tone?: "ok" | "warn" | "muted";
   open: boolean;
@@ -2227,7 +2251,12 @@ function Panel({
           </span>
         )}
       </button>
-      {open && <div className="space-y-3 border-t border-border/60 p-4">{children}</div>}
+      {open && (
+        <div className="space-y-3 border-t border-border/60 p-4">
+          {purpose && <p className="text-xs leading-relaxed text-muted-foreground">{purpose}</p>}
+          {children}
+        </div>
+      )}
     </section>
   );
 }

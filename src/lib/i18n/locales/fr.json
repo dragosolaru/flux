@@ -1358,6 +1358,8 @@
     "not_asking": "On ne sollicite pas la voiture",
     "nothing_stored": "Aucun relevé enregistré",
     "resume_updates": "Réactiver les mises à jour",
-    "updates_off": "Mises à jour coupées"
+    "updates_off": "Mises à jour coupées",
+    "pair_key": "Appairer la clé virtuelle",
+    "pair_key_hint": "À ouvrir depuis le téléphone avec l'app Tesla, à côté de la voiture. Tant que la clé n'est pas approuvée, chaque commande est refusée."
   }
 }

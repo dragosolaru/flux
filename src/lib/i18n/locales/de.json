@@ -1358,6 +1358,8 @@
     "not_asking": "Wir fragen das Auto nicht",
     "nothing_stored": "Noch kein Stand gespeichert",
     "resume_updates": "Updates wieder einschalten",
-    "updates_off": "Updates aus"
+    "updates_off": "Updates aus",
+    "pair_key": "Virtuellen Schlüssel koppeln",
+    "pair_key_hint": "Vom Telefon mit der Tesla-App öffnen, direkt am Auto stehend. Bis der Schlüssel im Auto bestätigt ist, wird jeder Befehl abgelehnt."
   }
 }

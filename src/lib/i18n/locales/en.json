@@ -1358,6 +1358,8 @@
     "not_asking": "Not asking the car",
     "nothing_stored": "No reading stored yet",
     "resume_updates": "Turn updates back on",
-    "updates_off": "Updates off"
+    "updates_off": "Updates off",
+    "pair_key": "Pair the Virtual Key",
+    "pair_key_hint": "Open this from the phone that has the Tesla app, standing next to the car. Until the key is approved in the car, every command is refused."
   }
 }

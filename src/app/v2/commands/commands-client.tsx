@@ -3,6 +3,7 @@
 import {
   BatteryCharging,
   Fan,
+  KeyRound,
   Lock,
   Play,
   Plug,
@@ -70,7 +71,7 @@ const MAPPED_ERRORS = [
  * characters, and a button whose text is cut is a button you have to guess at.
  * One column, full width, means the longest German string still fits.
  */
-export function CommandsV2Client() {
+export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | null }) {
   const t = useTranslations("commands");
   const tv = useTranslations("v2");
 
@@ -99,6 +100,9 @@ export function CommandsV2Client() {
   const [departAt, setDepartAt] = useState<string | null>(null);
 
   const sending = tv("sending");
+  // The screen where the refusals happen. Shown before the groups, because a
+  // row that cannot work is worse than a row that is missing.
+  const needsPairing = isLive && vehicle?.virtualKeyPaired === false && virtualKeyUrl != null;
 
   function send(cmd: CommandName, args?: Record<string, unknown>) {
     mutate({ vehicleId, command: cmd, args });
@@ -253,6 +257,24 @@ export function CommandsV2Client() {
       {!state && (
         <div className="mt-4">
           <Mono className="text-muted-foreground">{tv("waiting_for_car")}</Mono>
+        </div>
+      )}
+
+      {needsPairing && (
+        <div className="mt-4">
+          <Rows>
+            <Row
+              icon={<KeyRound strokeWidth={1.5} className="text-chart-3" />}
+              label={tv("pair_key")}
+              value={tv("not_paired")}
+              valueTone="amber"
+              href={virtualKeyUrl ?? undefined}
+              last
+            />
+          </Rows>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            {tv("pair_key_hint")}
+          </p>
         </div>
       )}
 

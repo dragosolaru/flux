@@ -1358,6 +1358,8 @@
     "not_asking": "Nem kérdezzük az autót",
     "nothing_stored": "Még nincs mentett mérés",
     "resume_updates": "Frissítések bekapcsolása",
-    "updates_off": "Frissítések kikapcsolva"
+    "updates_off": "Frissítések kikapcsolva",
+    "pair_key": "Virtuális kulcs párosítása",
+    "pair_key_hint": "Nyisd meg a Tesla appot futtató telefonról, az autó mellett állva. Amíg a kulcs nincs jóváhagyva, minden parancs elutasításra kerül."
   }
 }

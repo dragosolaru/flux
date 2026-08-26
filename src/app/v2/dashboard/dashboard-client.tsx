@@ -1,6 +1,6 @@
 "use client";
 
-import { Fan, Lock, MapPin, RadioTower, Sunrise, Unlock } from "lucide-react";
+import { Fan, KeyRound, Lock, MapPin, RadioTower, Sunrise, Unlock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -55,7 +55,7 @@ function ageLabel(iso: string | null | undefined, t: (k: string, v?: Record<stri
   return t("time_day_ago", { d: Math.floor(hours / 24) });
 }
 
-export function DashboardV2Client() {
+export function DashboardV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | null }) {
   const t = useTranslations("v2");
   const tc = useTranslations("commands");
   const td = useTranslations("dashboard");
@@ -87,6 +87,11 @@ export function DashboardV2Client() {
   // A cached read of a car we have never stored fails with NO_CACHED_STATE.
   // That is not an error, it is "nothing to show yet, and we are not asking".
   const nothingStored = sleeping && isError;
+
+  // Every signed command fails with "your public key has not been paired with
+  // the vehicle" until this is done, and nothing in /v2 said so — the driver saw
+  // controls that all refused for a reason printed nowhere.
+  const needsPairing = isLive && vehicle?.virtualKeyPaired === false && virtualKeyUrl != null;
 
   const wake = useMutation({
     mutationFn: () => vehiclesApi.wake(vehicleId),
@@ -218,6 +223,17 @@ export function DashboardV2Client() {
         </Rows>
       ) : (
         <Rows>
+          {needsPairing && (
+            // Above everything, including the wake row: nothing below it can
+            // succeed until the key is in the car.
+            <Row
+              icon={<KeyRound strokeWidth={1.5} className="text-chart-3" />}
+              label={t("pair_key")}
+              value={t("not_paired")}
+              valueTone="amber"
+              href={virtualKeyUrl ?? undefined}
+            />
+          )}
           {isLive && stale && (
             // First, not last. It is the only action that changes anything
             // about the rows under it, and putting it after them asks the

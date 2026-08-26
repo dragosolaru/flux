@@ -95,9 +95,13 @@ export async function POST(
     // /api/tesla/charging-history 404s — and was duly typed into the API caller.
     recordDebugLog("error", "vehicles/charging-history", msg, errorContext(err));
     const status = /history (\d{3}):/.exec(msg)?.[1] ?? null;
-    // Tesla's charging endpoints are restricted to business fleet accounts. On
-    // a personal account this call can never succeed, so "try again" is advice
-    // that wastes the driver's time forever. Say it is unavailable instead —
+    // A 403 here means the endpoint is closed to this account — Tesla restricts
+    // some charging endpoints to business fleets — so "try again" is advice
+    // that wastes the driver's time forever.
+    //
+    // NOT to be confused with the 400 "Invalid page no" that filled the logs
+    // from August: that was ours, a pageNo starting at 0 against an API that
+    // numbers from 1. It was read as this restriction for weeks. Say it is unavailable instead —
     // the real charging history has to come from Fleet Telemetry, which is
     // tracked in docs/TESLA-API-CAPABILITIES.md.
     if (status === "403") {

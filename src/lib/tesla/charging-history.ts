@@ -27,7 +27,11 @@ export async function fetchTeslaChargingHistory(params: {
   pageSize?: number;
 }): Promise<TeslaChargingSession[]> {
   const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
-  const pageNo = params.pageNo ?? 0;
+  // 1, not 0. Tesla's dx/charging/history numbers pages from one and answers a
+  // zero with 400 "Invalid page no" — which is what every sync since August has
+  // done. It was read as the endpoint being closed to personal accounts; it is
+  // an off-by-one in this line.
+  const pageNo = params.pageNo ?? 1;
   const pageSize = params.pageSize ?? 50;
 
   const url = `${baseUrl(region)}/api/1/dx/charging/history?vehicleId=${params.teslaVehicleId}&pageNo=${pageNo}&pageSize=${pageSize}`;
