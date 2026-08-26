@@ -935,6 +935,23 @@ is wider than the car (`-14 0 228 375`) because a door swings about ten units
 past the body and an SVG clips at its viewBox — on the one state that most needs
 to read at a glance, "you left a door open", the line was cut off at the edge.
 
+**It is drawn to three stroke weights and nothing outside them** — `T1` the
+silhouette and only the silhouette, `T2` anything that is a real gap in the
+sheet metal (shutlines, glass edges, tyres, mirrors), `T3` surface that is
+neither (arches, lamp lenses, the tail signature). A technical drawing reads
+because the weights are a hierarchy rather than a texture. Two rules fall out
+of it: **state always outranks structure** — an open door is heavier than the
+shutline it just left — and **structure that appears four times is a tier
+lighter than structure that appears once**, which is why the wheels are at
+detail weight. Drawn at shutline weight with tread they became four dark corner
+blobs that outweighed every state indicator and went to mush at 196px.
+
+The silhouette carries the one thing a plan view usually loses: **which end is
+the front**. The nose tapers across the front overhang and the tail is flat and
+square, so the two ends are not interchangeable. The taper has to finish by the
+front axle (0.175 of the length ≈ the real 841mm overhang) or the front wheels
+stand outside the bodywork.
+
 **`/v2/commands` is grouped the way the Tesla app is** — by the part of the car,
 with the setting next to the switch that uses it. Every row that has a state
 field is a toggle showing where it is now (`BLOCATĂ` / `DEBLOCATĂ`, `PORNIT` /
