@@ -391,14 +391,13 @@ const PORT: readonly [Pt, Pt, Pt, Pt] = [
 const PORT_HINGE: Hinge = { hx: 4200, hw: 890 };
 const portPath = (deg: number) => `M${PORT.map((p) => swung(p, 1, PORT_HINGE, deg)).join("L")}Z`;
 
-// ── wheels: a circle in a vertical plane is an exact ellipse here ───────────
+// ── circles: any circle is an exact ellipse under a parallel projection ─────
 const K = 0.5523;
-function wheel(x: number, r: number, s: Side): string {
-  const c = [OX + U * (KX * x + KY * s * WHEEL_Y), OY + U * (JY * s * WHEEL_Y - JX * x - JZ * r)];
-  // The projections of the two radii — rearward and up — are the ellipse's
-  // conjugate semi-diameters, which is all four Béziers need.
-  const a = [U * KX * r, -U * JX * r];
-  const b = [0, -U * JZ * r];
+type V2 = readonly [number, number];
+/** An ellipse from its centre and two conjugate semi-diameters — which is all
+ *  four Béziers need, and the two semi-diameters are just the projections of
+ *  the circle's own two radii. */
+function ellipse(c: V2, a: V2, b: V2): string {
   const pt = (mx: number, my: number) => `${n(c[0] + mx * a[0] + my * b[0])} ${n(c[1] + mx * a[1] + my * b[1])}`;
   return (
     `M${pt(1, 0)}` +
@@ -408,6 +407,17 @@ function wheel(x: number, r: number, s: Side): string {
     `C${pt(K, -1)} ${pt(1, -K)} ${pt(1, 0)}Z`
   );
 }
+/** A wheel: a circle standing in a vertical plane. */
+const wheel = (x: number, r: number, s: Side): string =>
+  ellipse(
+    [OX + U * (KX * x + KY * s * WHEEL_Y), OY + U * (JY * s * WHEEL_Y - JX * x - JZ * r)],
+    [U * KX * r, -U * JX * r],
+    [0, -U * JZ * r],
+  );
+/** A patch of road: a circle lying flat at z=0, stretched ax mm along the car
+ *  and by mm across it. This is what the car's shadow is drawn on. */
+const ground = (x: number, y: number, ax: number, by: number): string =>
+  ellipse([qx(x, y), qy(x, y, 0)], [U * KX * ax, -U * JX * ax], [U * KY * by, U * JY * by]);
 
 const OPEN = "var(--chart-3)"; // amber — open, and usually should not be
 const LIVE = "var(--chart-2)"; // green — running on purpose
@@ -415,10 +425,109 @@ const IDLE = "oklch(0.97 0 0 / 30%)";
 const BODY = "oklch(0.97 0 0 / 62%)";
 const PANEL = "oklch(0.97 0 0 / 34%)";
 const DETAIL = "oklch(0.97 0 0 / 20%)";
-const UNKNOWN = "oklch(0.97 0 0 / 10%)";
-/** Surfaces are opaque so that what is behind them is hidden. The diagram sits
- *  directly on the /v2 screen, so the page's own ground is the right ink. */
-const BG = "var(--background)";
+const UNKNOWN = "oklch(0.97 0 0 / 13%)";
+/** The specular white. The only near-white in the drawing and it is used on
+ *  exactly one thing: the shoulder. */
+const HILITE = "oklch(0.98 0 0)";
+
+// ── the light ───────────────────────────────────────────────────────────────
+/**
+ * ONE light, declared once, and every fill in this file is derived from it.
+ *
+ *   L = (−0.48, +0.44, +0.76) in car space — HIGH, AHEAD of the nose, and on
+ *   the NEAR side.
+ *
+ * On screen that lands about 14° to the left of straight down, which is what
+ * "high and to the upper left" has to mean in this projection: the near flank
+ * faces screen right-and-down, so a light literally at the upper-left corner
+ * of the frame would rim-light the far side and leave the whole near flank —
+ * most of the drawing — in shadow.
+ *
+ * Everything else follows from `lit()` rather than from taste, which is the
+ * point: shading picked panel by panel is the "different vanishing points"
+ * failure applied to tone. It reads as wrong and nobody can say why.
+ *
+ *   bonnet 0.82 · roof 0.78 · flank at the shoulder 0.53 · deck 0.67 ·
+ *   nose 0.38 · flank at the sill 0.16 · anything facing the road 0
+ *
+ * The one declared exception is the glasshouse. Glass is not a Lambert
+ * surface — it is dark because you are looking through it at a dark cabin, and
+ * bright only where it happens to catch the sky. So the panes keep a dark base
+ * and take their light as a single narrow band, placed along the same axis as
+ * every other gradient. Stated here so it is a decision and not a contradiction.
+ */
+const LIGHT: Q3 = [-0.48, 0.44, 0.76];
+
+/** Lambert, clamped at the terminator. The normal need not be unit length. */
+function lit(nx: number, ny: number, nz: number): number {
+  const m = Math.hypot(nx, ny, nz) || 1;
+  return Math.max(0, (nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]) / m);
+}
+/** The tone of a panel that runs from profile point a to profile point b: its
+ *  normal is the segment turned a quarter turn in the x–z plane. */
+const slope = (a: Pt, b: Pt) => lit(-(b[1] - a[1]), 0, b[0] - a[0]);
+
+const K_NOSE = slope(BUMPER_F, NOSE_T);
+const K_BONNET = slope(NOSE_T, COWL);
+const K_ROOF = slope(HEADER, ROOF_E);
+const K_DECK = slope(LIP, TAIL_T);
+/** The flank at the shoulder, where it still stands nearly upright, and at the
+ *  sill, where it has rolled under far enough to see only the road. */
+const K_FLANK = lit(0, 1, 0.14);
+const K_SILL = lit(0, 1, -0.55);
+
+/** A body grey at Lambert level k. The car is near-black, so the whole scale
+ *  lives between L 0.10 and L 0.44 — this is about separating surfaces, not
+ *  about painting a picture. The chroma is the /v2 ground's own hue at a level
+ *  no one can name as a colour; without it the greys read as a cut-out laid
+ *  over the screen rather than as an object in the same air. */
+const tone = (k: number) => `oklch(${Math.round((0.098 + 0.34 * k) * 1000) / 1000} 0.008 240)`;
+/** The car's own darkest ink. This used to be `var(--background)` — the
+ *  drawing borrowed the page's ground to occlude what was behind it, which
+ *  only worked because it sits directly on /v2. Now every surface is a lit
+ *  surface with a tone of its own, so the coupling is gone. What remains
+ *  assumed is only that the ground is DARK: the contact shadow is black at
+ *  low alpha, and on a light page it would be a bruise. /v2 is dark-only by
+ *  design (see globals.css). */
+const INK = tone(0);
+
+/**
+ * A gradient axis: from a point in car space, running mm millimetres ALONG the
+ * light. Every gradient in the drawing is built with this, so no two of them
+ * can disagree about where the light is — the same guarantee `q()` gives the
+ * geometry.
+ */
+function ray(from: Q3, mm: number) {
+  const to: Q3 = [from[0] - LIGHT[0] * mm, from[1] - LIGHT[1] * mm, from[2] - LIGHT[2] * mm];
+  return {
+    gradientUnits: "userSpaceOnUse" as const,
+    x1: n(qx(from[0], from[1])),
+    y1: n(qy(from[0], from[1], from[2])),
+    x2: n(qx(to[0], to[1])),
+    y2: n(qy(to[0], to[1], to[2])),
+  };
+}
+
+/** How deep the shoulder highlight is at station x: nothing at the cowl,
+ *  fullest just behind the mirror, thinning to nothing at the tail lamp. A
+ *  highlight held at one width for the whole length is a stripe, not a
+ *  highlight — it reads as trim. */
+const shoulderDrop = (x: number, deep: number) => {
+  const t = Math.min(1, Math.max(0, (x - COWL[0]) / (LIP[0] - COWL[0])));
+  return deep * Math.sin(Math.PI * t ** 0.72);
+};
+const dropPt = (p: Pt, deep: number): Pt => [p[0], p[1] - shoulderDrop(p[0], deep), p[2]];
+/** The sheet between an edge and a tapered copy of itself dropped below it —
+ *  the shape a highlight takes when it rides a crease. */
+function band(e: Edge, deep: number): string {
+  const u: Edge = {
+    from: dropPt(e.from, deep),
+    segs: e.segs.map((g) =>
+      g.c1 ? cv(dropPt(g.c1, deep), dropPt(g.c2, deep), dropPt(g.to, deep)) : ln(dropPt(g.to, deep)),
+    ),
+  };
+  return open(e, 1) + `L${at(last(u), 1)}` + rev(u, 1) + "Z";
+}
 
 // The three weights. Anything drawn outside them is a mistake.
 const T1 = 2.4; // silhouette

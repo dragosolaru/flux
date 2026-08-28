@@ -281,7 +281,11 @@ export function ChargersV2Client() {
 
             <Rows className="mt-4">
               <Row
-                label={t("distance_km")}
+                // NOT distance_km — that key is the phrase "la {km} km", a
+                // whole sentence with a placeholder in it, and used as a bare
+                // label next-intl printed the placeholder: the row read
+                // "la {km} km · 720 M".
+                label={t("distance_label")}
                 value={
                   centre ? formatDistance(haversineMeters(centre, selected)) : undefined
                 }
@@ -304,7 +308,10 @@ export function ChargersV2Client() {
                 valueTone={selected.availability === "offline" ? "red" : "green"}
               />
               <Row
-                label={t("address_unknown")}
+                // The label is the field; address_unknown is what to say when
+                // there ISN'T one. Used as the label it claimed the address was
+                // unavailable while printing the address next to it.
+                label={t("address_label")}
                 value={addressLine(selected) ?? undefined}
                 disabled={addressLine(selected) == null}
                 reason={t("address_unknown")}

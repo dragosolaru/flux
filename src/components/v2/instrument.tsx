@@ -1,5 +1,7 @@
 "use client";
 
+import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -405,6 +407,7 @@ export function Sheet({
   // `document` does not exist during the server render, and useSyncExternalStore
   // answers "not yet" on the server and "yes" in the browser without a state
   // write in an effect.
+  const tCommon = useTranslations("common");
   const mounted = useSyncExternalStore(
     subscribeNever,
     () => true,
@@ -429,10 +432,22 @@ export function Sheet({
           paddingBottom: "calc(env(safe-area-inset-bottom) + 18px)",
         }}
       >
-        {/* A grab handle: this arrives from the bottom edge, and the gesture to
-            dismiss it has to be suggested by something. */}
-        <div className="flex justify-center py-3">
+        {/* A grab handle suggests the gesture — and on its own it was not
+            enough. It LOOKS draggable and is not, so the gesture it invites
+            does nothing; the only way out was tapping the backdrop, which is
+            invisible as an affordance and, on the charger screen, is a map you
+            would rather not poke. Reported as "I can't close it". So there is
+            also a button that says what it does. */}
+        <div className="relative flex justify-center py-3">
           <span className="h-1 w-10 rounded-full bg-white/15" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={tCommon("close")}
+            className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center text-muted-foreground transition-opacity duration-[80ms] active:opacity-60"
+          >
+            <X strokeWidth={1.5} className="size-5" />
+          </button>
         </div>
         {children}
       </div>

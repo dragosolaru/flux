@@ -783,7 +783,9 @@
     "send_to_car_success": "Trimis în mașină",
     "send_to_car_preconditioned": "Trimis — mașina va naviga aici și va precondiționa bateria",
     "send_to_car_error": "Nu am putut trimite în mașină",
-    "sending": "Se trimite…"
+    "sending": "Se trimite…",
+    "distance_label": "Distanță",
+    "address_label": "Adresă"
   },
   "auth": {
     "title_login": "Bine ai revenit",

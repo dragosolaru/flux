@@ -355,6 +355,27 @@ function userLocationIcon(fetching: boolean): L.DivIcon {
   });
 }
 
+/**
+ * Brings a chosen station into view.
+ *
+ * `MapContainer`'s `center` prop is read once at mount, so changing it later
+ * does nothing — which is why "see it on the map" moved the map exactly as far
+ * as selecting a row did: not at all. Zoom is only ever increased, so arriving
+ * at a station never throws away a wider view the driver chose.
+ */
+function PanTo({ target }: { target: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const lastRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!target) return;
+    const key = `${target.lat},${target.lng}`;
+    if (lastRef.current === key) return;
+    lastRef.current = key;
+    map.setView([target.lat, target.lng], Math.max(map.getZoom(), 14), { animate: true });
+  }, [map, target]);
+  return null;
+}
+
 export default function StationMap({
   stations,
   center,
@@ -385,19 +406,25 @@ export default function StationMap({
   const selectedId = selected?.id ?? null;
   const markers = useMemo(
     () =>
-      stations.map((s) => {
-        const tier = getPowerTier(s.maxPowerKw, s.availability);
-        const isSelected = selectedId === s.id;
-        const color = isSelected ? "#2563eb" : (TIER_COLORS[tier] ?? "#6b7280");
-        return (
-          <Marker
-            key={s.id}
-            position={[s.lat, s.lng]}
-            icon={stationIcon(color, isSelected, s.maxPowerKw)}
-            eventHandlers={{ click: () => onSelect(s) }}
-          />
-        );
-      }),
+      stations
+        // The selected station is drawn OUTSIDE the cluster layer, below.
+        // Left in here it was swallowed by a cluster bubble at every zoom
+        // where its neighbours collapse — which is precisely when you most
+        // need to see which one you picked. It had selected styling that
+        // almost never got the chance to render.
+        .filter((s) => s.id !== selectedId)
+        .map((s) => {
+          const tier = getPowerTier(s.maxPowerKw, s.availability);
+          const color = TIER_COLORS[tier] ?? "#6b7280";
+          return (
+            <Marker
+              key={s.id}
+              position={[s.lat, s.lng]}
+              icon={stationIcon(color, false, s.maxPowerKw)}
+              eventHandlers={{ click: () => onSelect(s) }}
+            />
+          );
+        }),
     [stations, selectedId, onSelect],
   );
 
@@ -476,6 +503,18 @@ export default function StationMap({
       >
         {markers}
       </MarkerClusterGroup>
+
+      {/* Never clustered, always on top, and the map moves to it. Selecting a
+          station used to change nothing visible on the map at all. */}
+      {selected && (
+        <Marker
+          position={[selected.lat, selected.lng]}
+          icon={stationIcon("#2563eb", true, selected.maxPowerKw)}
+          eventHandlers={{ click: () => onSelect(selected) }}
+          zIndexOffset={1000}
+        />
+      )}
+      <PanTo target={selected} />
     </MapContainer>
   );
 }
