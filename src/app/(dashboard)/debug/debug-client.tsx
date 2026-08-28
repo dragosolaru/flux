@@ -24,6 +24,7 @@ import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
 import { SleepPanel } from "@/components/debug/SleepPanel";
+import { GeolocationProbe } from "@/components/debug/geolocation-probe";
 import { useSleepMode } from "@/lib/vehicle-sleep";
 
 interface ChargerStats {
@@ -2004,6 +2005,15 @@ export function DebugClient() {
         <p className="text-xs text-muted-foreground">Sonde de unică folosință. Fără buton de raport și fără etichete: nimic de aici nu descrie o stare, doar face lucruri când apeși.</p>
       </div>
 
+
+      <Panel
+        title="GPS din browser"
+        purpose="Poate pagina afla singură unde e mașina, și cât de des? Răspunsul decide dacă navigația în browser are nevoie de server de streaming sau nu."
+        open={open.geo ?? false}
+        onToggle={() => toggle("geo")}
+      >
+        <GeolocationProbe />
+      </Panel>
 
       <Panel
         title="Apelează o rută API"

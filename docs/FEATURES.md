@@ -863,6 +863,36 @@ have billed thirteen vehicle-document types to the energy quota.
 
 ---
 
+## 25b. Browser GPS probe (`/debug` → Unelte → "GPS din browser")
+
+**What:** measures whether the browser the app is running in can locate the car
+itself, and how fast. Reports secure context, whether `navigator.geolocation`
+exists, the Permissions state, time to first fix and its accuracy, then watches
+for 20s and reports the median gap between fixes and the distance moved.
+
+**Why it exists:** it decides an architecture rather than a detail. Position
+from the Fleet API is capped (reportedly a few hundred `vehicle_data` reads per
+vehicle per day) and cannot carry navigation. Position from the browser costs
+nothing and is capped by nothing — so if `watchPosition` delivers a fix every
+second or two in the car, turn-by-turn in the browser needs no streaming
+server, no mTLS and no always-on host. The public evidence on Tesla's browser
+is a decade of contradictory forum threads, none dated close enough to trust;
+the car is the only authority on its own browser.
+
+**How to use it:** open `/debug` in the car's browser, Unelte → GPS din
+browser, tap once, ideally while moving. Nothing is sent anywhere. Thresholds:
+a fix every ≤2s is navigation-grade (green), ≤5s lags (amber), worse is not
+navigation (red). Accuracy worse than ~50m is a network-derived fix rather than
+the car's GPS. The "moved" line only means something if the car is moving — a
+watch replaying one cached fix looks identical to a working one at a standstill.
+
+**Key files:** `src/components/debug/geolocation-probe.tsx`, mounted as a Panel
+in `src/app/(dashboard)/debug/debug-client.tsx`.
+
+**Dependencies:** none. Browser APIs only. Like the rest of `/debug` it is
+hardcoded Romanian rather than translated — it is a single-operator tool, not a
+product surface.
+
 ## 26. v2 redesign (`/v2`)
 
 **What:** the Instrument redesign, running **beside** the shipping app instead of
