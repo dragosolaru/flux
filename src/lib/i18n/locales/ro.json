@@ -1390,6 +1390,7 @@
     "frunk_open": "portbagajul din față deschis",
     "trunk_open": "portbagajul deschis",
     "charge_port_open": "portul de încărcare deschis",
-    "car_state_unknown": "Mașina nu și-a raportat starea"
+    "car_state_unknown": "Mașina nu și-a raportat starea",
+    "charging_controls": "Limită, amperaj, programare"
   }
 }

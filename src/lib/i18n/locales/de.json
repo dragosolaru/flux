@@ -1390,6 +1390,7 @@
     "frunk_open": "Frunk offen",
     "trunk_open": "Kofferraum offen",
     "charge_port_open": "Ladeklappe offen",
-    "car_state_unknown": "Das Auto hat seinen Zustand nicht gemeldet"
+    "car_state_unknown": "Das Auto hat seinen Zustand nicht gemeldet",
+    "charging_controls": "Limit, Stromstärke, Zeitplan"
   }
 }

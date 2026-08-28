@@ -1390,6 +1390,7 @@
     "frunk_open": "első csomagtartó nyitva",
     "trunk_open": "csomagtartó nyitva",
     "charge_port_open": "töltőnyílás nyitva",
-    "car_state_unknown": "Az autó nem jelentette az állapotát"
+    "car_state_unknown": "Az autó nem jelentette az állapotát",
+    "charging_controls": "Limit, áramerősség, ütemezés"
   }
 }

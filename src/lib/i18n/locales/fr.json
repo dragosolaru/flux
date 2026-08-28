@@ -1390,6 +1390,7 @@
     "frunk_open": "coffre avant ouvert",
     "trunk_open": "coffre ouvert",
     "charge_port_open": "trappe de charge ouverte",
-    "car_state_unknown": "La voiture n'a pas signalé son état"
+    "car_state_unknown": "La voiture n'a pas signalé son état",
+    "charging_controls": "Limite, ampérage, programmation"
   }
 }

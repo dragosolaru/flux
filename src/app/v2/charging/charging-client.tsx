@@ -1,12 +1,10 @@
 "use client";
 
-import { Zap } from "lucide-react";
-import { useState } from "react";
+import { SlidersHorizontal, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
   Arc,
-  ChipRow,
   HeroValue,
   Mono,
   Row,
@@ -14,17 +12,14 @@ import {
   Screen,
   ScreenHeader,
   SectionLabel,
-  TimeRow,
   ValueTable,
 } from "@/components/v2/instrument";
 import { NavBar } from "@/components/v2/nav";
 import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { useChargingHistory, type ChargingSessionRow } from "@/hooks/useChargingHistory";
 import { useVehicle } from "@/hooks/useVehicle";
-import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
-import { minutesFromMidnight, minutesToHhmm } from "@/lib/time";
 
 function formatMinutes(min: number | null | undefined): string {
   if (min == null || min <= 0) return "—";
@@ -45,7 +40,6 @@ export function ChargingV2Client({
   initialVehicleId: string;
 }) {
   const tc = useTranslations("charging");
-  const t = useTranslations("commands");
   const tv = useTranslations("v2");
 
   const { selectedVehicleId } = useVehicleContext();
@@ -63,20 +57,14 @@ export function ChargingV2Client({
     isLive,
     (s) => s?.chargingState === "charging",
   );
-  const { mutate, isPending, variables } = useVehicleCommand();
   const { data: history = [] } = useChargingHistory(
     vehicleId,
     vehicleId === initialVehicleId ? initialHistory : undefined,
   );
 
-  const [limit, setLimit] = useState<number | null>(null);
-  const [scheduleAt, setScheduleAt] = useState<string | null>(null);
-
-  const inFlight = (cmd: string) => isPending && variables?.command === cmd;
-  const sending = tv("sending");
 
   const soc = typeof state?.batteryLevel === "number" ? Math.round(state.batteryLevel) : null;
-  const target = limit ?? state?.chargeLimit ?? null;
+  const target = state?.chargeLimit ?? null;
   const charging = state?.chargingState === "charging";
 
   const values = [
@@ -128,50 +116,22 @@ export function ChargingV2Client({
             icon={<Zap strokeWidth={1.5} className="text-primary" />}
             label={<span className="text-primary">{tv("stations_nearby")}</span>}
             href="/v2/chargers"
+          />
+          {/* The charge limit and the schedule used to be duplicated here, as a
+              second copy with a different layout from the one on Commands.
+              Two places to change one setting is two places to disagree — and
+              this copy had no amperage, so it was the poorer of the two. The
+              label names what is over there rather than saying "settings",
+              because a link whose destination you have to guess is a link
+              nobody follows. */}
+          <Row
+            icon={<SlidersHorizontal strokeWidth={1.5} />}
+            label={tv("charging_controls")}
+            href="/v2/commands"
             last
           />
         </Rows>
       </div>
-
-      {state && (
-        <div className="mt-6">
-          <SectionLabel>{tc("limit_title")}</SectionLabel>
-          <div className="mt-2">
-            <ChipRow
-              label={tc("limit_label")}
-              unit="%"
-              values={[50, 60, 70, 80, 90, 100]}
-              current={target}
-              busy={inFlight("set_charge_limit")}
-              busyLabel={sending}
-              onPick={(v) => {
-                setLimit(v);
-                mutate({ vehicleId, command: "set_charge_limit", args: { percent: v } });
-              }}
-            />
-            <TimeRow
-              label={tc("scheduled_title")}
-              value={
-                scheduleAt ??
-                (state.scheduledChargingStartMinutes != null
-                  ? minutesToHhmm(state.scheduledChargingStartMinutes)
-                  : "23:00")
-              }
-              busy={inFlight("schedule_charging")}
-              busyLabel={sending}
-              action={t("apply")}
-              onChange={setScheduleAt}
-              onApply={(v) => {
-                const time = minutesFromMidnight(v);
-                if (time != null) {
-                  mutate({ vehicleId, command: "schedule_charging", args: { enable: true, time } });
-                }
-              }}
-              last
-            />
-          </div>
-        </div>
-      )}
 
       <div className="mt-7 pb-8">
         <SectionLabel>{tc("history_title")}</SectionLabel>
