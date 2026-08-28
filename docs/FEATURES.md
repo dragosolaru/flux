@@ -965,6 +965,24 @@ is wider than the car (`-14 0 228 375`) because a door swings about ten units
 past the body and an SVG clips at its viewBox — on the one state that most needs
 to read at a glance, "you left a door open", the line was cut off at the edge.
 
+**It is lit from one declared direction.** `L = (−0.535, +0.425, +0.73)` in car
+space — high, ahead of the nose, on the near side. Every panel tone comes out of
+one `lit()` function rather than taste: bonnet 0.80, roof 0.75, deck 0.63, flank
+0.52, nose 0.44, sill 0.02. The third digit of the light vector is load-bearing:
+it is tuned so the light's *screen* direction is perpendicular to the near
+beltline, which climbs 40 units from cowl to tail lamp. A gradient run along a
+sensible-looking light instead crossed that line and lit the tail while blacking
+the nose — wrong in a way you feel without being able to name it.
+
+Shading is a layer of **fills, painted before every stroke group**, so it
+physically cannot sit on top of a state mark. One knock-on had to be paid for:
+lighter panels cost white-on-dark strokes their contrast, so `IDLE` went 30→34%
+and `UNKNOWN` 10→12% to hold the tri-state gap exactly where it was. Far-side
+recession is `opacity` on a group rather than a second grey, so it behaves
+identically when the whole silhouette turns amber. The old `var(--background)`
+coupling is gone — every surface now has its own lit tone, so the drawing no
+longer assumes what is behind it.
+
 **It is drawn to three stroke weights and nothing outside them** — `T1` the
 silhouette and only the silhouette, `T2` anything that is a real gap in the
 sheet metal (shutlines, glass edges, tyres, mirrors), `T3` surface that is

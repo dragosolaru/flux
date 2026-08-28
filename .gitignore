@@ -54,3 +54,8 @@ next-env.d.ts
 # Seeded canvas output — regenerate with the design skill's seeder from the
 # .dc.html working files beside it. ~2 MB, and it changes wholesale every seed.
 design/flux-screens.html
+
+# Scratch harnesses. They keep getting swept in by `git add -A` while a
+# background agent is mid-render.
+*.tmp.mjs
+*.tmp.test.tsx

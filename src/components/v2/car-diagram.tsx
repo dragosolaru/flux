@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useId } from "react";
 
 import type { DoorsState, VehicleState, WindowsState } from "@/types/vehicle";
 
@@ -72,6 +73,29 @@ import type { DoorsState, VehicleState, WindowsState } from "@/types/vehicle";
  * sheet metal, T3 is surface that is neither. State always outranks structure —
  * an open door is drawn heavier than the shutline it just left.
  *
+ * ── on the shading ───────────────────────────────────────────────────────────
+ * A separate layer UNDERNEATH all of that, made only of fills. It is not a
+ * fourth weight and it must never become one: every stroke in the drawing is
+ * still exactly T1, T2, T3 or T_OPEN, and the shading is painted before any of
+ * them so it can never sit on top of a state mark.
+ *
+ * Four things, in the order they earn their keep:
+ *
+ *   1. ONE light. See `LIGHT` — declared once, and every panel tone comes out
+ *      of `lit()` rather than out of taste. Shading picked panel by panel is
+ *      the "different vanishing points" failure applied to value: it reads as
+ *      wrong and nobody can say why.
+ *   2. A ground. Three ellipses lying flat at z=0 — a faint lit floor, an
+ *      occlusion pool, a black patch under each tyre. Before them the car
+ *      floated, which is most of what made it look pasted on.
+ *   3. Gradients along that light, never flat tone, so a surface separates
+ *      from the one next to it without a line between them.
+ *   4. A shoulder highlight, and a quieter one on the wing crest. It is the
+ *      single most recognisable mark in automotive illustration and it is the
+ *      only thing in the drawing the eye is invited to travel ALONG.
+ *
+ * Nothing here animates, so `prefers-reduced-motion` is unaffected by it.
+ *
  * ── faults, all of which took a render to see ────────────────────────────────
  * The file's memory. Every one of these was invisible in the source and obvious
  * in a picture. The first nine are from the plan-view drawings this replaces;
@@ -130,6 +154,47 @@ import type { DoorsState, VehicleState, WindowsState } from "@/types/vehicle";
  *   · six silhouette paths sharing the single `stroke-dasharray: 1200` in
  *     globals.css. The short ones sit inside the gap for most of the draw-in
  *     and then pop. `pathLength={1200}` normalises them so they draw together.
+ *
+ * and from putting the light in:
+ *
+ *   · a black contact shadow on a page that is already L 0.08. Black is only
+ *     about fourteen sRGB levels below that ground, so the shadow was drawn,
+ *     was correct, and was invisible; the car went on floating. The drawing
+ *     now brings its own faintly-lit floor and the shadow is dark AGAINST
+ *     something. On a near-black UI a shadow needs a light, not more black.
+ *   · a cast shadow thrown where the light would actually throw it — rearward
+ *     and to the far side — which is precisely the ground the car itself
+ *     hides. Correct, and invisible for the second time. What reads is the
+ *     occlusion that gathers under any object whatever the light is doing, so
+ *     the pool is centred under the sill.
+ *   · a straight gradient axis crossing a line that climbs the screen. The
+ *     beltline rises 40 units from cowl to tail lamp, so the first flank
+ *     gradient — a sensible 1000mm along the light — lit the tail and left the
+ *     nose black, for no reason a viewer could name. Two fixes, both kept: the
+ *     axis is long enough that the residual skew is a fraction of the fall-off,
+ *     and the third digit of `LIGHT` is tuned so its SCREEN direction is
+ *     perpendicular to the shoulder. See the note on `LIGHT`.
+ *   · gradients on the horizontals. A flat panel under a directional light has
+ *     ONE tone; a ramp along the light across a bonnet puts the bright edge on
+ *     the FAR side, which is backwards. Bonnet, roof and boot lid get a crown
+ *     — a peak across the car, biased to the near half. See `span`.
+ *   · a highlight hung off a crease that also carries a stroked shutline. T2 is
+ *     1.4 wide and centred on the line, so the first 0.7 units of the highlight
+ *     are underneath it; a 26mm band is 1.7 units of curve separation and
+ *     arrived two-thirds invisible. Highlights start BELOW the stroke.
+ *   · a gradient stop placed for the front of a long shallow shape lands
+ *     halfway up the back of it. A "ground bounce" stop at the base of the
+ *     front side window arrived as a diagonal smear across the C-pillar.
+ *   · lifting the panel tones makes the CLOSED structure quieter, not louder.
+ *     IDLE and UNKNOWN are white-on-dark, so a lighter flank costs them
+ *     contrast and the tri-state gap narrows exactly where it matters. They
+ *     went 30→34% and 10→12% to hold the gap the shading had eaten.
+ *   · shared gradient ids. Two of these on one page and every url(#…) in both
+ *     resolves to the first one's defs; the contact sheet was the only place
+ *     that would ever have shown it. `useId()`.
+ *   · one user-space gradient for both wheels. The rear one sits 38 units
+ *     up-screen of the front, past the end of the axis, and came out flat.
+ *     One gradient per axle.
  */
 
 // A modern EV fastback saloon, in millimetres. Turned into ratios so the
@@ -421,11 +486,11 @@ const ground = (x: number, y: number, ax: number, by: number): string =>
 
 const OPEN = "var(--chart-3)"; // amber — open, and usually should not be
 const LIVE = "var(--chart-2)"; // green — running on purpose
-const IDLE = "oklch(0.97 0 0 / 30%)";
+const IDLE = "oklch(0.97 0 0 / 34%)";
 const BODY = "oklch(0.97 0 0 / 62%)";
 const PANEL = "oklch(0.97 0 0 / 34%)";
 const DETAIL = "oklch(0.97 0 0 / 20%)";
-const UNKNOWN = "oklch(0.97 0 0 / 13%)";
+const UNKNOWN = "oklch(0.97 0 0 / 12%)";
 /** The specular white. The only near-white in the drawing and it is used on
  *  exactly one thing: the shoulder. */
 const HILITE = "oklch(0.98 0 0)";
@@ -434,21 +499,27 @@ const HILITE = "oklch(0.98 0 0)";
 /**
  * ONE light, declared once, and every fill in this file is derived from it.
  *
- *   L = (−0.48, +0.44, +0.76) in car space — HIGH, AHEAD of the nose, and on
- *   the NEAR side.
+ *   L = (−0.535, +0.425, +0.73) in car space — HIGH, AHEAD of the nose, and on
+ *   the NEAR side. On screen it arrives from 22° to the left of straight up.
  *
- * On screen that lands about 14° to the left of straight down, which is what
- * "high and to the upper left" has to mean in this projection: the near flank
- * faces screen right-and-down, so a light literally at the upper-left corner
- * of the frame would rim-light the far side and leave the whole near flank —
- * most of the drawing — in shadow.
+ * The near flank faces screen right-and-down, so a light literally in the
+ * upper-left CORNER of the frame would rim the far side and leave the whole
+ * near flank — most of the drawing — in shadow. "Upper left" here therefore
+ * means high and a little to the left, which is where it looks like it is.
+ *
+ * The third digit of each component is not decoration. It is tuned so that the
+ * light's SCREEN direction, (0.374, 0.928), is perpendicular to the shoulder
+ * line: the near beltline runs 21° uphill from cowl to tail lamp, so a gradient
+ * down any other axis crosses it and shades the tail differently from the nose
+ * for no reason a viewer could name. Perpendicular to the shoulder, the whole
+ * flank falls off together. See the fault list.
  *
  * Everything else follows from `lit()` rather than from taste, which is the
  * point: shading picked panel by panel is the "different vanishing points"
  * failure applied to tone. It reads as wrong and nobody can say why.
  *
- *   bonnet 0.82 · roof 0.78 · flank at the shoulder 0.53 · deck 0.67 ·
- *   nose 0.38 · flank at the sill 0.16 · anything facing the road 0
+ *   bonnet 0.80 · roof 0.75 · deck 0.63 · flank at the shoulder 0.52 ·
+ *   nose 0.44 · flank at the sill 0.02 · anything facing the road 0
  *
  * The one declared exception is the glasshouse. Glass is not a Lambert
  * surface — it is dark because you are looking through it at a dark cabin, and
@@ -456,7 +527,7 @@ const HILITE = "oklch(0.98 0 0)";
  * and take their light as a single narrow band, placed along the same axis as
  * every other gradient. Stated here so it is a decision and not a contradiction.
  */
-const LIGHT: Q3 = [-0.48, 0.44, 0.76];
+const LIGHT: Q3 = [-0.535, 0.425, 0.73];
 
 /** Lambert, clamped at the terminator. The normal need not be unit length. */
 function lit(nx: number, ny: number, nz: number): number {
@@ -476,20 +547,25 @@ const K_DECK = slope(LIP, TAIL_T);
 const K_FLANK = lit(0, 1, 0.14);
 const K_SILL = lit(0, 1, -0.55);
 
-/** A body grey at Lambert level k. The car is near-black, so the whole scale
- *  lives between L 0.10 and L 0.44 — this is about separating surfaces, not
- *  about painting a picture. The chroma is the /v2 ground's own hue at a level
- *  no one can name as a colour; without it the greys read as a cut-out laid
- *  over the screen rather than as an object in the same air. */
-const tone = (k: number) => `oklch(${Math.round((0.098 + 0.34 * k) * 1000) / 1000} 0.008 240)`;
-/** The car's own darkest ink. This used to be `var(--background)` — the
- *  drawing borrowed the page's ground to occlude what was behind it, which
- *  only worked because it sits directly on /v2. Now every surface is a lit
- *  surface with a tone of its own, so the coupling is gone. What remains
- *  assumed is only that the ground is DARK: the contact shadow is black at
- *  low alpha, and on a light page it would be a bruise. /v2 is dark-only by
- *  design (see globals.css). */
-const INK = tone(0);
+/**
+ * A body grey at Lambert level k. The car is near-black, so the whole scale
+ * lives between L 0.088 and L 0.448 — this is about separating surfaces, not
+ * about painting a picture. The 1.25 exponent puts the extra resolution in the
+ * shadows, where a near-black car actually has its shape.
+ *
+ * The chroma is the /v2 ground's own hue at a level no one can name as a
+ * colour: not a new hue, and without it the greys read as a cut-out laid over
+ * the screen rather than as an object in the same air.
+ *
+ * `tone(0)` is also what the occluding fills used to get from
+ * `var(--background)`. That was a real coupling — the drawing borrowed the
+ * page's ground to hide what was behind it, and only worked because it sits
+ * directly on /v2. Every surface now has a lit tone of its own and the
+ * coupling is gone. What is still assumed is only that the page is DARK: the
+ * contact shadow is black at low alpha and on a light page would be a bruise.
+ * /v2 is dark-only by design — see globals.css.
+ */
+const tone = (k: number) => `oklch(${Math.round((0.088 + 0.36 * k ** 1.25) * 1000) / 1000} 0.008 240)`;
 
 /**
  * A gradient axis: from a point in car space, running mm millimetres ALONG the
@@ -497,39 +573,68 @@ const INK = tone(0);
  * can disagree about where the light is — the same guarantee `q()` gives the
  * geometry.
  */
-function ray(from: Q3, mm: number) {
+interface Axis {
+  readonly gradientUnits: "userSpaceOnUse";
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
+}
+function ray(from: Q3, mm: number): Axis {
   const to: Q3 = [from[0] - LIGHT[0] * mm, from[1] - LIGHT[1] * mm, from[2] - LIGHT[2] * mm];
   return {
-    gradientUnits: "userSpaceOnUse" as const,
+    gradientUnits: "userSpaceOnUse",
     x1: n(qx(from[0], from[1])),
     y1: n(qy(from[0], from[1], from[2])),
     x2: n(qx(to[0], to[1])),
     y2: n(qy(to[0], to[1], to[2])),
   };
 }
+/**
+ * The other axis, and the only one: straight ACROSS the car at station x, far
+ * side to near. The three roughly horizontal panels — bonnet, roof, boot lid —
+ * take this instead of `ray`, and it is not a second light. A flat panel under
+ * a directional light has exactly ONE tone; what varies across a bonnet is its
+ * own crown. So these three get a peak rather than a ramp, and the peak sits
+ * on the near half because that is the side the light is on.
+ */
+const span = (x: number, z: number, hw: number): Axis => ({
+  gradientUnits: "userSpaceOnUse",
+  x1: n(qx(x, -hw)),
+  y1: n(qy(x, -hw, z)),
+  x2: n(qx(x, hw)),
+  y2: n(qy(x, hw, z)),
+});
 
-/** How deep the shoulder highlight is at station x: nothing at the cowl,
- *  fullest just behind the mirror, thinning to nothing at the tail lamp. A
- *  highlight held at one width for the whole length is a stripe, not a
- *  highlight — it reads as trim. */
-const shoulderDrop = (x: number, deep: number) => {
-  const t = Math.min(1, Math.max(0, (x - COWL[0]) / (LIP[0] - COWL[0])));
-  return deep * Math.sin(Math.PI * t ** 0.72);
-};
-const dropPt = (p: Pt, deep: number): Pt => [p[0], p[1] - shoulderDrop(p[0], deep), p[2]];
-/** The sheet between an edge and a tapered copy of itself dropped below it —
- *  the shape a highlight takes when it rides a crease. */
-function band(e: Edge, deep: number): string {
-  const u: Edge = {
-    from: dropPt(e.from, deep),
-    segs: e.segs.map((g) =>
-      g.c1 ? cv(dropPt(g.c1, deep), dropPt(g.c2, deep), dropPt(g.to, deep)) : ln(dropPt(g.to, deep)),
-    ),
+/**
+ * The sheet between two tapered copies of an edge, `top` and `bottom` mm below
+ * it — the shape a highlight takes when it rides a crease.
+ *
+ * Two depths rather than one because the brightest core has to START below any
+ * shutline stroked along the same crease, or it is drawn underneath it. The
+ * taper runs to nothing at both ends of the edge, because a highlight held at
+ * one width for the whole length is a stripe and reads as trim; the clamp
+ * gives it a plateau in the middle so it still runs the LENGTH of the car
+ * rather than pooling into a blob over one door.
+ */
+function band(e: Edge, top: number, bottom: number): string {
+  const x0 = e.from[0];
+  const x1 = last(e)[0];
+  const taper = (x: number) => {
+    const t = Math.min(1, Math.max(0, (x - x0) / (x1 - x0)));
+    return Math.min(1, 1.9 * Math.sin(Math.PI * t ** 0.8));
   };
-  return open(e, 1) + `L${at(last(u), 1)}` + rev(u, 1) + "Z";
+  const copy = (deep: number): Edge => {
+    const p = (v: Pt): Pt => [v[0], v[1] - deep * taper(v[0]), v[2]];
+    return { from: p(e.from), segs: e.segs.map((g) => (g.c1 ? cv(p(g.c1), p(g.c2), p(g.to)) : ln(p(g.to)))) };
+  };
+  const a = copy(top);
+  const b = copy(bottom);
+  return open(a, 1) + `L${at(last(b), 1)}` + rev(b, 1) + "Z";
 }
 
-// The three weights. Anything drawn outside them is a mistake.
+// The three weights. Anything drawn outside them is a mistake. The shading is
+// not a fourth weight: it is fills, laid down underneath all of this.
 const T1 = 2.4; // silhouette
 const T2 = 1.4; // shutlines, glass edges, wheels, mirrors
 const T3 = 0.8; // surface detail: creases, lamps, apertures
@@ -549,8 +654,180 @@ function strokeFor(open: Tri): string {
 
 const MOVE = "d 280ms cubic-bezier(.22,1,.36,1), stroke 200ms ease, stroke-width 200ms ease";
 
+type Stop = readonly [offset: number, colour: string, alpha?: number];
+
+function Ramp({ id, axis, stops }: { id: string; axis: Axis; stops: readonly Stop[] }) {
+  return (
+    <linearGradient id={id} {...axis}>
+      {stops.map(([o, c, a], i) => (
+        <stop key={i} offset={`${o}%`} stopColor={c} stopOpacity={a} />
+      ))}
+    </linearGradient>
+  );
+}
+
+/**
+ * Every fill in the drawing, in one place, all of them on the one light.
+ *
+ * The three glass panes keep a dark base and take a narrow bright band where
+ * they catch the sky — a reflection has to be a hint, or the car turns into a
+ * mirror and the climate tint has nothing left to read against. The band is
+ * placed by the same `ray` as everything else, so it lies across all three
+ * panes at the same angle.
+ */
+function Shading({ id }: { id: (k: string) => string }) {
+  return (
+    <defs>
+      {/* The flank: the one big surface, and the one that carries the drama.
+          Bright just under the shoulder, falling to almost nothing where it
+          rolls under at the sill. */}
+      <Ramp
+        id={id("flank")}
+        axis={ray([2600, 900, 1265], 1950)}
+        stops={[
+          [0, tone(0.68)],
+          [22, tone(K_FLANK - 0.02)],
+          [55, tone(0.3)],
+          [80, tone(K_SILL + 0.07)],
+          [100, tone(K_SILL)],
+        ]}
+      />
+      {/* The front face wraps round the nose: the far end has turned away from
+          the light, the near end has not. */}
+      <Ramp
+        id={id("nose")}
+        axis={span(90, 560, 750)}
+        stops={[
+          [0, tone(0.18)],
+          [50, tone(K_NOSE - 0.04)],
+          [100, tone(K_NOSE + 0.17)],
+        ]}
+      />
+      <Ramp
+        id={id("bonnet")}
+        axis={span(900, 925, 900)}
+        stops={[
+          [0, tone(K_BONNET - 0.34)],
+          [26, tone(K_BONNET - 0.14)],
+          [52, tone(K_BONNET + 0.02)],
+          [72, tone(K_BONNET + 0.1)],
+          [100, tone(K_BONNET - 0.36)],
+        ]}
+      />
+      <Ramp
+        id={id("roof")}
+        axis={span(2800, MM.height, 700)}
+        stops={[
+          [0, tone(K_ROOF - 0.32)],
+          [28, tone(K_ROOF - 0.14)],
+          [56, tone(K_ROOF + 0.04)],
+          [76, tone(K_ROOF + 0.15)],
+          [100, tone(K_ROOF - 0.34)],
+        ]}
+      />
+      <Ramp
+        id={id("deck")}
+        axis={span(4400, 1060, 770)}
+        stops={[
+          [0, tone(K_DECK - 0.26)],
+          [56, tone(K_DECK + 0.06)],
+          [100, tone(K_DECK - 0.30)],
+        ]}
+      />
+      {/* The beltline shelf. Nearly all of it is under the glasshouse; it is
+          here so the sliver that shows is not a hole. */}
+      <Ramp
+        id={id("belt")}
+        axis={span(3000, 1080, 900)}
+        stops={[
+          [0, tone(0.16)],
+          [60, tone(0.34)],
+          [100, tone(0.12)],
+        ]}
+      />
+      <Ramp
+        id={id("wscreen")}
+        axis={ray([2520, 0, 1420], 640)}
+        stops={[
+          [0, tone(0.05)],
+          [30, tone(0.06)],
+          [42, tone(0.40)],
+          [55, tone(0.09)],
+          [100, tone(0.03)],
+        ]}
+      />
+      <Ramp
+        id={id("backlight")}
+        axis={ray([3020, 0, 1442], 560)}
+        stops={[
+          [0, tone(0.26)],
+          [22, tone(0.09)],
+          [100, tone(0.03)],
+        ]}
+      />
+      {/* Side glass. Two stops and no more: the glasshouse is a long shallow
+          triangle that climbs the screen, so a stop placed for the front pane
+          lands halfway up the rear one and arrives as a diagonal smear across
+          the C-pillar. */}
+      <Ramp
+        id={id("sideglass")}
+        axis={ray([2800, 700, 1600], 1000)}
+        stops={[
+          [0, tone(0.3)],
+          [46, tone(0.1)],
+          [100, tone(0.045)],
+        ]}
+      />
+      {/* One gradient per axle: the axis is in user space and the rear wheel
+          sits 38 units up-screen of the front one, so a shared axis would run
+          out before it got there and leave a flat tyre. */}
+      {([AXLE_F, AXLE_R] as const).map((x, i) => (
+        <Ramp
+          key={x}
+          id={id(i === 0 ? "tyreF" : "tyreR")}
+          axis={ray([x, WHEEL_Y, MM.tyreDiameter], 760)}
+          stops={[
+            [0, tone(0.24)],
+            [52, tone(0.06)],
+            [100, tone(0)],
+          ]}
+        />
+      ))}
+      {/* The ground, in three layers, and the first one is the whole trick.
+          The /v2 page is already at L 0.08, so a black shadow on it moves the
+          pixel by almost nothing and the car goes on floating — the first
+          attempt at this was invisible. So the drawing brings its own floor:
+          a wide, very faint LIFT that reads as road catching the same light,
+          and only then a dark pool and a black patch under each tyre. The
+          shadow is now dark against something. */}
+      <radialGradient id={id("floor")}>
+        <stop offset="0%" stopColor={HILITE} stopOpacity={0.085} />
+        <stop offset="52%" stopColor={HILITE} stopOpacity={0.08} />
+        <stop offset="76%" stopColor={HILITE} stopOpacity={0.05} />
+        <stop offset="100%" stopColor={HILITE} stopOpacity={0} />
+      </radialGradient>
+      <radialGradient id={id("pool")}>
+        <stop offset="0%" stopColor="#000" stopOpacity={0.97} />
+        <stop offset="52%" stopColor="#000" stopOpacity={0.88} />
+        <stop offset="78%" stopColor="#000" stopOpacity={0.5} />
+        <stop offset="100%" stopColor="#000" stopOpacity={0} />
+      </radialGradient>
+      <radialGradient id={id("contact")}>
+        <stop offset="0%" stopColor="#000" stopOpacity={0.98} />
+        <stop offset="52%" stopColor="#000" stopOpacity={0.82} />
+        <stop offset="100%" stopColor="#000" stopOpacity={0} />
+      </radialGradient>
+    </defs>
+  );
+}
+
 export function CarDiagram({ state }: { state: VehicleState | undefined }) {
   const t = useTranslations("v2");
+  // Gradient ids have to be unique per instance: two diagrams on one page would
+  // otherwise both resolve every url(#…) to the first one's defs.
+  const uid = useId();
+  const id = (k: string) => `${uid}${k}`;
+  const paint = (k: string) => `url(#${id(k)})`;
 
   const doors = state?.doorsOpen ?? null;
   const windows = state?.windowsOpen ?? null;
@@ -596,22 +873,63 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
         className="v2-car"
         style={{ width: "min(100%, 300px)", height: "auto" }}
       >
-        {/* Far side first, before anything opaque: what the body hides, the
+        <Shading id={id} />
+
+        {/* The ground, before anything else, so everything stands on it.
+            The pool is centred under the car and NOT thrown to where the light
+            would throw a cast shadow — that direction is rearward and to the
+            far side, which is precisely the ground the car itself hides, so a
+            correctly-placed cast shadow is an invisible one. What is wanted
+            here is the occlusion that gathers under any object whatever the
+            light is doing: it is what makes the sill sit on the road. */}
+        <path d={ground(2360, 280, 2380, 1320)} fill={paint("floor")} />
+        <path d={ground(2390, 0, 2060, 960)} fill={paint("pool")} />
+        <path d={ground(AXLE_F, WHEEL_Y - 30, 780, 470)} fill={paint("contact")} />
+        <path d={ground(AXLE_R, WHEEL_Y - 30, 780, 470)} fill={paint("contact")} />
+
+        {/* Far side next, before anything opaque: what the body hides, the
             body hides. What is left over is the sliver that is really there. */}
         <FarDoor d={DOOR_F} open={doors?.frontRight ?? null} />
         <FarDoor d={DOOR_R} open={doors?.rearRight ?? null} />
 
         {/* Surfaces: closed, silent, opaque. Every one of them is the sheet
-            metal between the far and near copies of a single authored edge. */}
-        {[FACE, BONNET, SHOULDER, DECK, WSCREEN, ROOF, BACKLIGHT].map((e, i) => (
-          <path key={i} d={strip(e)} fill={BG} />
-        ))}
-        <path d={wheel(AXLE_F, WHEEL_R, 1)} fill={BG} stroke={DETAIL} strokeWidth={T2} />
-        <path d={wheel(AXLE_R, WHEEL_R, 1)} fill={BG} stroke={DETAIL} strokeWidth={T2} />
+            metal between the far and near copies of a single authored edge,
+            and every one of them takes its tone from the one light. */}
+        <path d={strip(FACE)} fill={paint("nose")} />
+        <path d={strip(BONNET)} fill={paint("bonnet")} />
+        <path d={strip(SHOULDER)} fill={paint("belt")} />
+        <path d={strip(DECK)} fill={paint("deck")} />
+        <path d={strip(WSCREEN)} fill={paint("wscreen")} />
+        <path d={strip(ROOF)} fill={paint("roof")} />
+        <path d={strip(BACKLIGHT)} fill={paint("backlight")} />
+        <path d={wheel(AXLE_F, WHEEL_R, 1)} fill={paint("tyreF")} stroke={DETAIL} strokeWidth={T2} />
+        <path d={wheel(AXLE_R, WHEEL_R, 1)} fill={paint("tyreR")} stroke={DETAIL} strokeWidth={T2} />
         <path d={wheel(AXLE_F, WHEEL_R * 0.56, 1)} fill="none" stroke={DETAIL} strokeWidth={T3} />
         <path d={wheel(AXLE_R, WHEEL_R * 0.56, 1)} fill="none" stroke={DETAIL} strokeWidth={T3} />
-        <path d={BODY_FILL} fill={BG} />
-        <path d={GLASS_FILL(1)} fill={BG} />
+        <path d={BODY_FILL} fill={paint("flank")} />
+        <path d={GLASS_FILL(1)} fill={paint("sideglass")} />
+
+        {/* The shoulder: the bright line where the flank turns up to meet the
+            glasshouse, and the only place in the drawing the eye is invited to
+            travel. Three nested bands rather than a gradient — the crease
+            climbs 40 units across the drawing, so any straight gradient axis
+            crosses it and lights one end of the car more than the other. The
+            bands follow the crease itself and cannot. */}
+        <g fill={HILITE}>
+          <path d={band(SHOULDER, 0, 430)} fillOpacity={0.055} />
+          <path d={band(SHOULDER, 0, 180)} fillOpacity={0.11} />
+          {/* Starting 24mm down, not at the crease: the T2 shutline along this
+              same crease is 1.4 wide and centred on it, so the first 0.7 units
+              of anything hung off this line are underneath the stroke and might
+              as well not be drawn. The first attempt was a 26mm band that was
+              two-thirds invisible for exactly that reason. */}
+          <path d={band(SHOULDER, 24, 88)} fillOpacity={0.62} />
+          {/* The other crease the light finds: the top of the front wing. Much
+              quieter than the shoulder — it is a second line for the eye to
+              run along, not a second subject. */}
+          <path d={band(BONNET, 0, 150)} fillOpacity={0.07} />
+          <path d={band(BONNET, 16, 66)} fillOpacity={0.38} />
+        </g>
 
         {/* Climate: the panes tint and breathe. Stroke-less overlays, because
             v2-breathe animates opacity and would take an outline with it. */}
@@ -640,16 +958,19 @@ export function CarDiagram({ state }: { state: VehicleState | undefined }) {
               globals.css. Without it the short edges sit inside the gap for
               most of the draw-in and then pop, because one dash length cannot
               fit six paths of six different lengths. */}
-          {[
-            open(UNDER, 1),
-            across(BUMPER_F),
-            open(FACE, -1) + fwd(BONNET, -1),
-            GLASS_EDGE(-1),
-            open(DECK, -1),
-            across(TAIL_T),
-          ].map((d, i) => (
+          {[open(UNDER, 1), across(BUMPER_F), across(TAIL_T)].map((d, i) => (
             <path key={i} d={d} pathLength={1200} />
           ))}
+          {/* Atmospheric depth. The far side is a metre and a half of air
+              further away, and the /v2 ground is a blue-black, so letting that
+              ground through at 26% is both the recession and the cooling —
+              done with opacity rather than a second grey, so it works
+              identically when the whole silhouette turns amber for unlocked. */}
+          <g opacity={0.74}>
+            {[open(FACE, -1) + fwd(BONNET, -1), GLASS_EDGE(-1), open(DECK, -1)].map((d, i) => (
+              <path key={i} d={d} pathLength={1200} />
+            ))}
+          </g>
         </g>
 
         {/* Interior edges: real gaps in the sheet metal, and the creases where
