@@ -163,14 +163,56 @@ async function fetchWindow(bbox: BBox, timeoutMs: number): Promise<RawCharger[]>
   return out;
 }
 
+/** The part of a requested area that is actually in the Netherlands. */
+function clampToNl(bbox: BBox): BBox {
+  return {
+    minLat: Math.max(bbox.minLat, NL_BOUNDS.minLat),
+    minLng: Math.max(bbox.minLng, NL_BOUNDS.minLng),
+    maxLat: Math.min(bbox.maxLat, NL_BOUNDS.maxLat),
+    maxLng: Math.min(bbox.maxLng, NL_BOUNDS.maxLng),
+  };
+}
+
+/** The windows a request has to be broken into, since the endpoint rejects
+ *  anything much larger than a province. */
+function windowsFor(bbox: BBox): BBox[] {
+  const out: BBox[] = [];
+  for (let lat = bbox.minLat; lat < bbox.maxLat; lat += SWEEP_STEP_DEG) {
+    for (let lng = bbox.minLng; lng < bbox.maxLng; lng += SWEEP_STEP_DEG) {
+      out.push({
+        minLat: lat,
+        minLng: lng,
+        maxLat: Math.min(lat + SWEEP_STEP_DEG, bbox.maxLat),
+        maxLng: Math.min(lng + SWEEP_STEP_DEG, bbox.maxLng),
+      });
+    }
+  }
+  return out;
+}
+
 async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
   // The connector had no geographic gate, so it was queried for every tile
   // worldwide — which is where the run of `fetch 400` while ingesting Greece
   // came from. IRVE has had this gate all along.
   if (!overlapsNl(bbox)) return [];
 
+  // Overlapping is not the same as fitting. A corridor tile spanning
+  // 6,43 → 22,53 overlaps the Netherlands by a corner and is sixteen degrees
+  // wide, and the endpoint rejects anything much larger than a province — so
+  // every corridor ingest logged `fetch 400` with a bbox covering half of
+  // Europe. The gate was necessary and not sufficient: the area is clipped to
+  // the country and then swept, exactly as fetchCountryNl already does.
+  const area = clampToNl(bbox);
+
   try {
-    return await fetchWindow(bbox, 12_000);
+    const windows = windowsFor(area);
+    if (windows.length <= 1) return await fetchWindow(area, 12_000);
+
+    const byRef = new Map<string, RawCharger>();
+    for (const w of windows) {
+      for (const row of await fetchWindow(w, 12_000)) byRef.set(row.sourceRef, row);
+    }
+    return [...byRef.values()];
   } catch (err) {
     recordDebugLog("error", "ndw", "fetch failed:", {
       detail: err instanceof Error ? err.message : String(err),

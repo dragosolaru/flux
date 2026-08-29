@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { canonicalConnectorType } from "../normalize";
+import type { BBox } from "../types";
 
 // The connector logs failures to Supabase; the tests exercise the failure paths
 // and have no database.
@@ -221,5 +222,47 @@ describe("OCPI connector identifiers", () => {
     ["CHADEMO", "chademo"],
   ])("%s → %s", (input, expected) => {
     expect(canonicalConnectorType(input)).toBe(expected);
+  });
+});
+
+/**
+ * Overlapping the Netherlands is not the same as fitting inside it.
+ *
+ * The connector had a geographic gate and it was not enough: a corridor tile
+ * spanning 6,43 → 22,53 clips the Dutch border by a corner while being sixteen
+ * degrees wide, and the endpoint rejects anything much larger than a province.
+ * Every corridor ingest logged `fetch 400` with a bbox covering half of Europe,
+ * for three weeks, and the log line looked like an API problem rather than ours.
+ */
+describe("clamping a request to the country", () => {
+  const NL = { minLng: 3.3, minLat: 50.7, maxLng: 7.3, maxLat: 53.6 };
+  const STEP = 0.5;
+
+  const clamp = (b: BBox): BBox => ({
+    minLat: Math.max(b.minLat, NL.minLat),
+    minLng: Math.max(b.minLng, NL.minLng),
+    maxLat: Math.min(b.maxLat, NL.maxLat),
+    maxLng: Math.min(b.maxLng, NL.maxLng),
+  });
+
+  const corridor: BBox = { minLng: 6, minLat: 43, maxLng: 22, maxLat: 53 };
+
+  it("never asks for anything outside the country", () => {
+    const c = clamp(corridor);
+    expect(c.minLat).toBeGreaterThanOrEqual(NL.minLat);
+    expect(c.maxLng).toBeLessThanOrEqual(NL.maxLng);
+  });
+
+  it("turns the offending tile into something the endpoint accepts", () => {
+    const c = clamp(corridor);
+    // 16° wide before, well under a degree and a half after.
+    expect(corridor.maxLng - corridor.minLng).toBeGreaterThan(15);
+    expect(c.maxLng - c.minLng).toBeLessThanOrEqual(1.5);
+  });
+
+  it("still needs sweeping when the clip is wider than one window", () => {
+    const c = clamp(corridor);
+    const needsSweep = c.maxLng - c.minLng > STEP || c.maxLat - c.minLat > STEP;
+    expect(needsSweep).toBe(true);
   });
 });

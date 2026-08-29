@@ -99,6 +99,13 @@ function mapFeature(f: AustriaFeature): RawCharger | null {
 }
 
 async function fetchTile(bbox: BBox): Promise<RawCharger[]> {
+  // AUSTRIA_URL defaults to empty because the old endpoint went away and no
+  // replacement has been verified. The country sweep below checks that; this
+  // path did not, so every corridor ingest called fetch("?geometry=…") with no
+  // base and logged "Failed to parse URL" — an outage reported as a parser bug,
+  // for three weeks. One guard, two callers.
+  if (AUSTRIA_URL.length === 0) return [];
+
   // Only query when the bbox overlaps Austria (rough bounds check saves API calls)
   if (bbox.maxLat < 46.3 || bbox.minLat > 49.1 || bbox.maxLng < 9.5 || bbox.minLng > 17.2) {
     return [];
