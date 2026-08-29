@@ -1225,12 +1225,26 @@ on, which is how the last wrong baseline was caught.
 the car has a real one at **Controls → Service → Battery Health**. `/insights`
 says so under the figure, so the number is not mistaken for a measurement.
 
-**How to use:** UI `/insights` → Battery health. No new API, no new call to the
-car — the data was already in every `vehicle_data` response.
+**It has to survive the car sleeping.** The badge arrives only with a live
+read, and a parked Tesla is asleep most of the day — so on the first cut the
+advice appeared for the few minutes the car happened to be awake and vanished
+the rest of the time, which reads as a broken feature rather than as a sleeping
+car. The badge is a fact about the vehicle, not a reading, so it is written once
+to `vehicles.trim_badge` (migration `050`) and `loadLastKnown` answers from it.
+Same for the simulator: a field added after a snapshot was written is simply
+absent from the stored JSON, so `sanitizeState` backfills it and every mock car
+created before the change gets it on the next tick.
+
+**How to use:** UI `/insights` → Battery health (it is a section on that page,
+not a new menu entry). No new call to the car — the data was already in every
+`vehicle_data` response.
 
 **Key files:** `src/lib/tesla/api.ts` (`TRIM_FACTS`, `trimKey`,
-`batteryChemistry`, `estimateSoH`), `src/types/vehicle.ts`
+`batteryChemistry`, `chemistryForBadge`, `estimateSoH`), `src/types/vehicle.ts`
 (`batteryChemistry`, `trimBadge` on `VehicleState`),
+`src/lib/tesla/last-known.ts`, `src/lib/mock/persistence.ts` (`sanitizeState`),
+`src/app/api/vehicles/[vehicleId]/state/route.ts`,
+`supabase/migrations/050_vehicles_trim_badge.sql`,
 `src/app/(dashboard)/insights/insights-client.tsx`,
 `src/lib/tesla/__tests__/soh.test.ts`.
 

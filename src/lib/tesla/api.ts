@@ -513,7 +513,19 @@ export function trimKey(
 export function batteryChemistry(
   config: Partial<TeslaVehicleConfig> | null | undefined,
 ): BatteryChemistry | null {
-  return TRIM_FACTS[trimKey(config)]?.chemistry ?? null;
+  return chemistryForBadge(trimKey(config));
+}
+
+/**
+ * The same answer from a stored badge instead of a live response.
+ *
+ * A parked Tesla is asleep most of the day, and a sleeping car is answered from
+ * storage — which is why the badge is kept on the vehicle row. Without this the
+ * chemistry advice appeared only in the minutes the car happened to be awake,
+ * which reads as a broken feature rather than as a sleeping car.
+ */
+export function chemistryForBadge(badge: string | null | undefined): BatteryChemistry | null {
+  return badge ? (TRIM_FACTS[badge]?.chemistry ?? null) : null;
 }
 
 export interface SoHEstimate {

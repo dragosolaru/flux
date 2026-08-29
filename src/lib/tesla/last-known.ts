@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { VehicleState } from "@/types/vehicle";
+import { chemistryForBadge } from "./api";
 
 /**
  * The last reading a live car gave us, and how to hand it back when the car is
@@ -84,7 +85,7 @@ export async function saveLastKnown(
  */
 export async function loadLastKnown(
   supabase: SupabaseClient,
-  vehicle: { id: string; brand: string; display_name: string },
+  vehicle: { id: string; brand: string; display_name: string; trim_badge?: string | null },
 ): Promise<VehicleState | null> {
   const { data } = await supabase
     .from("vehicle_snapshots")
@@ -102,7 +103,7 @@ export async function loadLastKnown(
     displayName: vehicle.display_name,
     brand: vehicle.brand as VehicleState["brand"],
     dataSource: "live",
-    trimBadge: null,
+    trimBadge: vehicle.trim_badge ?? null,
 
     // The whole point: the car is not online, and the reading is from when it
     // last was. `lastSeenAt` is what makes the age of it visible.
@@ -122,9 +123,9 @@ export async function loadLastKnown(
     scheduledDepartureEnabled: null,
     scheduledDepartureMinutes: null,
     batteryHealthPct: null,
-    // Chemistry comes from the live `vehicle_config`, which a stored snapshot
-    // never carried. Unknown rather than assumed.
-    batteryChemistry: null,
+    // Chemistry is a fact about the car, not a reading, so it survives the car
+    // sleeping — the badge is kept on the vehicle row precisely for this.
+    batteryChemistry: chemistryForBadge(vehicle.trim_badge),
     cellVoltages: null,
 
     motionState: "parked",

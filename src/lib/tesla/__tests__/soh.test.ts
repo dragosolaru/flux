@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { batteryChemistry, estimateSoH, trimKey } from "../api";
+import { batteryChemistry, chemistryForBadge, estimateSoH, trimKey } from "../api";
 
 /**
  * State of health, and the baseline it is measured against.
@@ -76,6 +76,25 @@ describe("batteryChemistry", () => {
     expect(batteryChemistry({ car_type: "modely", trim_badging: "74d" })).toBeNull();
     expect(batteryChemistry(null)).toBeNull();
     expect(batteryChemistry({})).toBeNull();
+  });
+});
+
+describe("chemistryForBadge", () => {
+  it("answers from a stored badge, so a sleeping car still knows what it is", () => {
+    // A parked Tesla is asleep most of the day and is answered from storage.
+    // Without this the advice appeared only in the minutes the car was awake,
+    // which looks like a broken feature rather than a sleeping car.
+    expect(chemistryForBadge("model3:p74d")).toBe("nmc");
+  });
+
+  it("is null for a badge we have not mapped, and for no badge at all", () => {
+    expect(chemistryForBadge("model3:xyz")).toBeNull();
+    expect(chemistryForBadge(null)).toBeNull();
+    expect(chemistryForBadge("")).toBeNull();
+  });
+
+  it("agrees with the live path, because both read the same table", () => {
+    expect(chemistryForBadge(trimKey(M3P))).toBe(batteryChemistry(M3P));
   });
 });
 

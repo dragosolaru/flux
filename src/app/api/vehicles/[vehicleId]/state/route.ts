@@ -59,7 +59,9 @@ export async function GET(
 
   const { data: vehicle, error: vehErr } = await supabase
     .from("vehicles")
-    .select("id, brand, data_source, display_name, model, tesla_vehicle_id, tesla_region")
+    .select(
+      "id, brand, data_source, display_name, model, tesla_vehicle_id, tesla_region, trim_badge",
+    )
     .eq("id", vehicleId)
     .eq("user_id", session.user.id)
     .maybeSingle();
@@ -82,6 +84,7 @@ export async function GET(
         id: vehicle.id,
         brand: vehicle.brand,
         display_name: vehicle.display_name,
+        trim_badge: vehicle.trim_badge,
       });
       if (lastKnown) return NextResponse.json(lastKnown);
       return NextResponse.json(
@@ -106,6 +109,21 @@ export async function GET(
         after(saveLastKnown(supabase, vehicle.id, state).catch((err: unknown) => {
           console.error("[saveLastKnown]", vehicle.id, err);
         }));
+        // The badge only arrives while the car is awake, and it is what the
+        // sleeping path has to answer from. Written once, then only if the car
+        // starts saying something different.
+        if (state.trimBadge && state.trimBadge !== vehicle.trim_badge) {
+          const badge = state.trimBadge;
+          after(
+            (async () => {
+              const { error } = await supabase
+                .from("vehicles")
+                .update({ trim_badge: badge })
+                .eq("id", vehicle.id);
+              if (error) console.error("[trim_badge]", vehicle.id, error);
+            })(),
+          );
+        }
         if (state.batteryHealthPct != null) {
           const soh = state.batteryHealthPct;
           after(recordBatteryHealth(supabase, vehicle.id, soh).catch((err: unknown) => {
@@ -122,6 +140,7 @@ export async function GET(
             id: vehicle.id,
             brand: vehicle.brand,
             display_name: vehicle.display_name,
+            trim_badge: vehicle.trim_badge,
           });
           if (lastKnown) return NextResponse.json(lastKnown);
           return NextResponse.json(

@@ -62,6 +62,13 @@ function sanitizeState(state: VehicleState): VehicleState {
       state.batteryRangeKm != null ? num(state.batteryRangeKm, 0) : state.batteryRangeKm,
     chargingRateKw:
       state.chargingRateKw != null ? num(state.chargingRateKw, 0) : state.chargingRateKw,
+    // A field added after a snapshot was written is simply absent from the
+    // stored JSON, so every simulated car created before it existed would show
+    // no chemistry — a new feature that appears only for new vehicles. Every
+    // simulated model charges on the NMC curve, so this is the truth for all of
+    // them, and it self-heals on the next save.
+    batteryChemistry: state.batteryChemistry ?? "nmc",
+    trimBadge: state.trimBadge ?? null,
   };
 }
 
