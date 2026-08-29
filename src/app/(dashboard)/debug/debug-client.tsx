@@ -82,6 +82,13 @@ interface DebugPayload {
     }[];
     virtualKeyUrl?: string | null;
   };
+  /** What actually reached the car in the last 24h, per hour. */
+  teslaCalls?: {
+    available: boolean;
+    read: number;
+    wake: number;
+    command: number;
+  };
   roadmap?: {
     goal: string;
     milestones: {
@@ -359,12 +366,28 @@ export function DebugClient() {
   // The car answered and said our key is not one of its keys. Distinct from
   // never having paired: re-pairing is the obvious response and the wrong one,
   // because it re-pairs whatever key Tesla currently holds for the domain.
-  const refusedForKeyNotPaired = groupedLogs.tesla.some(
-    (l) =>
-      l.scope === "vehicles/commands" &&
-      typeof l.context?.matched === "string" &&
-      l.context.matched === "key-not-paired",
-  );
+  //
+  // Only when it is still TRUE. This had no freshness filter and no notion of
+  // being disproven, so a refusal from three days ago went on warning about
+  // pairing while eighteen commands reached the car that same morning. The
+  // owner read the panel, saw the warning, and reported the panel — correctly.
+  // A pairing failure is disproven the moment a command succeeds, and this now
+  // says so on both counts: recent, and not since contradicted.
+  const lastKeyRefusal = groupedLogs.tesla
+    .filter(
+      (l) =>
+        l.scope === "vehicles/commands" &&
+        typeof l.context?.matched === "string" &&
+        l.context.matched === "key-not-paired",
+    )
+    .reduce<number>((newest, l) => Math.max(newest, Date.parse(l.latest)), 0);
+  const commandsReachedCar = (data?.teslaCalls?.command ?? 0) > 0;
+  const refusedForKeyNotPaired =
+    lastKeyRefusal > 0 &&
+    generatedAtMs - lastKeyRefusal < DAY_MS &&
+    // A command counted in the last 24h is the car accepting our key. It
+    // outranks any older log line claiming otherwise.
+    !commandsReachedCar;
 
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
@@ -1526,7 +1549,7 @@ export function DebugClient() {
 
       <Panel
         title="Activitatea mașinii"
-        purpose="Erorile produse de mașină și de API-ul Tesla. Gol aici înseamnă că o comandă eșuată n-a ajuns niciodată la server — sau că a funcționat."
+        purpose="Erorile produse de mașină și de API-ul Tesla, cu ce a reușit între timp. O eroare veche fără nimic după ea e istorie, nu o problemă."
         badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "mai vechi" : "liniște"}
         tone={teslaFresh > 0 ? "warn" : undefined}
         open={open.carLog ?? false}
@@ -1538,6 +1561,29 @@ export function DebugClient() {
           collapsed. Split by area because a flat list is always dominated by
           whichever subsystem is noisiest — never the one being debugged.
         </p>
+        {/* What succeeded, above what failed. The list alone told the owner his
+            commands were broken while eighteen of them were reaching the car
+            that morning — the errors were three days old and nothing on screen
+            said so, or said what had happened since. */}
+        {data?.teslaCalls?.available && (
+          <div className="rounded-lg border border-border px-3 py-2.5 text-xs">
+            <span className="text-muted-foreground">În ultimele 24h au ajuns la mașină </span>
+            <span className={commandsReachedCar ? "text-emerald-400" : "text-muted-foreground"}>
+              {data.teslaCalls.command} comenzi
+            </span>
+            <span className="text-muted-foreground">
+              {" "}și {data.teslaCalls.read} citiri
+              {data.teslaCalls.wake > 0 ? `, ${data.teslaCalls.wake} treziri` : ", nicio trezire"}.
+            </span>
+            {commandsReachedCar && lastKeyRefusal > 0 && (
+              <span className="mt-1 block text-muted-foreground">
+                Deci împerecherea cheii funcționează, oricât de alarmant ar arăta o refuzare mai
+                veche mai jos.
+              </span>
+            )}
+          </div>
+        )}
+
         <LogGroup
           title="Tesla și mașina"
           entries={groupedLogs.tesla}

@@ -142,9 +142,23 @@ export async function GET() {
   // resolved here — but leaving it out entirely is how the checklist came to
   // report every prerequisite met while linking still failed with an empty
   // vehicle list. Named explicitly, with the panel's own button as the check.
+  //
+  // The fallback used to be unconditional, so once every variable was set the
+  // panel said "partner account registration" for ever — including on a day
+  // when eighteen commands had already reached the car, which is only possible
+  // if registration, pairing and the signing proxy all work. A checklist whose
+  // last item can never be ticked is a checklist nobody believes.
+  //
+  // Commands counted in the last 24h are that proof, so they are what closes
+  // it. Registration still has no environment variable to read, which is why
+  // it is inferred from evidence rather than asserted.
+  const teslaCalls = await readTeslaCalls();
+  const commandsReachedCar = (teslaCalls?.command ?? 0) > 0;
   const teslaNextStep =
     teslaSteps.find((s) => !s.ok)?.step ??
-    "partner account registration — use the button below to check";
+    (commandsReachedCar
+      ? null
+      : "partner account registration — use the button below to check");
 
   // What the driver actually granted, per linked car. Worth surfacing because
   // Tesla's consent screen is a set of tickboxes, so a grant can come back
@@ -221,7 +235,7 @@ export async function GET() {
     // question this panel exists to answer — did anything reach the car — was
     // impossible to check from a pasted report, because the counts lived behind
     // a second request the Copy button never made.
-    teslaCalls: await readTeslaCalls(),
+    teslaCalls,
     warnings,
   });
 }
