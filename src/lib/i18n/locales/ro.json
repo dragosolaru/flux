@@ -1277,7 +1277,8 @@
       "car": "Mașina",
       "charging": "Încărc.",
       "more": "Mai mult",
-      "commands": "Comenzi"
+      "commands": "Comenzi",
+      "map": "Hartă"
     },
     "live": "Live",
     "paused": "Pe pauză",
@@ -1400,6 +1401,9 @@
     "chip_frunk": "Capotă",
     "chip_trunk": "Portbagaj",
     "chip_port": "Port",
-    "nothing_open": "Nimic deschis"
+    "nothing_open": "Nimic deschis",
+    "stations_link": "Stații de încărcare",
+    "find_car_link": "Unde e mașina",
+    "plan_trip": "Planifică un drum"
   }
 }

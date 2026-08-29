@@ -36,10 +36,25 @@ import { useTranslations } from "next-intl";
  * Charging covers both halves of one topic: this car's session, and where to
  * get more. The nearby stations are a row at the top of that screen.
  */
+/**
+ * Four decisions, in the order they get made on a drive.
+ *
+ * The map replaced charging here. Charging was carrying a live session and a
+ * history, and the dashboard already answers "how full is it" — whereas "where
+ * can I charge" is a decision made on the road, with the battery falling, and
+ * it was two taps deep under More. A bottom tab is for what you need while
+ * moving, not for what you look back at.
+ *
+ * The map is also where the trip planner and the station list now live, so the
+ * three screens that were all a map are one entry rather than three.
+ */
 const TABS = [
   { key: "car", href: "/v2/dashboard" },
   { key: "commands", href: "/v2/commands" },
-  { key: "charging", href: "/v2/charging" },
+  // Three routes, one tab. The section is where you plan and where you look
+  // for a charger, so being on any of them has to light the same tab — a tab
+  // bar with nothing lit is a tab bar that has lost you.
+  { key: "map", href: "/v2/chargers", also: ["/v2/trip", "/v2/map"] },
   { key: "more", href: "/v2/more" },
 ] as const;
 
@@ -61,7 +76,11 @@ export function NavBar() {
       }}
     >
       {TABS.map((tab) => {
-        const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        const also: readonly string[] = "also" in tab ? tab.also : [];
+        const active =
+          pathname === tab.href ||
+          pathname.startsWith(`${tab.href}/`) ||
+          also.some((p) => pathname === p || pathname.startsWith(`${p}/`));
         return (
           <Link
             key={tab.key}

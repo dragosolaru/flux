@@ -1277,7 +1277,8 @@
       "car": "Car",
       "charging": "Charge",
       "more": "More",
-      "commands": "Controls"
+      "commands": "Controls",
+      "map": "Map"
     },
     "live": "Live",
     "paused": "Paused",
@@ -1400,6 +1401,9 @@
     "chip_frunk": "Bonnet",
     "chip_trunk": "Boot",
     "chip_port": "Port",
-    "nothing_open": "Nothing open"
+    "nothing_open": "Nothing open",
+    "stations_link": "Charging stations",
+    "find_car_link": "Where the car is",
+    "plan_trip": "Plan a trip"
   }
 }

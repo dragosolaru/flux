@@ -321,6 +321,8 @@ interface StationMapProps {
   stations: Charger[];
   center: { lat: number; lng: number };
   selected: Charger | null;
+  /** Driving route to the selection, [lat,lng] pairs. Empty until it arrives. */
+  routeLine?: [number, number][];
   onSelect: (s: Charger) => void;
   userLocation?: { lat: number; lng: number } | null;
   /** The car, when the map was opened to go and find it. */
@@ -380,6 +382,7 @@ export default function StationMap({
   stations,
   center,
   selected,
+  routeLine,
   onSelect,
   userLocation,
   carLocation,
@@ -491,6 +494,16 @@ export default function StationMap({
             <div className="text-xs font-medium">{t("locate_me")}</div>
           </Popup>
         </Marker>
+      )}
+
+      {/* The road, drawn before the pins so a marker is never buried under it.
+          Solid and primary-coloured, unlike the dashed walk line further down:
+          that one is a bearing we did not compute, this one is a road we did. */}
+      {routeLine && routeLine.length > 1 && (
+        <Polyline
+          positions={routeLine}
+          pathOptions={{ color: "#22d3ee", weight: 5, opacity: 0.85 }}
+        />
       )}
 
       {/* Station markers — clustered so dense/overlapping sites collapse into a

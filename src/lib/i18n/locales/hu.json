@@ -1277,7 +1277,8 @@
       "car": "Autó",
       "charging": "Töltés",
       "more": "Több",
-      "commands": "Parancsok"
+      "commands": "Parancsok",
+      "map": "Térkép"
     },
     "live": "Élő",
     "paused": "Szünetel",
@@ -1400,6 +1401,9 @@
     "chip_frunk": "Motorháztető",
     "chip_trunk": "Csomagtartó",
     "chip_port": "Töltőnyílás",
-    "nothing_open": "Semmi nyitva"
+    "nothing_open": "Semmi nyitva",
+    "stations_link": "Töltőállomások",
+    "find_car_link": "Hol az autó",
+    "plan_trip": "Út tervezése"
   }
 }

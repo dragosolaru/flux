@@ -1277,7 +1277,8 @@
       "car": "Voiture",
       "charging": "Charge",
       "more": "Plus",
-      "commands": "Commandes"
+      "commands": "Commandes",
+      "map": "Carte"
     },
     "live": "Live",
     "paused": "En pause",
@@ -1400,6 +1401,9 @@
     "chip_frunk": "Capot",
     "chip_trunk": "Coffre",
     "chip_port": "Trappe",
-    "nothing_open": "Rien d'ouvert"
+    "nothing_open": "Rien d'ouvert",
+    "stations_link": "Bornes de recharge",
+    "find_car_link": "Où est la voiture",
+    "plan_trip": "Planifier un trajet"
   }
 }

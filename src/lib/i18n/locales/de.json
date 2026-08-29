@@ -1277,7 +1277,8 @@
       "car": "Auto",
       "charging": "Laden",
       "more": "Mehr",
-      "commands": "Befehle"
+      "commands": "Befehle",
+      "map": "Karte"
     },
     "live": "Live",
     "paused": "Pausiert",
@@ -1400,6 +1401,9 @@
     "chip_frunk": "Haube",
     "chip_trunk": "Kofferraum",
     "chip_port": "Klappe",
-    "nothing_open": "Nichts offen"
+    "nothing_open": "Nichts offen",
+    "stations_link": "Ladestationen",
+    "find_car_link": "Wo das Auto steht",
+    "plan_trip": "Fahrt planen"
   }
 }

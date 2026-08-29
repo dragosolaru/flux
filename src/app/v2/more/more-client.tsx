@@ -4,12 +4,10 @@ import {
   Car,
   FileText,
   Gauge,
-  MapPin,
-  Plug,
   Receipt,
-  Route,
   Settings as SettingsIcon,
   Zap,
+  BatteryCharging,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -32,7 +30,6 @@ export function MoreV2Client() {
       <div className="mt-6">
         <SectionLabel>{t("section.car")}</SectionLabel>
         <Rows className="mt-2">
-          <Row icon={<MapPin strokeWidth={1.5} />} label={t("map")} href="/v2/map" />
           <Row icon={<Car strokeWidth={1.5} />} label={t("garage")} href="/v2/garage" />
           <Row icon={<FileText strokeWidth={1.5} />} label={t("documents")} href="/v2/documents" last />
         </Rows>
@@ -41,6 +38,7 @@ export function MoreV2Client() {
       <div className="mt-7">
         <SectionLabel>{t("section.money")}</SectionLabel>
         <Rows className="mt-2">
+          <Row icon={<BatteryCharging strokeWidth={1.5} />} label={t("charging")} href="/v2/charging" />
           <Row icon={<Receipt strokeWidth={1.5} />} label={t("costs")} href="/v2/costs" />
           <Row icon={<Zap strokeWidth={1.5} />} label={t("energy")} href="/v2/energy" />
           <Row icon={<Gauge strokeWidth={1.5} />} label={t("insights")} href="/v2/insights" last />
@@ -50,8 +48,6 @@ export function MoreV2Client() {
       <div className="mt-7">
         <SectionLabel>{t("section.planning")}</SectionLabel>
         <Rows className="mt-2">
-          <Row icon={<Route strokeWidth={1.5} />} label={t("trip")} href="/v2/trip" />
-          <Row icon={<Plug strokeWidth={1.5} />} label={t("charging_map")} href="/v2/chargers" />
           <Row
             icon={<SettingsIcon strokeWidth={1.5} />}
             label={t("settings")}

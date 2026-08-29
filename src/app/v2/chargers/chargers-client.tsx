@@ -161,6 +161,30 @@ export function ChargersV2Client() {
   });
 
   const [selected, setSelected] = useState<Charger | null>(null);
+
+  // The road to the selection, drawn on the map. Asked for only once a station
+  // is picked and only when we know where we are — a route from nowhere is not
+  // a shorter route, it is a wrong one.
+  const { data: road } = useQuery({
+    queryKey: ["route", centre?.lat, centre?.lng, selected?.id],
+    queryFn: async () => {
+      const res = await fetch("/api/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: centre, to: { lat: selected!.lat, lng: selected!.lng } }),
+      });
+      if (!res.ok) throw new Error("route");
+      return (await res.json()) as {
+        distanceKm: number;
+        drivingMinutes: number;
+        line: [number, number][];
+      };
+    },
+    enabled: centre != null && selected != null,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
   /** The station the map is centred on, when it was opened from a list row. */
   const [focused, setFocused] = useState<Charger | null>(null);
 
@@ -190,6 +214,25 @@ export function ChargersV2Client() {
         metaTone={!locating && centre == null ? "amber" : "muted"}
       />
 
+      {/* The other two questions this tab now answers. They were three separate
+          menu entries — a map, a planner and a station list — which is three
+          places to look for one thing: where am I going and where do I charge. */}
+      <div className="mt-4">
+        <Rows>
+          <Row
+            icon={<RouteIcon strokeWidth={1.5} className="text-primary" />}
+            label={<span className="text-primary">{tv("plan_trip")}</span>}
+            href="/v2/trip"
+          />
+          <Row
+            icon={<Navigation strokeWidth={1.5} />}
+            label={tv("find_car_link")}
+            href="/v2/map"
+            last
+          />
+        </Rows>
+      </div>
+
       <div className="mt-4">
         <ChipRow
           label={t("filter_power")}
@@ -212,6 +255,7 @@ export function ChargersV2Client() {
               stations={chargers}
               center={focused ?? centre}
               selected={selected}
+              routeLine={road?.line}
               onSelect={setSelected}
               userLocation={here}
               isFetching={isLoading}
