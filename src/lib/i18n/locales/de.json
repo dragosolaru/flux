@@ -785,7 +785,8 @@
     "send_to_car_error": "Konnte nicht ans Auto senden",
     "sending": "Wird gesendet…",
     "distance_label": "Entfernung",
-    "address_label": "Adresse"
+    "address_label": "Adresse",
+    "points_count": "{count} Punkte"
   },
   "auth": {
     "title_login": "Willkommen zurück",

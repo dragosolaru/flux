@@ -785,7 +785,8 @@
     "send_to_car_error": "Couldn’t send to your car",
     "sending": "Sending…",
     "distance_label": "Distance",
-    "address_label": "Address"
+    "address_label": "Address",
+    "points_count": "{count} points"
   },
   "auth": {
     "title_login": "Welcome back",

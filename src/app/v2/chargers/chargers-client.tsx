@@ -100,9 +100,39 @@ export function ChargersV2Client() {
     staleTime: 60_000,
   });
 
+  // Grouped by site, because a site with four stalls arrives as four rows with
+  // the same name, the same distance and the same power — and a list that says
+  // "iHunt 110 M 200 KW" twice reads as broken rather than as two bays. Three
+  // decimal places of latitude is about 100 m, which is one car park.
+  //
+  // The group opens the best point at that site rather than the first one the
+  // query happened to return: highest power, then whichever we trust more.
   const nearest = centre
-    ? [...chargers]
-        .map((c) => ({ charger: c, meters: haversineMeters(centre, c) }))
+    ? Object.values(
+        [...chargers]
+          .map((c) => ({ charger: c, meters: haversineMeters(centre, c) }))
+          .reduce<Record<string, { charger: Charger; meters: number; points: number }>>(
+            (sites, entry) => {
+              const key = `${entry.charger.name ?? "?"}|${entry.charger.lat.toFixed(3)}|${entry.charger.lng.toFixed(3)}`;
+              const seen = sites[key];
+              if (!seen) {
+                sites[key] = { ...entry, points: 1 };
+                return sites;
+              }
+              seen.points += 1;
+              const better =
+                (entry.charger.maxPowerKw ?? 0) > (seen.charger.maxPowerKw ?? 0) ||
+                ((entry.charger.maxPowerKw ?? 0) === (seen.charger.maxPowerKw ?? 0) &&
+                  entry.charger.confidence > seen.charger.confidence);
+              if (better) {
+                seen.charger = entry.charger;
+                seen.meters = entry.meters;
+              }
+              return sites;
+            },
+            {},
+          ),
+      )
         .sort((a, b) => a.meters - b.meters)
         .slice(0, 12)
     : [];
@@ -227,10 +257,14 @@ export function ChargersV2Client() {
           </p>
         ) : (
           <Rows className="mt-2">
-            {nearest.map(({ charger, meters }, i) => (
+            {nearest.map(({ charger, meters, points }, i) => (
               <Row
                 key={charger.id}
-                label={charger.name ?? t("station_fallback")}
+                label={
+                  points > 1
+                    ? `${charger.name ?? t("station_fallback")} · ${t("points_count", { count: points })}`
+                    : (charger.name ?? t("station_fallback"))
+                }
                 value={`${formatDistance(meters)} · ${
                   charger.maxPowerKw != null ? `${Math.round(charger.maxPowerKw)} kW` : "—"
                 }`}

@@ -785,7 +785,8 @@
     "send_to_car_error": "Nem sikerült elküldeni az autóba",
     "sending": "Küldés…",
     "distance_label": "Távolság",
-    "address_label": "Cím"
+    "address_label": "Cím",
+    "points_count": "{count} pont"
   },
   "auth": {
     "title_login": "Üdv újra",

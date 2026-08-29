@@ -785,7 +785,8 @@
     "send_to_car_error": "Nu am putut trimite în mașină",
     "sending": "Se trimite…",
     "distance_label": "Distanță",
-    "address_label": "Adresă"
+    "address_label": "Adresă",
+    "points_count": "{count} puncte"
   },
   "auth": {
     "title_login": "Bine ai revenit",
