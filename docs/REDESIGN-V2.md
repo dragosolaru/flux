@@ -366,6 +366,69 @@ Fixed in the **real** app, not only in `/v2`.
 
 ---
 
+## What five attempts at a drawing cost, and what they taught
+
+The car diagram is deleted. It went through five versions — a plan view, a
+lit plan view, a three-quarter, a lit three-quarter, and an abandoned filled
+silhouette — and the owner's verdict on the last shipped one was that it looked
+like a child drew it. He was right, and the cause was never draughtsmanship: a
+representational illustration gets judged as an illustration, and at 208px on a
+phone it loses that judgement however correct the geometry is. Five rounds is
+enough evidence to stop.
+
+Its header carried a list of faults, every one of which was invisible in the
+source and obvious in a render. The list is kept here because it is the only
+part of that file that was never wrong, and because most of it generalises:
+
+**About the thing being drawn**
+- A 3.05:1 body against a car that is 2.54:1 — which is exactly why it read as
+  a capsule, and which no amount of source review would show.
+- Flanks curving continuously nose to tail. A car is straight-sided between the
+  arches; without that straight it is a capsule whatever the length ratio says.
+- Both ends blunt, so the car was near-symmetric front-to-back and the mirrors
+  were the only thing saying which end was which.
+- A nose taper that had not finished by the front axle, so the wheels stood
+  outside the bodywork.
+- A flat rear deck over a tall tail, which read as a pickup bed.
+
+**About drawing state**
+- Doors rotating INTO the cabin: the left/right angle signs were swapped.
+- `opacity` on the glass elements instead of `fill-opacity`, so the whole shape
+  vanished — outline included — whenever the climate was off.
+- A lid translated far enough to stop being a lid: a full-width bonnet slid 11
+  units threw an amber horseshoe across the nose.
+- A lid opened "a bit". A panel hinged at the cowl passes edge-on at 44°, so a
+  bonnet cracked 30° is *less* visible than a shut one.
+- A far door swung to the same angle as a near one shows only a spike past the
+  roof rail. A readout that cannot be read is wrong in the way that matters,
+  even when it is geometrically right.
+- An open door clipped at the `viewBox` edge, on the one state that most needs
+  to read at a glance.
+
+**About hierarchy and light**
+- Detail put where the eye already goes: wheels and arches at shutline weight
+  became four dark corner blobs that outweighed every state indicator.
+  Structure appearing four times must sit a tier lighter than structure
+  appearing once.
+- A near-side outline stroked as one closed path, half of which is interior —
+  so a silhouette-weight line ran through the car's middle and the hierarchy
+  stopped meaning anything.
+- A black contact shadow on a page that is already L 0.08. Black is fourteen
+  sRGB levels below that ground: the shadow was drawn, was correct, and was
+  invisible. On a near-black UI a shadow needs a light, not more black.
+- A cast shadow thrown where the light would actually throw it — which is the
+  ground the car itself hides. Correct, and invisible for the second time.
+
+**The one that outlives all of them**
+Every entry above was found by rendering the component to a page and looking at
+it. None was found by reading the source, and several survived multiple careful
+readings. That harness — render every state, screenshot it, look — is the only
+reason the drawing stopped regressing, and it is what the status panel replacing
+it is verified with too. It caught a defect there within minutes: an open window
+summoned a schematic that had no window marks on it.
+
+---
+
 ## Waking, and why the polling rule was only half the answer
 
 Reducing polling was necessary and not sufficient. Tesla answers `vehicle_data`

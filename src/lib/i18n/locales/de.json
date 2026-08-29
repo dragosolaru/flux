@@ -1393,6 +1393,12 @@
     "trunk_open": "Kofferraum offen",
     "charge_port_open": "Ladeklappe offen",
     "car_state_unknown": "Das Auto hat seinen Zustand nicht gemeldet",
-    "charging_controls": "Limit, Stromstärke, Zeitplan"
+    "charging_controls": "Limit, Stromstärke, Zeitplan",
+    "chip_doors": "Türen",
+    "chip_windows": "Fenster",
+    "chip_frunk": "Haube",
+    "chip_trunk": "Kofferraum",
+    "chip_port": "Klappe",
+    "nothing_open": "Nichts offen"
   }
 }

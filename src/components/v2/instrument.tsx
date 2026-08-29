@@ -3,7 +3,13 @@
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -95,11 +101,20 @@ export function Spacer() {
 }
 
 /** The uppercase mono voice: labels, states, units. Never body copy. */
-export function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Mono({
+  children,
+  className = "",
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** For a colour that is computed rather than chosen from the tone set. */
+  style?: CSSProperties;
+}) {
   return (
     <span
       className={`font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums ${className}`}
-      style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+      style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace", ...style }}
     >
       {children}
     </span>

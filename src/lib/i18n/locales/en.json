@@ -1393,6 +1393,12 @@
     "trunk_open": "boot open",
     "charge_port_open": "charge port open",
     "car_state_unknown": "The car has not reported its state",
-    "charging_controls": "Limit, amperage, schedule"
+    "charging_controls": "Limit, amperage, schedule",
+    "chip_doors": "Doors",
+    "chip_windows": "Windows",
+    "chip_frunk": "Bonnet",
+    "chip_trunk": "Boot",
+    "chip_port": "Port",
+    "nothing_open": "Nothing open"
   }
 }

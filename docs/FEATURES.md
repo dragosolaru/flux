@@ -950,55 +950,38 @@ that had to agree, and giving the links a 44px target changed one of them — th
 nav then covered the last row. In flow there is only one number. Pinned by
 `e2e/v2-nav.spec.ts`, which measures rather than reasons.
 
-**The car diagram** (`src/components/v2/car-diagram.tsx`, on `/v2/commands`) is
-the system's second instrument. The arc's justification is "a number that IS a
-level"; this one's is **position** — `doorsOpen` and `windowsOpen` arrive per
-corner from both the Tesla adapter and the simulator, and all eight booleans
-were read and discarded because no row can say *which* window is down without
-becoming four rows. Lock, climate, charging and sentry are repeated from the
-rows below deliberately: rows are read one at a time to change something, the
-car is read at a glance to see whether you left something open. Anything the car
-has not reported is drawn fainter than "closed", never as closed. The charge
-port is drawn at the rear left, where it is: amber and swung clear of the body
-when the flap is open, green and pulsing while power is flowing. The `viewBox`
-is wider than the car (`-14 0 228 375`) because a door swings about ten units
-past the body and an SVG clips at its viewBox — on the one state that most needs
-to read at a glance, "you left a door open", the line was cut off at the edge.
+**The status panel** (`src/components/v2/status-panel.tsx`, on `/v2/commands`)
+replaced a drawing of the car after five attempts, three of them thrown away.
+The verdict on the last was that it looked like a child drew it, and that was
+correct without being about draughtsmanship: a representational illustration is
+judged as an illustration, and at 208px on a phone it loses that judgement
+however the geometry is fixed.
 
-**It is lit from one declared direction.** `L = (−0.535, +0.425, +0.73)` in car
-space — high, ahead of the nose, on the near side. Every panel tone comes out of
-one `lit()` function rather than taste: bonnet 0.80, roof 0.75, deck 0.63, flank
-0.52, nose 0.44, sill 0.02. The third digit of the light vector is load-bearing:
-it is tuned so the light's *screen* direction is perpendicular to the near
-beltline, which climbs 40 units from cowl to tail lamp. A gradient run along a
-sensible-looking light instead crossed that line and lit the tail while blacking
-the nose — wrong in a way you feel without being able to name it.
+The job survives the picture. `doorsOpen` and `windowsOpen` arrive per corner
+from both the Tesla adapter and the simulator, and no row below can say *which*
+one without becoming four rows nobody wants. So the panel is two levels of one
+answer, shown one at a time: **five chips always** — doors, windows, bonnet,
+boot, port, each a label and a dot, with a count where one helps (`2 UȘI`) — and
+**a schematic only when it has something to say**. The schematic is a rounded
+rectangle with marks where the openings are, not a car, and must never drift
+into being one: the moment it has a windscreen it is judged as an illustration
+again.
 
-Shading is a layer of **fills, painted before every stroke group**, so it
-physically cannot sit on top of a state mark. One knock-on had to be paid for:
-lighter panels cost white-on-dark strokes their contrast, so `IDLE` went 30→34%
-and `UNKNOWN` 10→12% to hold the tri-state gap exactly where it was. Far-side
-recession is `opacity` on a group rather than a second grey, so it behaves
-identically when the whole silhouette turns amber. The old `var(--background)`
-coupling is gone — every surface now has its own lit tone, so the drawing no
-longer assumes what is behind it.
+Windows are deliberately not on the schematic. Eight marks on one small shape is
+too many, and which window is down rarely changes what you do, whereas which
+door tells you where to walk. That decision has a consequence worth stating,
+because it was a bug first: an open window must not summon the schematic, or it
+appears with nothing lit on it — a diagram showing nothing, which is worse than
+no diagram.
 
-**It is drawn to three stroke weights and nothing outside them** — `T1` the
-silhouette and only the silhouette, `T2` anything that is a real gap in the
-sheet metal (shutlines, glass edges, tyres, mirrors), `T3` surface that is
-neither (arches, lamp lenses, the tail signature). A technical drawing reads
-because the weights are a hierarchy rather than a texture. Two rules fall out
-of it: **state always outranks structure** — an open door is heavier than the
-shutline it just left — and **structure that appears four times is a tier
-lighter than structure that appears once**, which is why the wheels are at
-detail weight. Drawn at shutline weight with tread they became four dark corner
-blobs that outweighed every state indicator and went to mush at 196px.
+Climate and sentry are not on the panel at all. They have switches carrying
+their state twelve pixels below, which the doors do not, so repeating them
+bought nothing and diluted the panel's one job: things that are *open*. The age
+of the reading and its refresh control moved **into** the panel, so it is one
+thing that says: this is the state, as of then, tap to re-read.
 
-The silhouette carries the one thing a plan view usually loses: **which end is
-the front**. The nose tapers across the front overhang and the tail is flat and
-square, so the two ends are not interchangeable. The taper has to finish by the
-front axle (0.175 of the length ≈ the real 841mm overhang) or the front wheels
-stand outside the bodywork.
+Anything the car has not reported is a dotted mark, fainter than shut, and never
+drawn as shut. Pinned by `src/components/v2/__tests__/status-panel.test.tsx`.
 
 **`/v2/commands` is grouped the way the Tesla app is** — by the part of the car,
 with the setting next to the switch that uses it. Charge limit, amperage and

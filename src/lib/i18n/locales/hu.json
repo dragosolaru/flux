@@ -1393,6 +1393,12 @@
     "trunk_open": "csomagtartó nyitva",
     "charge_port_open": "töltőnyílás nyitva",
     "car_state_unknown": "Az autó nem jelentette az állapotát",
-    "charging_controls": "Limit, áramerősség, ütemezés"
+    "charging_controls": "Limit, áramerősség, ütemezés",
+    "chip_doors": "Ajtók",
+    "chip_windows": "Ablakok",
+    "chip_frunk": "Motorháztető",
+    "chip_trunk": "Csomagtartó",
+    "chip_port": "Töltőnyílás",
+    "nothing_open": "Semmi nyitva"
   }
 }

@@ -1393,6 +1393,12 @@
     "trunk_open": "portbagajul deschis",
     "charge_port_open": "portul de încărcare deschis",
     "car_state_unknown": "Mașina nu și-a raportat starea",
-    "charging_controls": "Limită, amperaj, programare"
+    "charging_controls": "Limită, amperaj, programare",
+    "chip_doors": "Uși",
+    "chip_windows": "Geamuri",
+    "chip_frunk": "Capotă",
+    "chip_trunk": "Portbagaj",
+    "chip_port": "Port",
+    "nothing_open": "Nimic deschis"
   }
 }

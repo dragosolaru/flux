@@ -1393,6 +1393,12 @@
     "trunk_open": "coffre ouvert",
     "charge_port_open": "trappe de charge ouverte",
     "car_state_unknown": "La voiture n'a pas signalé son état",
-    "charging_controls": "Limite, ampérage, programmation"
+    "charging_controls": "Limite, ampérage, programmation",
+    "chip_doors": "Portes",
+    "chip_windows": "Vitres",
+    "chip_frunk": "Capot",
+    "chip_trunk": "Coffre",
+    "chip_port": "Trappe",
+    "nothing_open": "Rien d'ouvert"
   }
 }

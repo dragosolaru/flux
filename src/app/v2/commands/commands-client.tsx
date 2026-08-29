@@ -26,7 +26,7 @@ import {
   TimeRow,
   ToggleRow,
 } from "@/components/v2/instrument";
-import { CarDiagram } from "@/components/v2/car-diagram";
+import { StatusPanel } from "@/components/v2/status-panel";
 import { NavBar } from "@/components/v2/nav";
 import { VehicleSwitch } from "@/components/v2/vehicle-switch";
 import { ConfirmCommandDialog, SENSITIVE_COMMANDS } from "@/components/vehicle/ConfirmCommandDialog";
@@ -433,29 +433,16 @@ export function CommandsV2Client({ virtualKeyUrl }: { virtualKeyUrl: string | nu
         title={t("title")}
       />
 
-      {/* What is open and what is running, at a glance. Every value it shows is
-          also a row below — except the per-corner door and window state, which
-          arrives from the car and had nowhere to go. */}
-      <div className="mt-3">
-        <CarDiagram state={state} />
+      {/* What is open, and how old that answer is. One thing rather than a
+          drawing plus a separate refresh control underneath it. */}
+      <div className="mt-4">
+        <StatusPanel
+          state={state}
+          age={state ? ageLabel(state.recordedAt, td) : null}
+          onRefresh={() => void refetch()}
+          refreshing={isFetching}
+        />
       </div>
-
-      {/* When these values are from. One tap re-reads — a deliberate act, so it
-          is allowed to contact the car; nothing here happens on a timer. */}
-      {state && (
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          disabled={isFetching}
-          className="mt-1 flex min-h-11 items-center gap-2 transition-opacity duration-[80ms] active:opacity-60 disabled:opacity-40"
-        >
-          <Mono className="text-muted-foreground">
-            {`${tv("updated")} ${ageLabel(state.recordedAt, td) ?? ""} · ${
-              isFetching ? tv("loading") : tv("refresh_state")
-            }`}
-          </Mono>
-        </button>
-      )}
 
       {/* No skeleton rectangles: a row whose state is unknown is disabled and
           says so, which is the truth and also stops a tap that would be sent
