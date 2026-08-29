@@ -94,7 +94,8 @@
     "efficiency_title": "Efficacité",
     "avg_wh_per_km": "Efficacité moyenne",
     "projected_range": "Autonomie projetée",
-    "no_efficiency_data": "Commencez à conduire pour voir l'efficacité"
+    "no_efficiency_data": "Commencez à conduire pour voir l'efficacité",
+    "consumption_title": "Consommation mensuelle"
   },
   "mock_banner": {
     "title": "Données simulées",

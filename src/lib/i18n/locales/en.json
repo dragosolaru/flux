@@ -94,7 +94,8 @@
     "efficiency_title": "Efficiency",
     "avg_wh_per_km": "Avg efficiency",
     "projected_range": "Projected range",
-    "no_efficiency_data": "Start driving to see efficiency"
+    "no_efficiency_data": "Start driving to see efficiency",
+    "consumption_title": "Monthly consumption"
   },
   "mock_banner": {
     "title": "Simulated data",

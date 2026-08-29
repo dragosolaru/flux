@@ -47,6 +47,7 @@ async function resolveState(vehicle: VehicleRow): Promise<VehicleState | null> {
   if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
     if (vehicle.brand === "tesla" && vehicle.tesla_vehicle_id) {
       return fetchVehicleData({
+        reason: "scheduled",
         vehicleId: vehicle.id,
         userId: vehicle.user_id,
         teslaVehicleId: vehicle.tesla_vehicle_id,

@@ -3,7 +3,12 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import type { TempBucket, MileagePeriod, VehicleStatsResponse } from "@/types/stats";
+import type {
+  TempBucket,
+  MileagePeriod,
+  ConsumptionPeriod,
+  VehicleStatsResponse,
+} from "@/types/stats";
 
 const TEMP_BUCKETS = [
   { label: "<0°C", min: -Infinity, max: 0 },
@@ -231,6 +236,29 @@ export async function GET(
     .map(([period, km]) => ({ period, km }))
     .sort((a, b) => a.period.localeCompare(b.period));
 
+  // Energy per month, from the same trips. Totals first, ratio second: dividing
+  // the month's kWh by the month's km weights a long drive more than a short
+  // one, which averaging each trip's own kWh/100km would not.
+  const energyMap = new Map<string, { km: number; kwh: number }>();
+  for (const trip of tripsData) {
+    if (trip.energy_used_kwh == null) continue;
+    const month = trip.started_at.slice(0, 7);
+    const acc = energyMap.get(month) ?? { km: 0, kwh: 0 };
+    acc.km += tripKm(trip);
+    acc.kwh += trip.energy_used_kwh;
+    energyMap.set(month, acc);
+  }
+
+  const consumptionByMonth: ConsumptionPeriod[] = Array.from(energyMap.entries())
+    .map(([period, { km, kwh }]) => ({
+      period,
+      km: Math.round(km),
+      kwh: Math.round(kwh * 10) / 10,
+      // A month with distance but no energy logged says nothing rather than 0.
+      kwhPer100km: km > 0 ? Math.round((kwh / km) * 100 * 10) / 10 : null,
+    }))
+    .sort((a, b) => a.period.localeCompare(b.period));
+
   const result: VehicleStatsResponse = {
     totalDrivingKm,
     totalDrivingH,
@@ -243,6 +271,7 @@ export async function GET(
     efficiencyByTemp,
     vampireDrainPctPerH,
     mileageByMonth,
+    consumptionByMonth,
   };
 
   return NextResponse.json(result);

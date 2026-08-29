@@ -23,11 +23,46 @@ function read(relative: string): string {
 }
 
 describe("waking the car is opt-in", () => {
-  it("fetchVehicleData does not wake unless asked", () => {
+  it("fetchVehicleData does not wake unless asked, and asked is now two things", () => {
     const api = read("lib/tesla/api.ts");
-    // The 408 branch must refuse before it reaches wakeVehicle.
-    expect(api).toMatch(/if \(!params\.allowWake\) throw new TeslaAsleepError\(\);/);
+    // The 408 branch must refuse before it reaches wakeVehicle — and a boolean
+    // alone is no longer enough. A caller has to pass allowWake AND have
+    // declared its reason as a wake, so `allowWake: true` cannot be copied onto
+    // a path that is not one.
+    expect(api).toMatch(
+      /if \(!params\.allowWake \|\| params\.reason !== "wake"\) throw new TeslaAsleepError\(\);/,
+    );
     expect(api).toMatch(/allowWake\?: boolean;/);
+    expect(api).toMatch(/reason: CallReason;/);
+  });
+
+  it("every path into the car has to name why it is calling", () => {
+    // The reason is required and undefaulted on purpose. The policy that kept
+    // the car asleep used to live in the client hooks, and two paths walked
+    // past it: a redesign where every screen forgot the poll argument, and
+    // /api/trip-plan, which reads the car server-side on every plan and no hook
+    // can see. A required parameter is the only version of that policy the
+    // compiler can enforce.
+    const callers = [
+      "app/api/cron/poll-vehicles/route.ts",
+      "app/api/trip-plan/route.ts",
+      "app/api/vehicles/[vehicleId]/state/route.ts",
+      "app/api/vehicles/[vehicleId]/wake/route.ts",
+    ];
+    for (const c of callers) {
+      expect(read(c)).toMatch(/reason: ("|`|\w)/);
+    }
+  });
+
+  it("only the wake endpoint claims the wake reason", () => {
+    expect(read("app/api/vehicles/[vehicleId]/wake/route.ts")).toContain('reason: "wake"');
+    for (const c of [
+      "app/api/cron/poll-vehicles/route.ts",
+      "app/api/trip-plan/route.ts",
+      "app/api/vehicles/[vehicleId]/state/route.ts",
+    ]) {
+      expect(read(c)).not.toContain('reason: "wake"');
+    }
   });
 
   it("the state route never passes allowWake", () => {

@@ -94,7 +94,8 @@
     "efficiency_title": "Effizienz",
     "avg_wh_per_km": "Durchschn. Effizienz",
     "projected_range": "Geschätzte Reichweite",
-    "no_efficiency_data": "Fahren beginnen, um Effizienz zu sehen"
+    "no_efficiency_data": "Fahren beginnen, um Effizienz zu sehen",
+    "consumption_title": "Monatsverbrauch"
   },
   "mock_banner": {
     "title": "Simulierte Daten",

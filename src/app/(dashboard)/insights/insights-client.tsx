@@ -25,7 +25,7 @@ import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import type { BatteryHealthPoint } from "@/app/api/vehicles/[vehicleId]/battery-health/route";
 import { useQuery } from "@tanstack/react-query";
 import * as vehiclesApi from "@/lib/api/vehicles";
-import type { MileagePeriod, TempBucket } from "@/types/stats";
+import type { ConsumptionPeriod, MileagePeriod, TempBucket } from "@/types/stats";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -113,6 +113,70 @@ interface ActivitySectionProps {
   from: string | undefined;
 }
 
+/**
+ * What each month cost in energy, and what that worked out to per 100 km.
+ *
+ * Distance was already charted per month and energy was not, though every trip
+ * carries it — so the app said how far the car had gone and never what that
+ * took. The bars are kWh; the number under the total is the month's own
+ * kWh/100km, computed from its totals rather than averaged across trips, so a
+ * two-kilometre errand does not weigh the same as a four-hundred-kilometre run.
+ */
+function ConsumptionChart({ months }: { months: ConsumptionPeriod[] }) {
+  const t = useTranslations("insights");
+  const visible = months.slice(-12);
+  if (visible.length === 0) return null;
+  const maxKwh = Math.max(...visible.map((m) => m.kwh), 1);
+  const SHORT = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // Totals over the visible window, not an average of averages.
+  const totalKwh = visible.reduce((sum, m) => sum + m.kwh, 0);
+  const totalKm = visible.reduce((sum, m) => sum + m.km, 0);
+  const overall = totalKm > 0 ? (totalKwh / totalKm) * 100 : null;
+
+  return (
+    <Card variant="surface" className="p-3">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-xs font-medium">{t("consumption_title")}</span>
+        {overall != null && (
+          <span className="font-mono text-xs tabular-nums text-muted-foreground">
+            {overall.toFixed(1)} kWh/100 km
+          </span>
+        )}
+      </div>
+      <div className="flex h-24 items-end gap-1.5 pb-5">
+        {visible.map((m) => {
+          const monthIdx = parseInt(m.period.slice(5)) - 1;
+          const label = SHORT[monthIdx] ?? m.period.slice(5);
+          return (
+            <div
+              key={m.period}
+              className="group relative flex flex-1 flex-col items-center justify-end"
+              style={{ height: "100%" }}
+              title={`${m.kwh} kWh · ${m.km} km${
+                m.kwhPer100km != null ? ` · ${m.kwhPer100km} kWh/100km` : ""
+              }`}
+            >
+              <div
+                className="w-full rounded-t"
+                style={{
+                  height: `${(m.kwh / maxKwh) * 100}%`,
+                  minHeight: m.kwh > 0 ? 3 : 0,
+                  background: "linear-gradient(to bottom, var(--chart-3), var(--chart-1))",
+                  opacity: 0.8,
+                }}
+              />
+              <span className="absolute -bottom-5 left-0 right-0 text-center text-2xs text-muted-foreground tabular-nums">
+                {label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
 function MileageChart({ months }: { months: MileagePeriod[] }) {
   const visible = months.slice(-12);
   if (visible.length === 0) return null;
@@ -198,6 +262,9 @@ function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
       </div>
       {data && data.mileageByMonth.length > 1 && (
         <MileageChart months={data.mileageByMonth} />
+      )}
+      {data && data.consumptionByMonth.length > 1 && (
+        <ConsumptionChart months={data.consumptionByMonth} />
       )}
     </div>
   );

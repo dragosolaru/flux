@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
     ) {
       try {
         const live = await fetchVehicleData({
+        reason: "screen",
           vehicleId: vehicle.id,
           userId: session.user.id,
           teslaVehicleId: vehicle.tesla_vehicle_id,

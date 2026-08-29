@@ -94,7 +94,8 @@
     "efficiency_title": "Hatékonyság",
     "avg_wh_per_km": "Átlagos hatékonyság",
     "projected_range": "Becsült hatótáv",
-    "no_efficiency_data": "Kezdjen el vezetni a hatékonyság megtekintéséhez"
+    "no_efficiency_data": "Kezdjen el vezetni a hatékonyság megtekintéséhez",
+    "consumption_title": "Havi fogyasztás"
   },
   "mock_banner": {
     "title": "Szimulált adatok",

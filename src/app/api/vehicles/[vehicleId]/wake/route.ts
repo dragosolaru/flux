@@ -70,6 +70,7 @@ export async function POST(
 
   try {
     const state = await fetchVehicleData({
+        reason: "wake",
       vehicleId: car.id,
       userId: session.user.id,
       teslaVehicleId: car.tesla_vehicle_id,

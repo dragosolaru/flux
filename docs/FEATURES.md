@@ -983,6 +983,66 @@ real improvement waiting to be made.
 rather than a return value — the defect was an extra command fired from three
 places, which is a property of the callers.
 
+## 25g. Nothing reaches the car without a reason and a budget
+
+**What:** `src/lib/tesla/budget.ts`. Every call into Tesla declares **why** it is
+happening — `user-action`, `screen`, `scheduled`, `wake` — and that reason is a
+required, undefaulted parameter of `fetchVehicleData`.
+
+**Why it had to move to the boundary.** The policy that keeps a car asleep lived
+entirely in the client hooks: `pollInterval()`, `poll: false`, the sleep switch.
+That is a policy with no enforcement, and two paths walked straight past it —
+every screen of the /v2 redesign shipped polling a parked car because nobody
+passed the third argument, and **`/api/trip-plan` reads the car server-side on
+every plan**, which no client hook can see and which the trip screen re-runs as
+a destination is dragged. A required parameter is the only version of this
+policy the compiler can enforce.
+
+**Three rules:**
+
+1. **A reading is shared for 30 seconds.** Ten re-plans, three screens and two
+   tabs inside the window are one call to the car. This removes a whole class of
+   accidental traffic without any caller having to be careful. Only
+   `user-action` skips it — a refresh button that returns a 29-second-old number
+   is a refresh button reported as broken.
+2. **200 reads per vehicle per day.** Tesla's own figure is reported as a few
+   hundred; ours sits under it with margin so our ceiling fires first and
+   legibly, instead of Tesla's firing and every screen breaking at once with no
+   explanation. Counted before the request, so a burst cannot slip through.
+   `user-action` and `wake` are counted and never refused.
+3. **Only a wake may wake.** `allowWake` alone is no longer enough — the reason
+   has to agree, so the flag cannot be copied onto a path that is not a wake.
+
+**On vampire drain specifically:** a `vehicle_data` request does **not** wake a
+sleeping car; it answers 408. So reads are not what drains a parked battery.
+What drains it is keeping an *awake* car awake, and a wake itself, which costs
+roughly ten times an idle hour. That is why `wake` is counted separately and
+expected to be **zero** on any day nobody pressed the button — the cleanest
+single number in the system.
+
+Redis is best-effort throughout: with none, the cache misses and the budget
+cannot be counted, so the gate **opens** rather than blocking a real driver over
+missing infrastructure.
+
+**Pinned by** `src/lib/tesla/__tests__/budget.test.ts` (the arithmetic and the
+asymmetry) and `no-background-wake.test.ts`, which now also checks that every
+caller names a reason and that only the wake endpoint claims `"wake"`.
+
+## 25h. Consumption history
+
+**What:** `consumptionByMonth` on `/api/vehicles/[vehicleId]/stats`, charted on
+`/insights` under the mileage chart: kWh per month, with that month's own
+kWh/100 km, and the window's overall figure in the header.
+
+Distance was already aggregated per month and energy was not, although every
+trip row carries `energy_used_kwh` — so the app knew how far the car had gone
+and never said what that took.
+
+**The ratio is computed from each month's totals**, not averaged across trips:
+averaging ratios weights a two-kilometre errand the same as a four-hundred-
+kilometre drive. A month with distance but no energy recorded shows the bar and
+says nothing for the ratio rather than printing 0.
+
 ## 25f. Nav probe — which way of sending a destination preconditions?
 
 **What:** `/debug` → Unelte → "Preîncălzire: cum trimitem destinația". Sends the

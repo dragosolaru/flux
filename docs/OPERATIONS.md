@@ -106,9 +106,11 @@ them is visible without looking.
 The whole polling policy exists for this (`pollInterval()`, FEATURES §25). The
 dashboard polls at 30s with a ten-minute idle cut-off — about twenty reads per
 visit. Fifteen visits is the day's budget.
-→ **Nothing enforces a ceiling.** `/debug` counts; nothing stops. This is the
-most likely way the app breaks for a second user, and it is on the roadmap as
-T6.
+→ **Enforced at the boundary since Aug 29.** `src/lib/tesla/budget.ts`: every
+call into Tesla declares a `CallReason`, a reading is shared for 30s, and there
+is a ceiling of 200 reads per vehicle per day. Automatic traffic is refused over
+it; a driver who pressed something never is, because being told "no" by your own
+app while the car sits there answering is the worse failure.
 
 **Tesla counts per partner account, not per user.** One driver at their limit is
 fine; ten drivers is ten times what Tesla allows, and it throttles everyone at
@@ -177,7 +179,6 @@ none.
 - **CARTO basemap has no API key.** Every map tile is watermarked
   `API KEY REQUIRED` in production, on every screenshot taken from the car and
   the phone. Needs an account decision, not code.
-- **No daily quota ceiling on `vehicle_data`** (§3). Roadmap T6.
 - **The signing proxy is an open relay.** Anyone with the hostname and a valid
   Tesla token for a paired account can have our private key sign commands, on
   our partner account. Roadmap T10 — a shared-secret header, about twenty lines.

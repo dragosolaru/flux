@@ -359,6 +359,7 @@ describe("fetchVehicleData — a revoked grant", () => {
         userId: "u",
         teslaVehicleId: 1,
         displayName: "car",
+        reason: "screen",
       })
       .catch((e: unknown) => e);
     return { err, TeslaAuthError };

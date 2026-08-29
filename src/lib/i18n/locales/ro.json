@@ -94,7 +94,8 @@
     "efficiency_title": "Eficiență",
     "avg_wh_per_km": "Eficiență medie",
     "projected_range": "Autonomie proiectată",
-    "no_efficiency_data": "Începe să conduci pentru a vedea eficiența"
+    "no_efficiency_data": "Începe să conduci pentru a vedea eficiența",
+    "consumption_title": "Consum lunar"
   },
   "mock_banner": {
     "title": "Date simulate",

@@ -14,6 +14,7 @@ import type {
   TeslaVehicleListResponse,
 } from "@/types/tesla";
 import type { VehicleState } from "@/types/vehicle";
+import { cachedRead, chargeReadBudget, storeRead, type CallReason } from "./budget";
 
 function baseUrl(region: string): string {
   return TESLA_REGIONS[region as TeslaRegion] ?? TESLA_REGIONS.eu;
@@ -79,13 +80,42 @@ export class TeslaAsleepError extends Error {
  *   the "wake the car" row, and a command, which is meaningless against a
  *   sleeping car.
  */
+export class TeslaBudgetError extends Error {
+  constructor(readonly used: number, readonly limit: number) {
+    super(`daily read budget spent (${used}/${limit})`);
+    this.name = "TeslaBudgetError";
+  }
+}
+
 export async function fetchVehicleData(params: {
   vehicleId: string;
   userId: string;
   teslaVehicleId: number;
   displayName: string;
+  /**
+   * Why this call is happening. Required, and deliberately not defaulted: the
+   * policy that kept the car asleep used to live in the client hooks, and two
+   * paths walked straight past it — a redesign where every screen forgot the
+   * poll argument, and /api/trip-plan, which reads the car server-side on every
+   * plan and no hook can see. A caller that has to name its reason is a caller
+   * that has thought about whether it should be calling at all.
+   */
+  reason: CallReason;
   allowWake?: boolean;
 }): Promise<VehicleState> {
+  // A reading from the last half-minute answers everything except a driver
+  // asking for a fresh one. This is what makes ten re-plans, three screens and
+  // two open tabs cost one call to the car instead of sixteen.
+  if (params.reason !== "user-action") {
+    const hit = await cachedRead<VehicleState>(params.vehicleId);
+    if (hit) return hit;
+  }
+
+  // Counted before the request, so a burst cannot slip through between the
+  // check and the send. Deliberate actions are counted and never refused.
+  const budget = await chargeReadBudget(params.vehicleId, params.reason);
+  if (!budget.allowed) throw new TeslaBudgetError(budget.used, budget.limit);
+
   const { accessToken, region } = await getValidAccessToken(params.vehicleId, params.userId);
 
   const url = `${baseUrl(region)}/api/1/vehicles/${params.teslaVehicleId}/vehicle_data?endpoints=${encodeURIComponent(TESLA_VEHICLE_DATA_ENDPOINTS)}`;
@@ -100,7 +130,9 @@ export async function fetchVehicleData(params: {
   // 408 means asleep. Waking it is now something the driver asks for, not
   // something a page load does on their behalf.
   if (res.status === 408) {
-    if (!params.allowWake) throw new TeslaAsleepError();
+    // allowWake alone is not enough: the reason has to agree, so a caller
+    // cannot pass true out of habit on a path that is not a wake.
+    if (!params.allowWake || params.reason !== "wake") throw new TeslaAsleepError();
 
     await recordTeslaCall("wake");
     await wakeVehicle({
@@ -137,7 +169,11 @@ export async function fetchVehicleData(params: {
   }
 
   const json = (await res.json()) as TeslaVehicleDataResponse;
-  return mapVehicleData(json, params);
+  const state = mapVehicleData(json, params);
+  // Shared with every other caller for the next half-minute. Best-effort: a
+  // cache that cannot be written is a slower app, not a broken one.
+  await storeRead(params.vehicleId, state);
+  return state;
 }
 
 export function mapVehicleData(

@@ -32,7 +32,12 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ vehicleId: string }> },
 ) {
-  const cachedOnly = new URL(req.url).searchParams.get("cached") === "1";
+  const query = new URL(req.url).searchParams;
+  const cachedOnly = query.get("cached") === "1";
+  // A tap on "refresh" is the one read that skips the shared 30s window and is
+  // never refused by the daily ceiling. Everything else is a screen wanting a
+  // reading to render, which is exactly the traffic the window is for.
+  const deliberate = query.get("fresh") === "1";
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -90,6 +95,7 @@ export async function GET(
         // car out of sleep. Waking is what POST /wake is for, and only a
         // driver's tap reaches it.
         const state = await fetchVehicleData({
+        reason: deliberate ? "user-action" : "screen",
           vehicleId: vehicle.id,
           userId: session.user.id,
           teslaVehicleId: vehicle.tesla_vehicle_id,
