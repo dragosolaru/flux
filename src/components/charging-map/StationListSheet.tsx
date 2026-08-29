@@ -56,9 +56,36 @@ export function StationListSheet({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const sorted = [...stations]
-    .map((s) => ({ s, d: distanceM(center, { lat: s.lat, lng: s.lng }) }))
-    .sort((a, b) => a.d - b.d);
+  // Grouped by site before sorting. A site with several stalls arrives from the
+  // API as several chargers with the same name, coordinates and power — correct
+  // data, and a list that reads as broken: "iHunt · 110 m · 200 kW" twice in a
+  // row, then Renovatio twice, then iHunt again. Reported from the car.
+  //
+  // Three decimals of latitude is about 100 m: one car park, not the next
+  // operator down the road. The survivor is the strongest stall at the site
+  // rather than whichever the query happened to return first.
+  const sorted = Object.values(
+    [...stations]
+      .map((s) => ({ s, d: distanceM(center, { lat: s.lat, lng: s.lng }), points: 1 }))
+      .reduce<Record<string, { s: Charger; d: number; points: number }>>((sites, entry) => {
+        const key = `${entry.s.name ?? "?"}|${entry.s.lat.toFixed(3)}|${entry.s.lng.toFixed(3)}`;
+        const seen = sites[key];
+        if (!seen) {
+          sites[key] = entry;
+          return sites;
+        }
+        seen.points += 1;
+        const better =
+          (entry.s.maxPowerKw ?? 0) > (seen.s.maxPowerKw ?? 0) ||
+          ((entry.s.maxPowerKw ?? 0) === (seen.s.maxPowerKw ?? 0) &&
+            entry.s.confidence > seen.s.confidence);
+        if (better) {
+          seen.s = entry.s;
+          seen.d = entry.d;
+        }
+        return sites;
+      }, {}),
+  ).sort((a, b) => a.d - b.d);
 
   const isSearch = query.trim().length >= 2;
 
@@ -115,7 +142,7 @@ export function StationListSheet({
             <p className="px-2 py-6 text-center text-sm text-muted-foreground">{t("no_results")}</p>
           ) : (
             <ul className="space-y-1">
-              {sorted.map(({ s, d }) => (
+              {sorted.map(({ s, d, points }) => (
                 <li key={s.id}>
                   <button
                     onClick={() => onSelect(s)}
@@ -130,6 +157,11 @@ export function StationListSheet({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-foreground">
                         {s.name ?? s.operator ?? t("station_fallback")}
+                        {points > 1 && (
+                          <span className="ml-1.5 font-normal text-muted-foreground">
+                            · {t("points_count", { count: points })}
+                          </span>
+                        )}
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
                         {[
