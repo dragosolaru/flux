@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+
+import { useHere } from "@/hooks/useHere";
 import { List, SlidersHorizontal } from "lucide-react";
 
 import * as chargersApi from "@/lib/api/chargers";
@@ -64,28 +66,11 @@ interface GeoCoords {
   lng: number;
 }
 
-function useSilentAutoLocate(onSuccess: (coords: GeoCoords) => void) {
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    // Silent one-shot locate on mount — 3s timeout, no error shown on denial.
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        onSuccess({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      () => undefined,
-      { timeout: 3000 },
-    );
-  // onSuccess is stable (useCallback in parent), so this runs once.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-}
-
 
 export function ChargingMapClient() {
   const t = useTranslations("chargingMap");
   const [selected, setSelected] = useState<Charger | null>(null);
   const [center, setCenter] = useState<GeoCoords>({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
-  const [userLocation, setUserLocation] = useState<GeoCoords | null>(null);
   // bbox follows the visible map viewport; updated on pan/zoom via MoveWatcher.
   const [area, setArea] = useState<ViewportBBox>(DEFAULT_BBOX);
   const [minKw, setMinKw] = useState(0);
@@ -95,25 +80,58 @@ export function ChargingMapClient() {
   // Incremented on location jumps to drop stale cross-area keepPreviousData.
   const [resetKey, setResetKey] = useState(0);
 
+  // The button still recentres on demand. It no longer sets the user marker —
+  // that follows the live fix now, so the two cannot disagree.
   const handleLocate = useCallback((lat: number, lng: number) => {
     setCenter({ lat, lng });
-    setUserLocation({ lat, lng });
     setArea(toBBox(lat, lng));
     setResetKey((k) => k + 1);
   }, []);
 
-  const handleSilentLocate = useCallback((coords: GeoCoords) => {
-    setCenter(coords);
-    setUserLocation(coords);
-    setArea(toBBox(coords.lat, coords.lng));
+  // Live rather than one-shot. Measured on the car's own screen: the browser
+  // gives a fix every ~0.1 s at ±1–2 m, and it never touches Tesla's API, so
+  // none of it is charged against the vehicle's daily read budget. A position
+  // taken when the screen opened is wrong by the length of a slip road by the
+  // time you have finished reading the list. useHere throttles the commits.
+  const { here } = useHere({ live: true });
+
+  // The map recentres on the FIRST fix only. Recentring on every one would drag
+  // the view out from under a thumb that had panned somewhere else on purpose.
+  const centredRef = useRef(false);
+  useEffect(() => {
+    if (!here || centredRef.current) return;
+    centredRef.current = true;
+    setCenter({ lat: here.lat, lng: here.lng });
+    setArea(toBBox(here.lat, here.lng));
     setResetKey((k) => k + 1);
-  }, []);
+  }, [here]);
+
+  // The road to whatever is selected, drawn on the map. The app already had
+  // four routing providers wired up for the trip planner and none of them
+  // reached this screen; POST /api/route is the small answer — a line, a
+  // distance and a time — rather than a full plan.
+  const { data: road } = useQuery({
+    queryKey: ["route", here?.lat, here?.lng, selected?.id],
+    queryFn: async () => {
+      const res = await fetch("/api/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: { lat: here!.lat, lng: here!.lng },
+          to: { lat: selected!.lat, lng: selected!.lng },
+        }),
+      });
+      if (!res.ok) throw new Error("route");
+      return (await res.json()) as { distanceKm: number; drivingMinutes: number; line: [number, number][] };
+    },
+    enabled: here != null && selected != null,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
 
   const handleAreaChange = useCallback((bbox: ViewportBBox) => {
     setArea(bbox);
   }, []);
-
-  useSilentAutoLocate(handleSilentLocate);
 
   const {
     data: stations = [],
@@ -188,8 +206,9 @@ export function ChargingMapClient() {
           stations={stations}
           center={center}
           selected={selected}
+          routeLine={road?.line}
           onSelect={setSelected}
-          userLocation={userLocation}
+          userLocation={here ? { lat: here.lat, lng: here.lng } : null}
           onUserLocate={handleLocate}
           onAreaChange={handleAreaChange}
         />
