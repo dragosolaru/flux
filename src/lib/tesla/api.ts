@@ -213,7 +213,7 @@ export function mapVehicleData(
     scheduledChargingStartMinutes: null,
     scheduledDepartureEnabled: null,
     scheduledDepartureMinutes: null,
-    batteryHealthPct: estimateSoH(charge, r.vin),
+    batteryHealthPct: estimateSoH(charge, r.vin)?.pct ?? null,
     cellVoltages: null,
     // drive / motion
     motionState: mapMotionState(drive?.shift_state, charge?.charging_state),
@@ -468,18 +468,24 @@ export async function sendVehicleCommand(params: {
  * (0-indexed position 3), which encodes the model/variant.
  * Sources: EPA-rated range figures.
  */
+/**
+ * Rated range when new, by the VIN's model character.
+ *
+ * Position 4 of a Tesla VIN is the model line: `3`, `S`, `X`, `Y`. This table
+ * used to key Model 3 on `F`, which is not a Tesla model code at all — so
+ * **every Model 3 missed the table and fell through to a 330-mile default**.
+ * A car showing 451 km (280 mi) at full charge was reported as 84.9% healthy on
+ * a baseline that belonged to no car in particular.
+ *
+ * One number per model line is still not enough to be sure, and that is why
+ * `estimateSoH` no longer guesses past it — see there.
+ */
 const RATED_RANGE_BY_VIN_MODEL: Record<string, number> = {
-  // Model 3 Long Range
-  F: 358,
-  // Model Y Long Range
+  "3": 358, // Model 3 Long Range; RWD and Performance differ, see estimateSoH
   Y: 330,
-  // Model S
   S: 405,
-  // Model X
   X: 348,
 };
-
-const DEFAULT_RATED_RANGE_MILES = 330;
 
 /**
  * Estimates State of Health (SoH) from charge_state telemetry.
@@ -491,26 +497,59 @@ const DEFAULT_RATED_RANGE_MILES = 330;
  * Only computed when battery_level > 15 to avoid noise at very low SOC.
  * Result is clamped to [50, 105] and rounded to 1 decimal.
  */
+/**
+ * State of health, or nothing.
+ *
+ * The measurement is sound: at a known charge level, `battery_range` scaled to
+ * 100% is what the pack can hold today. The comparison is where it goes wrong,
+ * because the baseline depends on a variant the VIN's model character cannot
+ * distinguish. A Model 3 RWD, Long Range and Performance leave the factory at
+ * roughly 272, 358 and 315 rated miles — a spread of thirty per cent. Divide
+ * one car's measurement by another variant's baseline and the answer is a
+ * confident percentage that is wrong by a quarter.
+ *
+ * So this returns the measurement and a percentage only when the model line is
+ * known, and `null` otherwise rather than falling back to an average of cars
+ * nobody owns. The full-range estimate is returned separately either way,
+ * because it is the honest half: a driver can check it against their own dash
+ * in one glance, and a percentage against a guessed baseline they cannot check
+ * at all.
+ */
+export interface SoHEstimate {
+  /** Range at 100%, in km, derived from the current reading. Checkable. */
+  fullRangeKm: number;
+  /** Percentage against the model's original, or null when the variant is unknown. */
+  pct: number | null;
+  /** What the percentage was measured against, so the claim can be argued with. */
+  baselineKm: number | null;
+}
+
 function estimateSoH(
   charge: Partial<import("@/types/tesla").TeslaChargeState> | null,
   vin: string | undefined,
-): number | null {
+): SoHEstimate | null {
   if (!charge) return null;
   const { battery_level: soc, battery_range: rangeAtSoc } = charge;
   if (soc == null || rangeAtSoc == null) return null;
+  // Below 15% the range estimate is dominated by the car's own reserve
+  // modelling and stops being a proxy for capacity.
   if (soc <= 15) return null;
 
-  const estimatedFullRange = rangeAtSoc / (soc / 100);
+  const estimatedFullRangeMiles = rangeAtSoc / (soc / 100);
+  const fullRangeKm = Math.round(estimatedFullRangeMiles * MILES_TO_KM);
 
-  // VIN character at index 3 identifies the model/variant.
   const modelKey = vin?.[3]?.toUpperCase() ?? "";
-  const ratedRange =
-    RATED_RANGE_BY_VIN_MODEL[modelKey] ?? DEFAULT_RATED_RANGE_MILES;
+  const ratedRange = RATED_RANGE_BY_VIN_MODEL[modelKey];
+  if (ratedRange == null) {
+    return { fullRangeKm, pct: null, baselineKm: null };
+  }
 
-  const soh = (estimatedFullRange / ratedRange) * 100;
-
-  // Clamp to [50, 105] and round to 1 decimal.
-  return Math.round(Math.min(105, Math.max(50, soh)) * 10) / 10;
+  const soh = (estimatedFullRangeMiles / ratedRange) * 100;
+  return {
+    fullRangeKm,
+    pct: Math.round(Math.min(105, Math.max(50, soh)) * 10) / 10,
+    baselineKm: Math.round(ratedRange * MILES_TO_KM),
+  };
 }
 
 function mapChargingState(

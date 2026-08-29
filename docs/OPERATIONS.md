@@ -186,6 +186,25 @@ none.
   the time, so a large share of real commands fail with nothing explaining why.
 - **`bnetza` and `austria` are dark.** Germany and Austria get no national feed;
   OSM and OCM still cover them, thinly.
+- **A linked Tesla records no trips and no charging sessions.** `trips` and
+  `charging_sessions` are written only by the simulator
+  (`src/lib/mock/persistence.ts`) and the history seeder. Nothing derives them
+  from a real car. So for a live vehicle the activity feed, the savings and CO₂
+  tiles, the monthly consumption chart and the planner's personal-efficiency
+  figure are all **permanently empty**, and none of them says why — which is
+  exactly how "7 days and 30 days show the same thing" gets reported. They show
+  the same thing because both windows are empty.
+  The data to build them from exists: `vehicle_snapshots` carries odometer,
+  battery level and position every ten minutes. Deriving a trip is a matter of
+  finding the gaps between moving and stopped. It is the largest thing on this
+  list.
+- **State of health cannot tell a Model 3 RWD from a Long Range.** The VIN's
+  model character gives the line, not the variant, and their original rated
+  ranges differ by about thirty per cent. Since Aug 29 an unknown variant
+  returns no percentage at all rather than one measured against an average of
+  cars nobody owns, and the measured full range is returned alongside so a
+  driver can check it against their own dash. Distinguishing the variant needs
+  more of the VIN decoded than we decode today.
 - **Costs arithmetic (C1–C5)** is wrong in four places and nothing flags it.
   The number the product exists for. Roadmap gate 2.
 - **Email verification is unreachable** without `RESEND_API_KEY`, which locks
