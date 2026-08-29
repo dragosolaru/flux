@@ -30,11 +30,13 @@ describe("decodeTeslaVin", () => {
     expect(decodeTeslaVin("LRW3E7EL0PC66116")).toBeNull(); // 16 characters
   });
 
-  it("does not pretend to know the trim", () => {
-    // This position is the body/platform, not the drivetrain: a Performance and
-    // a Standard Range can share it. The real trim comes from the car's own
-    // vehicle_config.trim_badging, which is why nothing derives a battery
-    // baseline from this field any more.
-    expect(decodeTeslaVin("LRW3E7EL0PC661169")?.variant).toBeDefined();
+  it("reads position 5 as the body it is, not as a trim", () => {
+    // The owner's car is a Model 3 Performance and position 5 is `E`, which the
+    // old map called "Standard Range RWD" — so the add-a-vehicle screen
+    // introduced a Performance to its owner as a Standard Range. `E` means a
+    // four-door saloon and nothing about the drivetrain.
+    const info = decodeTeslaVin("LRW3E7EL0PC661169");
+    expect(info?.body).toContain("Sedan");
+    expect(info).not.toHaveProperty("variant");
   });
 });

@@ -69,12 +69,25 @@ export interface WindowsState {
   rearRight: boolean;
 }
 
+/**
+ * Lithium-ion in two flavours that behave differently enough to need naming:
+ * `nmc` covers NMC/NCA packs, `lfp` the lithium-iron-phosphate ones.
+ */
+export type BatteryChemistry = "nmc" | "lfp";
+
 export interface VehicleState {
   // --- identity -------------------------------------------------------
   vehicleId: string;
   displayName: string;
   brand: VehicleBrand;
   dataSource: DataSource;
+  /**
+   * What the car calls itself — `model3:p74d`. The key the trim table is keyed
+   * on, carried through so an unmapped car can be identified from the screen
+   * instead of guessed at: without it, "no state of health" has no cause a
+   * driver can report.
+   */
+  trimBadge: string | null;
 
   // --- connectivity ---------------------------------------------------
   isOnline: boolean;
@@ -96,6 +109,12 @@ export interface VehicleState {
   scheduledDepartureMinutes: number | null;     // minutes after local midnight
   batteryHealthPct: number | null;    // SoH 0–100 %
   cellVoltages: number[] | null;      // per-cell volts (Tesla only)
+  /**
+   * Which chemistry the pack is, when we know. Null when we do not, and null
+   * is load-bearing: the two chemistries want opposite treatment, so charging
+   * advice for the wrong one is not vague, it is backwards.
+   */
+  batteryChemistry: BatteryChemistry | null;
 
   // --- drive / motion -------------------------------------------------
   motionState: MotionState | null;

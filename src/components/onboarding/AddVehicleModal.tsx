@@ -293,7 +293,10 @@ export function AddVehicleModal({ trigger, open: controlledOpen, onOpenChange }:
                       <p className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
                         <CheckCircle className="size-4 shrink-0" />
                         {t("add_vehicle.vin_detected", {
-                          variant: `${vinInfo.model} ${vinInfo.variant}`,
+                          // Model and body only. The VIN cannot say which trim
+                          // this is, and saying it anyway introduced a
+                          // Performance to its owner as a Standard Range.
+                          variant: [vinInfo.model, vinInfo.body].filter(Boolean).join(" · "),
                           year: vinInfo.year ?? "—",
                         })}
                       </p>

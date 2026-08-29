@@ -1,7 +1,12 @@
 export interface VinInfo {
   brand: "tesla";
   model: string;
-  variant: string;
+  /**
+   * Body style. NOT the trim — the VIN position this comes from is the body,
+   * and reading it as a drivetrain is how a Performance came to be labelled a
+   * Standard Range. The trim comes from the car (`vehicle_config.trim_badging`).
+   */
+  body: string | null;
   year: number | null;
 }
 
@@ -16,15 +21,26 @@ const MODEL_MAP: Record<string, string> = {
   C: "Cybertruck",
 };
 
-const VARIANT_MAP: Record<string, string> = {
-  E: "Standard Range RWD",
-  F: "Dual Motor AWD",
-  G: "Performance AWD",
-  P: "Performance",
-  N: "Long Range RWD",
-  R: "All-Wheel Drive",
-  S: "Standard",
-  T: "Standard Range RWD",
+/**
+ * Position 5 is the BODY, not the drivetrain.
+ *
+ * This map read it as a trim and was confidently wrong about it: on
+ * `LRW3E7EL0PC661169` — a Model 3 Performance — position 5 is `E`, which the
+ * map called "Standard Range RWD". The add-a-vehicle screen therefore
+ * introduced a Performance to its owner as a Standard Range.
+ *
+ * `E` means a four-door left-hand-drive saloon. That is all this position says,
+ * and the drivetrain lives at position 8, which this decoder does not attempt:
+ * one worked example is not a mapping, and the trim is available from the car
+ * itself as `vehicle_config.trim_badging`, which is authoritative rather than
+ * inferred.
+ */
+const BODY_MAP: Record<string, string> = {
+  A: "Hatchback, 5 uși",
+  B: "Hatchback, 5 uși",
+  C: "Coupé",
+  E: "Sedan, 4 uși",
+  G: "SUV, 5 uși",
 };
 
 const YEAR_MAP: Record<string, number> = {
@@ -47,18 +63,14 @@ export function decodeTeslaVin(vin: string): VinInfo | null {
   if (!TESLA_WMI.has(normalized.slice(0, 3))) return null;
 
   const modelChar = normalized[3];
-  const variantChar = normalized[4];
+  const bodyChar = normalized[4];
   const yearChar = normalized[9];
 
   const model = MODEL_MAP[modelChar ?? ""] ?? null;
   if (!model) return null;
 
-  // The VIN cannot settle the trim: this position is the body/platform, not the
-  // drivetrain, and a Model 3 Performance and a Standard Range can share it.
-  // Anything that needs the real trim reads `vehicle_config.trim_badging` from
-  // the car instead — see estimateSoH. This stays a rough label, and says so.
-  const variant = VARIANT_MAP[variantChar ?? ""] ?? "Unknown variant";
+  const body = BODY_MAP[bodyChar ?? ""] ?? null;
   const year = YEAR_MAP[yearChar ?? ""] ?? null;
 
-  return { brand: "tesla", model, variant, year };
+  return { brand: "tesla", model, body, year };
 }

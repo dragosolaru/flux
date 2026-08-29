@@ -102,6 +102,7 @@ export async function loadLastKnown(
     displayName: vehicle.display_name,
     brand: vehicle.brand as VehicleState["brand"],
     dataSource: "live",
+    trimBadge: null,
 
     // The whole point: the car is not online, and the reading is from when it
     // last was. `lastSeenAt` is what makes the age of it visible.
@@ -121,6 +122,9 @@ export async function loadLastKnown(
     scheduledDepartureEnabled: null,
     scheduledDepartureMinutes: null,
     batteryHealthPct: null,
+    // Chemistry comes from the live `vehicle_config`, which a stored snapshot
+    // never carried. Unknown rather than assumed.
+    batteryChemistry: null,
     cellVoltages: null,
 
     motionState: "parked",

@@ -7,13 +7,15 @@ import {
 import { getValidAccessToken, TeslaAuthError } from "./tokens";
 import { recordTeslaCall } from "./call-log";
 import type {
+  TeslaChargeState,
   TeslaCommand,
   TeslaCommandResponse,
   TeslaRegion,
+  TeslaVehicleConfig,
   TeslaVehicleDataResponse,
   TeslaVehicleListResponse,
 } from "@/types/tesla";
-import type { VehicleState } from "@/types/vehicle";
+import type { BatteryChemistry, VehicleState } from "@/types/vehicle";
 import { cachedRead, chargeReadBudget, storeRead, type CallReason } from "./budget";
 
 function baseUrl(region: string): string {
@@ -195,6 +197,7 @@ export function mapVehicleData(
     displayName: r.display_name ?? params.displayName,
     brand: "tesla",
     dataSource: "live",
+    trimBadge: config?.trim_badging ? trimKey(config) : null,
     // connectivity
     isOnline: r.state === "online",
     lastSeenAt: new Date().toISOString(),
@@ -215,6 +218,7 @@ export function mapVehicleData(
     scheduledDepartureEnabled: null,
     scheduledDepartureMinutes: null,
     batteryHealthPct: estimateSoH(charge, config)?.pct ?? null,
+    batteryChemistry: batteryChemistry(config),
     cellVoltages: null,
     // drive / motion
     motionState: mapMotionState(drive?.shift_state, charge?.charging_state),
@@ -465,49 +469,53 @@ export async function sendVehicleCommand(params: {
 }
 
 /**
- * Rated range (miles) for known Tesla models, keyed by the 4th VIN character
- * (0-indexed position 3), which encodes the model/variant.
- * Sources: EPA-rated range figures.
- */
-/**
- * Rated range when new, keyed on what the car calls itself.
+ * What a trim badge tells us about the car.
  *
  * `vehicle_config.trim_badging` is the car's own badge — `p74d` for a Model 3
- * Performance, `74d` for a Long Range — and we have been requesting that
- * section from Tesla all along without reading it, while guessing the variant
- * out of the VIN instead.
+ * Performance, `74d` for a Long Range — and it is authoritative in a way the
+ * VIN is not: the VIN's model character gives the line and its body character
+ * gives the shell, and neither says which drivetrain or which pack is fitted.
  *
- * The VIN could not have settled it anyway. Its model character gives the line
- * and not the trim, and the trims differ by thirty per cent; the repo's own VIN
- * decoder additionally rejected every car not built in Fremont, which is every
- * European and Chinese Tesla. Asking the car is both easier and correct.
+ * **Chemistry is the field worth having.** It changes daily advice completely
+ * and in opposite directions. An NMC/NCA pack wants to spend its life between
+ * about 50 and 80 per cent and dislikes sitting full; an LFP pack wants taking
+ * to 100 per cent regularly, because that is how its BMS recalibrates and it
+ * does not mind the time there. Advice built on the wrong one is not vague, it
+ * is backwards.
  *
  * Keyed on `car_type:trim_badging` so a Model Y cannot borrow a Model 3 figure.
- * EPA rated miles, which is the unit `battery_range` comes in.
+ * Rated range is in EPA miles, the unit `battery_range` comes in.
  */
-const RATED_RANGE_BY_TRIM: Record<string, number> = {
-  "model3:p74d": 315, // Model 3 Performance
-  "model3:74d": 358, // Model 3 Long Range AWD
+interface TrimFacts {
+  ratedRangeMiles: number;
+  chemistry: BatteryChemistry;
+}
+
+const TRIM_FACTS: Record<string, TrimFacts> = {
+  "model3:p74d": { ratedRangeMiles: 315, chemistry: "nmc" }, // Performance
+  "model3:74d": { ratedRangeMiles: 358, chemistry: "nmc" }, // Long Range AWD
 };
 
+/** The badge, normalised. Exported so one place decides how the key is built. */
+export function trimKey(
+  config: Partial<TeslaVehicleConfig> | null | undefined,
+): string {
+  return `${config?.car_type ?? ""}:${(config?.trim_badging ?? "").toLowerCase()}`;
+}
+
 /**
- * State of health, or nothing.
+ * Which chemistry this car has, or null when its badge is not one we know.
  *
- * The measurement is sound: at a known charge level, `battery_range` scaled to
- * 100% is what the pack can hold today. The comparison is where it goes wrong,
- * because the baseline depends on a variant the VIN's model character cannot
- * distinguish. A Model 3 RWD, Long Range and Performance leave the factory at
- * roughly 272, 358 and 315 rated miles — a spread of thirty per cent. Divide
- * one car's measurement by another variant's baseline and the answer is a
- * confident percentage that is wrong by a quarter.
- *
- * So this returns the measurement and a percentage only when the model line is
- * known, and `null` otherwise rather than falling back to an average of cars
- * nobody owns. The full-range estimate is returned separately either way,
- * because it is the honest half: a driver can check it against their own dash
- * in one glance, and a percentage against a guessed baseline they cannot check
- * at all.
+ * Null matters: advice for the wrong chemistry is worse than none, because the
+ * two point in opposite directions. Better to say nothing than to tell an LFP
+ * owner to avoid 100%, which is the one thing their pack actually wants.
  */
+export function batteryChemistry(
+  config: Partial<TeslaVehicleConfig> | null | undefined,
+): BatteryChemistry | null {
+  return TRIM_FACTS[trimKey(config)]?.chemistry ?? null;
+}
+
 export interface SoHEstimate {
   /** Range at 100%, in km, derived from the current reading. Checkable. */
   fullRangeKm: number;
@@ -517,9 +525,27 @@ export interface SoHEstimate {
   baselineKm: number | null;
 }
 
-function estimateSoH(
-  charge: Partial<import("@/types/tesla").TeslaChargeState> | null,
-  config: Partial<import("@/types/tesla").TeslaVehicleConfig> | null,
+/**
+ * State of health, or nothing.
+ *
+ * The measurement is sound: at a known charge level, `battery_range` scaled to
+ * 100% is what the pack can hold today. The comparison is where it goes wrong,
+ * because the baseline depends on a trim the VIN cannot settle. A Model 3 RWD,
+ * Long Range and Performance leave the factory at roughly 272, 358 and 315
+ * rated miles — a spread of thirty per cent. Divide one car's measurement by
+ * another trim's baseline and the answer is a confident percentage that is
+ * wrong by a quarter.
+ *
+ * So the percentage appears only when the car's own badge is one we know, and
+ * is `null` otherwise rather than falling back to an average of cars nobody
+ * owns. The full-range estimate is returned either way, because it is the
+ * honest half: a driver can hold it up against their own dash in one glance,
+ * and a percentage against a guessed baseline they cannot check at all. That
+ * is exactly how the last wrong baseline was caught.
+ */
+export function estimateSoH(
+  charge: Partial<TeslaChargeState> | null,
+  config: Partial<TeslaVehicleConfig> | null,
 ): SoHEstimate | null {
   if (!charge) return null;
   const { battery_level: soc, battery_range: rangeAtSoc } = charge;
@@ -531,8 +557,8 @@ function estimateSoH(
   const estimatedFullRangeMiles = rangeAtSoc / (soc / 100);
   const fullRangeKm = Math.round(estimatedFullRangeMiles * MILES_TO_KM);
 
-  const key = `${config?.car_type ?? ""}:${(config?.trim_badging ?? "").toLowerCase()}`;
-  const ratedRange = RATED_RANGE_BY_TRIM[key];
+  const key = trimKey(config);
+  const ratedRange = TRIM_FACTS[key]?.ratedRangeMiles;
   // An unrecognised badge gets the measurement and no percentage. A percentage
   // against the wrong trim is wrong by a quarter, confidently, and a driver
   // cannot check it — whereas they can hold the full-range figure up against

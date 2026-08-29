@@ -1189,3 +1189,63 @@ label asks the driver to guess — still stands, and is now recorded here rather
 than fixed, because v1's look is what was chosen and redesigning it was not
 what was asked for.
 
+
+---
+
+## 25i. What the car is, and what that changes
+
+**What:** The trim table in `src/lib/tesla/api.ts` now carries two facts per
+badge, not one: the rated range a state-of-health estimate is measured against,
+and the **battery chemistry**. Chemistry is the one that changes what a driver
+should do, and it changes it in opposite directions:
+
+- **NMC/NCA** — happiest between roughly 50% and 80% day to day; sitting at 100%
+  for days is what ages it. Charge full before a long trip, not as a habit.
+- **LFP** — wants 100% regularly. That is how the BMS recalibrates its range
+  estimate, and the chemistry does not mind the time there.
+
+Advice built on the wrong one is not vague, it is backwards. So
+`batteryChemistry(config)` returns `null` for a badge that is not in the table,
+and the UI says nothing rather than guessing. Two badges are mapped today:
+`model3:p74d` (Performance, NMC) and `model3:74d` (Long Range AWD, NMC).
+
+**Where the badge comes from:** `vehicle_config.trim_badging`, which the car
+reports about itself. It was requested in `TESLA_VEHICLE_DATA_ENDPOINTS` all
+along and never read, while the variant was being guessed from the VIN — which
+cannot carry it. A VIN gives the model line and the body shell; it does not say
+which pack is fitted.
+
+**When the badge is unknown:** `/insights` shows the measured range at 100% (a
+figure the driver can check against their own dash in one glance) and, instead
+of a percentage, the badge itself: *"No state of health for this trim yet — the
+car reports model3:xyz."* That turns a silent gap into a report anyone can act
+on, which is how the last wrong baseline was caught.
+
+**Tesla's own test is authoritative.** The estimate here is derived from range;
+the car has a real one at **Controls → Service → Battery Health**. `/insights`
+says so under the figure, so the number is not mistaken for a measurement.
+
+**How to use:** UI `/insights` → Battery health. No new API, no new call to the
+car — the data was already in every `vehicle_data` response.
+
+**Key files:** `src/lib/tesla/api.ts` (`TRIM_FACTS`, `trimKey`,
+`batteryChemistry`, `estimateSoH`), `src/types/vehicle.ts`
+(`batteryChemistry`, `trimBadge` on `VehicleState`),
+`src/app/(dashboard)/insights/insights-client.tsx`,
+`src/lib/tesla/__tests__/soh.test.ts`.
+
+**Dependencies:** none. Adding a trim is one line in `TRIM_FACTS`.
+
+### VIN position 5 is the body, not the trim
+
+Same commit, same cause. `vin-decoder.ts` read position 5 through a
+`VARIANT_MAP` that called `E` "Standard Range RWD" — so `AddVehicleModal`
+introduced a Model 3 Performance to its owner as a Standard Range. Position 5
+encodes the **body**: `E` is the four-door sedan, and every Model 3 has one.
+It is now `BODY_MAP`, `VinInfo.body`, and the modal shows `Model 3 · Sedan,
+4 uși` — true, and about the shell rather than the drivetrain.
+
+Also fixed there: `TESLA_WMI` was `startsWith("5YJ")`, the Fremont code. Cars
+built in Berlin (`XP7`), Shanghai (`LRW`) and Austin (`7SA`) were rejected as
+not-a-Tesla — which is every European car, including the one this app is being
+field-tested in.

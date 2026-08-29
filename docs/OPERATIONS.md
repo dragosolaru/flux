@@ -201,11 +201,13 @@ none.
 - **State of health now comes from the car's own badge**, not the VIN:
   `vehicle_config.trim_badging` (`p74d` = Model 3 Performance, `74d` = Long
   Range), keyed with `car_type` so a Model Y cannot borrow a Model 3 figure.
-  Two trims are mapped. **An unrecognised badge gets the measured full range
-  and no percentage** — which is the safe direction, but it also means a car we
-  have not mapped shows no SoH at all. `/debug` should surface the raw badge so
-  an unknown one can be identified and added rather than guessed; it does not
-  yet.
+  Two trims are mapped (`model3:p74d`, `model3:74d`). **An unrecognised badge
+  gets the measured full range and no percentage** — the safe direction, but it
+  means an unmapped car shows no SoH at all. `/insights` now prints the raw
+  badge in place of the missing percentage, so the gap reports its own cause
+  and adding the trim is one line in `TRIM_FACTS`. Chemistry rides on the same
+  table; an unmapped badge also gets no charging advice, deliberately, because
+  NMC and LFP want opposite treatment.
 - **Costs arithmetic (C1–C5)** is wrong in four places and nothing flags it.
   The number the product exists for. Roadmap gate 2.
 - **Email verification is unreachable** without `RESEND_API_KEY`, which locks

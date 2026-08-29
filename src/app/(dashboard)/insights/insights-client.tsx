@@ -356,6 +356,32 @@ function BatterySection({ vehicleId }: BatterySectionProps) {
       ) : (
         <EmptyState icon={BatteryFull} title={t("no_battery_data")} />
       )}
+      {/*
+        Advice, only when the pack is known. The two chemistries want opposite
+        things — an NMC pack dislikes sitting full, an LFP one needs to get
+        there — so a guess here is worse than silence.
+      */}
+      {vehicleState?.batteryChemistry ? (
+        <Card variant="surface" className="p-3">
+          <p className="text-2xs text-muted-foreground">
+            {t(
+              vehicleState.batteryChemistry === "lfp"
+                ? "chemistry_lfp"
+                : "chemistry_nmc",
+            )}
+          </p>
+        </Card>
+      ) : null}
+      {currentSoh != null ? (
+        <p className="text-2xs text-muted-foreground">{t("soh_estimate_hint")}</p>
+      ) : vehicleState?.trimBadge ? (
+        // No percentage means the car's badge is not in the trim table. Show
+        // the badge rather than nothing, so the missing row can be identified
+        // from the screen instead of guessed at.
+        <p className="text-2xs text-muted-foreground">
+          {t("soh_unknown_trim", { badge: vehicleState.trimBadge })}
+        </p>
+      ) : null}
     </div>
   );
 }

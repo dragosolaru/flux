@@ -51,6 +51,7 @@ export function createInitialSnapshot(
     displayName,
     brand,
     dataSource: "mock",
+    trimBadge: null,
     isOnline: true,
     lastSeenAt: now.toISOString(),
     batteryLevel: initialBattery,
@@ -67,6 +68,9 @@ export function createInitialSnapshot(
     scheduledDepartureMinutes: null,
     // Static telemetry — capability mask nulls these for brands that don't expose them
     batteryHealthPct: 92.4,
+    // Every simulated model charges on the NMC curve, so the advice the mock
+    // shows is the advice a real Model 3 Performance gets.
+    batteryChemistry: "nmc",
     cellVoltages: makeCellVoltages(),
     motionState: step.motionState,
     odometerKm: 0,
