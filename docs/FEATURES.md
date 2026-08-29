@@ -923,6 +923,41 @@ is the one case where it is the best available centre and needs no permission.
 
 **Dependencies:** none. Browser APIs only.
 
+## 25d. Send to car — and the preconditioning that never was
+
+**What:** `vehiclesApi.shareNavigation()` sends a destination, and any planned
+stops, to the car's own navigation via `navigation_gps_request`. That is all it
+sends.
+
+**What it used to also send, and why that was wrong.** For third-party fast
+chargers it fired `precondition_max` alongside the destination, on the belief
+that this warmed the battery for charging. It does not.
+`set_preconditioning_max` toggles **Max Defrost**, a cabin command. The proof
+came from the car: tapping "send to car" at 27°C set the destination *and*
+started `DEFROSTING HI MAX`, heating the cabin and draining the battery unasked.
+
+**There is no Fleet API command that preconditions the battery.** Tesla does it
+itself when the car navigates to a Supercharger. For anything else there is
+nothing to send — so nothing is sent, and nothing claims otherwise. Every string
+describing the old behaviour ("Precondiționarea bateriei a pornit", "va
+precondiționa bateria", "am activat noi preîncălzirea") was describing Max
+Defrost, and each has been corrected or deleted in all five locales.
+
+The stop badge still marks a charger Tesla will **not** auto-precondition for —
+that information is true and useful. It now reads "no automatic preheating"
+rather than implying we supply it.
+
+**One deliberate max-defrost path survives**: a button on the trip map, pressed
+by a person, labelled as what it does. A driver heading for a cold charger may
+genuinely want it. It is never a side effect.
+
+**Key files:** `src/lib/api/vehicles.ts`,
+`src/components/charging-map/ChargerDetailSheet.tsx`,
+`src/app/(dashboard)/map/map-client.tsx`. Pinned by
+`src/lib/api/__tests__/share-navigation.test.ts`, which checks the call sites
+rather than a return value — the defect was an extra command fired from three
+places, which is a property of the callers.
+
 ## 26. The /v2 redesign — closed, and what came out of it
 
 **`/v2` is deleted.** It ran for weeks beside the shipping app as a staging

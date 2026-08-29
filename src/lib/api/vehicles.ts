@@ -99,23 +99,26 @@ export function syncChargingHistory(
 }
 
 /**
- * Send a destination (and any planned stops) to the car's navigation, and
- * trigger battery preconditioning in parallel when the next fast charger needs
- * it. Tesla auto-preconditions for its own Superchargers, so callers pass
- * `precondition: true` only for third-party fast chargers. This unifies the
- * share-to-Tesla flow used by the charging map, trip planner and unified map.
+ * Send a destination (and any planned stops) to the car's navigation.
+ *
+ * It used to fire `precondition_max` alongside this for third-party fast
+ * chargers, on the belief that it warmed the battery. It does not.
+ * `set_preconditioning_max` toggles **Max Defrost** — a cabin command — and the
+ * proof arrived from the car: tapping "send to car" set the destination and
+ * started DEFROSTING HI MAX, heating the cabin and draining the battery
+ * unasked, at 27°C.
+ *
+ * There is no Fleet API command that preconditions the battery. Tesla does it
+ * itself when the car navigates to a Supercharger, and for anything else there
+ * is nothing to send. Claiming otherwise was worse than doing nothing, because
+ * the toast said the battery was being warmed while the car was defrosting a
+ * windscreen.
  */
 export async function shareNavigation(
   vehicleId: string,
   nav: { destination: NavPoint; stops?: NavPoint[] },
-  opts: { precondition: boolean },
 ): Promise<void> {
   const args: Record<string, unknown> = { destination: nav.destination };
   if (nav.stops) args.stops = nav.stops;
-  await Promise.all([
-    sendCommand(vehicleId, "share_navigation", args),
-    opts.precondition
-      ? sendCommand(vehicleId, "precondition_max", { on: true })
-      : Promise.resolve(),
-  ]);
+  await sendCommand(vehicleId, "share_navigation", args);
 }

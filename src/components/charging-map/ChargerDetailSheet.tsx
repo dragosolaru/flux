@@ -9,7 +9,6 @@ import type { Charger } from "@/lib/chargers/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useVehicles } from "@/hooks/useVehicles";
 import * as vehiclesApi from "@/lib/api/vehicles";
-import { needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 
 interface ChargerDetailSheetProps {
   charger: Charger;
@@ -71,18 +70,10 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
     if (!teslaVehicle) return;
     setSending(true);
     try {
-      const isSupercharger = isTeslaOwnNetwork({ operatorId: charger.operatorId });
-      const willPrecondition =
-        needsPreconditioning(charger.maxPowerKw ?? 0) && !isSupercharger;
-
-      await vehiclesApi.shareNavigation(
-        teslaVehicle.id,
-        { destination: { lat: charger.lat, lng: charger.lng, name: displayName } },
-        { precondition: willPrecondition },
-      );
-      toast.success(
-        willPrecondition ? t("send_to_car_preconditioned") : t("send_to_car_success"),
-      );
+      await vehiclesApi.shareNavigation(teslaVehicle.id, {
+        destination: { lat: charger.lat, lng: charger.lng, name: displayName },
+      });
+      toast.success(t("send_to_car_success"));
     } catch {
       toast.error(t("send_to_car_error"));
     } finally {

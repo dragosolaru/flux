@@ -53,7 +53,7 @@ import {
 import { SavedRoutesSheet } from "@/components/trip/SavedRoutesSheet";
 import { compactSnapshot, parseSnapshot } from "@/lib/trip/snapshot";
 import { shareRoute } from "@/lib/trip/share-route";
-import { routeNeedsPreconditioning, needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
+import { needsPreconditioning, isTeslaOwnNetwork } from "@/lib/trip/precondition";
 import type { TripPlan, TripVariant, ChargingStop } from "@/lib/external/routing/types";
 import type { Charger, ConnectorType } from "@/lib/chargers/types";
 import { haversineMeters } from "@/lib/chargers/dedup";
@@ -553,6 +553,13 @@ export function MapClient() {
     return tTrip("share_error");
   }
 
+  /**
+   * Max Defrost, on purpose and by hand.
+   *
+   * Kept because a driver heading for a cold charger may genuinely want it —
+   * but it is now labelled as what it is. It was called "precondition the
+   * battery", which it has never done.
+   */
   async function handleManualPrecondition() {
     if (!teslaVehicle) return;
     setPreconditioningManually(true);
@@ -692,18 +699,9 @@ export function MapClient() {
   async function handleShareRoute() {
     if (!activePlan || !origin || !destination) return;
 
-    // The battery cares about the route, not about which app receives the link.
-    if (teslaVehicle && routeNeedsPreconditioning(activePlan.stops)) {
-      // Fire-and-forget, but not silent: the share must not be blocked on the
-      // car, yet a driver told nothing will stand at a cold charger wondering
-      // why. `.catch(() => undefined)` swallowed even the 412 that says the
-      // signing proxy is missing.
-      void vehiclesApi
-        .sendCommand(teslaVehicle.id, "precondition_max", { on: true })
-        .catch((err: unknown) => {
-          toast.error(commandErrorMessage(err));
-        });
-    }
+    // Nothing is sent to the car here. Sharing a link is not a reason to touch
+    // the climate, and the command that used to fire — precondition_max — turns
+    // on Max Defrost rather than warming the battery.
 
     const outcome = await shareRoute({
       origin,
@@ -720,22 +718,16 @@ export function MapClient() {
     if (!teslaVehicle || !activePlan || !destination) return;
     setSharing(true);
     try {
-      const willPrecondition = routeNeedsPreconditioning(activePlan.stops);
-
-      await vehiclesApi.shareNavigation(
-        teslaVehicle.id,
-        {
-          destination: { lat: destination.lat, lng: destination.lng, name: destination.name },
-          stops: activePlan.stops.map((s) => ({
-            lat: s.station.lat,
-            lng: s.station.lng,
-            name: s.station.name,
-          })),
-        },
-        { precondition: willPrecondition },
-      );
+      await vehiclesApi.shareNavigation(teslaVehicle.id, {
+        destination: { lat: destination.lat, lng: destination.lng, name: destination.name },
+        stops: activePlan.stops.map((s) => ({
+          lat: s.station.lat,
+          lng: s.station.lng,
+          name: s.station.name,
+        })),
+      });
       setSharedRoute(true);
-      toast.success(willPrecondition ? tTrip("share_success_preconditioned") : tTrip("share_success"));
+      toast.success(tTrip("share_success"));
     } catch {
       toast.error(tTrip("share_error"));
     } finally {
