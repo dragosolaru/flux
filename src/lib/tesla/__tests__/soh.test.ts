@@ -16,18 +16,23 @@ import { join } from "node:path";
  */
 const api = readFileSync(join(process.cwd(), "src/lib/tesla/api.ts"), "utf8");
 
-describe("rated-range table", () => {
-  it("keys Model 3 on the character Tesla actually uses", () => {
-    expect(api).toMatch(/"3":\s*\d+/);
-    // `F` is not a model code, and its presence is what sent every Model 3 to
-    // the default.
-    expect(api).not.toMatch(/^\s*F:\s*\d+,/m);
+describe("where the baseline comes from", () => {
+  it("asks the car, not the VIN", () => {
+    // vehicle_config was in TESLA_VEHICLE_DATA_ENDPOINTS all along and nothing
+    // read it, while the VIN was being decoded for a trim it cannot carry.
+    expect(api).toContain("trim_badging");
+    expect(api).toContain("RATED_RANGE_BY_TRIM");
   });
 
-  it("covers the four model lines and nothing invented", () => {
-    for (const key of ['"3"', "Y:", "S:", "X:"]) {
-      expect(api).toContain(key);
-    }
+  it("keys on the model as well as the badge", () => {
+    // A Model Y reporting p74d must not borrow a Model 3 figure.
+    expect(api).toMatch(/"model3:p74d"/);
+    expect(api).toContain("config?.car_type");
+  });
+
+  it("no longer derives a baseline from the VIN at all", () => {
+    expect(api).not.toContain("RATED_RANGE_BY_VIN_MODEL");
+    expect(api).not.toContain("DEFAULT_RATED_RANGE_MILES");
   });
 });
 
@@ -38,7 +43,7 @@ describe("what it does when it cannot know", () => {
     // variant's baseline is wrong by a quarter, confidently. The default was
     // exactly that, so it is gone.
     expect(api).not.toContain("DEFAULT_RATED_RANGE_MILES");
-    expect(api).toMatch(/if \(ratedRange == null\) \{[\s\S]*?pct: null/);
+    expect(api).toMatch(/if \(ratedRange == null\) return \{ fullRangeKm, pct: null/);
   });
 
   it("always returns the measurement, which a driver can check", () => {

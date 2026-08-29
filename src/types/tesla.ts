@@ -86,6 +86,19 @@ export interface TeslaSoftwareUpdate {
   install_perc?: number | null;
 }
 
+/**
+ * What the car says it is. We have been requesting `vehicle_config` in
+ * `TESLA_VEHICLE_DATA_ENDPOINTS` all along and never reading it, while
+ * guessing the variant from the VIN — badly, and in a way the VIN cannot
+ * settle.
+ */
+export interface TeslaVehicleConfig {
+  /** "model3", "modely", "models", "modelx". */
+  car_type?: string | null;
+  /** "p74d" (Performance), "74d" (Long Range), "50", … — the car's own badge. */
+  trim_badging?: string | null;
+}
+
 export interface TeslaVehicleState {
   locked: boolean;
   odometer: number; // miles
@@ -129,6 +142,7 @@ export interface TeslaVehicleDataResponse {
     charge_state?: Partial<TeslaChargeState> | null;
     climate_state?: Partial<TeslaClimateState> | null;
     drive_state?: Partial<TeslaDriveState> | null;
+    vehicle_config?: Partial<TeslaVehicleConfig> | null;
     vehicle_state?: Partial<TeslaVehicleState> | null;
   };
 }

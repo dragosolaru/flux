@@ -5,6 +5,9 @@ export interface VinInfo {
   year: number | null;
 }
 
+/** Fremont, Shanghai, Berlin, Austin. */
+const TESLA_WMI = new Set(["5YJ", "LRW", "XP7", "7SA"]);
+
 const MODEL_MAP: Record<string, string> = {
   "3": "Model 3",
   Y: "Model Y",
@@ -38,7 +41,10 @@ export function decodeTeslaVin(vin: string): VinInfo | null {
   const normalized = vin.trim().toUpperCase();
 
   if (normalized.length !== 17) return null;
-  if (!normalized.startsWith("5YJ")) return null;
+  // Tesla builds in four places, and this accepted one of them. `LRW` is
+  // Shanghai and `XP7` is Berlin — between them, every European and Chinese
+  // car — so the decoder returned null for exactly the cars this app has.
+  if (!TESLA_WMI.has(normalized.slice(0, 3))) return null;
 
   const modelChar = normalized[3];
   const variantChar = normalized[4];
@@ -47,6 +53,10 @@ export function decodeTeslaVin(vin: string): VinInfo | null {
   const model = MODEL_MAP[modelChar ?? ""] ?? null;
   if (!model) return null;
 
+  // The VIN cannot settle the trim: this position is the body/platform, not the
+  // drivetrain, and a Model 3 Performance and a Standard Range can share it.
+  // Anything that needs the real trim reads `vehicle_config.trim_badging` from
+  // the car instead — see estimateSoH. This stays a rough label, and says so.
   const variant = VARIANT_MAP[variantChar ?? ""] ?? "Unknown variant";
   const year = YEAR_MAP[yearChar ?? ""] ?? null;
 

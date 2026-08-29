@@ -187,6 +187,7 @@ export function mapVehicleData(
   const climate = r.climate_state ?? null;
   const drive = r.drive_state ?? null;
   const veh = r.vehicle_state ?? null;
+  const config = r.vehicle_config ?? null;
 
   return {
     // identity
@@ -213,7 +214,7 @@ export function mapVehicleData(
     scheduledChargingStartMinutes: null,
     scheduledDepartureEnabled: null,
     scheduledDepartureMinutes: null,
-    batteryHealthPct: estimateSoH(charge, r.vin)?.pct ?? null,
+    batteryHealthPct: estimateSoH(charge, config)?.pct ?? null,
     cellVoltages: null,
     // drive / motion
     motionState: mapMotionState(drive?.shift_state, charge?.charging_state),
@@ -469,34 +470,26 @@ export async function sendVehicleCommand(params: {
  * Sources: EPA-rated range figures.
  */
 /**
- * Rated range when new, by the VIN's model character.
+ * Rated range when new, keyed on what the car calls itself.
  *
- * Position 4 of a Tesla VIN is the model line: `3`, `S`, `X`, `Y`. This table
- * used to key Model 3 on `F`, which is not a Tesla model code at all — so
- * **every Model 3 missed the table and fell through to a 330-mile default**.
- * A car showing 451 km (280 mi) at full charge was reported as 84.9% healthy on
- * a baseline that belonged to no car in particular.
+ * `vehicle_config.trim_badging` is the car's own badge — `p74d` for a Model 3
+ * Performance, `74d` for a Long Range — and we have been requesting that
+ * section from Tesla all along without reading it, while guessing the variant
+ * out of the VIN instead.
  *
- * One number per model line is still not enough to be sure, and that is why
- * `estimateSoH` no longer guesses past it — see there.
+ * The VIN could not have settled it anyway. Its model character gives the line
+ * and not the trim, and the trims differ by thirty per cent; the repo's own VIN
+ * decoder additionally rejected every car not built in Fremont, which is every
+ * European and Chinese Tesla. Asking the car is both easier and correct.
+ *
+ * Keyed on `car_type:trim_badging` so a Model Y cannot borrow a Model 3 figure.
+ * EPA rated miles, which is the unit `battery_range` comes in.
  */
-const RATED_RANGE_BY_VIN_MODEL: Record<string, number> = {
-  "3": 358, // Model 3 Long Range; RWD and Performance differ, see estimateSoH
-  Y: 330,
-  S: 405,
-  X: 348,
+const RATED_RANGE_BY_TRIM: Record<string, number> = {
+  "model3:p74d": 315, // Model 3 Performance
+  "model3:74d": 358, // Model 3 Long Range AWD
 };
 
-/**
- * Estimates State of Health (SoH) from charge_state telemetry.
- *
- * Formula:
- *   estimated_full_range = battery_range / (battery_level / 100)
- *   soh = (estimated_full_range / rated_range) × 100
- *
- * Only computed when battery_level > 15 to avoid noise at very low SOC.
- * Result is clamped to [50, 105] and rounded to 1 decimal.
- */
 /**
  * State of health, or nothing.
  *
@@ -526,7 +519,7 @@ export interface SoHEstimate {
 
 function estimateSoH(
   charge: Partial<import("@/types/tesla").TeslaChargeState> | null,
-  vin: string | undefined,
+  config: Partial<import("@/types/tesla").TeslaVehicleConfig> | null,
 ): SoHEstimate | null {
   if (!charge) return null;
   const { battery_level: soc, battery_range: rangeAtSoc } = charge;
@@ -538,11 +531,13 @@ function estimateSoH(
   const estimatedFullRangeMiles = rangeAtSoc / (soc / 100);
   const fullRangeKm = Math.round(estimatedFullRangeMiles * MILES_TO_KM);
 
-  const modelKey = vin?.[3]?.toUpperCase() ?? "";
-  const ratedRange = RATED_RANGE_BY_VIN_MODEL[modelKey];
-  if (ratedRange == null) {
-    return { fullRangeKm, pct: null, baselineKm: null };
-  }
+  const key = `${config?.car_type ?? ""}:${(config?.trim_badging ?? "").toLowerCase()}`;
+  const ratedRange = RATED_RANGE_BY_TRIM[key];
+  // An unrecognised badge gets the measurement and no percentage. A percentage
+  // against the wrong trim is wrong by a quarter, confidently, and a driver
+  // cannot check it — whereas they can hold the full-range figure up against
+  // their own dash, which is how the last wrong one was caught.
+  if (ratedRange == null) return { fullRangeKm, pct: null, baselineKm: null };
 
   const soh = (estimatedFullRangeMiles / ratedRange) * 100;
   return {

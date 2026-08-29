@@ -198,13 +198,14 @@ none.
   battery level and position every ten minutes. Deriving a trip is a matter of
   finding the gaps between moving and stopped. It is the largest thing on this
   list.
-- **State of health cannot tell a Model 3 RWD from a Long Range.** The VIN's
-  model character gives the line, not the variant, and their original rated
-  ranges differ by about thirty per cent. Since Aug 29 an unknown variant
-  returns no percentage at all rather than one measured against an average of
-  cars nobody owns, and the measured full range is returned alongside so a
-  driver can check it against their own dash. Distinguishing the variant needs
-  more of the VIN decoded than we decode today.
+- **State of health now comes from the car's own badge**, not the VIN:
+  `vehicle_config.trim_badging` (`p74d` = Model 3 Performance, `74d` = Long
+  Range), keyed with `car_type` so a Model Y cannot borrow a Model 3 figure.
+  Two trims are mapped. **An unrecognised badge gets the measured full range
+  and no percentage** — which is the safe direction, but it also means a car we
+  have not mapped shows no SoH at all. `/debug` should surface the raw badge so
+  an unknown one can be identified and added rather than guessed; it does not
+  yet.
 - **Costs arithmetic (C1–C5)** is wrong in four places and nothing flags it.
   The number the product exists for. Roadmap gate 2.
 - **Email verification is unreachable** without `RESEND_API_KEY`, which locks
