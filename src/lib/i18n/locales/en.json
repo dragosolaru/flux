@@ -957,7 +957,7 @@
     "saved_route_rename_placeholder": "Route name",
     "saved_route_rename_save": "Save",
     "saved_route_delete_confirm": "Delete this route?",
-    "precondition_disclaimer": "At Superchargers, Tesla warms the battery itself when you navigate there. For other stations there is no API command that starts it — so we do not start it, and do not claim to.",
+    "precondition_disclaimer": "At Superchargers, Tesla warms the battery itself when you navigate there — the navigation is the trigger, not a separate command. A non-Tesla station reaches the car as a plain GPS destination, so the car does not know it is a charger and will not preheat. No API command asks for it (an open request on Tesla's own repo), so we do not start it and do not claim to.",
     "precondition_btn_manual": "Max defrost",
     "precondition_started": "Max defrost started",
     "area_loaded": "{count} chargers loaded for that area",

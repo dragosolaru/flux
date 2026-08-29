@@ -957,7 +957,7 @@
     "saved_route_rename_placeholder": "Útvonal neve",
     "saved_route_rename_save": "Mentés",
     "saved_route_delete_confirm": "Törli ezt az útvonalat?",
-    "precondition_disclaimer": "Superchargernél a Tesla magától előmelegíti az akkumulátort, amikor odanavigálsz. Más töltőknél nincs API-parancs, ami elindítaná — tehát nem indítjuk el, és nem is állítjuk, hogy megtesszük.",
+    "precondition_disclaimer": "Superchargernél a Tesla magától előmelegíti az akkumulátort, amikor odanavigálsz — a navigáció az indító, nem külön parancs. Egy nem-Tesla töltő sima GPS-célpontként érkezik az autóhoz, így az nem tudja, hogy töltő, és nem melegít elő. Nincs rá API-parancs (nyitott kérés a Tesla saját repójában), tehát nem indítjuk el, és nem is állítjuk.",
     "precondition_btn_manual": "Max. jégmentesítés",
     "precondition_started": "Max. jégmentesítés elindult",
     "area_loaded": "{count} töltő betöltve arra a területre",

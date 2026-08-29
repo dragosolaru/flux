@@ -957,7 +957,7 @@
     "saved_route_rename_placeholder": "Routenname",
     "saved_route_rename_save": "Speichern",
     "saved_route_delete_confirm": "Route löschen?",
-    "precondition_disclaimer": "An Superchargern wärmt Tesla die Batterie selbst vor, sobald man dorthin navigiert. Für andere Stationen gibt es keinen API-Befehl dafür — also starten wir sie nicht und behaupten es auch nicht.",
+    "precondition_disclaimer": "An Superchargern wärmt Tesla die Batterie selbst vor, sobald man dorthin navigiert — die Navigation ist der Auslöser, kein eigener Befehl. Eine Fremdstation erreicht das Auto als reines GPS-Ziel, es weiß also nicht, dass es eine Ladesäule ist, und wärmt nicht vor. Es gibt keinen API-Befehl dafür (offene Anfrage in Teslas eigenem Repo) — wir starten es also nicht und behaupten es auch nicht.",
     "precondition_btn_manual": "Max. Enteisung",
     "precondition_started": "Max. Enteisung gestartet",
     "area_loaded": "{count} Ladepunkte für diesen Bereich geladen",

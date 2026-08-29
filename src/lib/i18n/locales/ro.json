@@ -957,7 +957,7 @@
     "saved_route_rename_placeholder": "Numele rutei",
     "saved_route_rename_save": "Salvează",
     "saved_route_delete_confirm": "Ștergi această rută?",
-    "precondition_disclaimer": "La Superchargere, Tesla preîncălzește bateria singură când navighezi acolo. Pentru celelalte stații nu există comandă în API care să o pornească — deci nu o pornim, și nu pretindem că o facem.",
+    "precondition_disclaimer": "La Superchargere, Tesla preîncălzește bateria singură când navighezi acolo — navigația e declanșatorul, nu o comandă separată. O stație non-Tesla ajunge la mașină ca simplă destinație GPS, deci mașina nu știe că e stație și nu preîncălzește. Nu există comandă în API care să ceară asta (cerere deschisă pe repo-ul Tesla), deci nu o pornim și nu pretindem că o facem.",
     "precondition_btn_manual": "Dezgheț maxim",
     "precondition_started": "Dezghețul maxim a pornit",
     "area_loaded": "{count} stații încărcate pentru zona aceea",

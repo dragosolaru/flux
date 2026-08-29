@@ -936,9 +936,27 @@ that this warmed the battery for charging. It does not.
 came from the car: tapping "send to car" at 27°C set the destination *and*
 started `DEFROSTING HI MAX`, heating the cabin and draining the battery unasked.
 
-**There is no Fleet API command that preconditions the battery.** Tesla does it
-itself when the car navigates to a Supercharger. For anything else there is
-nothing to send — so nothing is sent, and nothing claims otherwise. Every string
+**There is no Fleet API command that preconditions the battery**, and this is
+now settled from three directions rather than assumed:
+
+1. The car itself. Tapping "send to car" started `DEFROSTING HI MAX`.
+2. The docs: `set_preconditioning_max` toggles Max Defrost, a climate command.
+3. Tesla's own repo. [teslamotors/vehicle-command#115](https://github.com/teslamotors/vehicle-command/issues/115)
+   is an **open** feature request asking for `set_battery_preconditioning`,
+   motivated in as many words by wanting to precondition "without navigating to
+   a Supercharger". A command being requested is a command that does not exist.
+
+**What does trigger it**, per Tesla's own Service Mode screen: *"Precondition
+the high-voltage battery from the mobile app or via trip planner."* The trigger
+is **the navigation itself**, not a separate command — and Tesla's trip planner
+routes via Superchargers, so a third-party charger sent as a plain GPS
+destination does not announce itself as a charging stop and will not warm the
+battery.
+
+Which means the old code was firing a harmful extra command to achieve
+something that either happens by itself or cannot be asked for at all. Sending
+the destination — which is all we now do — is the whole of the correct
+behaviour. Every string
 describing the old behaviour ("Precondiționarea bateriei a pornit", "va
 precondiționa bateria", "am activat noi preîncălzirea") was describing Max
 Defrost, and each has been corrected or deleted in all five locales.
@@ -950,6 +968,13 @@ rather than implying we supply it.
 **One deliberate max-defrost path survives**: a button on the trip map, pressed
 by a person, labelled as what it does. A driver heading for a cold charger may
 genuinely want it. It is never a side effect.
+
+**Worth revisiting:** Fleet API has `add_precondition_schedule`, and Tesla
+says the newer schedule commands should be preferred over `set_scheduled_charging`
+and `set_scheduled_departure` on firmware 2024.26+. That is departure-time
+preconditioning rather than the on-demand kind, so it does not close the gap
+above — but our two schedule commands are the older pair, and moving them is a
+real improvement waiting to be made.
 
 **Key files:** `src/lib/api/vehicles.ts`,
 `src/components/charging-map/ChargerDetailSheet.tsx`,
