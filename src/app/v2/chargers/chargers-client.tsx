@@ -3,7 +3,7 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Map, Navigation, Route as RouteIcon, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ import { haversineMeters } from "@/lib/chargers/dedup";
 import { isTeslaOwnNetwork, needsPreconditioning } from "@/lib/trip/precondition";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles } from "@/hooks/useVehicles";
+import { useHere } from "@/hooks/useHere";
 import { useVehicleContext } from "@/contexts/vehicle";
 import type { Charger } from "@/lib/chargers/types";
 
@@ -63,29 +64,18 @@ export function ChargersV2Client() {
   // poll: false. Only used as a fallback map centre when location is denied.
   const { data: state } = useVehicle(vehicleId, vehicle?.dataSource === "live", false);
 
-  const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
   const [minKw, setMinKw] = useState(0);
-  // Three states, not two: still asking the phone where we are, asked and
-  // refused, or done. Collapsing the first into the last is what printed
-  // "no stations found" a second after the screen opened.
-  const [locating, setLocating] = useState(true);
 
-  // Silent one-shot locate. On denial the screen falls back to the car's own
-  // position, which is the next most useful centre and needs no permission.
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      queueMicrotask(() => setLocating(false));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      () => setLocating(false),
-      { timeout: 5000, maximumAge: 60_000 },
-    );
-  }, []);
+  // Live, because this screen is opened in a moving car. A one-shot fix taken
+  // when the screen opened is wrong by the length of a slip road, and the
+  // browser gives a fresh one ten times a second at ±1–2 m for free — it never
+  // touches Tesla's API, so none of it is charged against the vehicle's daily
+  // read budget. useHere throttles the commits; see the hook for why.
+  const { here, state: locate } = useHere({ live: true });
+  // Three states, not two: still asking where we are, asked and refused, or
+  // done. Collapsing the first into the last is what printed "no stations
+  // found" a second after the screen opened.
+  const locating = locate === "asking";
 
   const centre =
     here ??

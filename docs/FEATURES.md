@@ -863,35 +863,65 @@ have billed thirteen vehicle-document types to the energy quota.
 
 ---
 
-## 25b. Browser GPS probe (`/debug` → Unelte → "GPS din browser")
+## 25b. Browser GPS — the probe, and the answer
 
-**What:** measures whether the browser the app is running in can locate the car
-itself, and how fast. Reports secure context, whether `navigator.geolocation`
-exists, the Permissions state, time to first fix and its accuracy, then watches
-for 20s and reports the median gap between fixes and the distance moved.
+**What the probe is:** `/debug` → Unelte → "GPS din browser" measures whether the
+browser the app is running in can locate the car itself, and how fast. Secure
+context, whether `navigator.geolocation` exists, the Permissions state, time to
+first fix and its accuracy, then a 20s watch reporting the median gap between
+fixes and the distance moved.
 
-**Why it exists:** it decides an architecture rather than a detail. Position
-from the Fleet API is capped (reportedly a few hundred `vehicle_data` reads per
-vehicle per day) and cannot carry navigation. Position from the browser costs
-nothing and is capped by nothing — so if `watchPosition` delivers a fix every
-second or two in the car, turn-by-turn in the browser needs no streaming
-server, no mTLS and no always-on host. The public evidence on Tesla's browser
-is a decade of contradictory forum threads, none dated close enough to trust;
-the car is the only authority on its own browser.
+**Why it existed:** it decided an architecture. Position from the Fleet API is
+capped — reportedly a few hundred `vehicle_data` reads per vehicle per day — and
+cannot carry navigation at any polling rate. Position from the browser costs
+nothing and is capped by nothing. The public evidence on Tesla's browser was a
+decade of contradictory forum threads, none dated close enough to trust.
 
-**How to use it:** open `/debug` in the car's browser, Unelte → GPS din
-browser, tap once, ideally while moving. Nothing is sent anywhere. Thresholds:
-a fix every ≤2s is navigation-grade (green), ≤5s lags (amber), worse is not
-navigation (red). Accuracy worse than ~50m is a network-derived fix rather than
-the car's GPS. The "moved" line only means something if the car is moving — a
-watch replaying one cached fix looks identical to a working one at a standstill.
+**The answer, measured on the car:**
+
+| | |
+| --- | --- |
+| Browser | Chromium 148 |
+| Secure context | yes (HTTPS) |
+| `navigator.geolocation` | present, permission **granted** |
+| First fix | immediate |
+| Accuracy | **±1–2 m** — the car's GPS, not a network-derived guess |
+| Rate | **206–214 fixes in 20 s ≈ one every 0.1 s** |
+| Moved during test | 191–247 m, so it tracked real motion |
+
+Ten hertz at GPS accuracy, for free. This removes Fleet Telemetry, the mTLS
+certificate and the always-on host from any future navigation work: the position
+comes from the browser and never touches Tesla's API, so none of it is charged
+against the vehicle's daily read budget.
 
 **Key files:** `src/components/debug/geolocation-probe.tsx`, mounted as a Panel
-in `src/app/(dashboard)/debug/debug-client.tsx`.
+in `src/app/(dashboard)/debug/debug-client.tsx`. Hardcoded Romanian like the
+rest of `/debug` — a single-operator tool, not a product surface.
 
-**Dependencies:** none. Browser APIs only. Like the rest of `/debug` it is
-hardcoded Romanian rather than translated — it is a single-operator tool, not a
-product surface.
+## 25c. Live position (`useHere`)
+
+**What:** `src/hooks/useHere.ts`. Returns the device's position and a locate
+state (`asking` / `ok` / `refused` / `unsupported`). `live: true` follows the
+device as it moves; the default takes one fix and stops.
+
+**How to use it:** `const { here, state } = useHere({ live: true })`. `/v2/chargers`
+uses the live form, because it is opened in a moving car and a fix taken when
+the screen opened is wrong by the length of a slip road.
+
+**The rate is throttled on purpose.** Ten fixes a second is ten React renders a
+second, and a map redrawn at 10 Hz on a phone is heat for no legibility —
+nothing on screen moves meaningfully in 100 ms. `worthCommitting()` is the whole
+policy and is exported so it can be tested: a fix is taken when it has moved 8 m
+or when 1.5 s have passed, whichever comes first. A car at 100 km/h crosses 8 m
+in under a third of a second, so motion stays smooth; a parked car crosses
+neither threshold and settles to one commit every 1.5 s. Pinned by
+`src/hooks/__tests__/use-here.test.ts`.
+
+**Why not the car's own position:** the Fleet API answer is slower, capped, and
+wakes a sleeping car. It stays the fallback for when location is refused, which
+is the one case where it is the best available centre and needs no permission.
+
+**Dependencies:** none. Browser APIs only.
 
 ## 26. v2 redesign (`/v2`)
 
