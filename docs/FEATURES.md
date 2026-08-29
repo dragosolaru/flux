@@ -983,6 +983,50 @@ real improvement waiting to be made.
 rather than a return value — the defect was an extra command fired from three
 places, which is a property of the callers.
 
+## 25f. Nav probe — which way of sending a destination preconditions?
+
+**What:** `/debug` → Unelte → "Preîncălzire: cum trimitem destinația". Sends the
+same station three ways, one at a time, and reports what Tesla answered.
+
+**The question.** The car preconditions its battery on the way to a charger only
+when it knows the destination *is* a charger. There is no command for it (§25d):
+it follows from the navigation. Flux sends `navigation_gps_request` with a bare
+`{ lat, lon, order }` — the station's name is read from our database, shown on
+screen, and then dropped by `toWaypoint`, which keeps only coordinates. The car
+receives two numbers and cannot know what is there.
+
+Sharing the same station from Google Maps **does** precondition. Google Maps
+sends a *place*: name and address, which the car resolves against its own POI
+database.
+
+**So the hypothesis is that the endpoint is wrong, not the idea** — and the
+Android share intent that `share` / `navigation_request` carries is exactly what
+Google Maps sends, which is what makes it worth measuring rather than arguing
+about.
+
+**The three arms:**
+
+| | Sends | Why |
+| --- | --- | --- |
+| `navigation_gps_request` | `{ lat, lon, order }` | The control: what the app does today |
+| `share` | `share_ext_content_raw` with the address | The Android share intent, i.e. Google Maps' path |
+| `navigation_request` | the same body, older endpoint name | timdorr's docs note the endpoint was renamed; Fleet API may accept either |
+
+**Read the car, not the panel.** The panel reports whether Tesla *accepted* the
+command; whether the battery starts warming is visible only on the car's climate
+screen, a minute or two later. That is the actual finding.
+
+Needs a linked Tesla — the simulator has no navigation, and what a real car's
+navigation does with the destination is the entire question.
+
+**Key files:** `src/components/debug/nav-probe.tsx`,
+`src/app/api/debug/nav-probe/route.ts` (auth + ownership + rate limit, like any
+other vehicle route — a probe is not an excuse to skip them).
+
+**Why a probe and not a change:** the last time someone here acted on a
+hypothesis about a Tesla command without measuring it, `set_preconditioning_max`
+turned on Max Defrost every time a driver sent a destination.
+
 ## 25e. Charge and precondition schedules (2024.26+)
 
 **What:** four commands — `add_charge_schedule`, `remove_charge_schedule`,

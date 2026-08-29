@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-fetch";
 import { SleepPanel } from "@/components/debug/SleepPanel";
 import { GeolocationProbe } from "@/components/debug/geolocation-probe";
+import { NavProbe } from "@/components/debug/nav-probe";
 import { useSleepMode } from "@/lib/vehicle-sleep";
 
 interface ChargerStats {
@@ -2005,6 +2006,15 @@ export function DebugClient() {
         <p className="text-xs text-muted-foreground">Sonde de unică folosință. Fără buton de raport și fără etichete: nimic de aici nu descrie o stare, doar face lucruri când apeși.</p>
       </div>
 
+
+      <Panel
+        title="Preîncălzire: cum trimitem destinația"
+        purpose="Mașina preîncălzește bateria doar când știe că destinația e o stație. Trimitem coordonate goale — Google Maps trimite o adresă. Asta măsoară care variantă pornește preîncălzirea."
+        open={open.nav ?? false}
+        onToggle={() => toggle("nav")}
+      >
+        <NavProbe />
+      </Panel>
 
       <Panel
         title="GPS din browser"
