@@ -52,6 +52,61 @@ export const TESLA_COMMAND_MAP: Partial<Record<CommandName, CommandEntry>> = {
   activate_sentry:   { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: true }) },
   deactivate_sentry: { teslaCmd: "set_sentry_mode",        buildBody: () => ({ on: false }) },
   remote_start:      { teslaCmd: "remote_start_drive",     buildBody: () => undefined },
+  /**
+   * The schedule pair Tesla says to prefer from firmware 2024.26.
+   *
+   * Every parameter name and its optionality is transcribed from Tesla's own
+   * proxy — teslamotors/vehicle-command pkg/proxy/command.go — rather than
+   * inferred. That file is the thing that will reject the request, so it is the
+   * only source worth copying from. The last command written from a guess about
+   * what its name implied turned on Max Defrost.
+   *
+   * Both are bound to a PLACE. A schedule fires when the car is parked at
+   * lat/lon, which is why "precondition at 08:00" is a property of your drive
+   * rather than a command you send at 07:30.
+   *
+   * `days_of_week` is a comma-separated list of day names, or the words ALL
+   * and WEEKDAYS. Times are minutes past local midnight, like the old pair.
+   * `id` is optional and Tesla defaults it to the current unix second; we send
+   * it explicitly so a schedule can be replaced instead of duplicated.
+   */
+  add_charge_schedule: {
+    teslaCmd: "add_charge_schedule",
+    buildBody: (args) => ({
+      lat: Number(args?.lat ?? 0),
+      lon: Number(args?.lng ?? 0),
+      days_of_week: String(args?.days ?? "ALL"),
+      // The window is a start, an end, or both — each with its own enable, so
+      // "charge from 23:00" and "charge until 07:00" are different schedules.
+      start_time: Number(args?.startTime ?? 0),
+      start_enabled: args?.startTime != null,
+      end_time: Number(args?.endTime ?? 0),
+      end_enabled: args?.endTime != null,
+      enabled: args?.enabled !== false,
+      one_time: args?.oneTime === true,
+      ...(args?.id != null ? { id: Number(args.id) } : {}),
+    }),
+  },
+  add_precondition_schedule: {
+    teslaCmd: "add_precondition_schedule",
+    buildBody: (args) => ({
+      lat: Number(args?.lat ?? 0),
+      lon: Number(args?.lng ?? 0),
+      precondition_time: Number(args?.time ?? 0),
+      days_of_week: String(args?.days ?? "ALL"),
+      enabled: args?.enabled !== false,
+      one_time: args?.oneTime === true,
+      ...(args?.id != null ? { id: Number(args.id) } : {}),
+    }),
+  },
+  remove_charge_schedule: {
+    teslaCmd: "remove_charge_schedule",
+    buildBody: (args) => ({ id: Number(args?.id ?? 0) }),
+  },
+  remove_precondition_schedule: {
+    teslaCmd: "remove_precondition_schedule",
+    buildBody: (args) => ({ id: Number(args?.id ?? 0) }),
+  },
   schedule_charging: {
     teslaCmd: "set_scheduled_charging",
     buildBody: (args) => ({ enable: args?.enable !== false, time: Number(args?.time ?? 0) }),

@@ -323,6 +323,27 @@ export function applyCommand(
       if (typeof args?.enable === "boolean") state.scheduledChargingEnabled = args.enable;
       if (typeof args?.time === "number") state.scheduledChargingStartMinutes = args.time;
       break;
+    // The place-bound pair. The simulator keeps only what a screen reads back:
+    // that a schedule exists and when it fires. Days and location round-trip
+    // through the command log rather than the state, because nothing renders
+    // them yet and inventing state nothing shows is how fields rot.
+    case "add_charge_schedule":
+      state.scheduledChargingEnabled = args?.enabled !== false;
+      if (typeof args?.startTime === "number")
+        state.scheduledChargingStartMinutes = args.startTime;
+      break;
+    case "remove_charge_schedule":
+      state.scheduledChargingEnabled = false;
+      state.scheduledChargingStartMinutes = null;
+      break;
+    case "add_precondition_schedule":
+      state.scheduledDepartureEnabled = args?.enabled !== false;
+      if (typeof args?.time === "number") state.scheduledDepartureMinutes = args.time;
+      break;
+    case "remove_precondition_schedule":
+      state.scheduledDepartureEnabled = false;
+      state.scheduledDepartureMinutes = null;
+      break;
     case "schedule_departure":
       state.scheduledDepartureEnabled = true;
       if (typeof args?.time === "number") state.scheduledDepartureMinutes = args.time;

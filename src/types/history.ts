@@ -70,6 +70,14 @@ export type CommandName =
   | "remote_start"
   | "schedule_charging"
   | "schedule_departure"
+  // The pair Tesla says to prefer on firmware 2024.26+. Unlike the two above,
+  // a schedule is bound to a PLACE — it fires when the car is parked there —
+  // and can repeat on chosen days, which is why they take lat/lon/days rather
+  // than only a time.
+  | "add_charge_schedule"
+  | "add_precondition_schedule"
+  | "remove_charge_schedule"
+  | "remove_precondition_schedule"
   | "precondition_max"
   | "share_navigation";
 

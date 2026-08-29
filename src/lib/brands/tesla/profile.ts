@@ -65,6 +65,8 @@ export const teslaProfile: BrandProfile = {
       remoteStart: true,
       scheduleCharging: true,
       scheduleDeparture: true,
+      chargeSchedules: true,
+      preconditionSchedules: true,
       preconditionMax: true,
       shareNavigation: true,
     },

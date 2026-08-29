@@ -983,6 +983,54 @@ real improvement waiting to be made.
 rather than a return value — the defect was an extra command fired from three
 places, which is a property of the callers.
 
+## 25e. Charge and precondition schedules (2024.26+)
+
+**What:** four commands — `add_charge_schedule`, `remove_charge_schedule`,
+`add_precondition_schedule`, `remove_precondition_schedule` — the pair Tesla
+says to prefer over `set_scheduled_charging` and `set_scheduled_departure` from
+firmware 2024.26. The older two are kept for cars below that.
+
+**The thing worth understanding about them: a schedule is bound to a PLACE.**
+Both take `lat`/`lon`, and the schedule fires when the car is parked there. So
+"precondition at 08:00" is not a command you send at 07:30 — it is a standing
+property of a location, which is why it survives being asleep and why the car
+can start warming before you ask.
+
+**Parameters, transcribed rather than inferred.** Every name and its
+optionality comes from `pkg/proxy/command.go` in
+[teslamotors/vehicle-command](https://github.com/teslamotors/vehicle-command) —
+the file that parses and rejects these requests, and therefore the only source
+worth copying from:
+
+| | |
+| --- | --- |
+| `add_charge_schedule` | `lat`, `lon`, `days_of_week`, `start_time` + `start_enabled`, `end_time` + `end_enabled`, `enabled`, `one_time`, optional `id` |
+| `add_precondition_schedule` | `lat`, `lon`, `precondition_time`, `days_of_week`, `enabled`, `one_time`, optional `id` |
+| `remove_*_schedule` | `id` |
+
+Times are minutes past local midnight. `days_of_week` is a comma-separated list
+of day names, or the words `ALL` and `WEEKDAYS`; anything else is rejected by
+Tesla's proxy as "unrecognized day name", which would reach a driver as a
+generic failure — so the API route validates the string against exactly
+Tesla's list before sending. Each end of a charge window has its own enable, so
+"charge from 23:00" and "charge until 07:00" are separately expressible. `id` is
+omitted when not given, because Tesla then assigns the current unix second, and
+sending `id: 0` would be a real id and the wrong one.
+
+**Why the parameters were copied and not reasoned about:** the last command in
+this codebase written from a guess about what its name implied was
+`set_preconditioning_max`, and it turned on Max Defrost every time a driver sent
+a destination to the car (§25d).
+
+**Key files:** `src/lib/brands/tesla/command-map.ts`,
+`src/app/api/vehicles/[vehicleId]/commands/route.ts`, `src/lib/mock/engine.ts`.
+Wire format pinned by `src/lib/brands/__tests__/schedule-commands.test.ts`.
+
+**Not done yet:** no screen sends these. The UI still sends the older pair,
+which takes only a time — the new ones need a location, and the natural source
+is the home address in preferences, with a picker for anywhere else. That is
+the next step, not an oversight.
+
 ## 26. The /v2 redesign — closed, and what came out of it
 
 **`/v2` is deleted.** It ran for weeks beside the shipping app as a staging

@@ -83,6 +83,8 @@ export interface CommandCapabilities {
   remoteStart: boolean;
   scheduleCharging: boolean;
   scheduleDeparture: boolean;
+  chargeSchedules: boolean;
+  preconditionSchedules: boolean;
   preconditionMax: boolean;
   shareNavigation: boolean;
 }

@@ -24,7 +24,19 @@ const VALID_COMMANDS: CommandName[] = [
   "start_charging", "stop_charging", "open_charge_port", "close_charge_port",
   "vent_windows", "close_windows", "activate_sentry", "deactivate_sentry", "remote_start",
   "schedule_charging", "schedule_departure", "precondition_max", "share_navigation",
+  "add_charge_schedule", "add_precondition_schedule",
+  "remove_charge_schedule", "remove_precondition_schedule",
 ];
+
+/**
+ * The day names Tesla's proxy accepts, and only those.
+ *
+ * Copied from `dayNamesBitMask` in teslamotors/vehicle-command; an unknown name
+ * is rejected there with "unrecognized day name", which would arrive here as a
+ * generic command failure with nothing pointing at the real cause.
+ */
+const DAY = "SUN|SUNDAY|MON|MONDAY|TUES|TUESDAY|WED|WEDNESDAY|THURS|THURSDAY|FRI|FRIDAY|SAT|SATURDAY";
+const DAYS_RE = new RegExp(`^(ALL|WEEKDAYS|(${DAY})(,(${DAY}))*)$`);
 
 const bodySchema = z.object({
   command: z.enum(VALID_COMMANDS as [CommandName, ...CommandName[]]),
@@ -55,6 +67,35 @@ const ARG_BOUNDS: Partial<Record<CommandName, z.ZodType>> = {
   schedule_departure: z
     .object({ time: z.number().int().min(0).max(1439) })
     .loose(),
+  // Bound to a place and to days, unlike the older pair. The day string is
+  // validated against exactly what Tesla's proxy accepts — anything else is
+  // rejected there with "unrecognized day name", which would reach the driver
+  // as a generic failure.
+  add_charge_schedule: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      days: z.string().regex(DAYS_RE),
+      startTime: z.number().int().min(0).max(1439).optional(),
+      endTime: z.number().int().min(0).max(1439).optional(),
+      enabled: z.boolean().optional(),
+      oneTime: z.boolean().optional(),
+      id: z.number().int().nonnegative().optional(),
+    })
+    .loose(),
+  add_precondition_schedule: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      time: z.number().int().min(0).max(1439),
+      days: z.string().regex(DAYS_RE),
+      enabled: z.boolean().optional(),
+      oneTime: z.boolean().optional(),
+      id: z.number().int().nonnegative().optional(),
+    })
+    .loose(),
+  remove_charge_schedule: z.object({ id: z.number().int().nonnegative() }).loose(),
+  remove_precondition_schedule: z.object({ id: z.number().int().nonnegative() }).loose(),
   share_navigation: z
     .object({
       destination: z.object({

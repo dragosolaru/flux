@@ -161,5 +161,9 @@ export type TeslaCommand =
   | "set_temps"
   | "set_scheduled_charging"
   | "set_scheduled_departure"
+  | "add_charge_schedule"
+  | "add_precondition_schedule"
+  | "remove_charge_schedule"
+  | "remove_precondition_schedule"
   | "set_preconditioning_max"
   | "navigation_gps_request";

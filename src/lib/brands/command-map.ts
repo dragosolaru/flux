@@ -27,6 +27,10 @@ export const COMMAND_CAP_MAP: Record<CommandName, keyof CommandCapabilities> = {
   remote_start:       "remoteStart",
   schedule_charging:  "scheduleCharging",
   schedule_departure: "scheduleDeparture",
+  add_charge_schedule:          "chargeSchedules",
+  remove_charge_schedule:       "chargeSchedules",
+  add_precondition_schedule:    "preconditionSchedules",
+  remove_precondition_schedule: "preconditionSchedules",
   precondition_max:   "preconditionMax",
   share_navigation:   "shareNavigation",
 };
