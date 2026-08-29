@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
-const { StatusPanel } = await import("../status-panel");
+const { StatusPanel } = await import("../StatusPanel");
 import type { VehicleState } from "@/types/vehicle";
 
 /**

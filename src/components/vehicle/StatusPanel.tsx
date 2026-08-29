@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 
 import type { DoorsState, VehicleState, WindowsState } from "@/types/vehicle";
-import { Mono } from "@/components/v2/instrument";
 
 /**
  * What is open, and how old that answer is.
@@ -33,6 +32,26 @@ import { Mono } from "@/components/v2/instrument";
  *   · **Look at it rendered.** Every real defect in this component's ancestry
  *     was invisible in the source and obvious in a picture.
  */
+
+/** v2's Mono went with v2; this is the same voice, kept local. */
+function Mono({
+  children,
+  className = "",
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      className={`font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums ${className}`}
+      style={style}
+    >
+      {children}
+    </span>
+  );
+}
 
 const OPEN = "var(--chart-3)"; // amber — open, and usually should not be
 const LIVE = "var(--chart-2)"; // green — running on purpose
@@ -155,7 +174,7 @@ function Chip({
             : { background: tone ?? "oklch(0.97 0 0 / 22%)" }
         }
       />
-      <Mono style={{ color: tone ?? "var(--v2-soft)" }}>
+      <Mono style={{ color: tone ?? "var(--muted-foreground)" }}>
         {count > 1 ? `${count} ${label}` : label}
       </Mono>
     </span>
@@ -243,7 +262,7 @@ function Bar({
         height={h}
         rx={2}
         fill="none"
-        stroke="var(--v2-faint)"
+        stroke="var(--muted-foreground)"
         strokeWidth="1"
         strokeDasharray="2 2"
       />

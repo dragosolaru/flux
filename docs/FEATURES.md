@@ -923,177 +923,57 @@ is the one case where it is the best available centre and needs no permission.
 
 **Dependencies:** none. Browser APIs only.
 
-## 26. v2 redesign (`/v2`)
+## 26. The /v2 redesign — closed, and what came out of it
 
-**What:** the Instrument redesign, running **beside** the shipping app instead of
-replacing it. Same auth, same `VehicleProvider`, same hooks, same API routes —
-only the presentation is new. Nothing under `/v2` can break `/dashboard`, and
-the two can be opened on the same phone and compared screen by screen.
+**`/v2` is deleted.** It ran for weeks beside the shipping app as a staging
+area for a redesign, and it was judged the way it was always meant to be
+judged: both versions open on the same screen, same data, same minute. On the
+car's screen v1 looked and worked better, so v1 is what remains.
 
-**How to use it:** open `/v2`. It lists every screen and whether it exists yet
-(read from `V2_SCREENS`, so the list cannot claim more than has been built) and
-links back to the current app for comparison. Individual screens live at
-`/v2/<screen>`.
+That was the plan's own rule, written when the route was created: *every ported
+screen either replaces the original or is deleted, because a permanent /v2 is
+the worst of the three outcomes.* It closed on that rule rather than against it.
 
-**The direction, in one paragraph:** one instrument (a 270° arc) where a number
-IS a level; everything else is a 56px full-width row on an 8% hairline. No card,
-no shadow, no rounded panel anywhere. Two faces (Space Grotesk, Geist Mono),
-four type sizes. Every row carries its own state on the right, so nothing has to
-be opened to learn whether it is on, and a disabled row prints the reason beside
-it rather than being silently grey.
+**Nothing of value was lost, because almost none of it lived in `/v2`.** The
+route's third stated reason for existing was that it must import the same hooks
+and the same API routes — so the work landed in the shared layer throughout:
 
-**Responsive rules** (drawn in the canvas, implemented as CSS custom properties):
+- **The battery discipline.** `pollInterval()`, the wake endpoint, `?cached=1`,
+  the sleep switch, the call log, last-known readings. §25.
+- **Every command doing something.** `chargeAmps`, `isChargePortOpen`,
+  `isRemoteStartActive`, the scheduled-departure fields, the mock engine
+  effects, and `optimisticPatch` covering every command with a state field.
+- **The browser GPS finding and `useHere`.** §25b–25c.
+- **The map**: the selected station drawn outside the cluster layer, `PanTo`,
+  and the road drawn to a selection through `POST /api/route`.
+- **52 defects**, each fixed in the real app rather than only in the new one.
+  The full list is `docs/REDESIGN-V2.md`, which is kept as the log.
 
-| Never flexes | Flexes |
-| --- | --- |
-| row height 56px, tap targets 44px | `--v2-gutter: clamp(16px, 6vw, 28px)` |
-| the 1px hairline | `--v2-arc: min(72vw, 300px)` |
-| the four type sizes | `--v2-hero: clamp(64px, 21vw, 92px)` |
+**What was ported forward at the end**, because it existed only in `/v2`:
 
-`dvh`, never `vh` (Safari's toolbar makes `vh` lie); the nav pads
-`env(safe-area-inset-bottom) + 14px`. Extra height on a tall phone goes to the
-gap **above** the action rows, never into the arc, so the actions stay in the
-thumb's reach instead of drifting up with the screen.
+- **`StatusPanel`** (`src/components/vehicle/StatusPanel.tsx`, on `/commands`).
+  Five chips — doors, windows, bonnet, boot, port — with a schematic that
+  appears only when it has something to say. It answers *which* door, which
+  v1 never showed at all: `doorsOpen` and `windowsOpen` arrive per corner and no
+  control can say "the rear left" without becoming four controls nobody wants.
+  Windows are deliberately not on the schematic, and an open window must
+  therefore not summon it — that was a bug before it was a decision.
+- **Stable noun labels with the state beside them.** `AllCommands` said
+  `Deschide portul` / `Închide portul` as two separate controls, neither of
+  which said which one the port was in. One control now, named `Port de
+  încărcare`, with `DESCHIS` / `ÎNCHIS` under it. The name holds still and the
+  state word does the moving — with an imperative label, one tap renamed the
+  control *and* flipped its appearance, so there was no fixed point to read the
+  change against.
+- **Honest accessible names** on `CommandPanel`'s circular buttons. They have
+  an icon and no visible text, so `aria-label` is the only thing that says what
+  they are, and it was an imperative that flipped with the state: a screen
+  reader heard the control rename itself on every tap.
+- **Live position** on the charging map, replacing a one-shot locate.
 
-**Theming:** `.v2` in `globals.css` redefines the *same* token names the rest of
-the app uses (`--background`, `--primary`, `--border`, …), so every existing
-Tailwind utility renders in the Instrument palette inside that subtree with no
-second vocabulary. It is dark-only on purpose: a light version of a hairline
-over near-black is a different design, not a tint.
+**Known, and deliberately not carried over:** `CommandPanel` is still a row of
+circular icon-only buttons. The redesign's criticism of that — an icon with no
+label asks the driver to guess — still stands, and is now recorded here rather
+than fixed, because v1's look is what was chosen and redesigning it was not
+what was asked for.
 
-**Polling:** `pollInterval()` in `src/hooks/useVehicle.ts` is the whole rule, in
-one pure function pinned by `src/hooks/__tests__/poll-interval.test.ts`. Only
-the dashboard polls; the charging screens poll **only while a session is
-running** (a charging car is awake anyway); everything else reads the value
-once and stays current through the invalidation `useVehicleCommand` already
-does. `poll` accepts a predicate over the last reported state so a screen can
-depend on the car's condition without needing the data to decide whether to
-fetch the data. A poll on a sleeping Tesla wakes it, and a car kept out of deep
-sleep loses roughly ten times more charge per idle day — this is a battery bill,
-not a preference.
-
-**The nav is `sticky bottom-0` with `mt-auto`,** in flow, not `fixed`. As the
-plain last child of a flex column it only reached the bottom when the content
-above happened to fill the viewport; `fixed` fixed that and introduced a second
-bug, because the nav's height and the padding reserved for it were two numbers
-that had to agree, and giving the links a 44px target changed one of them — the
-nav then covered the last row. In flow there is only one number. Pinned by
-`e2e/v2-nav.spec.ts`, which measures rather than reasons.
-
-**The status panel** (`src/components/v2/status-panel.tsx`, on `/v2/commands`)
-replaced a drawing of the car after five attempts, three of them thrown away.
-The verdict on the last was that it looked like a child drew it, and that was
-correct without being about draughtsmanship: a representational illustration is
-judged as an illustration, and at 208px on a phone it loses that judgement
-however the geometry is fixed.
-
-The job survives the picture. `doorsOpen` and `windowsOpen` arrive per corner
-from both the Tesla adapter and the simulator, and no row below can say *which*
-one without becoming four rows nobody wants. So the panel is two levels of one
-answer, shown one at a time: **five chips always** — doors, windows, bonnet,
-boot, port, each a label and a dot, with a count where one helps (`2 UȘI`) — and
-**a schematic only when it has something to say**. The schematic is a rounded
-rectangle with marks where the openings are, not a car, and must never drift
-into being one: the moment it has a windscreen it is judged as an illustration
-again.
-
-Windows are deliberately not on the schematic. Eight marks on one small shape is
-too many, and which window is down rarely changes what you do, whereas which
-door tells you where to walk. That decision has a consequence worth stating,
-because it was a bug first: an open window must not summon the schematic, or it
-appears with nothing lit on it — a diagram showing nothing, which is worse than
-no diagram.
-
-Climate and sentry are not on the panel at all. They have switches carrying
-their state twelve pixels below, which the doors do not, so repeating them
-bought nothing and diluted the panel's one job: things that are *open*. The age
-of the reading and its refresh control moved **into** the panel, so it is one
-thing that says: this is the state, as of then, tap to re-read.
-
-Anything the car has not reported is a dotted mark, fainter than shut, and never
-drawn as shut. Pinned by `src/components/v2/__tests__/status-panel.test.tsx`.
-
-**`/v2/commands` is grouped the way the Tesla app is** — by the part of the car,
-with the setting next to the switch that uses it. Charge limit, amperage and
-both schedules sit inside **Încărcare**; the cabin temperature sits inside
-**Climatizare**. There is no longer a "Settings" block at the bottom — it put
-the charge limit several scroll-lengths from the charging switch it governs.
-
-**Anything with a state is a switch; the one thing without a state is a
-button.** That split is the industry rule rather than a house preference: a
-control for two mutually exclusive states is a switch whose label *names the
-option*, while a label describing *what will happen* belongs on a button, with
-the state shown separately ([NN/G](https://www.nngroup.com/articles/toggle-switch-guidelines/)).
-
-The screen previously used the button pattern throughout — an imperative label
-(`Deblochează`) with the current state beside it (`BLOCATĂ`) — and was reported
-as misleading twice, the second time *after* the labels had already been fixed
-once. The labels were not the fault. The fault is that one tap changed both
-halves at once: the row renamed itself **and** the value flipped, so there was
-no fixed point to read the change against, and the control you were reaching
-for was no longer called what it had been called a second earlier. Tesla's own
-app has the same problem in the same place — its window control reads "Close"
-when a window is open and "Vent" when they are shut, which owners regularly ask
-about.
-
-So: `Blocare uși`, `Mod Sentry`, `Încărcare`, `Port de încărcare`,
-`Climatizare`, `Dezgheț maxim`, `Aerisire geamuri` — stable nouns that never
-change, each with a switch carrying both the state and the action, plus the
-state in one word for the cases where "on" is not self-evident (a switch cannot
-say by itself that *on* means *locked*). The icon stopped swapping with the
-state too; it was a third moving part repeating what the switch already said.
-`remote_start` is the sole button, because Tesla exposes no command to cancel a
-remote start — it is a two-minute window that expires on its own.
-
-The switch has **three** positions. `null` — the car has this field and has not
-reported it — is centred, with a dashed track, and prints no state word. A
-switch resting at "off" would be a claim, and it would look exactly like a
-reading. ARIA has the same trap: `role="switch"` accepts only true/false, so an
-unknown announced through it is flattened to "not checked"; the unknown case
-renders as `role="checkbox"` with `aria-checked="mixed"`, the role that carries
-a third state. Pinned by `src/components/v2/__tests__/toggle-row.test.tsx`.
-
-Unlocking still asks for confirmation (`SENSITIVE_COMMANDS`), so that one switch
-moves only after the dialog is accepted — locking is instant. A switch resting
-at unknown sends the command that turns it **on**, which for the doors means
-*lock*: the safe direction, and the one that needs no confirmation.
-
-**Motion:** `.v2-sweep` (arc, 1.1s) and `.v2-rise` are arrive-once and are
-removed under `prefers-reduced-motion`. Press feedback (80ms to 5% white) and
-the pending counter are **not** animations and are never removed — a command
-that takes eight seconds must still say so.
-
-**Screens:** `/v2/dashboard`, `/v2/commands`, `/v2/map` (find my car),
-`/v2/trip`, `/v2/chargers`, `/v2/charging`, `/v2/costs`, `/v2/garage`,
-`/v2/documents` (+ `/v2/documents/[documentId]` to correct a parsed one),
-`/v2/insights`, `/v2/energy`, `/v2/settings`, `/v2/more`, plus `/v2/login` and
-`/v2/register`. Two jobs are deliberately still v1's: account deletion and
-notification channels. Those rows are labelled `v1` so the boundary is visible
-rather than a dead end.
-
-**Switching cars:** `VehicleSwitch` sits in the header of every vehicle-scoped
-screen — the dashboard's title *is* the switcher, elsewhere it is a mono chip
-left of the state. It renders nothing with one car, and the sheet it opens reads
-only the selected car, so opening a chooser never contacts every linked vehicle.
-The garage carries a one-tap **demo car** row for testing with two.
-
-**No auth guard in `src/app/v2/layout.tsx`** — every page under it calls
-`auth()` itself. A shared guard would need an exception carved out for
-`/v2/login` and `/v2/register`, and a conditional guard is one refactor away
-from guarding nothing. `LoginForm` is reused unchanged (it owns the
-`callbackUrl` open-redirect check) with one added `defaultCallbackUrl` prop,
-validated by the same rule as the query parameter.
-
-**Key files:** `src/app/v2/layout.tsx` (auth + Space Grotesk + `.v2` scope),
-`src/app/v2/page.tsx` (index), `src/app/v2/screens.ts` (the checklist),
-`src/app/v2/*/`, `src/components/v2/instrument.tsx` (all primitives:
-`Screen`, `Bleed`, `ScreenHeader`, `Row`, `Rows`, `Arc`, `ArcMini`, `HeroValue`,
-`Bars`, `ValueTable`, `ChipRow`, `StepperRow`, `TimeRow`, `Mono`,
-`SectionLabel`), `src/components/v2/nav.tsx`,
-the `.v2` block in `src/app/globals.css`, the `v2` i18n namespace in all five
-locales, and `design/` (the canvas the direction was designed in).
-
-**Dependencies:** `next/font/google` (Space Grotesk), next-intl, TanStack Query
-via the existing hooks. No new runtime dependency.
-
-**Progress and defects found while porting:** `docs/REDESIGN-V2.md`.

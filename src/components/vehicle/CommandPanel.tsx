@@ -61,10 +61,13 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
   const stateLoaded = state != null;
 
   // Compute translated labels at component level (not inside callbacks/conditions)
-  const labelLock = t("lock");
-  const labelUnlock = t("unlock");
-  const labelClimateOn = t("climate_on");
-  const labelClimateOff = t("climate_off");
+  // Stable nouns plus the state, for the accessible name. These buttons are
+  // circles with an icon and no visible text, so `title`/`aria-label` is the
+  // ONLY thing that says what they are — and it was an imperative that flipped
+  // with the state, so a screen reader heard the control rename itself on every
+  // tap with nothing saying which way it had gone.
+  const labelDoors = t("name_doors");
+  const labelClimate = t("name_climate");
   const labelHonk = t("honk");
   const labelFlash = t("flash");
 
@@ -72,11 +75,9 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
     caps.commands.lock &&
       caps.commands.unlock && {
         cmd: stateLoaded ? lockCmd : ("lock" as CommandName),
-        label: stateLoaded
-          ? lockCmd === "lock"
-            ? labelLock
-            : labelUnlock
-          : labelLock,
+        label: stateLoaded && state?.isLocked != null
+          ? `${labelDoors} · ${state.isLocked ? t("doors_locked") : t("doors_unlocked")}`
+          : labelDoors,
         icon: stateLoaded ? (lockCmd === "lock" ? Lock : Unlock) : Lock,
         inFlight: inFlight("lock") || inFlight("unlock"),
         active: stateLoaded && state?.isLocked === false,
@@ -84,7 +85,9 @@ export function CommandPanel({ vehicleId, brand, state }: CommandPanelProps) {
     caps.commands.climateOn &&
       caps.commands.climateOff && {
         cmd: climateCmd,
-        label: climateActive ? labelClimateOff : labelClimateOn,
+        label: state?.isClimateOn != null
+          ? `${labelClimate} · ${state.isClimateOn ? t("climate_state_on") : t("climate_state_off")}`
+          : labelClimate,
         icon: Fan,
         inFlight: inFlight("climate_on") || inFlight("climate_off"),
         active: climateActive,

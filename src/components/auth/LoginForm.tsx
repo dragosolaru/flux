@@ -9,8 +9,11 @@ import { useTranslations } from "next-intl";
 interface LoginFormProps {
   mode: "login" | "register";
   /**
-   * Where to land when the URL carries no `callbackUrl`. Exists so the /v2
-   * auth screens land back in /v2 instead of bouncing the visitor into the
+   * Where to land when the URL carries no `callbackUrl`. Added for the /v2 auth
+   * screens, which are gone; kept because the validation below is the thing
+   * that matters — it is the same open-redirect check the query parameter
+   * gets, so a caller cannot introduce one by passing a default. Without it a
+   * visitor would bounce into the
    * version they were not using. Validated exactly like the URL parameter.
    */
   defaultCallbackUrl?: string;

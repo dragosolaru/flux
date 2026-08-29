@@ -7,7 +7,8 @@ import { POLL_INTERVAL_MS, pollInterval } from "../useVehicle";
  * roughly ten times more charge per idle day. That makes this rule a battery
  * bill, not a preference — so it is pinned here rather than left to a comment.
  *
- * The regression these guard against is real: every /v2 screen shipped calling
+ * The regression these guard against is real: every screen of the /v2 redesign
+ * shipped calling
  * `useVehicle(id, isLive)` without the third argument, so opening Commands or
  * the trip planner started a 30-second interval against a parked car.
  */

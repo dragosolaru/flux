@@ -1,12 +1,20 @@
-# REDESIGN-V2 — the working log
+# REDESIGN-V2 — the working log (closed)
 
-The redesign runs at `/v2`, beside the shipping app. This file is the log: what
-is done, what each ported screen changed, and — the point of doing it this way —
-what turned up **broken** while looking closely at a screen, because that gets
-fixed in the real app too rather than only in the new one.
+**`/v2` is deleted.** It was judged the way it was meant to be — both versions
+on the same screen, same data, same minute — and on the car's screen v1 looked
+and worked better. Every screen was deleted; everything useful moved into v1.
 
-Design source: the canvas in `design/` (published artboards, one page per
-direction). Feature-catalogue entry: `docs/FEATURES.md` §26.
+That was this file's own rule from the first day: a ported screen either
+replaces the original or is deleted, because a permanent `/v2` is the worst of
+the three outcomes.
+
+**The log is kept**, because the point of running the redesign on a separate
+route was never the screens. It was that looking closely at each one turned up
+things that were **broken in the real app**, and those were fixed there rather
+than only in the new one. There are 52 of them below. They are still true, still
+fixed, and still the reason this file exists.
+
+`docs/FEATURES.md` §26 records what was ported forward at the end.
 
 ---
 

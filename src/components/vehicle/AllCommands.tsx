@@ -7,15 +7,12 @@ import {
   Minus,
   Play,
   Plug,
-  PlugZap,
   Plus,
   Shield,
   Snowflake,
-  Square,
   Thermometer,
   Timer,
   Wind,
-  X,
 } from "lucide-react";
 import { useState, type ComponentType } from "react";
 import { useTranslations } from "next-intl";
@@ -48,7 +45,19 @@ interface Action {
   cmd: CommandName;
   cap: Cap;
   icon: ComponentType<{ className?: string }>;
+  /**
+   * A stable noun. NOT an imperative that flips with the state.
+   *
+   * The imperative version was reported as misleading twice, and the labels
+   * were not the fault: one tap changed both halves at once — the control
+   * renamed itself AND its appearance flipped — so there was no fixed point to
+   * read the change against, and what you were reaching for was no longer
+   * called what it had been called a second earlier. The name holds still; the
+   * state word below it does the moving.
+   */
   label: string;
+  /** The state in one word. Absent when the car has not reported it. */
+  stateWord?: string;
   /** null when the car has not reported the underlying state. */
   on: boolean | null;
   args?: Record<string, unknown>;
@@ -117,6 +126,13 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
     ? Object.values(state.windowsOpen).some(Boolean)
     : null;
 
+  const portOpen = state.isChargePortOpen ?? null;
+
+  // A control whose field the car has not reported says nothing rather than a
+  // default. "BLOCATE" under an unknown reads exactly like a reading.
+  const reads = (v: boolean | null | undefined, yes: string, no: string) =>
+    v == null ? undefined : v ? yes : no;
+
   const groups: { title: string; actions: Action[] }[] = [
     {
       title: t("group_charging"),
@@ -125,25 +141,21 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
           key: "charging",
           cmd: charging ? "stop_charging" : "start_charging",
           cap: charging ? "stopCharging" : "startCharging",
-          icon: charging ? Square : BatteryCharging,
-          label: charging ? t("stop_charging") : t("start_charging"),
+          icon: BatteryCharging,
+          label: t("name_charging"),
+          stateWord: charging ? t("charging_state_on") : t("charging_state_off"),
           on: charging,
         },
         {
-          key: "port_open",
-          cmd: "open_charge_port",
-          cap: "openChargePort",
-          icon: PlugZap,
-          label: t("open_charge_port"),
-          on: null,
-        },
-        {
-          key: "port_close",
-          cmd: "close_charge_port",
-          cap: "closeChargePort",
+          // One control, not two. "Open charge port" and "Close charge port"
+          // sat side by side and neither said which one the port was in.
+          key: "charge_port",
+          cmd: portOpen === true ? "close_charge_port" : "open_charge_port",
+          cap: portOpen === true ? "closeChargePort" : "openChargePort",
           icon: Plug,
-          label: t("close_charge_port"),
-          on: null,
+          label: t("name_charge_port"),
+          stateWord: reads(portOpen, t("port_state_open"), t("port_state_closed")),
+          on: portOpen,
         },
       ],
     },
@@ -155,14 +167,17 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
           cmd: "precondition_max",
           cap: "preconditionMax",
           icon: Snowflake,
-          label: state.isBatteryPreconditioning
-            ? t("precondition_max_off")
-            : t("precondition_max"),
+          label: t("name_precondition"),
+          stateWord: reads(
+            state.isBatteryPreconditioning,
+            t("precondition_state_on"),
+            t("precondition_state_off"),
+          ),
           on: state.isBatteryPreconditioning,
           // The off path existed in the command map and the mock engine from
           // the start and had no button, so max defrost could be started and
           // never stopped.
-          args: { on: !state.isBatteryPreconditioning },
+          args: { on: state.isBatteryPreconditioning !== true },
         },
       ],
     },
@@ -171,10 +186,11 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
       actions: [
         {
           key: "windows",
-          cmd: windowsOpen ? "close_windows" : "vent_windows",
-          cap: windowsOpen ? "closeWindows" : "ventWindows",
-          icon: windowsOpen ? X : Wind,
-          label: windowsOpen ? t("close_windows") : t("vent_windows"),
+          cmd: windowsOpen === true ? "close_windows" : "vent_windows",
+          cap: windowsOpen === true ? "closeWindows" : "ventWindows",
+          icon: Wind,
+          label: t("name_windows"),
+          stateWord: reads(windowsOpen, t("windows_state_open"), t("windows_state_closed")),
           on: windowsOpen,
         },
       ],
@@ -184,19 +200,29 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
       actions: [
         {
           key: "sentry",
-          cmd: state.isSentryMode ? "deactivate_sentry" : "activate_sentry",
-          cap: state.isSentryMode ? "deactivateSentry" : "activateSentry",
+          cmd: state.isSentryMode === true ? "deactivate_sentry" : "activate_sentry",
+          cap: state.isSentryMode === true ? "deactivateSentry" : "activateSentry",
           icon: Shield,
-          label: state.isSentryMode ? t("deactivate_sentry") : t("activate_sentry"),
+          label: t("name_sentry"),
+          stateWord: reads(state.isSentryMode, t("sentry_state_on"), t("sentry_state_off")),
           on: state.isSentryMode,
         },
         {
+          // Stays an action, not a state: Tesla exposes no command that
+          // cancels a remote start. It is a two-minute window that expires on
+          // its own, so this reports whether one is open and never offers to
+          // close it.
           key: "remote_start",
           cmd: "remote_start",
           cap: "remoteStart",
           icon: Play,
           label: t("remote_start"),
-          on: null,
+          stateWord: reads(
+            state.isRemoteStartActive,
+            t("sentry_state_on"),
+            t("sentry_state_off"),
+          ),
+          on: state.isRemoteStartActive,
         },
       ],
     },
@@ -246,7 +272,18 @@ export function AllCommands({ vehicleId, brand, state }: AllCommandsProps) {
                       className={`size-4 shrink-0 ${a.on ? "text-primary" : "text-muted-foreground"}`}
                     />
                   )}
-                  <span className="truncate">{a.label}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate">{a.label}</span>
+                    {a.stateWord && (
+                      <span
+                        className={`truncate font-mono text-[10px] uppercase tracking-wider ${
+                          a.on ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      >
+                        {a.stateWord}
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>

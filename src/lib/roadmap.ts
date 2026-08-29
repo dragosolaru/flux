@@ -139,11 +139,11 @@ export const ROADMAP: Milestone[] = [
   },
   {
     gate: 3,
-    goal: "Redesignul — fiecare ecran refăcut în direcția Instrument",
+    goal: "Redesignul — încheiat, /v2 e șters",
     nextStep:
-      "Deschide /v2 pe telefon lângă aplicația live și judecă ecran cu ecran. Se portează câte un ecran; starea și ce s-a găsit sunt în docs/REDESIGN-V2.md.",
+      "Nimic de făcut. Judecat pe ecranul mașinii, v1 arăta și mergea mai bine, deci /v2 a fost șters și tot ce era util s-a mutat în v1. Ce s-a găsit pe drum — 52 de defecte, toate reparate în aplicația reală — e în docs/REDESIGN-V2.md.",
     cost:
-      "Două versiuni ale fiecărui ecran sunt un cost care se plătește doar dacă se termină. Fiecare ecran portat trebuie ori să-l înlocuiască pe original, ori să fie șters — un /v2 permanent e cel mai prost dintre cele trei rezultate.",
+      "Regula scrisă aici de la început a fost că fiecare ecran portat ori îl înlocuiește pe original, ori e șters, fiindcă un /v2 permanent e cel mai prost dintre cele trei rezultate. S-a închis pe regula aia, nu împotriva ei — iar defectele găsite au fost reparate în v1 tot timpul, deci munca nu s-a pierdut odată cu ecranele.",
   },
   {
     gate: 3,

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { AllCommands } from "@/components/vehicle/AllCommands";
 import { CommandPanel } from "@/components/vehicle/CommandPanel";
+import { StatusPanel } from "@/components/vehicle/StatusPanel";
 import { CommandHistory } from "@/components/vehicle/CommandHistory";
 import { FeatureGate } from "@/components/layout/FeatureGate";
 import { useVehicle } from "@/hooks/useVehicle";
@@ -92,6 +93,13 @@ function VehicleCommands({
         {/* The quick row stays on top: four taps cover almost every session,
             and burying them in a group of twenty-two would be a downgrade. */}
         <CommandPanel vehicleId={id} brand={brand} state={data} />
+
+        {/* What is open, and WHICH one. doorsOpen and windowsOpen arrive per
+            corner and nothing in v1 ever showed them — no control here can say
+            "the rear left door" without becoming four controls nobody wants. */}
+        <div className="mt-5">
+          <StatusPanel state={data} />
+        </div>
 
         <div className="mt-6">
           <AllCommands vehicleId={id} brand={brand} state={data} />
