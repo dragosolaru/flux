@@ -87,7 +87,7 @@
     "no_battery_data": "History will appear over time",
     "chemistry_nmc": "NMC/NCA pack: keep it between roughly 50% and 80% day to day, and charge to 100% only before a long trip. Leaving it full for days is what ages it.",
     "chemistry_lfp": "LFP pack: take it to 100% at least once a week. That is how the car recalibrates its range estimate, and this chemistry does not mind sitting full.",
-    "soh_estimate_hint": "Estimated from range at the current charge level. The car's own test — Controls → Service → Battery Health — is the authoritative figure.",
+    "soh_estimate_hint": "Estimated from range, not measured — compare it with what the car shows at 100%. Tesla's own test (Controls → Service → Battery Health) only appears on software 2025.8.3 or newer, and needs AC charging of at least 5 kW.",
     "soh_unknown_trim": "No state of health for this trim yet — the car reports {badge}.",
     "states_title": "Activity",
     "driving_km": "Driven",

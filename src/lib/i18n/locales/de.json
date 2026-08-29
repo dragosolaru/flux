@@ -87,7 +87,7 @@
     "no_battery_data": "Verlauf erscheint mit der Zeit",
     "chemistry_nmc": "NMC/NCA-Akku: im Alltag etwa zwischen 50 % und 80 % halten und nur vor langen Fahrten auf 100 % laden. Tagelang voll zu stehen lässt ihn altern.",
     "chemistry_lfp": "LFP-Akku: mindestens einmal pro Woche auf 100 % laden. So kalibriert das Auto seine Reichweitenschätzung neu, und dieser Chemie schadet voller Ladestand nicht.",
-    "soh_estimate_hint": "Geschätzt aus der Reichweite beim aktuellen Ladestand. Maßgeblich ist der Test im Auto: Bedienelemente → Service → Batteriezustand.",
+    "soh_estimate_hint": "Aus der Reichweite geschätzt, nicht gemessen — vergleiche es mit der Anzeige bei 100 %. Teslas eigener Test (Bedienelemente → Service → Batteriezustand) erscheint erst ab Software 2025.8.3 und braucht AC-Laden mit mindestens 5 kW.",
     "soh_unknown_trim": "Für diese Ausstattung gibt es noch keinen Batteriezustand — das Auto meldet {badge}.",
     "states_title": "Aktivität",
     "driving_km": "Gefahren",

@@ -87,7 +87,7 @@
     "no_battery_data": "Istoricul va apărea în timp",
     "chemistry_nmc": "Acumulator NMC/NCA: ține-l zilnic între aproximativ 50% și 80% și încarcă la 100% doar înainte de un drum lung. Lăsat plin zile la rând este ce îl îmbătrânește.",
     "chemistry_lfp": "Acumulator LFP: du-l la 100% cel puțin o dată pe săptămână. Așa își recalibrează mașina estimarea de autonomie, iar acestei chimii nu îi strică să stea plină.",
-    "soh_estimate_hint": "Estimare din autonomia de la nivelul curent de încărcare. Testul mașinii — Comenzi → Service → Stare baterie — este cifra de referință.",
+    "soh_estimate_hint": "Estimare din autonomie, nu o măsurătoare — compar-o cu ce arată mașina la 100%. Testul Tesla (Comenzi → Service → Stare baterie) apare doar pe software 2025.8.3 sau mai nou și cere încărcare AC de minimum 5 kW.",
     "soh_unknown_trim": "Încă nu avem starea bateriei pentru această versiune — mașina raportează {badge}.",
     "states_title": "Activitate",
     "driving_km": "Condus",

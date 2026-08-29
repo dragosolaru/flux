@@ -1221,9 +1221,15 @@ of a percentage, the badge itself: *"No state of health for this trim yet — th
 car reports model3:xyz."* That turns a silent gap into a report anyone can act
 on, which is how the last wrong baseline was caught.
 
-**Tesla's own test is authoritative.** The estimate here is derived from range;
-the car has a real one at **Controls → Service → Battery Health**. `/insights`
-says so under the figure, so the number is not mistaken for a measurement.
+**Tesla's own test is authoritative — where the car has it.** The estimate here
+is derived from range; the car has a real one at **Controls → Service → Battery
+Health**. But that entry only exists on software **2025.8.3 or newer**, needs AC
+charging of at least 5 kW (a Supercharger will not do), and Tesla has moved and
+removed it between builds. The first version of this string named the path
+flatly and the field-test car did not have it — pointing a driver at a menu that
+is not there is the same failure this repo keeps rediscovering, so the condition
+is now part of the sentence, together with the check anyone can do instead:
+compare the full-range figure with what the car shows at 100%.
 
 **It has to survive the car sleeping.** The badge arrives only with a live
 read, and a parked Tesla is asleep most of the day — so on the first cut the

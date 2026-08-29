@@ -87,7 +87,7 @@
     "no_battery_data": "Az előzmények idővel megjelennek",
     "chemistry_nmc": "NMC/NCA akkumulátor: hétköznap tartsd nagyjából 50% és 80% között, és csak hosszú út előtt töltsd 100%-ra. A napokig teli állapot az, ami öregíti.",
     "chemistry_lfp": "LFP akkumulátor: hetente legalább egyszer töltsd 100%-ra. Az autó így kalibrálja újra a hatótáv-becslést, és ezt a kémiát nem viseli meg a teli állapot.",
-    "soh_estimate_hint": "Becslés az aktuális töltöttséghez tartozó hatótávból. A mérvadó érték az autó saját tesztje: Vezérlők → Szerviz → Akkumulátor állapota.",
+    "soh_estimate_hint": "Hatótávból becsülve, nem mérve — vesd össze azzal, amit az autó 100%-on mutat. A Tesla saját tesztje (Vezérlők → Szerviz → Akkumulátor állapota) csak a 2025.8.3 vagy újabb szoftveren jelenik meg, és legalább 5 kW-os AC töltést igényel.",
     "soh_unknown_trim": "Ehhez a kivitelhez még nincs akkumulátorállapot — az autó ezt jelenti: {badge}.",
     "states_title": "Aktivitás",
     "driving_km": "Megtett km",
