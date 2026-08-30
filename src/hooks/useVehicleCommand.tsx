@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 import { vehicleQueryPrefix } from "@/hooks/useVehicle";
+import { commandArt } from "@/lib/vehicle/command-art";
+import { CommandFlash } from "@/components/vehicle/CommandFlash";
 
 interface CommandInput {
   vehicleId: string;
@@ -163,9 +165,27 @@ export function useVehicleCommand() {
       }
       return { previous };
     },
-    onSuccess: (data, _variables, context) => {
+    onSuccess: (data, variables, context) => {
       if (data.success) {
-        toast.success(t("success"));
+        // "Comandă trimisă" is true of every command and therefore says nothing
+        // about the one that was pressed. Where the artwork actually depicts the
+        // result, show the car in the state it just went into instead; where it
+        // does not, the generic line is still better than a picture that lies.
+        const art = commandArt(variables.command);
+        if (art) {
+          toast.custom(
+            () => (
+              <CommandFlash
+                art={art.art}
+                title={t(art.nameKey)}
+                state={art.stateKey ? t(art.stateKey) : undefined}
+              />
+            ),
+            { duration: 2200 },
+          );
+        } else {
+          toast.success(t("success"));
+        }
       } else {
         // Server rejected the command (HTTP 200, success:false) — undo the
         // optimistic change and surface the car-provided reason if any.

@@ -34,14 +34,14 @@ describe("vehicle state cache keys", () => {
   });
 
   it("the command hook builds no vehicle key of its own", () => {
-    const commands = read("hooks/useVehicleCommand.ts");
+    const commands = read("hooks/useVehicleCommand.tsx");
     expect(commands).toContain("vehicleQueryPrefix");
     // The literal is what drifted. Any reintroduction of it is the same bug.
     expect(commands).not.toMatch(/\["vehicle",\s*\w+\]/);
   });
 
   it("the optimistic patch reaches every matching entry, not one key", () => {
-    const commands = read("hooks/useVehicleCommand.ts");
+    const commands = read("hooks/useVehicleCommand.tsx");
     // setQueryData targets one exact key; setQueriesData matches the prefix.
     expect(commands).toContain("setQueriesData");
     expect(commands).toContain("getQueriesData");
@@ -50,6 +50,6 @@ describe("vehicle state cache keys", () => {
   it("a successful command refreshes the vehicle list too", () => {
     // virtual_key_paired lives on the list, and the server flips it on the
     // command's outcome. Without this the pairing prompt survived pairing.
-    expect(read("hooks/useVehicleCommand.ts")).toContain('queryKey: ["vehicles"]');
+    expect(read("hooks/useVehicleCommand.tsx")).toContain('queryKey: ["vehicles"]');
   });
 });

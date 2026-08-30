@@ -1269,3 +1269,59 @@ Also fixed there: `TESLA_WMI` was `startsWith("5YJ")`, the Fremont code. Cars
 built in Berlin (`XP7`), Shanghai (`LRW`) and Austin (`7SA`) were rejected as
 not-a-Tesla — which is every European car, including the one this app is being
 field-tested in.
+
+---
+
+## 27. Command feedback — the car in the state you just put it in
+
+**What:** A successful command no longer confirms itself with "Comandă trimisă".
+Where the artwork depicts the result, the toast becomes a small card showing the
+car in the state it just went into, captioned with the thing and its new state —
+`Uși · Deblocate`, `Sentry · Pornit`, `Încărcare · Pornită`. It springs in and
+clears after 2.2s.
+
+"Command sent" is true of every command and therefore says nothing about the one
+that was pressed. A picture answers the question a driver actually has — *did
+the thing I meant happen* — in the time this moment gets, which is a glance.
+
+**Two rules keep it honest:**
+
+- **No picture beats a wrong picture.** Only commands whose outcome the art
+  genuinely shows are mapped. There is no frame of an open charge port — the
+  nearest one has a cable plugged in, which reads as *charging* — so both port
+  commands are deliberately unmapped and fall back to the plain toast. Same for
+  honk and every numeric setter.
+- **The caption is a noun and its state, never an imperative.** By the time the
+  card is on screen the door is already unlocked; a label that still commands is
+  a label that lies about when it is read. This is the same rule the toggles
+  follow (§26). Momentary actions with no resulting state — flash, remote start
+  — carry the action name alone. No new strings: the captions reuse the toggle
+  labels already in all five locales.
+
+**Where the art came from:** an illustration sheet supplied by the owner, sliced
+into nine 186×143 WebP frames, 40 KB for the set. The sheet's own state grid was
+not usable as a state *display* — the frames are visibly different cars, the
+labels are baked into the pixels in English, and states must compose (charging
+*and* boot open *and* sentry), which a flat image cannot do. As a one-at-a-time
+confirmation, shown for two seconds and never side by side, none of that
+matters, which is why this is the use it got.
+
+**The caption was over the picture first, and was unreadable.** The cars are
+white on a pale ground, so white-on-scrim had almost no contrast exactly where
+the words landed, and a scrim dark enough to fix it covered the sill and wheels
+— the parts carrying the state. Moving the caption onto the card's own surface
+fixed it. Invisible in the source; obvious the moment it was rendered.
+
+**How to use:** press any mapped command anywhere (`/commands`, the dashboard
+panel, the charging card). Nothing to configure.
+
+**Key files:** `src/lib/vehicle/command-art.ts` (the map),
+`src/components/vehicle/CommandFlash.tsx`, `src/hooks/useVehicleCommand.tsx`
+(renamed from `.ts` — it renders JSX now), `public/car-states/*.webp`,
+`src/lib/vehicle/__tests__/command-art.test.ts` (which checks every mapped name
+resolves to a file that exists, since a typo would fail silently as a broken
+image inside a toast that is gone in two seconds).
+
+**Dependencies:** sonner (`toast.custom`), framer-motion. `MotionConfig
+reducedMotion="user"` in the providers already downgrades the spring to a fade
+for anyone who asked for less motion.
