@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendVehicleCommand } from "@/lib/tesla/api";
+import { isLiveEnabled } from "@/lib/live-integrations";
 import type { TeslaCommand } from "@/types/tesla";
 
 /**
@@ -85,6 +86,14 @@ export async function POST(req: NextRequest) {
     | null;
 
   if (!row) return NextResponse.json({ message: "not-found" }, { status: 404 });
+  // The one path that reached Tesla without consulting LIVE_INTEGRATIONS. Every
+  // other route checks it; this one checked only `data_source`, so with the
+  // integration switched off this button would still have sent a signed command
+  // and been billed for it — which would have made "the car generates no costs"
+  // false by exactly one endpoint.
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "live-disabled" }, { status: 503 });
+  }
   if (row.data_source !== "live" || row.tesla_vehicle_id == null) {
     // The simulator cannot answer this question — the whole point is what a
     // real car's navigation does with the destination.

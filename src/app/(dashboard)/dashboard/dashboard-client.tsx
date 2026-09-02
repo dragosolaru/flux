@@ -353,7 +353,10 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
           key: "lastseen",
           icon: <RefreshCw className="size-4 text-muted-foreground" />,
           value: formatRelativeTime(state.lastSeenAt, td),
-          label: td("chip_last_seen"),
+          // Under "last seen", a paused link reads as a car that is merely
+          // asleep — plausible, and not what happened. Nothing is going to
+          // refresh this reading, so the label says so.
+          label: state.linkPaused ? td("chip_link_paused") : td("chip_last_seen"),
         }
       : null,
   ].filter(Boolean) as ChipData[];

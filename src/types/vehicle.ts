@@ -82,6 +82,16 @@ export interface VehicleState {
   brand: VehicleBrand;
   dataSource: DataSource;
   /**
+   * The car is linked, but its brand integration is switched off, so this
+   * reading came from storage and nothing will refresh it.
+   *
+   * Optional because it is an annotation from the route, not something the car
+   * reports. It exists so the screen can say "paused" instead of showing a
+   * stale reading under a "last seen" label, which would read as a car that is
+   * merely asleep — true-sounding, and not what happened.
+   */
+  linkPaused?: boolean;
+  /**
    * What the car calls itself — `model3:p74d`. The key the trim table is keyed
    * on, carried through so an unmapped car can be identified from the screen
    * instead of guessed at: without it, "no state of health" has no cause a

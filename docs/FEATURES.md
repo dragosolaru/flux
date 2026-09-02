@@ -1403,3 +1403,54 @@ a `DO` block that catches `insufficient_privilege`, and the grants to `anon` and
 `authenticated` are revoked either way — which removes the same exposure from the
 other end. Every PostGIS query in the app runs through the service-role client,
 which bypasses RLS and keeps its grants.
+
+---
+
+## 29. Pausing the car — how the integration switches off without lying
+
+**What:** The Tesla integration can be switched off entirely, so it issues no
+requests and incurs no charges, while the code stays in the repo to be brought
+back later. The switch is the existing `LIVE_INTEGRATIONS` env var: unset it (or
+drop `tesla` from it) and OAuth, the daily cron, the trip-plan read, the state
+screen, commands, wake and the nav probe all stop.
+
+**Why it needed code and not just a config change.** Every route that talks to a
+car is shaped `if (isLiveEnabled(brand) && data_source === "live") { …reach the
+car… }` and then **falls through to the simulator**. That is safe while the flag
+is up and dangerous the moment it comes down, because a real Tesla then lands on
+the mock path:
+
+- `/api/vehicles/[id]/state` reached `createInitialSnapshot` and **invented a
+  vehicle** — a fabricated battery level shown to the owner of a real car;
+- `/api/vehicles/[id]/commands` would have applied the command to that invented
+  snapshot and answered "locked" while nothing left the building.
+
+Neither throws, logs, or looks wrong in review. So `isLiveVehicleDormant()` names
+the state and both routes check it **before** the live branch: state answers from
+`vehicle_snapshots` (or 503 `LIVE_PAUSED` when there is nothing stored), commands
+refuse with `LIVE_PAUSED`. A simulator now only ever answers for a vehicle that
+was created as one.
+
+**The one ungated path.** `/api/debug/nav-probe` checked `data_source` and not
+the flag, so with the integration off it would still have sent a signed command
+and been billed for it — one endpoint away from making "no queries, no costs"
+false. It checks `isLiveEnabled` now.
+
+**What the driver sees.** A linked car returns its last stored reading with
+`linkPaused: true`, and the dashboard's "last seen" chip becomes **"Legătură
+oprită"**. Under the old label a paused link reads as a car that is merely
+asleep — plausible, and not what happened.
+
+**How to verify it is really off:** `teslaCalls` in `/debug` shows zero reads,
+zero commands and zero wakes across a full day. That is the check that cannot be
+fooled by an unexercised code path.
+
+**Key files:** `src/lib/live-integrations.ts` (`isLiveEnabled`,
+`isLiveVehicleDormant`), `src/app/api/vehicles/[vehicleId]/{state,commands}/route.ts`,
+`src/app/api/debug/nav-probe/route.ts`,
+`src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/types/vehicle.ts`
+(`linkPaused`), `src/lib/__tests__/dormant-live-vehicle.test.ts` — which pins both
+the guard order and the list of every route that must consult the flag, because
+"no costs" is a claim about all of them at once.
+
+**Dependencies:** none. Bringing the car back is setting `LIVE_INTEGRATIONS=tesla`.

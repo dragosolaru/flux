@@ -412,6 +412,7 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odometer",
     "chip_last_seen": "Last seen",
+    "chip_link_paused": "Link paused",
     "chip_last_charge": "Last charge",
     "action_charge": "Charge",
     "time_now": "now",

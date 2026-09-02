@@ -6,7 +6,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import { getBrand } from "@/lib/brands/registry";
 import { TESLA_COMMAND_MAP } from "@/lib/brands/tesla/command-map";
-import { isLiveEnabled } from "@/lib/live-integrations";
+import { isLiveEnabled, isLiveVehicleDormant } from "@/lib/live-integrations";
 import { applyCommand } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot, recordCommandEvent } from "@/lib/mock/persistence";
 import { alertOnSensitiveCommand } from "@/lib/notifications/security-alert";
@@ -170,6 +170,16 @@ export async function POST(
   // Capability check using the shared COMMAND_CAP_MAP (same map the simulator uses)
   if (!profile.capabilities.commands[COMMAND_CAP_MAP[command]]) {
     return NextResponse.json({ message: "command-not-supported" }, { status: 400 });
+  }
+
+  // A linked car whose integration is switched off. Refused outright: falling
+  // through to the simulator below would apply the command to an invented
+  // snapshot and answer "locked" while nothing reached the car.
+  if (isLiveVehicleDormant(vehicle)) {
+    return NextResponse.json(
+      { message: "Vehicle link is paused", code: "LIVE_PAUSED" },
+      { status: 503 },
+    );
   }
 
   // Live path

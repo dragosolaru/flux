@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
 import { getBrand } from "@/lib/brands/registry";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { isLiveEnabled } from "@/lib/live-integrations";
+import { isLiveEnabled, isLiveVehicleDormant } from "@/lib/live-integrations";
 import { tick } from "@/lib/mock/engine";
 import { loadSnapshot, saveSnapshot } from "@/lib/mock/persistence";
 import { createInitialSnapshot } from "@/lib/mock/seed";
@@ -73,6 +73,25 @@ export async function GET(
   const profile = getBrand(vehicle.brand);
   if (!profile) {
     return NextResponse.json({ message: "unknown-brand" }, { status: 400 });
+  }
+
+  // A linked car whose integration is switched off. Answered from storage or
+  // not at all — never by the simulator below, which would invent a vehicle and
+  // show its made-up battery level as this driver's own.
+  if (isLiveVehicleDormant(vehicle)) {
+    const lastKnown = await loadLastKnown(supabase, {
+      id: vehicle.id,
+      brand: vehicle.brand,
+      display_name: vehicle.display_name,
+      trim_badge: vehicle.trim_badge,
+    });
+    if (lastKnown) {
+      return NextResponse.json({ ...lastKnown, linkPaused: true });
+    }
+    return NextResponse.json(
+      { message: "Vehicle link is paused", code: "LIVE_PAUSED" },
+      { status: 503 },
+    );
   }
 
   // Live path: brand is in LIVE_INTEGRATIONS and vehicle is marked live
