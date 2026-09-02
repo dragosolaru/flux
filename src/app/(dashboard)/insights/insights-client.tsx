@@ -222,6 +222,7 @@ function MileageChart({ months }: { months: MileagePeriod[] }) {
 function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
   const t = useTranslations("insights");
   const { data, isLoading } = useStats(vehicleId, from);
+  const { data: vehicleState } = useVehicle(vehicleId, true, false);
 
   if (isLoading) return <Skeleton className="h-28 w-full rounded-2xl" />;
 
@@ -266,6 +267,16 @@ function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
       {data && data.consumptionByMonth.length > 1 && (
         <ConsumptionChart months={data.consumptionByMonth} />
       )}
+      {/*
+        A linked car records nothing itself — this is reconstructed from
+        readings taken minutes or hours apart. Distance and energy survive that
+        (they are differences between two numbers); the count of trips does not,
+        because several errands between two readings arrive as one. Saying so is
+        cheaper than having the number quietly disbelieved.
+      */}
+      {vehicleState?.dataSource === "live" ? (
+        <p className="text-2xs text-muted-foreground">{t("activity_derived_hint")}</p>
+      ) : null}
     </div>
   );
 }

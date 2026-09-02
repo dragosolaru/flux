@@ -1325,3 +1325,81 @@ image inside a toast that is gone in two seconds).
 **Dependencies:** sonner (`toast.custom`), framer-motion. `MotionConfig
 reducedMotion="user"` in the providers already downgrades the spring to a fade
 for anyone who asked for less motion.
+
+---
+
+## 28. Activity for a real car — derived from what it was seen doing
+
+**What:** `trips` and `charging_sessions` were written by the simulator and by
+nothing else. For a linked Tesla that made the activity feed, the savings and
+CO₂ tiles, the monthly consumption chart and the planner's personal-efficiency
+figure **permanently empty** — and none of them said why, which is how "7 days
+and 30 days show the same thing" gets reported. Both windows were empty.
+
+They are now reconstructed from `vehicle_snapshots`, which already carried
+odometer, battery level, charging flag and position with a timestamp.
+
+**What survives sparse readings, and what does not.** A snapshot is written at
+most every five minutes while a screen is open, and once a day from the cron —
+reading more often costs quota and, on a sleeping car, battery. So:
+
+| | |
+| --- | --- |
+| **Distance** | Exact. An odometer difference is right however far apart the readings are. |
+| **Energy** | Close. Battery-level difference × pack capacity; the percentage is an integer, so a short hop is coarse. |
+| **Trip count** | A **lower bound**. Three errands between two readings arrive as one. Nothing can recover the three. |
+| **Average speed** | Left **null** when any gap in the run exceeds 30 min. Dividing a day's driving by a day's elapsed time gives a number that looks like a speed and is not one. |
+
+Totals are therefore trustworthy and counts are not, which is the right way
+round — savings, CO₂ and consumption are all sums. `/insights` states this under
+the activity tiles for a live car rather than leaving the numbers to be quietly
+disbelieved.
+
+**Other rules the derivation follows:** an odometer difference under 300 m is
+rounding, not a journey; a pair of readings more than a day apart produces no
+trip at all rather than a twenty-hour one; a trip the car charged during reports
+no energy, because the level difference then says the opposite of what was used;
+a single reading with the charging flag set is not a session, having neither
+duration nor energy.
+
+**Idempotent by construction.** Rows are marked `source = 'derived'` and upserted
+on `(vehicle_id, started_at)` against a partial unique index. Re-running is the
+normal case — a trip still in progress last pass has more snapshots now and must
+grow, not appear twice. Simulated and seeded rows have a null source, sit outside
+the index, and cannot be touched by this. The pass recomputes a trailing 30 days
+each run rather than tracking a watermark: a watermark has to be right forever, a
+window only has to be re-run.
+
+**Two bugs this depended on, fixed in the same change:**
+- **The daily cron threw away the reading it took.** It fetched a state to
+  evaluate alerts and never stored it, so `vehicle_snapshots` only gained rows
+  when someone had a screen open — and the job `OPERATIONS.md` describes as
+  existing "to keep history continuous" did not keep any.
+- **It returned early when notifications were off**, so with the feature flag
+  down the whole job did nothing at all. Only the alerting half is gated now.
+
+**How to use:** nothing to switch on. Apply migration `052` from `/debug`, then
+the 06:00 cron fills history forward. `/insights` shows it.
+
+**Key files:** `src/lib/vehicle/derive-activity.ts` (pure, all the judgement
+calls, 14 tests), `src/lib/vehicle/persist-activity.ts`,
+`src/app/api/cron/poll-vehicles/route.ts`, `src/lib/tesla/last-known.ts`,
+`supabase/migrations/052_derived_activity.sql`.
+
+**Dependencies:** none new. Pack capacity comes from `getModelSpec`.
+
+### Also: `spatial_ref_sys` and the Supabase linter
+
+Migration `051` closes `rls_disabled_in_public` on `public.spatial_ref_sys` —
+PostGIS's table of coordinate reference systems, which lands in `public` because
+that is where the extension was installed. Nothing in it is ours or secret, but a
+`public` table with RLS off is readable by `anon` through PostgREST, and "it is
+only reference data" is the reasoning that leaves the next one exposed too.
+
+It is not a one-liner: the table is owned by the extension, so
+`ENABLE ROW LEVEL SECURITY` needs ownership we may not have, and a migration that
+died there would block every migration after it. So the ALTER is attempted inside
+a `DO` block that catches `insufficient_privilege`, and the grants to `anon` and
+`authenticated` are revoked either way — which removes the same exposure from the
+other end. Every PostGIS query in the app runs through the service-role client,
+which bypasses RLS and keeps its grants.

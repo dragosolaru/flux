@@ -95,6 +95,7 @@
     "trips": "Trips",
     "energy_charged": "Energy charged",
     "no_activity_data": "Drive and charge to see activity",
+    "activity_derived_hint": "Reconstructed from periodic readings of the car. Distance and energy are exact; the trip count is a lower bound, since several short journeys between two readings arrive as one.",
     "efficiency_title": "Efficiency",
     "avg_wh_per_km": "Avg efficiency",
     "projected_range": "Projected range",

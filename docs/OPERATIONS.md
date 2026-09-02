@@ -20,7 +20,7 @@ everything else happens because a person opened a screen.
 | Job | When | What it does | Broken looks like |
 | --- | --- | --- | --- |
 | `/api/internal/warm?country=…` | 03:00 daily | Refreshes charger data for twelve countries | `ingest_runs` stops gaining rows; `chargers.total` flat for days |
-| `/api/cron/poll-vehicles` | 06:00 daily | One reading per linked car, to keep history continuous | `vehicle_snapshots` has a gap; `teslaCalls.read` shows 0 at hour 06 |
+| `/api/cron/poll-vehicles` | 06:00 daily | One reading per linked car — **kept**, then trips and charging sessions derived from the history | `vehicle_snapshots` has a gap; `teslaCalls.read` shows 0 at hour 06; `trips.source = 'derived'` stops gaining rows |
 
 Both are guarded by `CRON_SECRET`. **A missing secret does not fail loudly** —
 it makes the endpoint refuse Vercel, and the symptom is silence. That is the
@@ -186,18 +186,19 @@ none.
   the time, so a large share of real commands fail with nothing explaining why.
 - **`bnetza` and `austria` are dark.** Germany and Austria get no national feed;
   OSM and OCM still cover them, thinly.
-- **A linked Tesla records no trips and no charging sessions.** `trips` and
-  `charging_sessions` are written only by the simulator
-  (`src/lib/mock/persistence.ts`) and the history seeder. Nothing derives them
-  from a real car. So for a live vehicle the activity feed, the savings and CO₂
-  tiles, the monthly consumption chart and the planner's personal-efficiency
-  figure are all **permanently empty**, and none of them says why — which is
-  exactly how "7 days and 30 days show the same thing" gets reported. They show
-  the same thing because both windows are empty.
-  The data to build them from exists: `vehicle_snapshots` carries odometer,
-  battery level and position every ten minutes. Deriving a trip is a matter of
-  finding the gaps between moving and stopped. It is the largest thing on this
-  list.
+- ~~A linked Tesla records no trips and no charging sessions.~~ **Fixed.**
+  Derived from `vehicle_snapshots` by `src/lib/vehicle/derive-activity.ts`,
+  written by `persist-activity.ts` from the daily cron, marked
+  `source = 'derived'` and upserted on `(vehicle_id, started_at)` so a pass is
+  idempotent and a period that grows updates in place. **Resolution is bounded
+  by how often we read the car**, and reading it more costs quota and battery —
+  so distance and energy are exact (they are differences between two numbers)
+  while the trip count is a lower bound, and average speed is left null when the
+  gap is too wide to support one. `/insights` says so under the activity tiles.
+  Two things this depends on, both also fixed: the cron now **keeps** the
+  reading it takes (it fetched one for alerting and threw it away, so the
+  history this job is named for had day-wide holes), and it no longer returns
+  early when notifications are off.
 - **State of health now comes from the car's own badge**, not the VIN:
   `vehicle_config.trim_badging` (`p74d` = Model 3 Performance, `74d` = Long
   Range), keyed with `car_type` so a Model Y cannot borrow a Model 3 figure.

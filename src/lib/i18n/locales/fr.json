@@ -95,6 +95,7 @@
     "trips": "Trajets",
     "energy_charged": "Énergie chargée",
     "no_activity_data": "Conduisez et rechargez pour voir l'activité",
+    "activity_derived_hint": "Reconstitué à partir de relevés périodiques de la voiture. La distance et l'énergie sont exactes ; le nombre de trajets est un minimum, car plusieurs courts trajets entre deux relevés n'en forment qu'un.",
     "efficiency_title": "Efficacité",
     "avg_wh_per_km": "Efficacité moyenne",
     "projected_range": "Autonomie projetée",

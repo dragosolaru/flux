@@ -95,6 +95,7 @@
     "trips": "Fahrten",
     "energy_charged": "Geladene Energie",
     "no_activity_data": "Fahren und laden, um Aktivität zu sehen",
+    "activity_derived_hint": "Aus periodischen Abfragen des Autos rekonstruiert. Strecke und Energie stimmen genau; die Anzahl der Fahrten ist eine Untergrenze, denn mehrere kurze Fahrten zwischen zwei Abfragen erscheinen als eine.",
     "efficiency_title": "Effizienz",
     "avg_wh_per_km": "Durchschn. Effizienz",
     "projected_range": "Geschätzte Reichweite",

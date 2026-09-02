@@ -95,6 +95,7 @@
     "trips": "Utak",
     "energy_charged": "Töltött energia",
     "no_activity_data": "Vezessen és töltsön az aktivitás megtekintéséhez",
+    "activity_derived_hint": "Az autó időszakos lekérdezéseiből rekonstruálva. A távolság és az energia pontos; az utak száma alsó becslés, mert két lekérdezés között több rövid út egyként jelenik meg.",
     "efficiency_title": "Hatékonyság",
     "avg_wh_per_km": "Átlagos hatékonyság",
     "projected_range": "Becsült hatótáv",

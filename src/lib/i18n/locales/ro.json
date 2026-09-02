@@ -95,6 +95,7 @@
     "trips": "Curse",
     "energy_charged": "Energie încărcată",
     "no_activity_data": "Conduce și încarcă pentru a vedea activitatea",
+    "activity_derived_hint": "Reconstituit din citiri periodice ale mașinii. Distanța și energia sunt exacte; numărul de drumuri e un minim, pentru că mai multe drumuri scurte între două citiri apar ca unul singur.",
     "efficiency_title": "Eficiență",
     "avg_wh_per_km": "Eficiență medie",
     "projected_range": "Autonomie proiectată",

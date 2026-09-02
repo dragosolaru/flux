@@ -8,6 +8,8 @@ import { isNotificationsEnabled } from "@/lib/feature-flags";
 import { getBrand } from "@/lib/brands/registry";
 import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
 import { fetchVehicleData } from "@/lib/tesla/api";
+import { saveLastKnown } from "@/lib/tesla/last-known";
+import { deriveAndStoreActivity } from "@/lib/vehicle/persist-activity";
 import { loadSnapshot } from "@/lib/mock/persistence";
 import { tick } from "@/lib/mock/engine";
 import { getWeatherAsync } from "@/lib/external/weather/providers/open-meteo";
@@ -63,11 +65,48 @@ async function resolveState(vehicle: VehicleRow): Promise<VehicleState | null> {
   return applyCapabilityMask(next.state, profile.capabilities.telemetry);
 }
 
-async function processVehicle(
+/**
+ * One reading, kept.
+ *
+ * `OPERATIONS.md` said this job existed "to keep history continuous" and it did
+ * not: it fetched a state to evaluate alerts and threw it away, so
+ * `vehicle_snapshots` only ever gained rows when a person happened to have a
+ * screen open. That left the history this job is named for with day-wide holes,
+ * and left the activity derived from it with nothing to derive.
+ *
+ * A sleeping car is not a failure here — it is the normal state of a parked one.
+ * The read is refused rather than waking it, and the derivation still runs,
+ * because it works on what is already stored.
+ */
+async function pollAndStore(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   vehicle: VehicleRow,
+): Promise<VehicleState | null> {
+  let state: VehicleState | null = null;
+  try {
+    state = await resolveState(vehicle);
+  } catch (err) {
+    console.error("[poll-vehicles] read", vehicle.id, err);
+  }
+
+  if (state && vehicle.data_source === "live") {
+    await saveLastKnown(supabase, vehicle.id, state).catch((err: unknown) => {
+      console.error("[poll-vehicles] saveLastKnown", vehicle.id, err);
+    });
+  }
+
+  await deriveAndStoreActivity(supabase, vehicle).catch((err: unknown) => {
+    console.error("[poll-vehicles] derive", vehicle.id, err);
+  });
+
+  return state;
+}
+
+async function alertFor(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  vehicle: VehicleRow,
+  state: VehicleState | null,
 ): Promise<number> {
-  const state = await resolveState(vehicle);
   if (!state || state.latitude == null || state.longitude == null) return 0;
 
   const prefs = await loadNotificationPreferences(supabase, vehicle.user_id);
@@ -132,10 +171,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isNotificationsEnabled()) {
-    return NextResponse.json({ disabled: true });
-  }
-
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("vehicles")
@@ -147,12 +182,20 @@ export async function GET(req: Request) {
   }
 
   const vehicles = (data ?? []) as VehicleRow[];
+  // Keeping history is what this job is for, and it runs whether or not anyone
+  // has notifications switched on. Only the alerting half is gated — that was
+  // the bug: with notifications off the whole job returned early, so no history
+  // was kept at all and every screen built on it stayed empty.
+  const notify = isNotificationsEnabled();
   let alerted = 0;
 
   for (let i = 0; i < vehicles.length; i += BATCH_SIZE) {
     const batch = vehicles.slice(i, i + BATCH_SIZE);
     const results = await Promise.allSettled(
-      batch.map((v) => processVehicle(supabase, v)),
+      batch.map(async (v) => {
+        const state = await pollAndStore(supabase, v);
+        return notify ? alertFor(supabase, v, state) : 0;
+      }),
     );
     for (const r of results) {
       if (r.status === "fulfilled") alerted += r.value;
@@ -160,5 +203,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ processed: vehicles.length, alerted });
+  return NextResponse.json({ processed: vehicles.length, alerted, notify });
 }
