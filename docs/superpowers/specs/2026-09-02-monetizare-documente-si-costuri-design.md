@@ -17,9 +17,9 @@ are ~400.000 de utilizatori. Notele au fost, pe rând: construit 7 / apărabil 2
 5 / 3, 5 / 2, 1 / 2.
 
 Concluzia acestei specificații e mai radicală decât alegerea unei direcții:
-**produsul plătit nu atinge deloc mașina.** Se vând documentele și costurile.
-Conexiunea la mașină rămâne în aplicație, dar iese din drumul comercial până când
-va merita reluată.
+**produsul plătit nu atinge deloc mașina, iar integrarea se stinge complet.** Se
+vând documentele și costurile. Codul rămâne în repo — revine ca funcție când va
+merita — dar nu mai rulează, deci nu mai generează niciun cost.
 
 ### De ce, în cifre
 
@@ -32,7 +32,7 @@ de partener.
 | --- | --- |
 | Interogări în PostGIS-ul nostru (hartă, stații, rutare) | **~0** |
 | OCR, ~20 de documente | **~$0,30** |
-| Dashboard live, poll la 30 s, o oră pe zi | **$7,20** |
+| Dashboard live, poll la 30 s, o oră pe zi | **$7,20** — și de asta se oprește |
 
 Un singur rând e periculos, și e cel al mașinii — adică exact suprafața pe care
 analizele au găsit-o cel mai puțin apărabilă. Scoțând-o din produsul plătit,
@@ -135,7 +135,24 @@ tăcere, și arată plauzibil. Conducta actuală nu are cum să o prindă. Odome
 Cele două prind practic orice eroare de o cifră, **și se aplică identic
 introducerii manuale**, unde o cifră în plus la tastat e la fel de probabilă.
 
-Efort: **~3–4 zile** pentru cele patru surse, tabel, validare și teste.
+**Ce face cifra să ajungă acolo.** Un câmp pe care nimeni nu-l completează e o
+funcție care există și nu produce nimic — iar fără două citiri la distanță în
+timp, cost/km și economia față de benzină rămân goale, adică exact promisiunea din
+pagina de preț. Deci două lucruri, nu unul:
+
+- **Un memento lunar, la sfârșit de lună**, cu câmpul chiar în el: *„Cât arată
+  kilometrajul? Ne trebuie ca să-ți calculăm costul pe kilometru pe septembrie."*
+  Sfârșitul lunii, pentru că acolo se închid perioadele de facturare și o citire
+  de pe 30 face luna întreagă corectă. Infrastructura există
+  (`src/lib/notifications/alert-engine.ts`); azi are patru reguli de vreme și e
+  oprită de un flag.
+- **Un gol onest, nu unul aproximat.** Dacă nu avem două citiri în perioada
+  afișată, cost/km nu arată o cifră estimată — arată *„adaugă kilometrajul ca să
+  calculăm"*, cu butonul lângă. Aceeași regulă ca la starea bateriei: mai bine
+  niciun număr decât unul care pare bun și nu e.
+
+Efort: **~4–5 zile** pentru cele patru surse, tabel, validare, mementoul, golul
+onest și testele.
 
 ### 1.4 Corectitudinea aritmeticii
 
@@ -193,6 +210,12 @@ trimise către un model găzduit în Statele Unite.
 - `/debug` arată rata de eșec OCR ca **procent din încărcări** — o cheie Anthropic
   moartă arată identic cu un teanc de facturi ilizibile până nu împarți.
 - Nota de confidențialitate listează fiecare sub-procesator care chiar primește date.
+- Cost/km nu afișează niciodată o cifră când lipsesc două citiri de odometru — și
+  există un test care o verifică, pentru că e exact locul unde ar apărea o
+  aproximare care pare bună.
+- **`teslaCalls` arată zero citiri, zero comenzi și zero treziri** pe o zi
+  întreagă. E cea mai simplă verificare că oprirea a fost completă, și singura
+  care nu se poate păcăli.
 
 ---
 
@@ -233,15 +256,32 @@ citirilor Tesla.
 Pragul de rentabilitate e pe la **zece abonați** — nu pentru că prețul e mare, ci
 pentru că nu mai există un cost per cerere care să crească odată cu ei.
 
-### Ce nu se vinde: mașina
+### Mașina se oprește — nu se ascunde, nu se șterge
 
-Conexiunea Tesla rămâne în aplicație pentru cine o are deja. Nu e promisă, nu e
-vândută și nu apare în pagina de preț.
+Integrarea Tesla se **stinge complet**, ca să nu mai genereze niciun cost. Codul
+rămâne în repo: revine ca funcție când va merita, nu se rescrie de la zero.
 
-Dar rămâne costisitoare, iar asta cere o măsură: **`DAILY_READ_BUDGET` scade de la
-200 la 40.** Fără venit în spate, un dashboard lăsat deschis o oră costă $0,24 din
-buzunarul nostru; plafonul nou ține cel mai rău caz la ~$2,40 pe lună și pe mașină.
-Cronul zilnic rămâne — costă $0,06 pe lună și ține istoricul continuu.
+**Mecanismul există deja.** `LIVE_INTEGRATIONS` (`src/lib/live-integrations.ts`)
+este un întrerupător care, nesetat, oprește OAuth-ul de conectare, cronul zilnic,
+citirea din `/api/trip-plan`, ecranul de stare, comenzile și trezirea. Toate șase
+sunt deja păzite de `isLiveEnabled`.
+
+**Există exact o cale nepăzită**, și fără ea afirmația „zero costuri" e falsă:
+`/api/debug/nav-probe` verifică doar `data_source !== "live"`, nu și flag-ul. Două
+linii.
+
+**Ce nu e gratis în oprire.** Un vehicul cu `data_source = "live"` și flag-ul
+stins cade azi pe ramura de simulator, unde nu are ce găsi — adică un ecran stricat
+pentru mașina deja conectată. Trebuie să degradeze onest: **ultima citire cunoscută
+din `vehicle_snapshots`, cu vechimea ei la vedere**, și un mesaj care spune că
+legătura cu mașina e oprită momentan. Plus ascunderea punctului de intrare
+„conectează Tesla", ca să nu ducă la un 503.
+
+Efort: **~1–2 zile.** „Scoatem Tesla" sună gratis și nu e chiar.
+
+**Consecință:** `DAILY_READ_BUDGET` devine irelevant, nu redus. Se lasă cum e —
+nu se ajustează o constantă pe o cale care nu mai rulează, ci se documentează că
+nu mai rulează.
 
 Motivul deciziei, scris ca să nu se piardă: integrarea nu e la un nivel care să
 justifice un preț, iar analizele au arătat că nici la un nivel bun nu ar fi
@@ -298,16 +338,18 @@ Rămân:
 - **Săptămânile 1–2, cât se procesează:** corpusul golden și testele de extragere
   (§1.2); kilometrii și consumul din cele patru surse (§1.3); înțelesul unic al lui
   `cost_ron` și cele patru reparații rămase (§1.4).
-- **Săptămâna 3:** gestionarea datelor (§1.5), Termeni și Politică, DPA-uri, cheia
-  CARTO, tăierea bugetului de citiri la 40.
+- **Săptămâna 3:** oprirea completă a integrării Tesla (§2) — flag stins, gaura din
+  nav-probe închisă, degradare onestă pentru mașina deja conectată; apoi
+  gestionarea datelor (§1.5), Termeni și Politică, DPA-uri, cheia CARTO.
 - **Săptămâna 4:** cele două abonamente în Stripe, granițele în `subscription.ts`,
   chei live. **Vandabil aici.**
 - **În paralel, tot timpul:** aplicația la zece proprietari, gratis. Nu întârzie
   nimic, pentru că oricum se așteaptă PFA-ul. Și acum pot fi proprietari de orice
   marcă — produsul plătit nu mai cere Tesla.
 
-Secțiunea 1 e **~11–12 zile de lucru**. Peste ea vin legalul și împachetarea —
-zile puține, calendar mult, pentru că PFA-ul se așteaptă.
+Secțiunea 1 e **~12–13 zile de lucru**, plus **~1–2 zile** pentru oprirea
+integrării Tesla. Peste ele vin legalul și împachetarea — zile puține, calendar
+mult, pentru că PFA-ul se așteaptă.
 
 ## 6. Ce nu e în această specificație
 
