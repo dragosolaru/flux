@@ -1,4 +1,4 @@
-# Monetizare — trei pachete, iar cel plătit nu depinde de Tesla
+# Monetizare — două abonamente, și niciunul nu depinde de mașină
 
 **Data:** 2026-09-02
 **Stare:** design aprobat, neimplementat
@@ -16,11 +16,12 @@ gratuită Tesla, logarea cu TeslaMate care e gratis, supravegherea cu Tessie, ca
 are ~400.000 de utilizatori. Notele au fost, pe rând: construit 7 / apărabil 2,
 5 / 3, 5 / 2, 1 / 2.
 
-Structura de pachete de mai jos rezolvă asta altfel decât prin alegerea unei
-direcții: **aliniază prețul cu costul marginal.** Fiecare tier costă exact atât
-cât consumă, iar tierul care aduce banii nu consumă aproape nimic.
+Concluzia acestei specificații e mai radicală decât alegerea unei direcții:
+**produsul plătit nu atinge deloc mașina.** Se vând documentele și costurile.
+Conexiunea la mașină rămâne în aplicație, dar iese din drumul comercial până când
+va merita reluată.
 
-### Costurile care dictează structura
+### De ce, în cifre
 
 Tarifele Tesla, derivate din studiile de caz de pe pagina lor de facturare și
 verificate pe toate cele trei totaluri publicate (`docs/SCALING-AND-COSTS.md`):
@@ -31,21 +32,20 @@ de partener.
 | --- | --- |
 | Interogări în PostGIS-ul nostru (hartă, stații, rutare) | **~0** |
 | OCR, ~20 de documente | **~$0,30** |
-| O citire Tesla pe zi | **$0,06** |
 | Dashboard live, poll la 30 s, o oră pe zi | **$7,20** |
-| Plafonul de 200 citiri/zi | **$12,00** |
 
-Un singur rând din tabel e periculos, și e cel al mașinii în timp real — adică
-exact suprafața pe care analizele au găsit-o cel mai puțin apărabilă. Restul e
-neglijabil.
+Un singur rând e periculos, și e cel al mașinii — adică exact suprafața pe care
+analizele au găsit-o cel mai puțin apărabilă. Scoțând-o din produsul plătit,
+costul marginal devine **aproape plat**, iar marja crește cu fiecare utilizator
+în loc să rămână blocată la ~22%.
 
 ---
 
 ## 1. OCR și procesare — corectitudine, funcționare, date
 
-Prima secțiune pentru că e prima condiție, și cu atât mai mult acum: cu Pro
-construit exclusiv pe documente, **pipeline-ul de OCR nu mai e o componentă a
-produsului, este produsul.** Dacă extragerea greșește, nu avem nimic de vândut.
+Prima secțiune pentru că e prima condiție, și cu atât mai mult acum: cu produsul
+plătit construit exclusiv pe documente, **pipeline-ul de OCR nu mai e o componentă
+a produsului, este produsul.** Dacă extragerea greșește, nu avem nimic de vândut.
 
 ### 1.1 Ce știm azi, și ce doar presupunem
 
@@ -67,10 +67,10 @@ ale autorului. E o presupunere, nu o măsurătoare.
 ### 1.2 Corectitudinea extragerii
 
 **Un corpus golden.** Zece până la cincisprezece documente reale, anonimizate,
-comise în repo: două facturi de energie de la furnizori diferiți, o bonificație
-de la o stație publică, un RCA, un CASCO, un ITP, o rovinietă, o factură de
-leasing, o factură de service, plus două cazuri urâte — un scan strâmb și o poză
-făcută cu telefonul.
+comise în repo: două facturi de energie de la furnizori diferiți, o bonificație de
+la o stație publică, un RCA, un CASCO, un ITP, o rovinietă, o factură de leasing,
+o factură de service, plus două cazuri urâte — un scan strâmb și o poză făcută cu
+telefonul.
 
 Plus, odată cu §1.3, **două poze de ecran de mașină** — una cu kilometrajul, una
 cu ecranul de consum — fotografiate cum le face un om: din scaunul șoferului, cu
@@ -95,34 +95,33 @@ calcule.
 
 ### 1.3 Kilometrii și consumul, fără să atingem mașina
 
-Nou, și e ce salvează promisiunea originală fără nicio interogare Tesla. Azi nu
-există niciun câmp de rulaj nicăieri — nici în `AddVehicleModal`, nici în
+Azi nu există niciun câmp de rulaj nicăieri — nici în `AddVehicleModal`, nici în
 `ParsedDocument`, nici în prompturi.
 
-**Trei surse, un singur tabel.** `odometer_readings` — `vehicle_id`, `km`,
+**Patru surse, un singur tabel.** `odometer_readings` — `vehicle_id`, `km`,
 `recorded_at`, `source`, `confidence`:
 
 1. **La adăugarea mașinii**, în `AddVehicleModal`, care există deja și e locul
    firesc. Opțional, cu motivul scris lângă câmp. Obligatoriu la înscriere ar
    însemna fricțiune înainte ca omul să fi văzut vreo valoare.
-2. **Din documente**, automat — ITP-ul consemnează rulajul, facturile de service
-   aproape întotdeauna. Zero efort din partea utilizatorului, dar ritm anual.
-3. **Din poza ecranului mașinii** — tip nou de document, aceeași conductă de OCR.
-   Ritm lunar, cât vrea omul.
+2. **Introducere manuală, oricând** — un câmp la îndemână în ecranul de costuri,
+   pentru când nu ai poza la tine. E cea mai simplă cale și trebuie să fie la fel
+   de vizibilă ca poza, nu ascunsă ca alternativă de rezervă.
+3. **Din documente**, automat — ITP-ul consemnează rulajul, facturile de service
+   aproape întotdeauna. Zero efort, dar ritm anual.
+4. **Din poza ecranului mașinii** — tip nou de document, aceeași conductă de OCR.
 
 Distanța dintre două citiri dă kilometrii; kilometrii dau **cost/km și economia
 față de benzină**.
 
 **Tabel separat, nu `vehicle_snapshots`.** Tentația e să scriem în tabelul care
-există, iar derivarea ar merge nemodificată. Dar ar amesteca citiri manuale cu
-telemetrie într-un tabel fără marcaj de sursă — exact ambiguitatea din care s-au
-născut C1–C5.
+există. Dar ar amesteca citiri manuale cu telemetrie într-un tabel fără marcaj de
+sursă — exact ambiguitatea din care s-au născut C1–C5.
 
 **Al doilea tip de poză: ecranul de consum.** Ecranul de energie al Tesla arată,
 într-o singură imagine, distanța, energia consumată și Wh/km — de pildă
-*181,3 Wh/km, 488,0 kWh, 2.692 km*. Asta e eficiență reală, măsurată de mașină,
-obținută fără niciun apel de API. Este singurul mod în care Pro poate vorbi despre
-consum.
+*181,3 Wh/km, 488,0 kWh, 2.692 km*. Eficiență reală, măsurată de mașină, fără
+niciun apel de API.
 
 **Validarea, care e partea nouă.** O eroare de OCR cu un ordin de mărime —
 79.449 citit ca 7.944 — nu e o imprecizie, ci strică toate cifrele de cost/km în
@@ -133,32 +132,34 @@ tăcere, și arată plauzibil. Conducta actuală nu are cum să o prindă. Odome
 - **crește într-un ritm plauzibil** — peste ~1.000 km/zi de la ultima citire e
   aproape sigur o greșeală de citire, nu un drum.
 
-Cele două prind practic orice eroare de o cifră. Peste ele rămâne pragul de
-încredere existent, care cere confirmarea numărului înainte să intre în calcule.
+Cele două prind practic orice eroare de o cifră, **și se aplică identic
+introducerii manuale**, unde o cifră în plus la tastat e la fel de probabilă.
 
-Ce **nu** obținem așa: split casă/public. Acela cere sesiuni de încărcare și
-rămâne exclusiv în Live.
-
-Efort: **~3–4 zile** pentru ambele tipuri de poză, tabel, validare și teste.
+Efort: **~3–4 zile** pentru cele patru surse, tabel, validare și teste.
 
 ### 1.4 Corectitudinea aritmeticii
 
-Șapte defecte cunoscute. Structura de pachete le împarte, și patru pleacă din
+Șapte defecte cunoscute. Patru dintre ele sunt despre atribuirea facturii casei
+către sesiuni de încărcare — care nu mai există în produsul plătit — deci ies din
 drumul critic:
 
-| Defect | Tier |
+| Defect | Stare |
 | --- | --- |
-| Înțelesul unic al lui `energy_costs.cost_ron` | **Pro** (mai simplu fără atribuire) |
-| Ziua pierdută la marginea perioadei (`.lte` la miezul nopții UTC) | **Pro** |
-| Cipul de economie și cipurile de cost/km folosesc baze diferite | **Pro** |
-| `costPerKmHome` împarte costul de acasă la kilometrii totali | **Pro** |
-| `attribution.ts` citește `network IS NULL` ca „încărcat acasă" | **Live** |
-| Ramura fără sesiuni atribuie mașinii toată factura casei | **Live** |
-| Înmulțirea dublă cu fracția de atribuire | **Live** |
+| Înțelesul unic al lui `energy_costs.cost_ron` | **De reparat** |
+| Ziua pierdută la marginea perioadei (`.lte` la miezul nopții UTC) | **De reparat** |
+| Cipul de economie și cipurile de cost/km folosesc baze diferite | **De reparat** |
+| `costPerKmHome` împarte costul de acasă la kilometrii totali | **De reparat** |
+| `attribution.ts` citește `network IS NULL` ca „încărcat acasă" | Amânat cu mașina |
+| Ramura fără sesiuni atribuie mașinii toată factura casei | Amânat cu mașina |
+| Înmulțirea dublă cu fracția de atribuire | Amânat cu mașina |
 
 Prima rămâne prima: până nu se decide dacă `cost_ron` e costul total al facturii
 sau partea atribuită mașinii, orice reparație e un petic peste aceeași
 ambiguitate. Rândurile deja salvate au nevoie de migrație.
+
+Cele trei amânate **nu se șterg** — rămân în `docs/OPERATIONS.md` §6, pentru că
+codul lor rulează în continuare pentru mașinile deja conectate. Doar nu mai
+blochează lansarea.
 
 **Teste golden pe aritmetică.** O factură, un set de documente, un rezultat
 așteptat, calculat de mână. Azi nu există niciunul.
@@ -172,19 +173,18 @@ trimise către un model găzduit în Statele Unite.
 Înainte ca un plătitor să încarce primul document:
 
 - **DPA cu Anthropic** acceptat, și Anthropic listat ca sub-procesator în nota de
-  confidențialitate, alături de Vercel, Supabase, Upstash, Stripe, Resend, Twilio
-  și Hetzner.
+  confidențialitate, alături de Vercel, Supabase, Upstash, Stripe, Resend și
+  Twilio.
 - **Temeiul legal, scris.** Executarea contractului pentru serviciu.
 - **O politică de retenție.** Azi fișierele rămân la nesfârșit. Ștergerea contului
   le șterge (`/api/user/delete` curăță și storage-ul), deci Art. 17 e acoperit
   mecanic. Propunerea: **cât timp contul e activ, plus 12 luni** — suficient cât
-  să acopere un an fiscal după plecare, și scris în nota de confidențialitate.
-  Implementat ca job de curățare, nu doar promis în text.
+  să acopere un an fiscal după plecare. Implementat ca job de curățare, nu doar
+  promis în text.
 - **Ștergerea unui singur document** din interfață, nu doar a contului întreg.
-- **Registrul de prelucrări (Art. 30)** — excepția sub 250 de angajați nu se
-  aplică, prelucrarea fiind sistematică.
-- **DPIA** — devine necesar doar odată cu Live, care introduce monitorizarea
-  poziției vehiculului. Pro, fără date de locație, nu îl declanșează.
+- **Registrul de prelucrări (Art. 30)**.
+- **Fără DPIA.** Era necesar pentru monitorizarea poziției vehiculului; fără
+  mașină în produs, nu se declanșează. Revine odată cu ea.
 
 ### 1.6 Cum știm că am reușit
 
@@ -196,78 +196,91 @@ trimise către un model găzduit în Statele Unite.
 
 ---
 
-## 2. Pachetele
+## 2. Cele două abonamente
 
 ### Free — „vezi unde încarci"
 
-Hartă, planificator, stații, plus **3 documente pe lună, de orice tip** — un
-singur contor, nu cele două de azi (5 energie + 10 auto). Un contor unic e mai
-ușor de înțeles și de comunicat decât două plafoane care se epuizează separat.
+Hartă, planificator, stații, o mașină, plus **3 documente pe lună, de orice tip** —
+un singur contor, nu cele două de azi (5 energie + 10 auto). Un contor unic e mai
+ușor de înțeles decât două plafoane care se epuizează separat.
 
 Cost marginal **zero**: sunt interogări în PostGIS-ul nostru. Poate rămâne gratis
 la nesfârșit, și e singurul canal de achiziție pe care îl avem.
 
 ### Pro — €4,99 — „toate costurile mașinii tale, din hârtiile tale"
 
-Documente nelimitate, clasificare, termene cu memento (RCA, ITP, rovinietă, taxă),
-total lunar și anual, defalcare pe categorii, mai multe valute cu curs BNR,
-cost/km din odometru, economie față de benzină, consumul din ecranul mașinii
-(Wh/km), export CSV.
+Până la **două mașini**, **50 de documente pe lună**, clasificare, termene cu
+memento (RCA, ITP, rovinietă, taxă), total lunar și anual, defalcare pe categorii,
+mai multe valute cu curs BNR, cost/km din odometru, economie față de benzină,
+consumul din ecranul mașinii, export CSV.
 
-**Zero interogări Tesla.** Cost marginal ~$0,30, marjă peste 90%.
+**Cincizeci, nu „nelimitat".** Un utilizator normal încarcă două-cinci pe lună,
+deci cincizeci e generos până la invizibil. Dar „nelimitat" nu acoperă niciodată un
+cost — la $0,015 documentul, un plafon declarat ține cel mai rău caz la $0,75, iar
+un plafon nedeclarat nu ține nimic. E aceeași regulă pe care am aplicat-o
+citirilor Tesla.
 
-Consecința strategică, și e cea mai importantă din tot documentul: **tierul care
-aduce banii nu depinde de Tesla.** Fără cont de partener, fără facturare per
-cerere, fără riscul ca limita de facturare să dezactiveze aplicația, fără
-împerecherea cheii virtuale. Și **funcționează pentru orice marcă** — RCA, ITP și
-rovinieta sunt ale oricui, nu doar ale celor ~12.000 de Tesla din România. Piața nu
-mai e limitată la parcul Tesla.
+**Economia, la €4,99:**
 
-### Live — €14,99 — „vezi și comanzi mașina"
+| | |
+| --- | --- |
+| OCR, în cel mai rău caz (50 documente) | $0,75 |
+| Stripe | €0,36 |
+| Infrastructură fixă (Vercel Pro + Supabase Pro), la 100 de abonați | €0,42 |
+| **Total, cel mai rău caz** | **~€1,45** |
+| **Marjă** | **~70%**, și crește cu fiecare abonat |
 
-Conectezi Tesla și costurile se completează singure: sesiuni de încărcare, split
-casă/public, consum real. Plus dashboard în timp real, comenzi, notificări.
+Pragul de rentabilitate e pe la **zece abonați** — nu pentru că prețul e mare, ci
+pentru că nu mai există un cost per cerere care să crească odată cu ei.
 
-Plafon **200 citiri/zi**, adică **$12/lună** în cel mai rău caz. Prețul stă
-deasupra plafonului **prin construcție**, nu prin speranță — „nelimitat" nu acoperă
-niciodată costurile; un plafon plus un preț peste el, da.
+### Ce nu se vinde: mașina
 
-**Poziție asumată:** pe Live concurăm frontal cu Tessie, la $6,99, cu 400.000 de
-utilizatori, și **vom pierde comparația de preț.** Live nu există ca să câștige
-piața. Există ca să-și acopere costul și ca cine chiar vrea liveness să-l poată
-cumpăra fără să fie subvenționat din Pro.
+Conexiunea Tesla rămâne în aplicație pentru cine o are deja. Nu e promisă, nu e
+vândută și nu apare în pagina de preț.
 
-### Upsell-ul
+Dar rămâne costisitoare, iar asta cere o măsură: **`DAILY_READ_BUDGET` scade de la
+200 la 40.** Fără venit în spate, un dashboard lăsat deschis o oră costă $0,24 din
+buzunarul nostru; plafonul nou ține cel mai rău caz la ~$2,40 pe lună și pe mașină.
+Cronul zilnic rămâne — costă $0,06 pe lună și ține istoricul continuu.
 
-**Pro îți spune cât ai cheltuit dacă îi dai hârtiile. Live îi spune singur.**
+Motivul deciziei, scris ca să nu se piardă: integrarea nu e la un nivel care să
+justifice un preț, iar analizele au arătat că nici la un nivel bun nu ar fi
+apărabilă. Se reia când avem un motiv, nu un calendar.
+
+### Diferențierea de mai târziu
+
+Axa naturală, când va fi nevoie, e **numărul de mașini** pentru care ținem
+costurile — o gospodărie cu două mașini, un om cu trei. Nu are nicio legătură cu
+Tesla, costul ei scalează cu documentele, și nu cere nimic din ce am amânat aici.
+Nu se construiește acum.
 
 ## 3. Ce scoatem din texte
 
-În toate cele cinci limbi, pentru că nu sunt adevărate — sau nu sunt adevărate în
-tierul unde apar:
+În toate cele cinci limbi, pentru că nu sunt adevărate:
 
 - **costul pe sesiune de încărcare** — nu poate fi produs la rezoluția la care
-  citim mașina, nici în Live;
+  citim mașina;
 - **disponibilitatea în timp real a prizelor** — e derivată din simulator, nu
   dintr-un flux de operator;
 - **preconditionarea către chargere non-Tesla** — nicio comandă din Fleet API nu o
   poate porni, iar Tesla o face singură din software 2025.2;
-- **split casă/public** dispare din orice text care descrie Pro — cere sesiuni de
-  încărcare, deci e exclusiv Live.
+- **split casă/public** — cere sesiuni de încărcare, deci pleacă odată cu mașina;
+- **orice promisiune despre mașină din pagina de preț.**
 
-Iar consumul, în Pro, se descrie cu sursa lui: **„consumul tău, din ecranul
-mașinii tale"**, niciodată „consum real, automat". Diferența nu e cosmetică — una
-e adevărată dacă omul trimite poza, cealaltă promite ceva ce Pro nu face.
+Iar consumul se descrie cu sursa lui: **„consumul tău, din ecranul mașinii tale"**,
+niciodată „consum real, automat". Diferența nu e cosmetică — una e adevărată când
+sosește poza, cealaltă promite ceva ce nu facem.
 
 Regula din care decurg toate: *o afirmație care își supraviețuiește adevărului e
 mai rea decât nicio afirmație.*
 
 ## 4. Ce blochează încasarea
 
-Structura de pachete schimbă și asta: **Pro poate fi lansat fără să atingem
-integrarea Tesla.**
+Scoaterea mașinii din produs scoate și patru blocaje din drum: proxy-ul releu,
+metoda de plată și limita de facturare la Tesla, URL-ul de confidențialitate în
+aplicația developer, și DPIA. Toate revin odată cu mașina.
 
-**Pentru Free și Pro:**
+Rămân:
 
 1. **PFA** — 1–2 săptămâni, ~€100–200. Ca persoană fizică nu poți deschide Stripe
    live în România. Cea mai lungă așteptare, nu depinde de cod.
@@ -279,60 +292,39 @@ integrarea Tesla.**
 6. Chei Stripe live + configurarea taxelor.
 7. **Cheia CARTO** — altfel fiecare hartă din Free are filigran `API KEY REQUIRED`.
 
-**În plus, doar pentru Live:**
-
-8. **Proxy-ul releu deschis (T10)** — o jumătate de zi. Nu conectăm mașina nimănui
-   cât cheia noastră privată semnează pentru străini.
-9. **Metodă de plată și limită de facturare la Tesla.** Limita pornește de la 0, iar
-   o aplicație peste limită — sau fără card configurat — este **dezactivată**, nu
-   încetinită. Singurul avertisment e un email la 80%.
-10. URL-ul de confidențialitate în aplicația Tesla developer.
-11. **DPIA**, pentru monitorizarea poziției vehiculului.
-
 ## 5. Ordinea
 
 - **Azi:** se depune PFA-ul.
 - **Săptămânile 1–2, cât se procesează:** corpusul golden și testele de extragere
-  (§1.2); kilometrii și consumul din poze și documente (§1.3); înțelesul unic al
-  lui `cost_ron` și cele patru reparații de Pro (§1.4).
+  (§1.2); kilometrii și consumul din cele patru surse (§1.3); înțelesul unic al lui
+  `cost_ron` și cele patru reparații rămase (§1.4).
 - **Săptămâna 3:** gestionarea datelor (§1.5), Termeni și Politică, DPA-uri, cheia
-  CARTO.
-- **Săptămâna 4:** cele trei pachete în Stripe, granițele în `subscription.ts`,
-  chei live. **Free și Pro sunt vandabile aici.**
-- **După:** T10, limita de facturare Tesla, DPIA, cele trei reparații de atribuire
-  — și abia atunci Live.
+  CARTO, tăierea bugetului de citiri la 40.
+- **Săptămâna 4:** cele două abonamente în Stripe, granițele în `subscription.ts`,
+  chei live. **Vandabil aici.**
 - **În paralel, tot timpul:** aplicația la zece proprietari, gratis. Nu întârzie
   nimic, pentru că oricum se așteaptă PFA-ul. Și acum pot fi proprietari de orice
-  marcă, nu doar de Tesla.
+  marcă — produsul plătit nu mai cere Tesla.
 
-Cifra de **~11–12 zile de lucru** se referă la secțiunea 1: corpusul golden, cele
-3–4 zile de kilometri și consum din poze, și cele patru reparații de aritmetică
-rămase în Pro. Era ~14 pentru varianta cu mașina conectată; patru dintre cele
-șapte defecte au plecat pe Live, iar pozele au adăugat la loc o parte din
-economie. Peste ea vin legalul și împachetarea — zile puține, calendar mult,
-pentru că PFA-ul se așteaptă.
+Secțiunea 1 e **~11–12 zile de lucru**. Peste ea vin legalul și împachetarea —
+zile puține, calendar mult, pentru că PFA-ul se așteaptă.
 
 ## 6. Ce nu e în această specificație
 
 - Modul de lansare și marketingul — specificație separată.
-- Fleet Telemetry. Ar rezolva rezoluția sesiunilor pentru Live, dar cere un
-  receptor mTLS pe alt host și mutarea de pe Vercel, care **desperechează fiecare
-  mașină deja conectată**. În plus, depășirea limitei de facturare Tesla **șterge
-  definitiv configurațiile de streaming**, iar Tesla nu le restaurează. Rămâne
-  poarta 3.
+- **Tot ce ține de mașină ca produs plătit.** Dashboard live, comenzi, notificări,
+  sesiuni de încărcare, split casă/public. Codul rămâne, promisiunea nu.
+- Fleet Telemetry. Rămâne poarta 3, și acum e o poartă fără dată.
 - Mașina de firmă și decontul. Analizate și respinse: în România se vând foi de
   parcurs conforme ANAF, cu hardware inclus, la €3,10–4,50 per vehicul.
-- Suport pentru alte mărci în Free și Live. Pro funcționează deja pentru orice
-  marcă pentru că nu atinge mașina; harta și comenzile sunt altă discuție.
+- Tierul pe număr de mașini. Descris în §2 ca direcție, nu construit.
 
 ## 7. Riscul pe care îl acceptăm conștient
 
 Nimeni nu a fost întrebat dacă plătește. `docs/USER-RESEARCH-2026-06-11.md`
 conține persoane simulate, scrise de un model — o spune chiar documentul. Toată
-analiza din spatele acestei specificații este dovadă despre produsele altora: că
-Tessie are 400.000 de utilizatori, că TeslaFi și-a crescut prețul fără să se
-prăbușească, că EEVEE vinde reconcilierea la $9. Niciuna nu e dovadă despre *acest*
-produs.
+analiza din spatele acestei specificații este dovadă despre produsele altora.
+Niciuna nu e dovadă despre *acest* produs.
 
 Cei zece utilizatori din §5 sunt singura linie din tot planul care produce o astfel
 de dovadă. De asta rulează în paralel și nu la sfârșit.
