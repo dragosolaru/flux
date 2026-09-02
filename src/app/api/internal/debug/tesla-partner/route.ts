@@ -10,6 +10,7 @@ import {
   teslaProxyBaseUrl,
 } from "@/lib/tesla/constants";
 import { recordDebugLog } from "@/lib/debug-log";
+import { isLiveEnabled } from "@/lib/live-integrations";
 
 // Registers the Tesla partner account, and reports whether it is registered.
 //
@@ -230,6 +231,13 @@ async function partnerToken(audience: string): Promise<
 export async function POST(req: Request) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  // Reaches Tesla, so it answers to LIVE_INTEGRATIONS like every other path
+  // that does. fleet_status is a billable request; being admin-only made this
+  // feel exempt, and the owner is exactly the person whose car is linked.
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "live-disabled" }, { status: 503 });
+  }
 
   if (!(await checkRateLimit(admin.userId, "debug-tesla-partner", 20))) {
     return NextResponse.json({ message: "Rate limit exceeded" }, { status: 429 });

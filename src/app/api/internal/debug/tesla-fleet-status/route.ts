@@ -7,6 +7,7 @@ import type { TeslaRegion } from "@/types/tesla";
 import { getValidAccessToken, TeslaAuthError } from "@/lib/tesla/tokens";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { recordDebugLog } from "@/lib/debug-log";
+import { isLiveEnabled } from "@/lib/live-integrations";
 
 // Asks Tesla whether the car is paired with OUR key.
 //
@@ -44,6 +45,13 @@ interface FleetStatusResponse {
 export async function POST() {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  // Reaches Tesla, so it answers to LIVE_INTEGRATIONS like every other path
+  // that does. fleet_status is a billable request; being admin-only made this
+  // feel exempt, and the owner is exactly the person whose car is linked.
+  if (!isLiveEnabled("tesla")) {
+    return NextResponse.json({ message: "live-disabled" }, { status: 503 });
+  }
 
   if (!(await checkRateLimit(admin.userId, "debug-fleet-status", 20))) {
     return NextResponse.json({ message: "Rate limit exceeded" }, { status: 429 });

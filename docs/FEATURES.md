@@ -1431,10 +1431,20 @@ the state and both routes check it **before** the live branch: state answers fro
 refuse with `LIVE_PAUSED`. A simulator now only ever answers for a vehicle that
 was created as one.
 
-**The one ungated path.** `/api/debug/nav-probe` checked `data_source` and not
-the flag, so with the integration off it would still have sent a signed command
-and been billed for it — one endpoint away from making "no queries, no costs"
-false. It checks `isLiveEnabled` now.
+**The ungated paths — three, not one.** `/api/debug/nav-probe` checked
+`data_source` and not the flag. Then the live diagnostics turned up two more:
+`/api/internal/debug/tesla-fleet-status` and `/api/internal/debug/tesla-partner`
+call Tesla and checked nothing at all. Being admin-only made them feel exempt,
+but the admin is the person whose car is linked and `fleet_status` is billed like
+any other request. All three check `isLiveEnabled` now.
+
+**And the list is derived, not written.** The first sweep test listed routes by
+hand, from a grep for four function names — which is exactly why it missed those
+two, and exactly how `LAUNCH-CHECKLIST.md` came to describe a repo that no longer
+existed. The test now walks the route tree, finds every `route.ts` importing from
+`@/lib/tesla/`, and requires the flag, with a small allowlist naming *why* each
+exempt route reaches no network. A new Tesla-touching route is caught the day it
+is added.
 
 **What the driver sees.** A linked car returns its last stored reading with
 `linkPaused: true`, and the dashboard's "last seen" chip becomes **"Legătură
