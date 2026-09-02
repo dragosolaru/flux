@@ -58,10 +58,26 @@ export const READ_CACHE_MS = 30_000;
 /**
  * Reads per vehicle per day.
  *
- * Tesla's own figure is reported as a few hundred; 200 leaves room underneath it
- * rather than racing it. The ceiling exists to make the failure legible: without
- * one, the app simply starts getting 429s from Tesla and every screen breaks at
- * once with no explanation.
+ * **This is a cost ceiling, not a quota ceiling, and it used to say otherwise.**
+ * The comment here claimed Tesla's own limit was "a few hundred reads per
+ * vehicle per day" and that without a ceiling the app would start collecting
+ * 429s. Neither is true. Tesla publishes no daily cap at all; the published
+ * rate limits are per minute, per device, per account — 60 realtime-data
+ * requests, 30 commands, 3 wakes — and at a 30-second poll one screen uses two
+ * of the sixty. Rate limiting was never the risk.
+ *
+ * The real risk is the invoice. Fleet API is pay-per-use: a data request costs
+ * $0.002, a command $0.001, a wake $0.02, against a $10 monthly credit. So this
+ * ceiling is worth **$12 per vehicle per month** — more than the subscription
+ * it is meant to fit inside. It is not a safety margin under someone else's
+ * limit; it is the largest bill we are willing to be handed for one car.
+ *
+ * Sharper still: **Tesla bills every response below HTTP 500.** A read of a
+ * sleeping car answers 408 and is charged in full, so the calls that return
+ * nothing cost exactly as much as the ones that work.
+ *
+ * Rates and limits: developer.tesla.com/docs/fleet-api/billing-and-limits,
+ * read 2026-09-02. See docs/SCALING-AND-COSTS.md for the arithmetic.
  */
 export const DAILY_READ_BUDGET = 200;
 

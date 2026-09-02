@@ -199,11 +199,21 @@ pragul vine mai devreme și marja se așază pe la ~40–45% peste o sută de ab
 Marja nu crește mult mai mult niciodată: taxa Tesla per citire e un cost liniar
 pe care scara nu îl diluează.
 
-**Condiție înainte de a fixa cifra:** toată aritmetica de mai sus stă pe o
-estimare a consumului. Numărul real există deja, în contoarele `teslaCalls` din
-Redis, vizibile în `/debug`. Se citește întâi. Dacă utilizarea reală e sub
-estimare, €4,99 redevine apărabil și rămâne acolo — decizia se ia pe cifra
-măsurată, nu pe cea presupusă.
+**Tarifele Tesla sunt acum confirmate**, nu estimate: $0,002 pe citire, $0,001
+pe comandă, $0,02 pe trezire, $10 credit lunar per cont de partener — derivate
+din studiile de caz de pe pagina de facturare a Tesla și verificate pe toate
+cele trei totaluri publicate. Detaliul în `docs/SCALING-AND-COSTS.md`.
+
+Ce **nu** e încă măsurat e consumul nostru real. Contoarele `teslaCalls` din
+Redis, vizibile în `/debug`, îl au. Se citește înainte de a fixa prețul; dacă
+utilizarea reală e sub estimarea de ~41 de citiri/zi, €4,99 redevine apărabil.
+
+**Două condiții care nu sunt de preț, ci de existență** (detaliu în
+`OPERATIONS.md` §6): limita de facturare Tesla pornește de la 0, iar o aplicație
+peste limită — sau fără metodă de plată configurată — este **dezactivată**, nu
+încetinită. Trebuie puse card și limită deliberată înainte să conectăm mașina
+altcuiva. Și depășirea limitei **șterge definitiv configurațiile Fleet
+Telemetry**; Tesla nu le restaurează.
 
 ## 5. Ce scoatem din texte
 

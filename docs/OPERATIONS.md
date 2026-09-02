@@ -102,10 +102,22 @@ both are worth knowing as failure *shapes* rather than as incidents:
 Not uptime. These are the numbers that get you throttled or billed, and none of
 them is visible without looking.
 
-**Tesla `vehicle_data`: reportedly a few hundred reads per vehicle per day.**
-The whole polling policy exists for this (`pollInterval()`, FEATURES §25). The
-dashboard polls at 30s with a ten-minute idle cut-off — about twenty reads per
-visit. Fifteen visits is the day's budget.
+**Tesla `vehicle_data`: there is no daily limit — there is an invoice.**
+This entry used to say "reportedly a few hundred reads per vehicle per day",
+which was wrong and pointed the whole policy at the wrong risk. Tesla's
+published rate limits are **per minute, per device**: 60 realtime-data
+requests, 30 commands, 3 wakes. At a 30-second poll one open screen uses two of
+the sixty, so rate limiting was never going to bite.
+
+What bites is pay-per-use billing: **$0.002 a data request, $0.001 a command,
+$0.02 a wake**, against a **$10 monthly credit per partner account**. The
+dashboard polls at 30s with a ten-minute idle cut-off — about twenty reads a
+visit, **$0.04**. An hour with a screen left open is **$0.24**. The credit is
+5,000 data requests, so roughly **four active users** fit inside it.
+
+And **every response below HTTP 500 is billable**, so a read of a sleeping car
+answers 408 and is charged in full. The calls that return nothing cost the same
+as the ones that work.
 → **Enforced at the boundary since Aug 29.** `src/lib/tesla/budget.ts`: every
 call into Tesla declares a `CallReason`, a reading is shared for 30s, and there
 is a ceiling of 200 reads per vehicle per day. Automatic traffic is refused over
@@ -220,11 +232,24 @@ none.
   single meaning of these fields, or it becomes the fifth thing patching around
   the same ambiguity. **Add it to C1–C5; it is the same defect family.**
 - **A user at the read cap costs more than the subscription.**
-  `DAILY_READ_BUDGET = 200` was chosen against Tesla's *rate limit*, never
-  against its *bill*. At Tesla's per-request pricing that ceiling is roughly
-  €12/month of API charges on a €4.99 plan, and nothing caps cost as opposed to
-  quota. The §4 alert on reads-per-vehicle-per-day is therefore a **billing**
-  control, not only a quota one — and it is still unbuilt.
+  `DAILY_READ_BUDGET = 200` was chosen against a rate limit that does not exist
+  (§3). At Tesla's published $0.002 a request that ceiling is **$12/month per
+  vehicle** on a €4.99 plan, and nothing caps cost as opposed to count. The §4
+  alert on reads-per-vehicle-per-day is a **billing** control, not a quota one —
+  and it is still unbuilt.
+- **The Tesla billing limit defaults to 0, and past it the app is disabled.**
+  Not throttled — disabled. Tesla auto-disables applications that exceed their
+  billing limit *or have no payment method configured*, and the limit starts at
+  zero until a card is added. So the first month real usage exceeds the $10
+  credit, the API stops for every user at once. A payment method and a
+  deliberate limit must be set **before** anyone else's car is connected, and
+  the 80%-of-limit email is the only warning.
+- **Blowing the billing limit deletes Fleet Telemetry configuration
+  permanently.** Tesla's own words: streaming configurations are removed and
+  *will not be restored*. Re-enabling billing does not bring them back — every
+  vehicle must be reconfigured. This is a landmine under the one direction all
+  five analyses pointed at, and it is worth knowing before the receiver is
+  built, not after.
 - **Email verification is unreachable** without `RESEND_API_KEY`, which locks
   document recovery for every non-admin user.
 

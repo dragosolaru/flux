@@ -29,13 +29,65 @@ That distinction is the whole game:
 Ten cars whose owners never open the app cost almost nothing. **One car with a
 dashboard left open all day costs more than all ten.**
 
-### Where the numbers actually are
+### The numbers — read from Tesla, 2026-09-02
 
-I am not going to quote you Tesla's price list from memory — it has changed
-since Fleet API billing was introduced and I would be guessing. Read it from the
-source: **developer portal → your app → usage/billing**. What matters is that
-you look at *requests per month*, not at car count, and that the free allowance
-is per partner account.
+This section used to refuse to quote a price list, on the grounds that quoting
+one from memory is guessing. That was right, and it is now unnecessary: the
+rates below come from Tesla's own billing page.
+
+| Category | Rate |
+| --- | --- |
+| Device data (`vehicle_data`) | **$0.002** per request |
+| Command | **$0.001** per request |
+| Wake | **$0.020** per request |
+| Streaming signal (Fleet Telemetry) | **$0.00000667** per signal ($0.00667 per 1,000) |
+| Free credit | **$10 per month, per partner account** |
+
+Tesla does not publish these as a table. They are solved from the two worked
+examples on the billing page, and the solution is exact — it reproduces all
+three of Tesla's own totals to the cent, and independently reproduces the
+published "1,211 commands = $1.21":
+
+```
+Before optimisation: 384 data + 4 commands + 4 wakes                = $0.852
+After optimisation:    0 data + 4 commands + 1 wake + 300 signals   = $0.026
+Fleet study:        ~1,000 signals/hour = $0.00667/h; same via data = $0.12/h
+```
+
+Three equations, four unknowns, and the fleet study pins two of them directly.
+
+**What it costs us, at those rates:**
+
+| | |
+| --- | --- |
+| One hour with a dashboard open (30 s poll) | **$0.24** |
+| One visit, with the 10-minute idle cut-off | **$0.04** |
+| Daily cron, one vehicle, per month | **$0.06** |
+| `DAILY_READ_BUDGET = 200`, per vehicle per month | **$12.00** |
+| What the $10 credit buys | 5,000 data requests ≈ **4 active users** |
+
+**Every response below HTTP 500 is billable.** A read of a sleeping car answers
+408 and is charged in full — the calls that return nothing cost the same as the
+ones that work. That makes Tesla's own first optimisation ("ensure the vehicle
+is online before requesting data") a billing measure, not just a courtesy, and
+it is the same check roadmap T3/T4 needs anyway.
+
+**Rate limits are per minute, per device, per account** — 60 realtime-data
+requests, 30 commands, 3 wakes. There is no daily cap. A 30-second poll uses two
+of the sixty, so nothing we do is near them; `DAILY_READ_BUDGET` protects the
+invoice, not the quota, and its comment said the opposite until today.
+
+**Two things that disable the application, not throttle it:**
+
+- The account's billing limit **defaults to 0** and can only be raised once a
+  payment method exists. Applications over the limit, *or with no payment method
+  at all*, are auto-disabled. Set both before a second person's car is connected.
+- Exceeding the limit **removes every vehicle's Fleet Telemetry configuration,
+  and Tesla does not restore them.** Raising the limit does not undo it; each
+  car must be reconfigured. Worth knowing before building the receiver.
+
+Still true, and still the thing to check: **developer portal → your app →
+usage/billing** is the authority on what you actually spent.
 
 `fleet_status` also returns `discounted_device_data` per VIN, which is Tesla's
 own flag for whether that vehicle's data is billed at the reduced rate. We
