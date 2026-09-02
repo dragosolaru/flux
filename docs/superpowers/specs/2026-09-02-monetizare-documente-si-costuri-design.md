@@ -72,6 +72,10 @@ de la o stație publică, un RCA, un CASCO, un ITP, o rovinietă, o factură de
 leasing, o factură de service, plus două cazuri urâte — un scan strâmb și o poză
 făcută cu telefonul.
 
+Plus, odată cu §1.3, **două poze de ecran de mașină** — una cu kilometrajul, una
+cu ecranul de consum — fotografiate cum le face un om: din scaunul șoferului, cu
+reflexii și în unghi, nu drept și curat.
+
 Pentru fiecare, rezultatul așteptat, scris de mână. Testul compară câmp cu câmp și
 cere ca fiecare câmp care contează să fie **ori corect, ori marcat
 `needs_review`**. Un câmp greșit cu încredere mare este singurul rezultat
@@ -89,21 +93,53 @@ fiecare cod de eroare de la Anthropic ajunge la un mesaj pe care un om îl înț
 Un document sub prag trebuie să ceară confirmarea sumei **înainte** să intre în
 calcule.
 
-### 1.3 Odometrul din documente
+### 1.3 Kilometrii și consumul, fără să atingem mașina
 
-Nou, și e ce salvează promisiunea originală fără nicio interogare Tesla.
+Nou, și e ce salvează promisiunea originală fără nicio interogare Tesla. Azi nu
+există niciun câmp de rulaj nicăieri — nici în `AddVehicleModal`, nici în
+`ParsedDocument`, nici în prompturi.
 
-Rulajul apare pe hârtii: ITP-ul îl consemnează, facturile de service aproape
-întotdeauna. Azi nu îl extragem — nu există niciun câmp de rulaj în prompturi sau
-în `ParsedDocument`.
+**Trei surse, un singur tabel.** `odometer_readings` — `vehicle_id`, `km`,
+`recorded_at`, `source`, `confidence`:
 
-Se adaugă: câmp în prompturile de documente auto, în schema Zod și în
-`ParsedDocument`; stocare cu data documentului; și introducere manuală, pentru
-lunile fără nicio hârtie. Două citiri de odometru la distanță în timp dau
-kilometrii, iar kilometrii dau **cost/km și economia față de benzină** — cele două
-cifre pe care le credeam pierdute odată cu deconectarea mașinii.
+1. **La adăugarea mașinii**, în `AddVehicleModal`, care există deja și e locul
+   firesc. Opțional, cu motivul scris lângă câmp. Obligatoriu la înscriere ar
+   însemna fricțiune înainte ca omul să fi văzut vreo valoare.
+2. **Din documente**, automat — ITP-ul consemnează rulajul, facturile de service
+   aproape întotdeauna. Zero efort din partea utilizatorului, dar ritm anual.
+3. **Din poza ecranului mașinii** — tip nou de document, aceeași conductă de OCR.
+   Ritm lunar, cât vrea omul.
 
-Ce **nu** dau: split casă/public și consum real. Alea rămân în Live.
+Distanța dintre două citiri dă kilometrii; kilometrii dau **cost/km și economia
+față de benzină**.
+
+**Tabel separat, nu `vehicle_snapshots`.** Tentația e să scriem în tabelul care
+există, iar derivarea ar merge nemodificată. Dar ar amesteca citiri manuale cu
+telemetrie într-un tabel fără marcaj de sursă — exact ambiguitatea din care s-au
+născut C1–C5.
+
+**Al doilea tip de poză: ecranul de consum.** Ecranul de energie al Tesla arată,
+într-o singură imagine, distanța, energia consumată și Wh/km — de pildă
+*181,3 Wh/km, 488,0 kWh, 2.692 km*. Asta e eficiență reală, măsurată de mașină,
+obținută fără niciun apel de API. Este singurul mod în care Pro poate vorbi despre
+consum.
+
+**Validarea, care e partea nouă.** O eroare de OCR cu un ordin de mărime —
+79.449 citit ca 7.944 — nu e o imprecizie, ci strică toate cifrele de cost/km în
+tăcere, și arată plauzibil. Conducta actuală nu are cum să o prindă. Odometrul
+însă are două proprietăți pe care o factură nu le are:
+
+- **crește întotdeauna** — o citire sub cea precedentă se respinge;
+- **crește într-un ritm plauzibil** — peste ~1.000 km/zi de la ultima citire e
+  aproape sigur o greșeală de citire, nu un drum.
+
+Cele două prind practic orice eroare de o cifră. Peste ele rămâne pragul de
+încredere existent, care cere confirmarea numărului înainte să intre în calcule.
+
+Ce **nu** obținem așa: split casă/public. Acela cere sesiuni de încărcare și
+rămâne exclusiv în Live.
+
+Efort: **~3–4 zile** pentru ambele tipuri de poză, tabel, validare și teste.
 
 ### 1.4 Corectitudinea aritmeticii
 
@@ -175,7 +211,8 @@ la nesfârșit, și e singurul canal de achiziție pe care îl avem.
 
 Documente nelimitate, clasificare, termene cu memento (RCA, ITP, rovinietă, taxă),
 total lunar și anual, defalcare pe categorii, mai multe valute cu curs BNR,
-cost/km din odometrul citit de pe documente, economie față de benzină, export CSV.
+cost/km din odometru, economie față de benzină, consumul din ecranul mașinii
+(Wh/km), export CSV.
 
 **Zero interogări Tesla.** Cost marginal ~$0,30, marjă peste 90%.
 
@@ -215,7 +252,12 @@ tierul unde apar:
   dintr-un flux de operator;
 - **preconditionarea către chargere non-Tesla** — nicio comandă din Fleet API nu o
   poate porni, iar Tesla o face singură din software 2025.2;
-- **split casă/public și consum real** dispar din orice text care descrie Pro.
+- **split casă/public** dispare din orice text care descrie Pro — cere sesiuni de
+  încărcare, deci e exclusiv Live.
+
+Iar consumul, în Pro, se descrie cu sursa lui: **„consumul tău, din ecranul
+mașinii tale"**, niciodată „consum real, automat". Diferența nu e cosmetică — una
+e adevărată dacă omul trimite poza, cealaltă promite ceva ce Pro nu face.
 
 Regula din care decurg toate: *o afirmație care își supraviețuiește adevărului e
 mai rea decât nicio afirmație.*
@@ -251,8 +293,8 @@ integrarea Tesla.**
 
 - **Azi:** se depune PFA-ul.
 - **Săptămânile 1–2, cât se procesează:** corpusul golden și testele de extragere
-  (§1.2); odometrul din documente (§1.3); înțelesul unic al lui `cost_ron` și cele
-  patru reparații de Pro (§1.4).
+  (§1.2); kilometrii și consumul din poze și documente (§1.3); înțelesul unic al
+  lui `cost_ron` și cele patru reparații de Pro (§1.4).
 - **Săptămâna 3:** gestionarea datelor (§1.5), Termeni și Politică, DPA-uri, cheia
   CARTO.
 - **Săptămâna 4:** cele trei pachete în Stripe, granițele în `subscription.ts`,
@@ -263,10 +305,12 @@ integrarea Tesla.**
   nimic, pentru că oricum se așteaptă PFA-ul. Și acum pot fi proprietari de orice
   marcă, nu doar de Tesla.
 
-Cifra de **~8–9 zile de lucru** se referă la secțiunea 1 — corpusul golden,
-odometrul și cele patru reparații de Pro. Era ~14 înainte; patru dintre cele șapte
-defecte de aritmetică au plecat pe Live. Peste ea vin legalul și împachetarea, care
-sunt zile puține dar calendar mult, pentru că PFA-ul se așteaptă.
+Cifra de **~11–12 zile de lucru** se referă la secțiunea 1: corpusul golden, cele
+3–4 zile de kilometri și consum din poze, și cele patru reparații de aritmetică
+rămase în Pro. Era ~14 pentru varianta cu mașina conectată; patru dintre cele
+șapte defecte au plecat pe Live, iar pozele au adăugat la loc o parte din
+economie. Peste ea vin legalul și împachetarea — zile puține, calendar mult,
+pentru că PFA-ul se așteaptă.
 
 ## 6. Ce nu e în această specificație
 
