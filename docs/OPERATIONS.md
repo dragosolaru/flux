@@ -211,6 +211,20 @@ none.
   NMC and LFP want opposite treatment.
 - **Costs arithmetic (C1–C5)** is wrong in four places and nothing flags it.
   The number the product exists for. Roadmap gate 2.
+- **Derived charging sessions are all counted as home charging.** `attribution.ts`
+  treats `network IS NULL` as "charged at home", and `persist-activity.ts` cannot
+  know the network, so it writes none — which means a Supercharger session
+  inflates the share of the household electricity bill attributed to the car.
+  Introduced with the derivation itself. The fix is a geofence against
+  `profiles.home_lat/home_lng`, but it must not be applied before C1 settles the
+  single meaning of these fields, or it becomes the fifth thing patching around
+  the same ambiguity. **Add it to C1–C5; it is the same defect family.**
+- **A user at the read cap costs more than the subscription.**
+  `DAILY_READ_BUDGET = 200` was chosen against Tesla's *rate limit*, never
+  against its *bill*. At Tesla's per-request pricing that ceiling is roughly
+  €12/month of API charges on a €4.99 plan, and nothing caps cost as opposed to
+  quota. The §4 alert on reads-per-vehicle-per-day is therefore a **billing**
+  control, not only a quota one — and it is still unbuilt.
 - **Email verification is unreachable** without `RESEND_API_KEY`, which locks
   document recovery for every non-admin user.
 

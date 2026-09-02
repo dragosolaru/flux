@@ -90,6 +90,25 @@ describe("trips", () => {
     expect(trips).toEqual([]);
   });
 
+  it("survives the gap the daily cron actually produces", () => {
+    // The background poll runs once a day, so an unattended car's readings
+    // arrive ~24h apart. The span limit was 24h exactly, so ordinary scheduler
+    // jitter dropped the pair — and the whole day's mileage vanished with no
+    // trace. A day of driving must survive both jitter and one missed run.
+    const jittered = deriveActivity(
+      [snap(0, { odometerKm: 1000 }), snap(60 * 24 + 7, { odometerKm: 1062 })],
+      CAPACITY,
+    );
+    expect(jittered.trips).toHaveLength(1);
+    expect(jittered.trips[0]!.distanceKm).toBe(62);
+
+    const missedRun = deriveActivity(
+      [snap(0, { odometerKm: 1000 }), snap(60 * 48, { odometerKm: 1130 })],
+      CAPACITY,
+    );
+    expect(missedRun.trips[0]!.distanceKm).toBe(130);
+  });
+
   it("leaves average speed null when the gap is too wide to support one", () => {
     // 42 km between readings six hours apart is not a 7 km/h journey. A wrong
     // number says more than a missing one.

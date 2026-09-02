@@ -85,8 +85,23 @@ const MIN_TRIP_KM = 0.3;
  */
 const SPEED_MAX_GAP_MS = 30 * 60 * 1000;
 
-/** A trip cannot be one reading long, and two readings a week apart are not one. */
-const MAX_TRIP_SPAN_MS = 24 * 60 * 60 * 1000;
+/**
+ * How far apart two readings may be and still describe one journey.
+ *
+ * **This constant is coupled to the cron cadence in `vercel.json`, and getting
+ * it wrong loses data silently.** The background poll runs once a day, so for a
+ * car whose owner is not opening the app the readings arrive almost exactly
+ * `CRON_INTERVAL_MS` apart — and the first version of this was that interval
+ * exactly. Any scheduler jitter pushed the pair over the limit, no trip was
+ * emitted, and **the whole day's mileage was discarded without a trace**. A
+ * mileage figure that occasionally drops a day is worse than one that is
+ * obviously coarse, because nothing about it looks wrong.
+ *
+ * Two intervals plus an hour: a pair survives jitter and one missed run, and a
+ * genuinely week-wide gap still yields nothing rather than a seven-day "trip".
+ */
+const CRON_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const MAX_TRIP_SPAN_MS = 2 * CRON_INTERVAL_MS + 60 * 60 * 1000;
 
 function ms(at: string): number {
   return new Date(at).getTime();
