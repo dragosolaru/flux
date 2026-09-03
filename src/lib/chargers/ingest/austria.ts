@@ -17,6 +17,16 @@ import { recordDebugLog } from "@/lib/debug-log";
 // Set AUSTRIA_URL to re-enable once one is known.
 const AUSTRIA_URL = process.env.AUSTRIA_URL ?? "";
 
+/**
+ * Whether this source is switched on at all.
+ *
+ * Exported so the bulk importer can tell "deliberately off" from "tried and
+ * failed" — recording a configured-off connector as an error every night is
+ * the crying-wolf failure, and recording it as a success is a lie. The
+ * connector is the only place that knows, so it is the place that says.
+ */
+export const austriaConfigured = AUSTRIA_URL.length > 0;
+
 // CAVEAT: this is the Burgenland state GIS endpoint (gis.bgld.gv.at), NOT a
 // national aggregator — coverage outside Burgenland is unverified. The bulk
 // importer therefore treats AT as having no full official source and fetches

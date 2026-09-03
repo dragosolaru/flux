@@ -11,10 +11,29 @@ import { clusterChargers } from "../dedup";
 import { findInBBox } from "../query";
 import { persistClusters, markCountryFresh } from "../repository";
 import { fetchCountryFr } from "./irve";
-import { fetchCountryDe } from "./bnetza";
-import { fetchCountryAt } from "./austria";
+import { fetchCountryDe, bnetzaConfigured } from "./bnetza";
+import { fetchCountryAt, austriaConfigured } from "./austria";
 import { fetchCountryNl } from "./ndw";
 import { fetchCountryOcm } from "./ocm";
+
+/**
+ * Which national register backs each country, and whether it is switched on.
+ *
+ * This exists because the importer could not previously tell the difference
+ * between a source that worked, one that failed, and one that is deliberately
+ * off — and it recorded all three the same way. See `recordOfficialRun`.
+ */
+function officialSourceFor(
+  cc: BulkCountry,
+): { id: string; configured: boolean } | null {
+  switch (cc) {
+    case "fr": return { id: "irve", configured: true };
+    case "de": return { id: "bnetza", configured: bnetzaConfigured };
+    case "at": return { id: "austria", configured: austriaConfigured };
+    case "nl": return { id: "ndw", configured: true };
+    default: return null;
+  }
+}
 
 function sevenDaysAgo(): Date {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -68,8 +87,46 @@ export async function bulkImportCountry(
     fetchCountryOcm(cc.toUpperCase(), ocmSince),
   ]);
 
+  const official = officialSourceFor(cc);
+  const officialRows =
+    officialResult.status === "fulfilled" ? officialResult.value : [];
+
+  // The national source's own outcome, recorded under its own name.
+  //
+  // Before this, a rejected official source was dropped by the ternary below
+  // and never mentioned again: the country still got OCM rows, so the single
+  // `bulk` run recorded `status: "ok"`, and nothing anywhere said that France's
+  // register had stopped answering. `docs/OPERATIONS.md` §4 asks for "charger
+  // rows per source, week over week" precisely because a dead connector stops
+  // producing errors after the first day and starts producing a number that
+  // does not move — but the number was not being recorded per source at all.
+  //
+  // Three states, because collapsing them is what made this invisible:
+  // `disabled` for a connector switched off on purpose (recording that as an
+  // error every night trains you to ignore the row), `error` for one that
+  // tried and failed, `ok` for one that answered.
+  if (official) {
+    const status = !official.configured
+      ? "disabled"
+      : officialResult.status === "rejected"
+        ? "error"
+        : "ok";
+    await supabase.from("ingest_runs").insert({
+      tile: `bulk:${cc}`,
+      source: official.id,
+      status,
+      fetched: officialRows.length,
+      upserted: null,
+      error:
+        officialResult.status === "rejected"
+          ? String(officialResult.reason).slice(0, 500)
+          : null,
+      finished_at: new Date().toISOString(),
+    });
+  }
+
   const raws = [
-    ...(officialResult.status === "fulfilled" ? officialResult.value : []),
+    ...officialRows,
     ...(ocmResult.status === "fulfilled" ? ocmResult.value : []),
   ];
   const fetched = raws.length;
@@ -112,7 +169,21 @@ export async function bulkImportCountry(
   // A full-country fetch returning 0 rows is always a source failure (every
   // covered country has chargers), so freshness requires actual persistence.
   // Unchanged re-runs still qualify: the batch RPC counts hash-skipped rows.
-  const shouldMarkFresh = totalUpserted > 0;
+  //
+  // The second condition is the one that was missing, and it made the rot
+  // self-sustaining. For a country in FULL_OFFICIAL_SOURCE, OCM is fetched
+  // **incrementally** — seven days of changes — on the explicit assumption that
+  // the national register supplies the baseline. If that register fails, the
+  // country receives a week of OCM deltas, `totalUpserted > 0` holds, the
+  // country is marked fresh, and the next run *skips it entirely* as fresh. So
+  // one failure suppressed its own retry, and France or the Netherlands would
+  // quietly stop being imported while every screen kept working. Germany was
+  // already bitten by the same assumption — the comment on FULL_OFFICIAL_SOURCE
+  // records a full German import that produced five rows.
+  const officialFailed =
+    official != null && official.configured && officialResult.status === "rejected";
+  const shouldMarkFresh =
+    totalUpserted > 0 && !(officialFailed && FULL_OFFICIAL_SOURCE.has(cc));
   if (shouldMarkFresh) {
     await markCountryFresh(cc);
   }

@@ -69,7 +69,27 @@ keeps working, which is the hardest failure mode here to notice.
 | `bnetza` | German regulator | 404s in early Aug; endpoint likely moved |
 | `chargeprice` | Chargeprice | pricing only |
 
-Two of these were logging errors for three weeks before anyone read them, and
+**How a dead source used to look healthy.** The cron records one `ingest_runs`
+row per country, `source: "bulk"`. Inside it, the national register and OCM are
+fetched with `Promise.allSettled`, and a rejected register was dropped by a
+ternary and never mentioned again — the country still got OCM rows, so the run
+recorded `status: "ok"`. Twelve green rows a night, next to a month of `austria`
+and `bnetza` errors in `debug_logs`, both true at once.
+
+Worse, the failure suppressed its own retry. For a country in
+`FULL_OFFICIAL_SOURCE`, OCM is fetched **incrementally** on the assumption that
+the register supplies the baseline; a failed register therefore yields a week of
+deltas, `upserted > 0` holds, `markCountryFresh` runs, and the next night skips
+the country as fresh. France or the Netherlands would have stopped being
+imported while every screen kept working.
+
+Fixed 3 Sep: the register is recorded under **its own name**, with three states —
+`disabled` (switched off on purpose, so it does not cry wolf), `error` (tried and
+failed, with the reason kept), `ok` — and freshness is withheld when a country
+that depends on its register did not get one. §4's "rows per source, week over
+week" is now computable, because there is finally a row per source.
+
+Two connectors were logging errors for three weeks before anyone read them, and
 both are worth knowing as failure *shapes* rather than as incidents:
 
 - **`austria`** — the URL defaults to empty because the endpoint went away.
@@ -197,7 +217,14 @@ none.
 - **Commands do not wake a sleeping car** (roadmap T3/T4). Cars sleep most of
   the time, so a large share of real commands fail with nothing explaining why.
 - **`bnetza` and `austria` are dark.** Germany and Austria get no national feed;
-  OSM and OCM still cover them, thinly.
+  OSM and OCM still cover them, thinly. Both are now recorded nightly as
+  `disabled` rather than silently omitted, so the gap is visible without being
+  mistaken for a fault.
+- **`tomtom` and `overpass` never run on the daily cron.** They are region-mode
+  only — the "populate this area now" path — so OSM and TomTom rows (2,793 and
+  2,526) age indefinitely unless someone triggers a region by hand. Nothing
+  reports that, and it is the one remaining instance of the shape described
+  above: not an error, a number that stops moving.
 - ~~A linked Tesla records no trips and no charging sessions.~~ **Fixed.**
   Derived from `vehicle_snapshots` by `src/lib/vehicle/derive-activity.ts`,
   written by `persist-activity.ts` from the daily cron, marked

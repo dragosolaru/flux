@@ -17,6 +17,16 @@ import { recordDebugLog } from "@/lib/debug-log";
 // service before it is trusted. Set BNETZA_URL to re-enable once one is known.
 const BNETZA_URL = process.env.BNETZA_URL ?? "";
 
+/**
+ * Whether this source is switched on at all.
+ *
+ * Exported so the bulk importer can tell "deliberately off" from "tried and
+ * failed" — recording a configured-off connector as an error every night is
+ * the crying-wolf failure, and recording it as a success is a lie. The
+ * connector is the only place that knows, so it is the place that says.
+ */
+export const bnetzaConfigured = BNETZA_URL.length > 0;
+
 interface BNetzAAttributes {
   ObjectID?: number | null;
   Betreiber?: string | null;
