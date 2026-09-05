@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState, type ChangeEvent } from "react";
-import { ChevronDown, ChevronUp, RefreshCw, Zap } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, type ChangeEvent } from "react";
+import { ChevronDown, RefreshCw, Zap } from "lucide-react";
+import { motion} from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -10,9 +10,7 @@ import { Button } from "@/components/ui/button";
 import { FeatureGate } from "@/components/layout/FeatureGate";
 import { PriceCurveChart } from "@/components/energy/PriceCurveChart";
 import { SmartChargeCard } from "@/components/energy/SmartChargeCard";
-import { DepartureCard } from "@/components/vehicle/DepartureCard";
 import * as tariffsApi from "@/lib/api/tariffs";
-import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, pageVariants } from "@/lib/animations/variants";
 import { Card, PageHeader } from "@/components/ui-kit";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
@@ -30,8 +28,6 @@ interface SettingsResponse {
 export function EnergyClient() {
   const t = useTranslations("energy");
   const qc = useQueryClient();
-  const [departureOpen, setDepartureOpen] = useState(false);
-  const { selectedVehicleId } = useVehicleContext();
 
   const {
     data: forecast,
@@ -67,7 +63,6 @@ export function EnergyClient() {
 
   const currentHour = new Date().getHours();
   const currentPrice = forecast?.currentPrice;
-  const firstVehicleId = selectedVehicleId;
 
   return (
     <FeatureGate capability="TARIFF">
@@ -198,47 +193,6 @@ export function EnergyClient() {
           </Card>
         </motion.div>
 
-        {/* Departure & Preconditioning — collapsible */}
-        <motion.div variants={cardVariants}>
-          <Card variant="surface" className="overflow-hidden">
-            <button
-              className="flex w-full items-center justify-between p-4 text-left"
-              onClick={() => setDepartureOpen((v) => !v)}
-            >
-              <span className="text-sm font-semibold">
-                {t("departure_card_title")}
-              </span>
-              {departureOpen ? (
-                <ChevronUp className="size-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="size-4 text-muted-foreground" />
-              )}
-            </button>
-
-            <AnimatePresence initial={false}>
-              {departureOpen && (
-                <motion.div
-                  key="departure-content"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="border-t border-border px-4 pb-4 pt-3">
-                    {firstVehicleId ? (
-                      <DepartureCard vehicleId={firstVehicleId} />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {t("no_recommendation")}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
       </motion.div>
     </FeatureGate>
   );

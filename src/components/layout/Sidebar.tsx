@@ -4,11 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  BatteryCharging,
   Car,
   ChevronDown,
   FileText,
-  Gamepad2,
   Info,
   LayoutGrid,
   MapPin,
@@ -46,10 +44,8 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/garage",    labelKey: "garage.title",    icon: LayoutGrid, capability: "NONE" },
       { href: "/dashboard", labelKey: "nav.dashboard",   icon: Car,        capability: "VEHICLE" },
-      { href: "/charging",   labelKey: "nav.charging",   icon: BatteryCharging, capability: "VEHICLE" },
       { href: "/insights",   labelKey: "nav.insights",   icon: BarChart3,  capability: "VEHICLE" },
       { href: "/documents",  labelKey: "nav.documents",  icon: FileText,   capability: "VEHICLE" },
-      { href: "/commands",   labelKey: "nav.commands",   icon: Gamepad2,   capability: "COMMANDS" },
     ],
   },
   {
@@ -76,9 +72,7 @@ const FOOTER_ITEMS: NavItem[] = [
 function tooltipKeyFor(missing: Capability): string {
   switch (missing) {
     case "VEHICLE": return "nav.indicator.tooltip.vehicle";
-    case "LIVE":    return "nav.indicator.tooltip.live";
     case "TARIFF":  return "nav.indicator.tooltip.tariff";
-    case "COMMANDS": return "nav.indicator.tooltip.commands";
     default: return "";
   }
 }

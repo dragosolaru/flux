@@ -7,9 +7,7 @@ import type { CapabilityContext } from "@/lib/capabilities";
 
 const EMPTY: CapabilityContext = {
   hasVehicle: false,
-  hasLiveVehicle: false,
   hasTariff: false,
-  hasCommandsReady: false,
   hasProSubscription: false,
 };
 

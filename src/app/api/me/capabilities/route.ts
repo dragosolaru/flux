@@ -9,9 +9,7 @@ import { ensureSupabaseUserId } from "@/lib/supabase/ensure-user";
 
 const EMPTY_CONTEXT: CapabilityContext = {
   hasVehicle: false,
-  hasLiveVehicle: false,
   hasTariff: false,
-  hasCommandsReady: false,
   hasProSubscription: false,
 };
 
@@ -60,11 +58,7 @@ export async function GET() {
 
   const ctx: CapabilityContext = {
     hasVehicle: vehicleRows.length > 0,
-    hasLiveVehicle: vehicleRows.some((v) => v.data_source === "live"),
     hasTariff: hasRealTariff,
-    hasCommandsReady: vehicleRows.some(
-      (v) => v.data_source === "live" && v.virtual_key_paired,
-    ),
     hasProSubscription: subscriptionTier === "pro",
   };
 

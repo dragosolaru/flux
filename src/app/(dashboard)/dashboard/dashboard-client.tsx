@@ -2,52 +2,35 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BatteryCharging,
   ChevronRight,
-  Fan,
-  LayoutGrid,
   Loader2,
-  Lock,
   MapPin,
   RefreshCw,
   Thermometer,
-  Unlock,
   Zap,
-  KeyRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect} from "react";
 import { useTranslations } from "next-intl";
 
-import { AllCommands } from "@/components/vehicle/AllCommands";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
-import { Card, ListRow, TAP } from "@/components/ui-kit";
-import { useBrandCapabilities } from "@/hooks/useBrandCapabilities";
+import { Card, ListRow} from "@/components/ui-kit";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useVehicle } from "@/hooks/useVehicle";
-import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
-import type { BrandKey } from "@/lib/brands/types";
 import { mockLocationLabel } from "@/lib/mock/location-label";
 import { setSleepMode, useSleepMode } from "@/lib/vehicle-sleep";
-import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
 
 interface DashboardClientProps {
   checklist: ChecklistData;
-  /**
-   * Where an owner pairs the Virtual Key. One link for the whole app, not one
-   * per car — but every car has to be approved individually, so this belongs
-   * in the app rather than only in the admin panel where it started.
-   */
-  virtualKeyUrl: string | null;
 }
 
 function formatMinutes(min: number | null | undefined): string {
@@ -396,171 +379,6 @@ function formatRelativeTime(
 }
 
 // --------------------------------------------------------------------------
-// Quick actions — tidy horizontal row of chip/icon buttons
-// --------------------------------------------------------------------------
-function QuickActions({
-  vehicleId,
-  brand,
-  state,
-  virtualKeyUrl,
-  notPaired,
-}: {
-  vehicleId: string;
-  brand: BrandKey;
-  state: VehicleState | undefined;
-  virtualKeyUrl: string | null;
-  notPaired: boolean;
-}) {
-  const t = useTranslations("commands");
-  const td = useTranslations("dashboard");
-  const caps = useBrandCapabilities(brand);
-  const { mutate, isPending, variables, error } = useVehicleCommand();
-  const [showAll, setShowAll] = useState(false);
-
-  // Two ways to know. `notPaired` comes from the column set true the first time
-  // the car accepts a signed command — the only proof of pairing there is,
-  // since Tesla exposes no way to ask — so a live car that has never had one
-  // work is prompted up front rather than after a puzzling failure. The error
-  // check stays for the case where the key was removed from the car's Locks
-  // screen after having worked once.
-  const needsPairing =
-    notPaired || (error instanceof Error && error.message === "error_vcp_required");
-
-  function send(command: CommandName) {
-    mutate({ vehicleId, command });
-  }
-
-  const inFlight = (cmd: CommandName) => isPending && variables?.command === cmd;
-
-  const climateActive = state?.isClimateOn ?? false;
-  const climateCmd: CommandName = climateActive ? "climate_off" : "climate_on";
-  const lockCmd: CommandName = state?.isLocked === false ? "lock" : "unlock";
-  const stateLoaded = state != null;
-
-  const actions = [
-    caps.commands.climateOn &&
-      caps.commands.climateOff && {
-        key: "climate",
-        cmd: climateCmd,
-        icon: <Fan className="size-5" />,
-        label: climateActive ? t("climate_off") : t("climate_on"),
-        active: climateActive,
-        inFlight: inFlight("climate_on") || inFlight("climate_off"),
-        disabled: !stateLoaded || isPending,
-      },
-    caps.commands.lock &&
-      caps.commands.unlock && {
-        key: "lock",
-        cmd: lockCmd,
-        icon:
-          stateLoaded && state?.isLocked === false ? (
-            <Unlock className="size-5" />
-          ) : (
-            <Lock className="size-5" />
-          ),
-        label: stateLoaded ? (lockCmd === "lock" ? t("lock") : t("unlock")) : t("lock"),
-        active: false,
-        inFlight: inFlight("lock") || inFlight("unlock"),
-        disabled: !stateLoaded || isPending,
-      },
-    {
-      key: "charge",
-      cmd: null as CommandName | null,
-      icon: <BatteryCharging className="size-5" />,
-      label: td("action_charge"),
-      active: state?.chargingState === "charging",
-      inFlight: false,
-      disabled: false,
-      href: `/charging`,
-    },
-    // The other nineteen commands. They lived only on /commands, which on a
-    // phone is two taps into the "more" menu — so the app looked like it could
-    // do three things. Expanding in place beats navigating away from the one
-    // screen that shows the battery you are deciding against.
-    {
-      key: "all",
-      cmd: null as CommandName | null,
-      icon: <LayoutGrid className="size-5" />,
-      label: t("all_commands"),
-      active: showAll,
-      inFlight: false,
-      disabled: false,
-      expand: true,
-    },
-  ].filter(Boolean) as {
-    key: string;
-    cmd: CommandName | null;
-    icon: React.ReactNode;
-    label: string;
-    active: boolean;
-    inFlight: boolean;
-    disabled: boolean;
-    href?: string;
-    expand?: boolean;
-  }[];
-
-  return (
-    <div className="space-y-3">
-      {needsPairing && virtualKeyUrl && (
-        <a
-          href={virtualKeyUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mx-auto flex max-w-sm items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left"
-        >
-          <KeyRound className="mt-0.5 size-4 shrink-0 text-amber-400" />
-          <span className="text-xs">
-            <span className="block font-medium text-amber-300">
-              {td("pair_key_title")}
-            </span>
-            <span className="text-amber-500/80">{td("pair_key_hint")}</span>
-          </span>
-        </a>
-      )}
-      <div className="flex justify-center gap-4">
-      {actions.map((action) => (
-        <motion.button
-          key={action.key}
-          whileTap={{ scale: 0.92 }}
-          transition={TAP}
-          disabled={action.disabled}
-          title={action.label}
-          aria-label={action.label}
-          onClick={() => {
-            if (action.expand) {
-              setShowAll((v) => !v);
-              return;
-            }
-            if (action.href) {
-              window.location.href = action.href;
-              return;
-            }
-            if (action.cmd) send(action.cmd);
-          }}
-          className={`flex size-12 items-center justify-center rounded-full border transition-colors disabled:opacity-50 ${
-            action.active
-              ? "border-primary/50 bg-primary/15 text-primary"
-              : "border-border bg-card text-foreground hover:bg-muted"
-          }`}
-        >
-          {action.inFlight ? (
-            <RefreshCw className="size-5 animate-spin" />
-          ) : (
-            action.icon
-          )}
-        </motion.button>
-      ))}
-      </div>
-      {showAll && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <AllCommands vehicleId={vehicleId} brand={brand} state={state} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --------------------------------------------------------------------------
 // Charging overlay card — clamps/rounds battery to [0,100] (guard preserved)
 // --------------------------------------------------------------------------
 function ChargingOverlayCard({ state }: { state: VehicleState }) {
@@ -604,14 +422,13 @@ function ChargingOverlayCard({ state }: { state: VehicleState }) {
 // --------------------------------------------------------------------------
 // Main export
 // --------------------------------------------------------------------------
-export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientProps) {
+export function DashboardClient({ checklist }: DashboardClientProps) {
   const router = useRouter();
   const { selectedVehicleId } = useVehicleContext();
   const { data: vehicles } = useVehicles();
   const vehicle = vehicles?.find((v) => v.id === selectedVehicleId);
   const vehicleId = selectedVehicleId ?? "";
   const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
-  const brand = (vehicle?.brand ?? "tesla") as BrandKey;
 
   const isLive = vehicle?.dataSource === "live";
   const { data, isLoading, isFetching, isError, refetch, polling } = useVehicle(
@@ -725,18 +542,6 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
       />
 
       <>
-          <QuickActions
-            // Remount per car. AllCommands seeds its controls from the vehicle
-            // once and then keeps local state, so without this a value picked
-            // for one car stayed on screen — and in the Apply button — after
-            // switching to another.
-            key={vehicleId}
-            vehicleId={vehicleId}
-            brand={brand}
-            state={data}
-            virtualKeyUrl={virtualKeyUrl}
-            notPaired={isLive && vehicle?.virtualKeyPaired === false}
-          />
 
           {data?.chargingState === "charging" && (
             <ChargingOverlayCard state={data} />

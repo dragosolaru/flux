@@ -45,7 +45,5 @@ export default async function DashboardPage() {
     ),
   };
 
-  // Virtual-key pairing went with the Tesla integration. The prop stays so the
-  // pairing prompt has one place to come back to; null keeps it hidden.
-  return <DashboardClient checklist={checklist} virtualKeyUrl={null} />;
+  return <DashboardClient checklist={checklist} />;
 }

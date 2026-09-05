@@ -102,6 +102,33 @@ them describe a car we no longer talk to.
 
 ---
 
+## 3b. The command layer went too — a day later, and for a better reason
+
+Withdrawing the integration left the surfaces that existed only to drive it, and
+they were not merely redundant: **they were broken and still on the menu.**
+`/commands` was visible because its gate read `data_source === "live"` from the
+database — the linked car's row still said live — while the route it led to had
+started answering `503 LIVE_PAUSED`. `/charging` was visible for any vehicle and
+called `/api/vehicles/[id]/charging-history`, a route deleted an hour earlier.
+Two menu entries, both pointing at walls.
+
+Keeping them for the simulator was the other option and it is worse: a button
+that "locks the doors" of an invented car is not a demo feature, it is a small
+lie told on every tap. And no tier in the approved spec contains commands — Free
+is the map, the planner and the stations; Pro is documents and costs.
+
+So the whole layer is gone: the `/commands` and `/charging` pages, `AllCommands`,
+`CommandPanel`, `QuickActions`, `ConfirmCommandDialog`, `CommandHistory`,
+`CommandFlash` with its nine car-state images, `DepartureCard`,
+`useVehicleCommand`, the commands and command-history routes, `applyCommand` in
+the simulator, and the `LIVE` and `COMMANDS` capabilities.
+
+**Kept, because it is a cost feature rather than a car action:** the smart-charge
+recommendation in `SmartChargeCard`. It says when electricity is cheapest. Only
+the button that acted on it was a command, and only that button went.
+
+---
+
 ## 4. What stayed, deliberately
 
 - **The vehicle.** Documents, costs and odometer readings attach to one, and the

@@ -1,24 +1,17 @@
 "use client";
 
-import { CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
-import { useState } from "react";
+import { Clock, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { GlassCard } from "@/components/ui/glass-card";
 import { computeSmartCharge } from "@/lib/external/tariffs/recommend";
 import { getModelSpec } from "@/lib/brands/models";
-import { useCapabilities } from "@/hooks/useCapabilities";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVehicle } from "@/hooks/useVehicle";
 import { useVehicles, type VehicleListItem } from "@/hooks/useVehicles";
-import { useVehicleCommand } from "@/hooks/useVehicleCommand";
 import { cardVariants } from "@/lib/animations/variants";
 import type { TariffForecast } from "@/lib/external/tariffs/types";
 import type { BrandKey } from "@/lib/brands/types";
@@ -37,11 +30,7 @@ function VehicleRecommendation({
 }) {
   const t = useTranslations("energy");
   const { fromEUR } = useCurrency();
-  const [scheduled, setScheduled] = useState(false);
-  const { mutate, isPending } = useVehicleCommand();
-  const { data: caps } = useCapabilities();
 
-  const hasCommandsReady = caps?.hasCommandsReady ?? false;
 
   // poll: false — a card reading current state, not a second poller. See the
   // note in useSmartChargeNotifications: intervals are per observer.
@@ -72,58 +61,6 @@ function VehicleRecommendation({
 
   if (!rec) return null;
 
-  const startTimeMinutes = rec.startAtHour * 60;
-
-  function handleSchedule() {
-    mutate(
-      {
-        vehicleId: vehicle.id,
-        command: "schedule_charging",
-        args: { time: startTimeMinutes },
-      },
-      {
-        // Confirm only on a real success — the hook toasts rejections
-        // (success:false) and errors centrally. Keep the confirmed state
-        // rather than auto-reverting, which read as "not scheduled".
-        onSuccess: (data) => {
-          if (data.success) setScheduled(true);
-        },
-      },
-    );
-  }
-
-  const scheduleButton = (
-    <motion.button
-      whileTap={{ scale: 0.97 }}
-      onClick={hasCommandsReady ? handleSchedule : undefined}
-      disabled={!hasCommandsReady || isPending || scheduled}
-      className={[
-        "mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-[10px] text-sm font-semibold transition-all",
-        scheduled
-          ? "bg-chart-2 text-white"
-          : "bg-primary text-primary-foreground hover:bg-primary/90",
-        (!hasCommandsReady || isPending || scheduled) &&
-          "cursor-not-allowed opacity-60",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {isPending ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : scheduled ? (
-        <>
-          <CheckCircle2 className="size-4" />
-          {t("scheduled")}
-        </>
-      ) : (
-        <>
-          <Zap className="size-4" />
-          {t("schedule_btn")}
-        </>
-      )}
-    </motion.button>
-  );
-
   return (
     <div className="space-y-1">
       {/* Vehicle name */}
@@ -151,19 +88,9 @@ function VehicleRecommendation({
         </div>
       </div>
 
-      {/* Schedule CTA */}
-      {hasCommandsReady ? (
-        scheduleButton
-      ) : (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="block">{scheduleButton}</span>
-            </TooltipTrigger>
-            <TooltipContent>{t("schedule_no_virtual_key")}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
+      {/* The button that scheduled this window went with the command layer.
+          The recommendation is the useful half and it stays: it says when
+          electricity is cheapest, which is a cost answer, not a car action. */}
     </div>
   );
 }

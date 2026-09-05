@@ -6,9 +6,7 @@
 // =============================================================================
 
 import type { BrandProfile } from "@/lib/brands/types";
-import { COMMAND_CAP_MAP } from "@/lib/brands/command-map";
 import type { MotionState, VehicleState } from "@/types/vehicle";
-import type { CommandName } from "@/types/history";
 import { getScenario, getStepInfoAt } from "./scenarios";
 import type { MockVehicleSnapshot, Scenario, ScenarioStep } from "./types";
 
@@ -273,86 +271,3 @@ function handleTransition(
 // ---------------------------------------------------------------------------
 
 
-export function applyCommand(
-  snapshot: MockVehicleSnapshot,
-  command: CommandName,
-  args: Record<string, unknown> | null,
-  brand: BrandProfile,
-): MockVehicleSnapshot {
-  const capKey = COMMAND_CAP_MAP[command];
-  if (!brand.capabilities.commands[capKey]) {
-    throw new Error(`command-not-supported:${command}`);
-  }
-
-  const state: VehicleState = { ...snapshot.state };
-
-  switch (command) {
-    case "lock":              state.isLocked = true;   break;
-    case "unlock":            state.isLocked = false;  break;
-    case "climate_on":        state.isClimateOn = true;  break;
-    case "climate_off":       state.isClimateOn = false; break;
-    case "set_climate_temp":
-      if (typeof args?.temp === "number") state.driverTempC = args.temp;
-      break;
-    case "honk":
-    case "flash":
-      break; // side-effect only; no state mutation in mock
-    case "set_charge_limit":
-      if (typeof args?.percent === "number")
-        state.chargeLimit = Math.max(50, Math.min(100, args.percent));
-      break;
-    case "set_charge_amps":
-      if (typeof args?.amps === "number") state.chargeAmps = args.amps;
-      break;
-    case "start_charging":   state.chargingState = "charging"; break;
-    case "stop_charging":    state.chargingState = "stopped";  break;
-    case "open_charge_port":  state.isChargePortOpen = true;  break;
-    case "close_charge_port": state.isChargePortOpen = false; break;
-    case "vent_windows":
-      state.windowsOpen = state.windowsOpen
-        ? { ...state.windowsOpen, frontLeft: true, frontRight: true }
-        : { frontLeft: true, frontRight: true, rearLeft: false, rearRight: false };
-      break;
-    case "close_windows":
-      state.windowsOpen = { frontLeft: false, frontRight: false, rearLeft: false, rearRight: false };
-      break;
-    case "activate_sentry":   state.isSentryMode = true;   break;
-    case "deactivate_sentry": state.isSentryMode = false;  break;
-    case "remote_start":      state.isRemoteStartActive = true; break;
-    case "schedule_charging":
-      if (typeof args?.enable === "boolean") state.scheduledChargingEnabled = args.enable;
-      if (typeof args?.time === "number") state.scheduledChargingStartMinutes = args.time;
-      break;
-    // The place-bound pair. The simulator keeps only what a screen reads back:
-    // that a schedule exists and when it fires. Days and location round-trip
-    // through the command log rather than the state, because nothing renders
-    // them yet and inventing state nothing shows is how fields rot.
-    case "add_charge_schedule":
-      state.scheduledChargingEnabled = args?.enabled !== false;
-      if (typeof args?.startTime === "number")
-        state.scheduledChargingStartMinutes = args.startTime;
-      break;
-    case "remove_charge_schedule":
-      state.scheduledChargingEnabled = false;
-      state.scheduledChargingStartMinutes = null;
-      break;
-    case "add_precondition_schedule":
-      state.scheduledDepartureEnabled = args?.enabled !== false;
-      if (typeof args?.time === "number") state.scheduledDepartureMinutes = args.time;
-      break;
-    case "remove_precondition_schedule":
-      state.scheduledDepartureEnabled = false;
-      state.scheduledDepartureMinutes = null;
-      break;
-    case "schedule_departure":
-      state.scheduledDepartureEnabled = true;
-      if (typeof args?.time === "number") state.scheduledDepartureMinutes = args.time;
-      break;
-    case "precondition_max":
-      state.isBatteryPreconditioning = args?.on === true;
-      break;
-    case "share_navigation":   break; // accepted; no mock state mutation needed
-  }
-
-  return { ...snapshot, state };
-}

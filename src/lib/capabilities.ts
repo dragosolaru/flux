@@ -5,13 +5,11 @@
  * (e.g. /api/me/capabilities) and indirectly by the client via the hook.
  */
 
-export type Capability = "NONE" | "VEHICLE" | "LIVE" | "TARIFF" | "COMMANDS" | "PRO";
+export type Capability = "NONE" | "VEHICLE" | "TARIFF" | "PRO";
 
 export interface CapabilityContext {
   hasVehicle: boolean;
-  hasLiveVehicle: boolean;
   hasTariff: boolean;
-  hasCommandsReady: boolean;
   hasProSubscription: boolean;
 }
 
@@ -24,7 +22,7 @@ export type GateResult =
   | { ok: true }
   | { ok: false; missing: Capability; cta: GateCta };
 
-const ORDER: Capability[] = ["NONE", "VEHICLE", "LIVE", "TARIFF", "COMMANDS", "PRO"];
+const ORDER: Capability[] = ["NONE", "VEHICLE", "TARIFF", "PRO"];
 
 function meets(required: Capability, ctx: CapabilityContext): boolean {
   switch (required) {
@@ -32,12 +30,8 @@ function meets(required: Capability, ctx: CapabilityContext): boolean {
       return true;
     case "VEHICLE":
       return ctx.hasVehicle;
-    case "LIVE":
-      return ctx.hasLiveVehicle;
     case "TARIFF":
       return ctx.hasTariff;
-    case "COMMANDS":
-      return ctx.hasCommandsReady && ctx.hasLiveVehicle;
     case "PRO":
       return ctx.hasProSubscription;
   }
@@ -47,12 +41,8 @@ function ctaFor(missing: Capability): GateCta {
   switch (missing) {
     case "VEHICLE":
       return { label: "empty_states.no_vehicle.cta", href: "/garage" };
-    case "LIVE":
-      return { label: "empty_states.no_live.cta", href: "/connect/tesla" };
     case "TARIFF":
       return { label: "empty_states.no_tariff.cta", href: "/settings#tariff" };
-    case "COMMANDS":
-      return { label: "empty_states.no_commands.cta", href: "/settings#virtual-key" };
     case "PRO":
       return { label: "empty_states.no_pro.cta", href: "/pricing" };
     case "NONE":

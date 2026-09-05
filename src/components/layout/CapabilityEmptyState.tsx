@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Car, KeyRound, Lightbulb, Sparkles, Zap } from "lucide-react";
+import { Car, Lightbulb, Sparkles} from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentType } from "react";
 
@@ -18,33 +18,25 @@ interface CapabilityEmptyStateProps {
 
 const ICONS: Record<Exclude<Capability, "NONE">, ComponentType<{ className?: string }>> = {
   VEHICLE: Car,
-  LIVE: Zap,
   TARIFF: Lightbulb,
-  COMMANDS: KeyRound,
   PRO: Sparkles,
 };
 
 const TITLE_KEYS: Record<Exclude<Capability, "NONE">, string> = {
   VEHICLE: "empty_states.no_vehicle.title",
-  LIVE: "empty_states.no_live.title",
   TARIFF: "empty_states.no_tariff.title",
-  COMMANDS: "empty_states.no_commands.title",
   PRO: "empty_states.no_pro.title",
 };
 
 const SUBTITLE_KEYS: Record<Exclude<Capability, "NONE">, string> = {
   VEHICLE: "empty_states.no_vehicle.subtitle",
-  LIVE: "empty_states.no_live.subtitle",
   TARIFF: "empty_states.no_tariff.subtitle",
-  COMMANDS: "empty_states.no_commands.subtitle",
   PRO: "empty_states.no_pro.subtitle",
 };
 
 const CTA_KEYS: Record<Exclude<Capability, "NONE">, string> = {
   VEHICLE: "empty_states.no_vehicle.cta",
-  LIVE: "empty_states.no_live.cta",
   TARIFF: "empty_states.no_tariff.cta",
-  COMMANDS: "empty_states.no_commands.cta",
   PRO: "empty_states.no_pro.cta",
 };
 
