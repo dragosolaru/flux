@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BatteryCharging, Car, Map, MoreHorizontal } from "lucide-react";
+import { Car, Map, MoreHorizontal } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, type ComponentType } from "react";
@@ -31,7 +31,6 @@ interface MobileTab {
 const TABS: MobileTab[] = [
   { key: "car",      href: "/dashboard", labelKey: "nav.mobile.car",      icon: Car,             capability: "VEHICLE" },
   { key: "map",      href: "/map",       labelKey: "nav.mobile.map",      icon: Map,             capability: "NONE"    },
-  { key: "charging", href: "/charging",  labelKey: "nav.mobile.charging", icon: BatteryCharging, capability: "VEHICLE" },
   { key: "more",     href: null,         labelKey: "nav.mobile.more",     icon: MoreHorizontal,  capability: "NONE"    },
 ];
 

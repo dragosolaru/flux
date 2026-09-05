@@ -32,8 +32,6 @@
       "planning": "Tervezés"
     },
     "dashboard": "Dashboard",
-    "charging": "Töltés",
-    "commands": "Parancsok",
     "costs": "Költségek",
     "energy": "Energia & díjszabás",
     "charging_map": "Töltőállomás-térkép",
@@ -47,7 +45,6 @@
     "select_vehicle": "Jármű kiválasztása",
     "mobile": {
       "car": "Az autóm",
-      "charging": "Töltés",
       "trip": "Útvonal",
       "costs": "Költségek",
       "energy": "Energia",
@@ -57,9 +54,7 @@
     "indicator": {
       "tooltip": {
         "vehicle": "Adjon hozzá járművet a feloldáshoz",
-        "live": "Tesla csatlakoztatása valós adatokért",
-        "tariff": "Konfigurálja az energiadíjat",
-        "commands": "Állítsa be a Virtual Key-t a parancsokhoz"
+        "tariff": "Konfigurálja az energiadíjat"
       }
     },
     "map": "Térkép",
@@ -113,20 +108,10 @@
       "subtitle": "Csatlakoztassa Tesla-ját az SOC, hatótáv és töltési állapot megtekintéséhez.",
       "cta": "Tesla hozzáadása"
     },
-    "no_live": {
-      "title": "Valós adatok közvetlenül az autóból",
-      "subtitle": "Tesla csatlakoztatása élő SOC, hatótáv, helyszín és töltési adatokért.",
-      "cta": "Tesla csatlakoztatása"
-    },
     "no_tariff": {
       "title": "Tudjuk, mikor a legolcsóbb a töltés",
       "subtitle": "Konfigurálja az energiaszolgáltatóját, és megmutatjuk az optimális időpontot a valós tarifa alapján.",
       "cta": "Díjszabás konfigurálása"
-    },
-    "no_commands": {
-      "title": "Vezérelje az autót a böngészőből",
-      "subtitle": "Párosítsa a Virtual Key-t és küldjön parancsokat: klíma, zárolás, töltés, ablakok.",
-      "cta": "Virtual Key beállítása"
     }
   },
   "onboarding": {
@@ -472,102 +457,6 @@
     "scheduled_disabled": "Ütemezett töltés letiltva",
     "scheduled_error": "A töltési ütemezés nem frissíthető",
     "syncUnavailable": "A Tesla a töltési előzményeket csak üzleti flottafiókoknak engedi, személyes fiókon ez nem működhet. A munkameneteket közvetlenül az autóból rögzítjük, amint a telemetria él."
-  },
-  "commands": {
-    "title": "Parancsok",
-    "subtitle": "Vezérelje távolról az autót.",
-    "panel_title": "Gyors parancsok",
-    "lock": "Zárás",
-    "unlock": "Nyitás",
-    "climate_on": "Klíma bekapcsolása",
-    "climate_off": "Klíma kikapcsolása",
-    "honk": "Dudálás",
-    "flash": "Fényvillantás",
-    "no_commands": "Nincs elérhető parancs ehhez a járműhöz.",
-    "sending": "Küldés…",
-    "no_vehicles_title": "Még nincs jármű",
-    "no_vehicles_hint": "Adjon hozzá járművet a Garázsban a parancsok küldéséhez.",
-    "success": "Parancs elküldve",
-    "error": "Parancs sikertelen",
-    "error_rate_limit": "Túl sok parancs. Várj egy pillanatot, és próbáld újra.",
-    "error_vcp_required": "Az autó elutasította az aláírt parancsot: a kulcsunk nincs hozzá párosítva. Ha már párosítottad, az újbóli párosítás nem segít — a regisztrált kulcs régebbi lehet, mint amivel aláírunk. Lásd /debug → Car.",
-    "error_not_supported": "Ez a parancs nem érhető el ehhez a járműhöz.",
-    "confirm": {
-      "unlock": {
-        "title": "Kinyitja az autót?",
-        "body": "Az ajtók ténylegesen kinyílnak. Bárki kinyithatja, aki a közelben van.",
-        "action": "Kinyitás"
-      },
-      "remote_start": {
-        "title": "Engedélyezi a távindítást?",
-        "body": "Az autó rövid ideig kulcs nélkül is vezethető lesz.",
-        "action": "Engedélyezés"
-      }
-    },
-    "history": {
-      "title": "Legutóbbi parancsok",
-      "loading": "Előzmények betöltése…",
-      "error": "Az előzmények nem tölthetők be.",
-      "empty": "Még nem küldött parancsot.",
-      "sensitive": "érzékeny",
-      "footer": "Ha olyan parancsot lát, amelyet nem Ön adott ki, válassza le a Teslát a Beállításokban és változtasson jelszót."
-    },
-    "error_proxy_missing": "A parancsokat még nem írjuk alá — az aláíró proxy nem fut. Ez rajtunk múlik, nem rajtad.",
-    "group_access": "Hozzáférés",
-    "group_charging": "Töltés",
-    "group_climate": "Klíma",
-    "group_windows": "Ablakok",
-    "group_security": "Biztonság",
-    "set_charge_limit": "Töltési limit",
-    "set_charge_amps": "Töltőáram",
-    "set_climate_temp": "Utastér hőmérséklete",
-    "start_charging": "Töltés indítása",
-    "stop_charging": "Töltés leállítása",
-    "open_charge_port": "Töltőnyílás nyitása",
-    "close_charge_port": "Töltőnyílás zárása",
-    "vent_windows": "Ablakok résnyitása",
-    "close_windows": "Ablakok zárása",
-    "activate_sentry": "Sentry bekapcsolása",
-    "deactivate_sentry": "Sentry kikapcsolása",
-    "remote_start": "Távindítás",
-    "schedule_charging": "Ütemezett töltés",
-    "schedule_departure": "Indulási idő",
-    "precondition_max": "Jégmentesítés be",
-    "share_navigation": "Küldés a navigációba",
-    "apply": "Alkalmaz",
-    "nav_placeholder": "Cím vagy hely",
-    "nav_send": "Küldés",
-    "nav_not_found": "Nem található ez a hely.",
-    "all_commands": "Összes parancs",
-    "find_car_title": "Az autód",
-    "find_car_distance": "{distance} gyalog",
-    "find_car_locating": "Helyzeted keresése…",
-    "find_car_walk": "Gyalog",
-    "precondition_max_off": "Jégmentesítés ki",
-    "nav_failed": "A címkereső nem érhető el.",
-    "nav_rate_limited": "Túl sok keresés. Várj egy percet.",
-    "find_car_no_location": "A helyzeted nem érhető el — a Gyalog működik",
-    "name_doors": "Ajtózár",
-    "doors_locked": "Zárva",
-    "doors_unlocked": "Nyitva",
-    "name_sentry": "Sentry mód",
-    "sentry_state_on": "Be",
-    "sentry_state_off": "Ki",
-    "name_charging": "Töltés",
-    "charging_state_on": "Be",
-    "charging_state_off": "Ki",
-    "name_charge_port": "Töltőnyílás",
-    "port_state_open": "Nyitva",
-    "port_state_closed": "Zárva",
-    "name_climate": "Klíma",
-    "climate_state_on": "Be",
-    "climate_state_off": "Ki",
-    "name_precondition": "Max. jégmentesítés",
-    "precondition_state_on": "Be",
-    "precondition_state_off": "Ki",
-    "name_windows": "Ablakszellőztetés",
-    "windows_state_open": "Szellőztetve",
-    "windows_state_closed": "Zárva"
   },
   "garage": {
     "title": "Garázs",

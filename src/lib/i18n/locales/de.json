@@ -32,8 +32,6 @@
       "planning": "Planung"
     },
     "dashboard": "Dashboard",
-    "charging": "Laden",
-    "commands": "Befehle",
     "costs": "Kosten",
     "energy": "Energie & Tarife",
     "charging_map": "Ladestation-Karte",
@@ -47,7 +45,6 @@
     "select_vehicle": "Fahrzeug wählen",
     "mobile": {
       "car": "Auto",
-      "charging": "Laden",
       "trip": "Route",
       "costs": "Kosten",
       "energy": "Energie",
@@ -57,9 +54,7 @@
     "indicator": {
       "tooltip": {
         "vehicle": "Fahrzeug hinzufügen zum Entsperren",
-        "live": "Tesla verbinden für Echtdaten",
-        "tariff": "Energietarif konfigurieren",
-        "commands": "Virtual Key für Befehle einrichten"
+        "tariff": "Energietarif konfigurieren"
       }
     },
     "map": "Karte",
@@ -113,20 +108,10 @@
       "subtitle": "Verbinde deinen Tesla, um SOC, Reichweite und Ladestatus zu sehen.",
       "cta": "Tesla hinzufügen"
     },
-    "no_live": {
-      "title": "Echtdaten direkt vom Auto",
-      "subtitle": "Tesla verbinden für live SOC, Reichweite, Standort und Laden.",
-      "cta": "Tesla verbinden"
-    },
     "no_tariff": {
       "title": "Wir wissen wann Laden am günstigsten ist",
       "subtitle": "Konfiguriere deinen Energieanbieter und wir zeigen dir die optimale Stunde basierend auf deinem echten Tarif.",
       "cta": "Tarif konfigurieren"
-    },
-    "no_commands": {
-      "title": "Auto vom Browser steuern",
-      "subtitle": "Koppele deinen Virtual Key und sende Befehle: Klima, Sperren, Laden, Fenster.",
-      "cta": "Virtual Key einrichten"
     }
   },
   "onboarding": {
@@ -472,102 +457,6 @@
     "scheduled_disabled": "Geplantes Laden deaktiviert",
     "scheduled_error": "Ladeplan konnte nicht aktualisiert werden",
     "syncUnavailable": "Tesla erlaubt den Ladeverlauf nur für Business-Fleet-Konten; auf einem privaten Konto kann das nicht funktionieren. Sitzungen werden direkt aus dem Auto erfasst, sobald die Telemetrie läuft."
-  },
-  "commands": {
-    "title": "Befehle",
-    "subtitle": "Auto fernsteuern.",
-    "panel_title": "Schnellbefehle",
-    "lock": "Verriegeln",
-    "unlock": "Entriegeln",
-    "climate_on": "Klima einschalten",
-    "climate_off": "Klima ausschalten",
-    "honk": "Hupen",
-    "flash": "Lichthupe",
-    "no_commands": "Keine Befehle für dieses Fahrzeug verfügbar.",
-    "sending": "Wird gesendet…",
-    "no_vehicles_title": "Noch keine Fahrzeuge",
-    "no_vehicles_hint": "Füge ein Fahrzeug in der Garage hinzu, um Befehle zu senden.",
-    "success": "Befehl gesendet",
-    "error": "Befehl fehlgeschlagen",
-    "error_rate_limit": "Zu viele Befehle. Bitte warte einen Moment und versuche es erneut.",
-    "error_vcp_required": "Das Auto hat den signierten Befehl abgelehnt: unser Schlüssel ist nicht mit ihm gekoppelt. Wenn bereits gekoppelt wurde, hilft erneutes Koppeln nicht — der registrierte Schlüssel ist womöglich älter als der, mit dem wir signieren. Siehe /debug → Car.",
-    "error_not_supported": "Dieser Befehl ist für dieses Fahrzeug nicht verfügbar.",
-    "confirm": {
-      "unlock": {
-        "title": "Auto entriegeln?",
-        "body": "Die Türen werden tatsächlich entriegelt. Jeder in der Nähe kann es öffnen.",
-        "action": "Entriegeln"
-      },
-      "remote_start": {
-        "title": "Fernstart aktivieren?",
-        "body": "Das Auto lässt sich dann kurzzeitig ohne Schlüssel fahren.",
-        "action": "Aktivieren"
-      }
-    },
-    "history": {
-      "title": "Letzte Befehle",
-      "loading": "Verlauf wird geladen…",
-      "error": "Verlauf konnte nicht geladen werden.",
-      "empty": "Noch keine Befehle gesendet.",
-      "sensitive": "sensibel",
-      "footer": "Sehen Sie einen Befehl, den Sie nicht gesendet haben? Trennen Sie Tesla in den Einstellungen und ändern Sie Ihr Passwort."
-    },
-    "error_proxy_missing": "Befehle werden noch nicht signiert — der Signatur-Proxy läuft nicht. Das liegt an uns, nicht an dir.",
-    "group_access": "Zugang",
-    "group_charging": "Laden",
-    "group_climate": "Klima",
-    "group_windows": "Fenster",
-    "group_security": "Sicherheit",
-    "set_charge_limit": "Ladelimit",
-    "set_charge_amps": "Ladestrom",
-    "set_climate_temp": "Innenraumtemperatur",
-    "start_charging": "Laden starten",
-    "stop_charging": "Laden stoppen",
-    "open_charge_port": "Ladeklappe öffnen",
-    "close_charge_port": "Ladeklappe schließen",
-    "vent_windows": "Fenster lüften",
-    "close_windows": "Fenster schließen",
-    "activate_sentry": "Sentry einschalten",
-    "deactivate_sentry": "Sentry ausschalten",
-    "remote_start": "Fernstart",
-    "schedule_charging": "Geplantes Laden",
-    "schedule_departure": "Abfahrtszeit",
-    "precondition_max": "Max-Defrost einschalten",
-    "share_navigation": "An Navigation senden",
-    "apply": "Übernehmen",
-    "nav_placeholder": "Adresse oder Ort",
-    "nav_send": "Senden",
-    "nav_not_found": "Ort nicht gefunden.",
-    "all_commands": "Alle Befehle",
-    "find_car_title": "Dein Auto",
-    "find_car_distance": "{distance} zu Fuß",
-    "find_car_locating": "Standort wird ermittelt…",
-    "find_car_walk": "Zu Fuß",
-    "precondition_max_off": "Max-Defrost ausschalten",
-    "nav_failed": "Adresssuche nicht erreichbar.",
-    "nav_rate_limited": "Zu viele Suchanfragen. Kurz warten.",
-    "find_car_no_location": "Standort nicht verfügbar — „Zu Fuß“ funktioniert",
-    "name_doors": "Türverriegelung",
-    "doors_locked": "Verriegelt",
-    "doors_unlocked": "Entriegelt",
-    "name_sentry": "Wächtermodus",
-    "sentry_state_on": "Ein",
-    "sentry_state_off": "Aus",
-    "name_charging": "Laden",
-    "charging_state_on": "Ein",
-    "charging_state_off": "Aus",
-    "name_charge_port": "Ladeklappe",
-    "port_state_open": "Offen",
-    "port_state_closed": "Geschlossen",
-    "name_climate": "Klima",
-    "climate_state_on": "Ein",
-    "climate_state_off": "Aus",
-    "name_precondition": "Max. Enteisung",
-    "precondition_state_on": "Ein",
-    "precondition_state_off": "Aus",
-    "name_windows": "Fensterlüftung",
-    "windows_state_open": "Gelüftet",
-    "windows_state_closed": "Geschlossen"
   },
   "garage": {
     "title": "Garage",

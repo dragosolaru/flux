@@ -32,8 +32,6 @@
       "planning": "Planification"
     },
     "dashboard": "Tableau de bord",
-    "charging": "Recharge",
-    "commands": "Commandes",
     "costs": "Coûts",
     "energy": "Énergie & tarifs",
     "charging_map": "Carte des bornes",
@@ -47,7 +45,6 @@
     "select_vehicle": "Choisir un véhicule",
     "mobile": {
       "car": "Ma voiture",
-      "charging": "Recharge",
       "trip": "Trajet",
       "costs": "Coûts",
       "energy": "Énergie",
@@ -57,9 +54,7 @@
     "indicator": {
       "tooltip": {
         "vehicle": "Ajoutez un véhicule pour déverrouiller",
-        "live": "Connectez Tesla pour des données en direct",
-        "tariff": "Configurez votre tarif énergétique",
-        "commands": "Configurez la clé virtuelle pour les commandes"
+        "tariff": "Configurez votre tarif énergétique"
       }
     },
     "map": "Carte",
@@ -113,20 +108,10 @@
       "subtitle": "Connectez votre Tesla pour voir le SOC, l'autonomie et l'état de charge.",
       "cta": "Ajouter Tesla"
     },
-    "no_live": {
-      "title": "Données réelles, directement de votre voiture",
-      "subtitle": "Connectez Tesla pour le SOC en direct, l'autonomie, la localisation et la recharge.",
-      "cta": "Connecter Tesla"
-    },
     "no_tariff": {
       "title": "Nous savons quand charger est le moins cher",
       "subtitle": "Configurez votre fournisseur d'énergie et nous vous indiquerons l'heure optimale selon votre tarif réel.",
       "cta": "Configurer le tarif"
-    },
-    "no_commands": {
-      "title": "Contrôlez votre voiture depuis le navigateur",
-      "subtitle": "Associez votre clé virtuelle et envoyez des commandes : climatisation, verrouillage, charge, vitres.",
-      "cta": "Configurer la clé virtuelle"
     }
   },
   "onboarding": {
@@ -472,102 +457,6 @@
     "scheduled_disabled": "Charge programmée désactivée",
     "scheduled_error": "Impossible de mettre à jour la programmation de charge",
     "syncUnavailable": "Tesla réserve l'historique de charge aux comptes de flotte professionnelle : impossible sur un compte personnel. Les sessions seront enregistrées depuis la voiture une fois la télémétrie active."
-  },
-  "commands": {
-    "title": "Commandes",
-    "subtitle": "Contrôlez votre voiture à distance.",
-    "panel_title": "Commandes rapides",
-    "lock": "Verrouiller",
-    "unlock": "Déverrouiller",
-    "climate_on": "Allumer la clim",
-    "climate_off": "Éteindre la clim",
-    "honk": "Klaxonner",
-    "flash": "Appels de phares",
-    "no_commands": "Aucune commande disponible pour ce véhicule.",
-    "sending": "Envoi en cours…",
-    "no_vehicles_title": "Aucun véhicule encore",
-    "no_vehicles_hint": "Ajoutez un véhicule dans le Garage pour envoyer des commandes.",
-    "success": "Commande envoyée",
-    "error": "Commande échouée",
-    "error_rate_limit": "Trop de commandes. Patientez un instant et réessayez.",
-    "error_vcp_required": "La voiture a refusé la commande signée : notre clé ne lui est pas associée. Si vous avez déjà associé, recommencer n'aidera pas — la clé enregistrée est peut-être plus ancienne que celle qui signe. Voir /debug → Car.",
-    "error_not_supported": "Cette commande n'est pas disponible pour ce véhicule.",
-    "confirm": {
-      "unlock": {
-        "title": "Déverrouiller la voiture ?",
-        "body": "Les portes sont réellement déverrouillées. Toute personne à proximité peut ouvrir.",
-        "action": "Déverrouiller"
-      },
-      "remote_start": {
-        "title": "Activer le démarrage à distance ?",
-        "body": "La voiture pourra rouler sans clé pendant un court instant.",
-        "action": "Activer"
-      }
-    },
-    "history": {
-      "title": "Commandes récentes",
-      "loading": "Chargement de l’historique…",
-      "error": "Impossible de charger l’historique.",
-      "empty": "Aucune commande envoyée.",
-      "sensitive": "sensible",
-      "footer": "Si vous voyez une commande que vous n’avez pas envoyée, déconnectez Tesla dans les Réglages et changez votre mot de passe."
-    },
-    "error_proxy_missing": "Les commandes ne sont pas encore signées — le proxy de signature n'est pas déployé. Cela vient de nous.",
-    "group_access": "Accès",
-    "group_charging": "Recharge",
-    "group_climate": "Climatisation",
-    "group_windows": "Vitres",
-    "group_security": "Sécurité",
-    "set_charge_limit": "Limite de charge",
-    "set_charge_amps": "Courant de charge",
-    "set_climate_temp": "Température habitacle",
-    "start_charging": "Lancer la charge",
-    "stop_charging": "Arrêter la charge",
-    "open_charge_port": "Ouvrir la trappe",
-    "close_charge_port": "Fermer la trappe",
-    "vent_windows": "Entrouvrir les vitres",
-    "close_windows": "Fermer les vitres",
-    "activate_sentry": "Activer Sentry",
-    "deactivate_sentry": "Désactiver Sentry",
-    "remote_start": "Démarrage à distance",
-    "schedule_charging": "Charge programmée",
-    "schedule_departure": "Heure de départ",
-    "precondition_max": "Activer le dégivrage",
-    "share_navigation": "Envoyer à la navigation",
-    "apply": "Appliquer",
-    "nav_placeholder": "Adresse ou lieu",
-    "nav_send": "Envoyer",
-    "nav_not_found": "Lieu introuvable.",
-    "all_commands": "Toutes les commandes",
-    "find_car_title": "Votre voiture",
-    "find_car_distance": "{distance} à pied",
-    "find_car_locating": "Recherche de votre position…",
-    "find_car_walk": "À pied",
-    "precondition_max_off": "Couper le dégivrage",
-    "nav_failed": "Recherche d'adresse indisponible.",
-    "nav_rate_limited": "Trop de recherches. Patientez une minute.",
-    "find_car_no_location": "Position indisponible — « À pied » fonctionne",
-    "name_doors": "Verrouillage",
-    "doors_locked": "Verrouillées",
-    "doors_unlocked": "Déverrouillées",
-    "name_sentry": "Mode Sentinelle",
-    "sentry_state_on": "Activé",
-    "sentry_state_off": "Désactivé",
-    "name_charging": "Charge",
-    "charging_state_on": "Activée",
-    "charging_state_off": "Arrêtée",
-    "name_charge_port": "Trappe de charge",
-    "port_state_open": "Ouverte",
-    "port_state_closed": "Fermée",
-    "name_climate": "Climatisation",
-    "climate_state_on": "Activée",
-    "climate_state_off": "Arrêtée",
-    "name_precondition": "Dégivrage max",
-    "precondition_state_on": "Activé",
-    "precondition_state_off": "Arrêté",
-    "name_windows": "Aération des vitres",
-    "windows_state_open": "Entrouvertes",
-    "windows_state_closed": "Fermées"
   },
   "garage": {
     "title": "Garage",

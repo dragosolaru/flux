@@ -32,8 +32,6 @@
       "planning": "Planificare"
     },
     "dashboard": "Dashboard",
-    "charging": "Încărcare",
-    "commands": "Comenzi",
     "costs": "Costuri",
     "energy": "Energie & tarife",
     "charging_map": "Harta stațiilor",
@@ -48,7 +46,6 @@
     "map": "Hartă",
     "mobile": {
       "car": "Mașina",
-      "charging": "Încărcare",
       "trip": "Traseu",
       "map": "Hartă",
       "costs": "Costuri",
@@ -58,9 +55,7 @@
     "indicator": {
       "tooltip": {
         "vehicle": "Adaugă o mașină pentru a debloca",
-        "live": "Conectează Tesla pentru date reale",
-        "tariff": "Configurează tariful tău de energie",
-        "commands": "Configurează Virtual Key pentru comenzi"
+        "tariff": "Configurează tariful tău de energie"
       }
     },
     "toggle_theme": "Schimbă tema",
@@ -113,20 +108,10 @@
       "subtitle": "Conectează-ți Tesla pentru a vedea SOC, range și starea de încărcare.",
       "cta": "Adaugă Tesla"
     },
-    "no_live": {
-      "title": "Date reale, direct din mașină",
-      "subtitle": "Conectează Tesla pentru SOC, range, locație și încărcare în timp real.",
-      "cta": "Conectează Tesla"
-    },
     "no_tariff": {
       "title": "Știm când e cel mai ieftin să încarci",
       "subtitle": "Configurează furnizorul tău de energie și-ți spunem ora optimă, în funcție de tariful tău real.",
       "cta": "Configurează tariful"
-    },
-    "no_commands": {
-      "title": "Controlează mașina din browser",
-      "subtitle": "Pereche Virtual Key și trimite comenzi: climate, lock, charge, geamuri.",
-      "cta": "Configurează Virtual Key"
     }
   },
   "onboarding": {
@@ -472,102 +457,6 @@
     "scheduled_disabled": "Încărcarea programată a fost dezactivată",
     "scheduled_error": "Programarea încărcării nu a putut fi actualizată",
     "syncUnavailable": "Tesla permite istoricul de încărcare doar conturilor business fleet, deci pe unul personal nu are cum să meargă. Sesiunile vor fi înregistrate direct din mașină odată ce pornim telemetria."
-  },
-  "commands": {
-    "title": "Comenzi",
-    "subtitle": "Controlează-ți mașina de la distanță.",
-    "panel_title": "Comenzi rapide",
-    "lock": "Blochează",
-    "unlock": "Deblochează",
-    "climate_on": "Pornește clima",
-    "climate_off": "Oprește clima",
-    "honk": "Claxonează",
-    "flash": "Semnalizează",
-    "no_commands": "Nicio comandă disponibilă pentru această mașină.",
-    "sending": "Se trimite…",
-    "no_vehicles_title": "Nicio mașină încă",
-    "no_vehicles_hint": "Adaugă o mașină în Garaj pentru a trimite comenzi.",
-    "success": "Comandă trimisă",
-    "error": "Comanda a eșuat",
-    "error_rate_limit": "Prea multe comenzi. Așteaptă puțin și încearcă din nou.",
-    "error_vcp_required": "Mașina a refuzat comanda semnată: cheia noastră nu e împerecheată cu ea. Dacă ai împerecheat deja, o nouă împerechere nu ajută — cheia înregistrată poate fi mai veche decât cea cu care semnăm. Verifică /debug → Car.",
-    "error_not_supported": "Această comandă nu este disponibilă pentru acest vehicul.",
-    "confirm": {
-      "unlock": {
-        "title": "Deblochezi mașina?",
-        "body": "Ușile se deschid fizic. Oricine e lângă mașină o poate deschide.",
-        "action": "Deblochează"
-      },
-      "remote_start": {
-        "title": "Activezi pornirea de la distanță?",
-        "body": "Mașina poate fi condusă fără cheie pentru scurt timp.",
-        "action": "Activează"
-      }
-    },
-    "history": {
-      "title": "Comenzi recente",
-      "loading": "Se încarcă istoricul…",
-      "error": "Nu s-a putut încărca istoricul.",
-      "empty": "Nicio comandă trimisă încă.",
-      "sensitive": "sensibilă",
-      "footer": "Dacă vezi o comandă pe care nu ai dat-o tu, deconectează Tesla din Setări și schimbă-ți parola."
-    },
-    "error_proxy_missing": "Comenzile nu sunt încă semnate — proxy-ul de semnare nu este pornit. Asta ține de noi, nu de tine.",
-    "group_access": "Acces",
-    "group_charging": "Încărcare",
-    "group_climate": "Climatizare",
-    "group_windows": "Geamuri",
-    "group_security": "Securitate",
-    "set_charge_limit": "Limită de încărcare",
-    "set_charge_amps": "Curent de încărcare",
-    "set_climate_temp": "Temperatură în habitaclu",
-    "start_charging": "Pornește încărcarea",
-    "stop_charging": "Oprește încărcarea",
-    "open_charge_port": "Deschide portul",
-    "close_charge_port": "Închide portul",
-    "vent_windows": "Aerisește geamurile",
-    "close_windows": "Închide geamurile",
-    "activate_sentry": "Pornește Sentry",
-    "deactivate_sentry": "Oprește Sentry",
-    "remote_start": "Pornește de la distanță",
-    "schedule_charging": "Încărcare programată",
-    "schedule_departure": "Ora de plecare",
-    "precondition_max": "Pornește dezghețul",
-    "share_navigation": "Trimite la navigație",
-    "apply": "Aplică",
-    "nav_placeholder": "Adresă sau loc",
-    "nav_send": "Trimite",
-    "nav_not_found": "Nu am găsit locul acesta.",
-    "all_commands": "Toate comenzile",
-    "find_car_title": "Mașina ta",
-    "find_car_distance": "{distance} pe jos",
-    "find_car_locating": "Îți caut poziția…",
-    "find_car_walk": "Pe jos",
-    "precondition_max_off": "Oprește dezghețul",
-    "nav_failed": "Nu am putut căuta adresa.",
-    "nav_rate_limited": "Prea multe căutări. Așteaptă un minut.",
-    "find_car_no_location": "Poziția ta nu e disponibilă — butonul Pe jos merge",
-    "name_doors": "Blocare uși",
-    "doors_locked": "Blocate",
-    "doors_unlocked": "Deblocate",
-    "name_sentry": "Mod Sentry",
-    "sentry_state_on": "Pornit",
-    "sentry_state_off": "Oprit",
-    "name_charging": "Încărcare",
-    "charging_state_on": "Pornită",
-    "charging_state_off": "Oprită",
-    "name_charge_port": "Port de încărcare",
-    "port_state_open": "Deschis",
-    "port_state_closed": "Închis",
-    "name_climate": "Climatizare",
-    "climate_state_on": "Pornită",
-    "climate_state_off": "Oprită",
-    "name_precondition": "Dezgheț maxim",
-    "precondition_state_on": "Pornit",
-    "precondition_state_off": "Oprit",
-    "name_windows": "Aerisire geamuri",
-    "windows_state_open": "Aerisite",
-    "windows_state_closed": "Închise"
   },
   "garage": {
     "title": "Garaj",

@@ -123,6 +123,23 @@ So the whole layer is gone: the `/commands` and `/charging` pages, `AllCommands`
 `useVehicleCommand`, the commands and command-history routes, `applyCommand` in
 the simulator, and the `LIVE` and `COMMANDS` capabilities.
 
+**One tab survived the first pass and shipped.** The menus live in three files —
+`Sidebar.tsx`, `SlideUpMenu.tsx`, `BottomNav.tsx` — two were edited by hand and
+the third was missed, so the mobile tab bar kept an **Încărcare** tab pointing at
+a deleted route. It was caught by a screenshot from the phone, which is not a
+review process, and it is the same failure as the hand-written route list this
+document already describes: a manual sweep over "everywhere that mentions X" is
+wrong the moment there is somewhere you forgot.
+`src/components/layout/__tests__/nav-targets-exist.test.ts` now derives the
+check — it reads the hrefs out of all three nav files, lists the pages that
+actually exist, and fails on any link that goes nowhere. Verified against the
+bug: with the fix reverted, it fails on exactly that tab.
+
+Removed with it: `useChargingHistory`, `useChargingHistorySync`, the two API
+helpers calling the deleted charging-history route, `security-alert.ts` (it
+warned about `unlock` and `remote_start`, which can no longer be sent), and the
+dead `commands` i18n namespace across all five locales.
+
 **Kept, because it is a cost feature rather than a car action:** the smart-charge
 recommendation in `SmartChargeCard`. It says when electricity is cheapest. Only
 the button that acted on it was a command, and only that button went.

@@ -85,19 +85,6 @@ export function wake(vehicleId: string): Promise<VehicleState> {
   return apiFetch<VehicleState>(`${BASE}/${vehicleId}/wake`, { method: "POST" });
 }
 
-export function getChargingHistory<T>(vehicleId: string): Promise<T[]> {
-  return apiFetch<T[]>(`${BASE}/${vehicleId}/charging-history`);
-}
-
-export function syncChargingHistory(
-  vehicleId: string,
-): Promise<ChargingHistorySyncResult> {
-  return apiFetch<ChargingHistorySyncResult>(
-    `${BASE}/${vehicleId}/charging-history`,
-    { method: "POST" },
-  );
-}
-
 /**
  * Send a destination (and any planned stops) to the car's navigation.
  *
