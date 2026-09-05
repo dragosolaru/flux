@@ -404,19 +404,12 @@
     "time_min_ago": "{m} perce",
     "time_hour_ago": "{h} órája",
     "time_day_ago": "{d} napja",
-    "polling_active": "Élő frissítés bekapcsolva — ez ébren tartja az autót.",
-    "polling_paused_idle": "10 perc tétlenség után szüneteltetve, hogy az autó alhasson.",
     "polling_paused": "Szüneteltetve — az autó alhat.",
     "let_it_sleep": "Hagyd aludni",
     "resume_polling": "Folytatás",
-    "reauth_title": "A Tesla-hozzáférés visszavonva",
-    "reauth_subtitle": "Az alkalmazás már nem érheti el az autót. Csatlakoztasd újra a helyreállításhoz.",
-    "reauth_action": "Tesla újracsatlakoztatása",
-    "contacting_car": "Kapcsolódás az autóhoz…",
     "pair_key_title": "Ez az autó nem párosította a virtuális kulcsot",
     "pair_key_hint": "Koppints a párosítási oldalért, majd hagyd jóvá a Tesla appban. Autónként egy jóváhagyás.",
-    "find_car": "Autó megkeresése",
-    "polling_off_everywhere": "A frissítések mindenhol ki vannak kapcsolva — az autót békén hagyjuk"
+    "find_car": "Autó megkeresése"
   },
   "charging": {
     "page_title": "Töltés",

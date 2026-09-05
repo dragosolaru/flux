@@ -404,19 +404,12 @@
     "time_min_ago": "vor {m} Min.",
     "time_hour_ago": "vor {h} Std.",
     "time_day_ago": "vor {d} T.",
-    "polling_active": "Live-Updates an — das hält das Auto wach.",
-    "polling_paused_idle": "Nach 10 Minuten Inaktivität pausiert, damit das Auto schlafen kann.",
     "polling_paused": "Pausiert — das Auto kann schlafen.",
     "let_it_sleep": "Schlafen lassen",
     "resume_polling": "Fortsetzen",
-    "reauth_title": "Tesla-Zugriff wurde widerrufen",
-    "reauth_subtitle": "Diese App darf dein Auto nicht mehr erreichen. Verbinde erneut, um das zu ändern.",
-    "reauth_action": "Tesla neu verbinden",
-    "contacting_car": "Verbindung zum Auto…",
     "pair_key_title": "Dieses Auto hat seinen Virtual Key nicht gekoppelt",
     "pair_key_hint": "Tippe für die Kopplungsseite und bestätige in der Tesla-App. Eine Bestätigung pro Auto.",
-    "find_car": "Auto finden",
-    "polling_off_everywhere": "Updates sind überall aus — das Auto wird in Ruhe gelassen"
+    "find_car": "Auto finden"
   },
   "charging": {
     "page_title": "Laden",

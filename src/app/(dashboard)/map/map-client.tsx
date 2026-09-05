@@ -331,9 +331,13 @@ export function MapClient() {
   // an interval here would keep a linked car awake for as long as the map is
   // open.
   const planningVehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+  // The flag means "has telemetry", and it used to mean "is a linked car" —
+  // opposite senses for the same vehicle. Poll is false either way, so the only
+  // consequence was a confusing argument; naming it stops the next reader
+  // trusting the old meaning.
   const { data: liveState } = useVehicle(
     vehicleId,
-    planningVehicle?.dataSource === "live",
+    planningVehicle?.dataSource !== "live",
     false,
   );
   // Derived, not synced. An effect copying the live value into state would

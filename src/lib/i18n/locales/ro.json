@@ -404,19 +404,12 @@
     "time_min_ago": "{m}m în urmă",
     "time_hour_ago": "{h}h în urmă",
     "time_day_ago": "{d}z în urmă",
-    "polling_active": "Actualizări live pornite — asta ține mașina trează.",
-    "polling_paused_idle": "Oprite după 10 minute de inactivitate, ca mașina să poată dormi.",
     "polling_paused": "Oprite — mașina poate dormi.",
     "let_it_sleep": "Las-o să doarmă",
     "resume_polling": "Reia",
-    "reauth_title": "Accesul Tesla a fost revocat",
-    "reauth_subtitle": "Aplicația nu mai are permisiunea să contacteze mașina. Reconectează ca să o restabilești.",
-    "reauth_action": "Reconectează Tesla",
-    "contacting_car": "Contactăm mașina…",
     "pair_key_title": "Mașina nu are Cheia Virtuală împerecheată",
     "pair_key_hint": "Apasă pentru pagina de împerechere, apoi aprobă în aplicația Tesla. O aprobare pentru fiecare mașină.",
-    "find_car": "Găsește mașina",
-    "polling_off_everywhere": "Actualizările sunt oprite peste tot — mașina e lăsată în pace"
+    "find_car": "Găsește mașina"
   },
   "charging": {
     "page_title": "Încărcare",

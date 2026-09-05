@@ -146,6 +146,40 @@ the button that acted on it was a command, and only that button went.
 
 ---
 
+## 3c. The dashboard sat on "Contactăm mașina…" forever
+
+Reported from the phone, and it was mine. A vehicle still stored as
+`data_source = "live"` was answered `503 LIVE_PAUSED`, the client read that as
+"still trying", and the screen showed a spinner and the words *contacting the
+car* — for a car nothing will ever contact again.
+
+The 503 was the wrong answer to the wrong question. Such a vehicle is not an
+error and not a simulator: it is **a record with no telemetry**, which is
+exactly what a vehicle is in the product now — the thing documents, costs and
+odometer readings hang off. So the route returns that: the identity we know, and
+null for every reading we do not. Screens already hide null fields rather than
+substituting placeholders, so an honest empty renders without any of them
+needing a special case.
+
+**And the polling machinery went with it.** There was an app-wide sleep switch, a
+ten-minute idle cut-off, a `live` flag marking vehicles that could be disturbed,
+a `cached=1` query mode and a second cache key — roughly two hundred lines whose
+entire purpose was that *a poll on a sleeping Tesla wakes it, and a woken car
+loses ten times more charge per idle day*. None of that hazard exists. What is
+left of `pollInterval` is: refresh if the screen asked, stop after a failure.
+`vehicle-sleep.ts` and the orphaned `SleepPanel` are deleted, and the hook's
+`live` parameter is now `hasTelemetry` — the opposite sense, which is why
+`map-client` needed its argument inverted rather than left to read plausibly and
+mean the reverse.
+
+**One thing was silently lost and is restored.** Removing the Tesla
+re-authorisation banner took the whole error branch of the dashboard's ternary
+with it, so a failed read showed "—" and nothing else — indistinguishable from a
+car with no data, and only one of those is worth retrying. There is an error
+card with a Retry again.
+
+---
+
 ## 4. What stayed, deliberately
 
 - **The vehicle.** Documents, costs and odometer readings attach to one, and the

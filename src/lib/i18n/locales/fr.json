@@ -404,19 +404,12 @@
     "time_min_ago": "il y a {m}m",
     "time_hour_ago": "il y a {h}h",
     "time_day_ago": "il y a {d}j",
-    "polling_active": "Mises à jour en direct actives — la voiture reste éveillée.",
-    "polling_paused_idle": "En pause après 10 minutes d'inactivité, pour que la voiture dorme.",
     "polling_paused": "En pause — la voiture peut dormir.",
     "let_it_sleep": "La laisser dormir",
     "resume_polling": "Reprendre",
-    "reauth_title": "L'accès Tesla a été révoqué",
-    "reauth_subtitle": "Cette application n'a plus l'autorisation de joindre votre voiture. Reconnectez-vous pour la rétablir.",
-    "reauth_action": "Reconnecter Tesla",
-    "contacting_car": "Connexion à la voiture…",
     "pair_key_title": "Cette voiture n'a pas associé sa clé virtuelle",
     "pair_key_hint": "Touchez pour ouvrir la page d'association, puis approuvez dans l'app Tesla. Une approbation par voiture.",
-    "find_car": "Trouver la voiture",
-    "polling_off_everywhere": "Les mises à jour sont coupées partout — la voiture est laissée tranquille"
+    "find_car": "Trouver la voiture"
   },
   "charging": {
     "page_title": "Recharge",

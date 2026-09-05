@@ -26,7 +26,6 @@ import { useVehicles } from "@/hooks/useVehicles";
 import { useVehicleContext } from "@/contexts/vehicle";
 import { cardVariants, staggerContainer } from "@/lib/animations/variants";
 import { mockLocationLabel } from "@/lib/mock/location-label";
-import { setSleepMode, useSleepMode } from "@/lib/vehicle-sleep";
 import type { VehicleState } from "@/types/vehicle";
 
 interface DashboardClientProps {
@@ -103,13 +102,6 @@ function HeroCard({
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-36 rounded-xl" />
-            {/* Grey rectangles alone read as a car that is present but broken —
-                especially beside live-looking controls. Saying what is
-                happening costs one line. */}
-            <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              {td("contacting_car")}
-            </p>
           </>
         ) : (
           <>
@@ -173,54 +165,6 @@ function HeroCard({
  * looked like a working live integration rather than a bug. `simulated` says
  * which it is; freshness now only chooses how alive the badge looks.
  */
-/**
- * Says whether the car is being polled, and lets the driver stop it.
- *
- * Polling a linked car wakes it, so an open dashboard keeps it awake. The
- * counterpart in useVehicle stops on its own after ten idle minutes — this makes
- * that state visible, because silently stopping would look like the app had
- * frozen, and gives an immediate "let it sleep" for someone who is done looking.
- */
-function SleepControl({
-  active,
-  pausedByIdle,
-  sleeping,
-  onPause,
-  onResume,
-  t,
-}: {
-  active: boolean;
-  pausedByIdle: boolean;
-  /** The app-wide switch, which outranks this hook's own idle state. */
-  sleeping: boolean;
-  onPause: () => void;
-  onResume: () => void;
-  t: ReturnType<typeof useTranslations>;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5">
-      <span
-        className={`size-2 shrink-0 rounded-full ${active ? "animate-pulse bg-chart-2" : "bg-muted-foreground"}`}
-      />
-      <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-        {active
-          ? t("polling_active")
-          : sleeping
-            ? t("polling_off_everywhere")
-            : pausedByIdle
-              ? t("polling_paused_idle")
-              : t("polling_paused")}
-      </p>
-      <button
-        onClick={active ? onPause : onResume}
-        className="flex min-h-11 shrink-0 items-center rounded-lg border border-border bg-muted/40 px-3 text-sm font-medium hover:bg-muted"
-      >
-        {active ? t("let_it_sleep") : t("resume_polling")}
-      </button>
-    </div>
-  );
-}
-
 function LiveBadge({
   fresh,
   isFetching,
@@ -431,12 +375,14 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
   const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
 
   const isLive = vehicle?.dataSource === "live";
-  const { data, isLoading, isFetching, isError, refetch, polling } = useVehicle(
+  // A linked car is a record with no telemetry: nothing about it changes, so
+  // there is nothing to poll for. The simulator does change, and is our own
+  // database, so it polls.
+  const { data, isLoading, isFetching, isError, refetch } = useVehicle(
     vehicleId,
-    isLive,
+    !isLive,
   );
   const td = useTranslations("dashboard");
-  const sleeping = useSleepMode();
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
 
   // Ambient body tinting based on battery state
@@ -499,71 +445,53 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
 
       <GettingStartedCard data={checklist} />
 
+      {isError ? (
+        // Without this the screen showed "—" and nothing else on a failed read,
+        // which is indistinguishable from a car with no data — and one of those
+        // is worth retrying. The reauth banner that used to live here went with
+        // the Tesla integration and took the whole error branch with it.
+        <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
+          <div>
+            <div className="font-medium">{td("error_title")}</div>
+            <p className="mt-1 text-sm text-muted-foreground">{td("error_subtitle")}</p>
+          </div>
+          <button
+            onClick={() => void refetch()}
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            {td("retry")}
+          </button>
+        </Card>
+      ) : (
+        <>
       <HeroCard
         state={data}
         isLoading={isLoading}
         isFetching={isFetching}
         vehicleName={vehicleName}
         simulated={!isLive}
-        footer={
-          // Inside the card, because it is a property of this car — it sat
-          // beside it as a sibling panel, reading like an app-wide setting.
-          //
-          // Hidden when the car cannot be reached: polling has stopped anyway
-          // (useVehicle drops the interval on error), so "live updates on, this
-          // keeps the car awake" printed directly above "we couldn't contact
-          // the car" claimed something untrue. The error card's Retry is the
-          // control that makes sense there.
-          // Also hidden while the first read is in flight: before anything has
-          // come back there is nothing being kept awake, and asserting there is
-          // — beside a screen of empty placeholders — reads as a car that is
-          // present but broken.
-          isLive && !isError && !isLoading ? (
-            <div className="mt-5">
-              <SleepControl
-                active={polling.active}
-                pausedByIdle={polling.pausedByIdle}
-                sleeping={sleeping}
-                // The app-wide switch, not this hook's own pause. The old one
-                // lived in component state, so it covered a single mounted hook
-                // and died on the next navigation — a control that looked like
-                // a promise and was not one.
-                onPause={() => setSleepMode(true)}
-                onResume={() => {
-                  setSleepMode(false);
-                  polling.resume();
-                  void refetch();
-                }}
-                t={td}
-              />
-            </div>
-          ) : undefined
-        }
       />
 
-      <>
+      {data?.chargingState === "charging" && <ChargingOverlayCard state={data} />}
 
-          {data?.chargingState === "charging" && (
-            <ChargingOverlayCard state={data} />
-          )}
+      <StatChips state={data} isLoading={isLoading} />
 
-          <StatChips state={data} isLoading={isLoading} />
-
-          {showLocation && data && (
-            // Tappable. It showed a coordinate-derived label and did nothing,
-            // which is the wrong half of "where is my car" — the question is
-            // almost always asked while walking towards it.
-            <ListRow
-              leading={<MapPin className="size-4 text-primary" />}
-              title={mockLocationLabel(data.latitude!, data.longitude!)}
-              meta={td("find_car")}
-              trailing={<ChevronRight className="size-4 text-muted-foreground" />}
-              onClick={() =>
-                router.push(`/map?lat=${data.latitude}&lng=${data.longitude}&car=1`)
-              }
-            />
-          )}
-      </>
+      {showLocation && data && (
+        // Tappable. It showed a coordinate-derived label and did nothing,
+        // which is the wrong half of "where is my car" — the question is
+        // almost always asked while walking towards it.
+        <ListRow
+          leading={<MapPin className="size-4 text-primary" />}
+          title={mockLocationLabel(data.latitude!, data.longitude!)}
+          meta={td("find_car")}
+          trailing={<ChevronRight className="size-4 text-muted-foreground" />}
+          onClick={() =>
+            router.push(`/map?lat=${data.latitude}&lng=${data.longitude}&car=1`)
+          }
+        />
+      )}
+        </>
+      )}
     </PageWrapper>
   );
 }

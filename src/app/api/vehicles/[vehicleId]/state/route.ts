@@ -12,6 +12,7 @@ import { seedMockHistory } from "@/lib/mock/seed-history";
 import { recordBatteryHealth } from "@/lib/battery-health";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { BrandKey } from "@/lib/brands/types";
+import type { VehicleState } from "@/types/vehicle";
 
 /**
  * Vehicle state — simulator only.
@@ -21,6 +22,76 @@ import type { BrandKey } from "@/lib/brands/types";
  * removal and is refused rather than handed to the simulator, which would
  * invent one.
  */
+/**
+ * A vehicle we hold a record for and take no readings from.
+ *
+ * Every telemetry field is null on purpose. `linkPaused` marks it so a screen
+ * can say why rather than implying the reading is merely old.
+ */
+function noTelemetryState(vehicle: {
+  id: string;
+  brand: string;
+  display_name: string;
+}): VehicleState {
+  const now = new Date().toISOString();
+  return {
+    vehicleId: vehicle.id,
+    displayName: vehicle.display_name,
+    brand: vehicle.brand as BrandKey,
+    dataSource: "live",
+    linkPaused: true,
+    trimBadge: null,
+    isOnline: false,
+    lastSeenAt: null,
+    batteryLevel: null,
+    batteryRangeKm: null,
+    chargeLimit: null,
+    chargingState: null,
+    chargingRateKw: null,
+    chargeAmps: null,
+    isChargePortOpen: null,
+    timeToFullMinutes: null,
+    scheduledChargingEnabled: null,
+    scheduledChargingStartMinutes: null,
+    scheduledDepartureEnabled: null,
+    scheduledDepartureMinutes: null,
+    batteryHealthPct: null,
+    batteryChemistry: null,
+    cellVoltages: null,
+    motionState: null,
+    odometerKm: null,
+    speedKmh: null,
+    headingDeg: null,
+    latitude: null,
+    longitude: null,
+    interiorTempC: null,
+    exteriorTempC: null,
+    isClimateOn: null,
+    driverTempC: null,
+    passengerTempC: null,
+    hvacMode: null,
+    seatHeatingLevel: null,
+    steeringHeating: null,
+    isLocked: null,
+    doorsOpen: null,
+    windowsOpen: null,
+    isTrunkOpen: null,
+    isFrunkOpen: null,
+    isSentryMode: null,
+    isDashcamRecording: null,
+    isRemoteStartActive: null,
+    isBatteryPreconditioning: null,
+    softwareVersion: null,
+    updateAvailable: null,
+    updateVersionLabel: null,
+    serviceDueAt: null,
+    tirePressures: null,
+    safetyScore: null,
+    efficiencyScore: null,
+    recordedAt: now,
+  };
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ vehicleId: string }> },
@@ -65,15 +136,21 @@ export async function GET(
     return NextResponse.json({ message: "unknown-brand" }, { status: 400 });
   }
 
-  // The live path is gone. A vehicle stored as `live` predates the Tesla
-  // integration being withdrawn, and it must not be handed to the simulator
-  // below — that path calls createInitialSnapshot and would invent a car,
-  // showing a fabricated battery level to the owner of a real one.
+  // A car that was linked before the integration was withdrawn.
+  //
+  // It is not a simulator and must never be handed to one below — that path
+  // calls createInitialSnapshot and would invent a battery level for a real
+  // Model 3. But 503 was wrong too: the dashboard read it as "still trying" and
+  // sat on "Contactăm mașina…" forever, contacting nothing, for a car nothing
+  // will ever contact again.
+  //
+  // What it actually is now is a record with no telemetry — the thing documents,
+  // costs and odometer readings hang off. So that is what it returns: the
+  // identity we know, and null for every reading we do not. Screens already hide
+  // null fields rather than substituting placeholders (see types/vehicle.ts), so
+  // an honest empty is rendered without any of them needing a special case.
   if (vehicle.data_source === "live") {
-    return NextResponse.json(
-      { message: "Vehicle link is not available", code: "LIVE_PAUSED" },
-      { status: 503 },
-    );
+    return NextResponse.json(noTelemetryState(vehicle));
   }
 
   // Mock path: tick the simulator to now
