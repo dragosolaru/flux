@@ -16,7 +16,7 @@
 export type Gate = 1 | 2 | 3;
 
 export const GATES: Record<Gate, string> = {
-  1: "Înainte să conectăm mașina altcuiva",
+  1: "Înainte să folosească altcineva aplicația",
   2: "Înainte să plătească cineva",
   3: "Ce diferențiază de fapt produsul",
 };
@@ -53,62 +53,48 @@ export const ROADMAP: Milestone[] = [
   },
   {
     gate: 1,
-    goal: "Tesla conectată și comenzile funcționează",
-    nextStep: "Gata — cont partener înregistrat, proxy pornit, comenzi confirmate pe mașină.",
-    check: (c) => c.teslaLive === true && c.teslaProxy === true,
+    goal: "Harta nu mai are filigran",
+    nextStep: "Ia o cheie CARTO și pune-o în variabilele de mediu.",
+    cost:
+      "Fiecare dală din producție scrie API KEY REQUIRED peste ea, inclusiv în orice captură de ecran. E primul lucru pe care îl vede cineva care încearcă aplicația.",
   },
   {
     gate: 1,
-    goal: "Proxy-ul de semnare refuză străinii (T10)",
+    goal: "Sursele de stații își spun singure starea",
     nextStep:
-      "Un header cu secret comun verificat în Caddy înainte de reverse_proxy, setat pe container și ca TESLA_PROXY_SECRET în Vercel. Vreo douăzeci de linii.",
-    cost:
-      "E un releu deschis. Oricine găsește hostname-ul și are un token Tesla valid pentru un cont împerecheat poate pune cheia ta privată să semneze comenzi, pe cota ta. Contul tău de partener e cel pe care Tesla îl suspendă.",
-  },
-  {
-    gate: 1,
-    goal: "Cota Fleet API rezistă la mai mult de un utilizator (T6)",
-    nextStep:
-      "O limită globală în fetchVehicleData/sendVehicleCommand, plus un cache Redis de 20-30s pentru vehicle_data per mașină, ca taburile și rutele să împartă un singur apel.",
-    cost:
-      "Limitele sunt per utilizator; Tesla numără per cont de partener. Un singur dashboard deschis stă deja la plafonul lui, deci zece utilizatori pun aplicația la de zece ori cât permite Tesla — și ea limitează pe toată lumea deodată.",
-  },
-  {
-    gate: 1,
-    goal: "Arată ce mașini le taxează Tesla la tarif redus",
-    nextStep:
-      "fleet_status returnează deja discounted_device_data per VIN și îl apelăm deja din Verifică împerecherea — trebuie doar afișat. Un singur câmp.",
-    cost:
-      "Tesla taxează contul de partener per cerere, nu per mașină, deci urmărirea costurilor trebuie făcută per mașină și per volum de cereri. Ieftin de adăugat acum, ghiceală când sunt multe mașini. Vezi docs/SCALING-AND-COSTS.md.",
-  },
-  {
-    gate: 1,
-    goal: "Comenzile funcționează pe o mașină adormită (T3/T4)",
-    nextStep:
-      "Întâi GET /api/1/vehicles/{id} (ieftin, nu trezește); dacă nu e online, wake_up DIRECT — niciodată prin proxy — apoi verifici cu pauze de 2/4/8/15s și trimiți. Cod VEHICLE_ASLEEP distinct.",
-    cost:
-      "Mașinile dorm mai tot timpul, iar logurile arată deja vehicle_data 408 vehicle unavailable. Cam jumătate din comenzile reale eșuează fără nicio explicație.",
+      "Gata — registrul național se înregistrează sub numele lui, cu disabled/error/ok, iar prospețimea nu se mai acordă când sursa de care depinde țara a picat.",
+    check: () => true,
   },
 
   // ---- Gate 2 -------------------------------------------------------------
   {
     gate: 2,
-    goal: "Costurile raportează suma corectă (C1-C5)",
+    goal: "OCR-ul e verificat, nu presupus",
     nextStep:
-      "Întâi decide un singur înțeles pentru energy_costs.cost_ron, apoi repară toate patru împreună: atribuirea filtrează network IS NULL ca să găsească încărcarea ACASĂ, toată factura casei ajunge pe mașină când nu se potrivește nicio sesiune, /api/costs înmulțește a doua oară cu fracția de atribuire, iar perioada de facturare își pierde ultima zi. Va fi nevoie de o migrație pentru rândurile deja salvate.",
+      "Corpus golden de 10–15 documente reale anonimizate, plus două poze de ecran. Regula: fiecare câmp ori corect, ori marcat needs_review. Nu există niciun test azi.",
+    cost:
+      "Produsul plătit e citirea documentelor. Că merge se sprijină pe faptul că a mers pe documentele autorului — o presupunere, nu o măsurătoare.",
+  },
+  {
+    gate: 2,
+    goal: "Costurile raportează suma corectă",
+    nextStep:
+      "Întâi decide un singur înțeles pentru energy_costs.cost_ron, apoi repară cele patru rămase: ziua pierdută la marginea perioadei, cipul de economie și cipurile de cost/km care folosesc baze diferite, și costPerKmHome care împarte costul de acasă la kilometrii totali.",
     cost:
       "Numărul pentru care există produsul e greșit și nimic nu semnalează asta. Oamenii nu reclamă — pur și simplu nu mai au încredere.",
   },
   {
     gate: 2,
-    goal: "Limitele de abonament sunt aplicate",
-    nextStep: "Gata — 5 documente de energie și 10 de mașină pe lună, restaurate în f408593.",
-    check: () => true,
+    goal: "Kilometrii ajung în aplicație",
+    nextStep:
+      "Odometru din patru surse — la adăugarea mașinii, manual oricând, din ITP și facturi de service, din poza ecranului — plus memento lunar și gol onest când lipsesc două citiri.",
+    cost:
+      "Fără două citiri la distanță în timp, cost/km și economia față de benzină rămân goale. Adică exact promisiunea din pagina de preț.",
   },
   {
     gate: 2,
     goal: "Planurile plătite chiar pot fi cumpărate",
-    nextStep: "Adaugă cheile Stripe de producție și cele două price ID-uri.",
+    nextStep: "Adaugă cheile Stripe de producție și price ID-urile.",
     check: (c) => c.stripe === true,
   },
   {
@@ -123,33 +109,23 @@ export const ROADMAP: Milestone[] = [
   // ---- Gate 3 -------------------------------------------------------------
   {
     gate: 3,
-    goal: "Fleet Telemetry — mașina transmite în loc să fie interogată",
+    goal: "Mașina, cândva",
     nextStep:
-      "Un receptor mTLS pe același host cu proxy-ul de semnare, plus un apel fleet_telemetry_config per mașină. Cam cât a fost munca la proxy.",
+      "Nimic de făcut acum. Integrarea Tesla a fost retrasă pe 2026-09-05 și trăiește pe ramura `v3`; docs/TESLA-PARKED.md spune ce s-a scos și cum se aduce înapoi.",
     cost:
-      "Singura cale către istoric real de încărcare, consum real și pierdere vampirică — pe care interogarea nu o poate măsura, pentru că fiecare măsurătoare trezește mașina. Toate aplicațiile Tesla interoghează; aproape niciuna nu ascultă un flux. Ăsta e diferențiatorul.",
-  },
-  {
-    gate: 3,
-    goal: "Domeniu propriu, plecat de pe Vercel",
-    nextStep:
-      "Cumpără domeniul acum; fă mutarea și schimbarea de domeniu ÎMPREUNĂ, când Fleet Telemetry o va impune. Ordinea completă în docs/HOSTING-AND-DOMAIN.md.",
-    cost:
-      "Schimbarea domeniului reînregistrează contul de partener și DESPERECHEAZĂ fiecare mașină — cheia, redirect URI-ul și linkul _ak sunt toate legate de el. Ieftin cu o mașină, scump cu clienți. Vercel e și motivul pentru care proxy-ul e public (T10) și pentru care Fleet Telemetry e imposibil.",
-  },
-  {
-    gate: 3,
-    goal: "Redesignul — încheiat, /v2 e șters",
-    nextStep:
-      "Nimic de făcut. Judecat pe ecranul mașinii, v1 arăta și mergea mai bine, deci /v2 a fost șters și tot ce era util s-a mutat în v1. Ce s-a găsit pe drum — 52 de defecte, toate reparate în aplicația reală — e în docs/REDESIGN-V2.md.",
-    cost:
-      "Regula scrisă aici de la început a fost că fiecare ecran portat ori îl înlocuiește pe original, ori e șters, fiindcă un /v2 permanent e cel mai prost dintre cele trei rezultate. S-a închis pe regula aia, nu împotriva ei — iar defectele găsite au fost reparate în v1 tot timpul, deci munca nu s-a pierdut odată cu ecranele.",
+      "Cinci analize independente au dat aceeași concluzie: ca aplicație-companion pentru Tesla pierdem în fața aplicației gratuite Tesla și a Tessie. Se reia când avem un motiv, nu un calendar.",
   },
   {
     gate: 3,
     goal: "Disponibilitatea prizelor în timp real",
     nextStep:
       "NDW are deja availabilities[] live pentru Olanda, gratis. Dovedește interfața pe o singură țară înainte să plătești un flux comercial.",
+  },
+  {
+    gate: 3,
+    goal: "tomtom și overpass rulează pe cron",
+    nextStep:
+      "Azi rulează doar în modul regiune, deci rândurile lor îmbătrânesc la nesfârșit dacă nu declanșează cineva o zonă manual. Ori intră pe cron și plătim apelurile, ori acceptăm explicit că sunt un supliment.",
   },
 ];
 

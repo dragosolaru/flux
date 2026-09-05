@@ -24,7 +24,7 @@ function appOrigin(req: NextRequest): string {
   // The configured origin wins over the request's Host header, which is
   // caller-set: a forged Host would otherwise put an attacker's domain in the
   // link we mail to the victim.
-  const configured = process.env.NEXTAUTH_URL ?? process.env.TESLA_REDIRECT_URI;
+  const configured = process.env.NEXTAUTH_URL;
   if (configured) {
     try {
       return new URL(configured).origin;

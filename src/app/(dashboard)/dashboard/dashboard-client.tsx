@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertTriangle,
   BatteryCharging,
   ChevronRight,
   Fan,
@@ -40,8 +39,6 @@ import { mockLocationLabel } from "@/lib/mock/location-label";
 import { setSleepMode, useSleepMode } from "@/lib/vehicle-sleep";
 import type { CommandName } from "@/types/history";
 import type { VehicleState } from "@/types/vehicle";
-import Link from "next/link";
-import { ApiError } from "@/lib/api-fetch";
 
 interface DashboardClientProps {
   checklist: ChecklistData;
@@ -617,13 +614,10 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
   const brand = (vehicle?.brand ?? "tesla") as BrandKey;
 
   const isLive = vehicle?.dataSource === "live";
-  const { data, isLoading, isFetching, isError, error, refetch, polling } = useVehicle(
+  const { data, isLoading, isFetching, isError, refetch, polling } = useVehicle(
     vehicleId,
     isLive,
   );
-  // Tesla revoked us, as opposed to the car simply not answering.
-  const needsTeslaReauth =
-    error instanceof ApiError && error.code === "TESLA_REAUTH_REQUIRED";
   const td = useTranslations("dashboard");
   const sleeping = useSleepMode();
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
@@ -730,43 +724,7 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
         }
       />
 
-      {isError && needsTeslaReauth ? (
-        // Revoking access from a Tesla account is not a connectivity problem,
-        // and "check your connection and try again" is advice that can never
-        // work for it. The only way back is re-authorising.
-        <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
-          <AlertTriangle className="size-8 text-amber-400" />
-          <div>
-            <div className="font-medium">{td("reauth_title")}</div>
-            <p className="mt-1 text-sm text-muted-foreground">{td("reauth_subtitle")}</p>
-          </div>
-          <Link
-            // ?reauth: this car already exists, so the page's "you already
-            // have a vehicle" guard would otherwise bounce straight back here.
-            href="/connect/tesla?reauth=1"
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-          >
-            {td("reauth_action")}
-          </Link>
-        </Card>
-      ) : isError ? (
-        <Card variant="surface" className="flex flex-col items-center gap-3 p-10 text-center">
-          <AlertTriangle className="size-8 text-destructive" />
-          <div>
-            <div className="font-medium">{td("error_title")}</div>
-            <p className="mt-1 text-sm text-muted-foreground">{td("error_subtitle")}</p>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            transition={TAP}
-            onClick={() => refetch()}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-          >
-            {td("retry")}
-          </motion.button>
-        </Card>
-      ) : (
-        <>
+      <>
           <QuickActions
             // Remount per car. AllCommands seeds its controls from the vehicle
             // once and then keeps local state, so without this a value picked
@@ -800,8 +758,7 @@ export function DashboardClient({ checklist, virtualKeyUrl }: DashboardClientPro
               }
             />
           )}
-        </>
-      )}
+      </>
     </PageWrapper>
   );
 }

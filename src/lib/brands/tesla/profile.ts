@@ -1,11 +1,12 @@
-import { isLiveEnabled } from "@/lib/live-integrations";
 import type { BrandProfile } from "../types";
 import type { VehicleState } from "@/types/vehicle";
 
 export const teslaProfile: BrandProfile = {
   key: "tesla",
   displayName: "Tesla",
-  dataSource: isLiveEnabled("tesla") ? "live" : "mock",
+  // Simulator only. This asked LIVE_INTEGRATIONS while the live adapter
+  // existed; there is no live adapter now, so the honest value is a constant.
+  dataSource: "mock",
   capabilities: {
     telemetry: {
       batteryLevel: true,

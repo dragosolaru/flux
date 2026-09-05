@@ -17,6 +17,12 @@ threshold below is chosen so that firing means something.
 Two scheduled jobs, in `vercel.json`. That is the entire background workload —
 everything else happens because a person opened a screen.
 
+**The Tesla integration was withdrawn on 2026-09-05** — see
+`docs/TESLA-PARKED.md`. Everything below about reaching a car, the Fleet API
+budget, wakes and the signing proxy describes code that is now on branch `v3`
+and no longer runs. It is left in place because it is the inventory a restore
+would need, not because it is live.
+
 | Job | When | What it does | Broken looks like |
 | --- | --- | --- | --- |
 | `/api/internal/warm?country=…` | 03:00 daily | Refreshes charger data for twelve countries | `ingest_runs` stops gaining rows; `chargers.total` flat for days |

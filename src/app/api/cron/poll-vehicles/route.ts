@@ -3,12 +3,9 @@ import { createHash } from "node:crypto";
 
 import { constantTimeEqual } from "@/lib/crypto/timing";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import { isLiveEnabled } from "@/lib/live-integrations";
 import { isNotificationsEnabled } from "@/lib/feature-flags";
 import { getBrand } from "@/lib/brands/registry";
 import { applyCapabilityMask } from "@/lib/brands/adapter-utils";
-import { fetchVehicleData } from "@/lib/tesla/api";
-import { saveLastKnown } from "@/lib/tesla/last-known";
 import { deriveAndStoreActivity } from "@/lib/vehicle/persist-activity";
 import { loadSnapshot } from "@/lib/mock/persistence";
 import { tick } from "@/lib/mock/engine";
@@ -46,19 +43,7 @@ async function resolveState(vehicle: VehicleRow): Promise<VehicleState | null> {
   const profile = getBrand(vehicle.brand);
   if (!profile) return null;
 
-  if (isLiveEnabled(vehicle.brand) && vehicle.data_source === "live") {
-    if (vehicle.brand === "tesla" && vehicle.tesla_vehicle_id) {
-      return fetchVehicleData({
-        reason: "scheduled",
-        vehicleId: vehicle.id,
-        userId: vehicle.user_id,
-        teslaVehicleId: vehicle.tesla_vehicle_id,
-        displayName: vehicle.display_name,
-      });
-    }
-    return null;
-  }
-
+  // Simulator only — the live branch went with the Tesla integration.
   const snapshot = await loadSnapshot(vehicle.id);
   if (!snapshot) return null;
   const next = tick(snapshot, new Date(), profile);
@@ -66,17 +51,13 @@ async function resolveState(vehicle: VehicleRow): Promise<VehicleState | null> {
 }
 
 /**
- * One reading, kept.
+ * Tick each vehicle and derive what it did.
  *
- * `OPERATIONS.md` said this job existed "to keep history continuous" and it did
- * not: it fetched a state to evaluate alerts and threw it away, so
- * `vehicle_snapshots` only ever gained rows when a person happened to have a
- * screen open. That left the history this job is named for with day-wide holes,
- * and left the activity derived from it with nothing to derive.
- *
- * A sleeping car is not a failure here — it is the normal state of a parked one.
- * The read is refused rather than waking it, and the derivation still runs,
- * because it works on what is already stored.
+ * This used to keep the reading it took from a real car, because the job was
+ * documented as existing "to keep history continuous" and did not. With the
+ * Tesla integration withdrawn the simulator writes its own snapshots, so what
+ * is left is the derivation — which runs on stored history and touches no
+ * network at all.
  */
 async function pollAndStore(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
@@ -86,13 +67,7 @@ async function pollAndStore(
   try {
     state = await resolveState(vehicle);
   } catch (err) {
-    console.error("[poll-vehicles] read", vehicle.id, err);
-  }
-
-  if (state && vehicle.data_source === "live") {
-    await saveLastKnown(supabase, vehicle.id, state).catch((err: unknown) => {
-      console.error("[poll-vehicles] saveLastKnown", vehicle.id, err);
-    });
+    console.error("[poll-vehicles] tick", vehicle.id, err);
   }
 
   await deriveAndStoreActivity(supabase, vehicle).catch((err: unknown) => {
@@ -101,6 +76,7 @@ async function pollAndStore(
 
   return state;
 }
+
 
 async function alertFor(
   supabase: ReturnType<typeof createSupabaseAdminClient>,

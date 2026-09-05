@@ -4,8 +4,6 @@ import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isRedisConfigured, redisSource } from "@/lib/redis";
 import { GOAL, resolveRoadmap } from "@/lib/roadmap";
-import { TESLA_SCOPES, teslaProxyBaseUrl, teslaVirtualKeyUrl } from "@/lib/tesla/constants";
-import { readTeslaCalls } from "@/lib/tesla/call-log";
 
 // Development diagnostics: charger-pipeline health, recent ingest runs, and
 // which integrations are configured. Admin-only (ADMIN_EMAILS).
@@ -96,106 +94,9 @@ export async function GET() {
     anthropicKey: !!process.env.ANTHROPIC_API_KEY,
     cronSecret: !!process.env.CRON_SECRET,
     ingestWebhookSecret: !!process.env.INGEST_WEBHOOK_SECRET,
-    liveIntegrations: process.env.LIVE_INTEGRATIONS ?? "",
     openRouteServiceKey: !!process.env.OPENROUTESERVICE_API_KEY,
     stripe: !!process.env.STRIPE_SECRET_KEY,
   };
-
-  // Kept out of `config` on purpose: every one of these is reported again, in
-  // dependency order and with what it blocks, under tesla.steps. Listing them
-  // twice made the Configuration panel the longest thing on the page while
-  // saying nothing the Tesla panel did not say better.
-  const teslaConfig = {
-    teslaClientId: !!process.env.TESLA_CLIENT_ID,
-    teslaClientSecret: !!process.env.TESLA_CLIENT_SECRET,
-    teslaPublicKey: !!process.env.TESLA_PUBLIC_KEY,
-    teslaTokenEncryptionKey: !!process.env.TESLA_TOKEN_ENCRYPTION_KEY,
-    teslaRedirectUri: !!process.env.TESLA_REDIRECT_URI,
-    teslaProxy: !!process.env.TESLA_PROXY_BASE_URL,
-    teslaLive: (process.env.LIVE_INTEGRATIONS ?? "").split(",").map((s) => s.trim()).includes("tesla"),
-  };
-
-  // A plaintext proxy URL is refused at command time, which is the right place
-  // to enforce it but a poor place to discover it. Say so here instead.
-  let teslaProxyProblem: string | null = null;
-  try {
-    teslaProxyBaseUrl();
-  } catch (err) {
-    teslaProxyProblem = err instanceof Error ? err.message : String(err);
-    warnings.push(teslaProxyProblem);
-  }
-
-  // Ordered by what actually blocks first when you try to link a car, not by
-  // how the docs are written. LIVE_INTEGRATIONS is first because /api/tesla/*
-  // answers 410 without it — the flow cannot even start, whatever else is set.
-  const teslaSteps: { step: string; ok: boolean; blocks: string }[] = [
-    { step: "LIVE_INTEGRATIONS=tesla", ok: teslaConfig.teslaLive, blocks: "every /api/tesla/* route — they answer 410 until this is set" },
-    { step: "TESLA_CLIENT_ID", ok: teslaConfig.teslaClientId, blocks: "the OAuth redirect to Tesla" },
-    { step: "TESLA_CLIENT_SECRET", ok: teslaConfig.teslaClientSecret, blocks: "exchanging the callback code for tokens" },
-    { step: "TESLA_REDIRECT_URI", ok: teslaConfig.teslaRedirectUri, blocks: "starting OAuth at all — must equal the URI registered in the portal, /api/tesla/callback" },
-    { step: "TESLA_TOKEN_ENCRYPTION_KEY", ok: teslaConfig.teslaTokenEncryptionKey, blocks: "storing refresh tokens at rest" },
-    { step: "TESLA_PUBLIC_KEY", ok: teslaConfig.teslaPublicKey, blocks: "partner registration and Virtual Key pairing — register AFTER this is served" },
-    { step: "TESLA_PROXY_BASE_URL", ok: teslaConfig.teslaProxy && !teslaProxyProblem, blocks: "every command on a post-2021 car — unset means nothing signs them, http means we refuse to send the access token over plaintext" },
-  ];
-
-  // Registration has no environment variable behind it, so it cannot be
-  // resolved here — but leaving it out entirely is how the checklist came to
-  // report every prerequisite met while linking still failed with an empty
-  // vehicle list. Named explicitly, with the panel's own button as the check.
-  //
-  // The fallback used to be unconditional, so once every variable was set the
-  // panel said "partner account registration" for ever — including on a day
-  // when eighteen commands had already reached the car, which is only possible
-  // if registration, pairing and the signing proxy all work. A checklist whose
-  // last item can never be ticked is a checklist nobody believes.
-  //
-  // Commands counted in the last 24h are that proof, so they are what closes
-  // it. Registration still has no environment variable to read, which is why
-  // it is inferred from evidence rather than asserted.
-  const teslaCalls = await readTeslaCalls();
-  const commandsReachedCar = (teslaCalls?.command ?? 0) > 0;
-  const teslaNextStep =
-    teslaSteps.find((s) => !s.ok)?.step ??
-    (commandsReachedCar
-      ? null
-      : "partner account registration — use the button below to check");
-
-  // What the driver actually granted, per linked car. Worth surfacing because
-  // Tesla's consent screen is a set of tickboxes, so a grant can come back
-  // narrower than the request — and the failure is silent. Without
-  // vehicle_location in particular the car answers every poll normally and
-  // just never has a position, which looks like a bug in the map.
-  // Active vehicles only, newest first. Without the filter this listed every
-  // token row the account had ever held — including cars deactivated long ago —
-  // so a grant fixed hours earlier still showed as broken, and the warning
-  // below told the driver to reconnect a car that was already correct. Seven
-  // rows for one visible car, four of them warning about a scope that had since
-  // been granted.
-  const { data: grantRows } = await supabase
-    .from("tesla_tokens")
-    .select("scopes, updated_at, vehicles!inner(display_name, user_id, is_active)")
-    .eq("user_id", admin.userId)
-    .eq("vehicles.is_active", true)
-    .order("updated_at", { ascending: false });
-
-  const teslaGrants = (grantRows ?? []).map((row) => {
-    const granted: string[] = Array.isArray(row.scopes) ? row.scopes : [];
-    const vehicle = row.vehicles as unknown as { display_name?: string } | null;
-    return {
-      vehicle: vehicle?.display_name ?? "unknown",
-      granted,
-      missing: TESLA_SCOPES.split(" ").filter((s) => !granted.includes(s)),
-      updatedAt: row.updated_at as string | null,
-    };
-  });
-
-  for (const g of teslaGrants) {
-    if (g.missing.includes("vehicle_location")) {
-      warnings.push(
-        `${g.vehicle}: vehicle_location was not granted — the car will never report a position. Reconnect and tick every box.`,
-      );
-    }
-  }
 
   if (!config.redis) {
     warnings.push(
@@ -216,26 +117,7 @@ export async function GET() {
     sources: sourceCounts,
     recentRuns: runs ?? [],
     config,
-    tesla: {
-      steps: teslaSteps,
-      nextStep: teslaNextStep,
-      grants: teslaGrants,
-      // Deliberately not a checklist step: nothing on the server can observe
-      // whether a car has accepted the key, so it would sit unticked forever
-      // and pin nextStep to itself.
-      virtualKeyUrl: teslaVirtualKeyUrl(),
-    },
-    // teslaConfig is merged back in here and only here. It is deliberately
-    // absent from the `config` payload (the Tesla panel reports it better),
-    // but the roadmap checks read teslaLive and teslaProxy — so dropping it
-    // from the object flipped "Tesla linked and commands working" from done
-    // back to todo, which is a lie the panel told for a day.
-    roadmap: { goal: GOAL, milestones: resolveRoadmap({ ...config, ...teslaConfig }) },
-    // In the copied report too, not only in the panel that renders it. The one
-    // question this panel exists to answer — did anything reach the car — was
-    // impossible to check from a pasted report, because the counts lived behind
-    // a second request the Copy button never made.
-    teslaCalls,
+    roadmap: { goal: GOAL, milestones: resolveRoadmap(config) },
     warnings,
   });
 }

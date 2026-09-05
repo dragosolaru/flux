@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { isLiveEnabled } from "@/lib/live-integrations";
-import { fetchVehicleData } from "@/lib/tesla/api";
-import { errorContext, logServer } from "@/lib/debug-log";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -140,46 +137,22 @@ export async function POST(req: NextRequest) {
 
     // A linked car's real battery, not the simulator's. This path read
     // mock_vehicle_state unconditionally, so planning from a genuinely linked
-    // Tesla still used made-up numbers — planning from the actual state of
-    // charge is the whole point of a route planner, and the one thing the
-    // integration makes possible.
-    let state: { latitude?: number; longitude?: number; batteryLevel?: number } | null = null;
+    // Planning used to start from the car's real state of charge. With the
+    // Tesla integration withdrawn there is no live reading, so it starts from
+    // the simulator's stored state, or from whatever the caller passes by hand
+    // — which the UI has always supported.
+    type PlanningState = {
+      latitude?: number;
+      longitude?: number;
+      batteryLevel?: number;
+    };
 
-    if (
-      isLiveEnabled(vehicle.brand) &&
-      vehicle.data_source === "live" &&
-      vehicle.brand === "tesla" &&
-      vehicle.tesla_vehicle_id
-    ) {
-      try {
-        const live = await fetchVehicleData({
-        reason: "screen",
-          vehicleId: vehicle.id,
-          userId: session.user.id,
-          teslaVehicleId: vehicle.tesla_vehicle_id,
-          displayName: vehicle.display_name,
-        });
-        state = {
-          latitude: live.latitude ?? undefined,
-          longitude: live.longitude ?? undefined,
-          batteryLevel: live.batteryLevel ?? undefined,
-        };
-      } catch (err) {
-        // A sleeping or unreachable car must not block planning — the caller
-        // can still pass an origin and a SoC by hand, which is what the UI
-        // does today.
-        logServer("warn", "trip-plan", "live vehicle state unavailable", errorContext(err));
-      }
-    }
-
-    if (!state) {
-      const { data: stateRow } = await supabase
-        .from("mock_vehicle_state")
-        .select("state")
-        .eq("vehicle_id", vehicleId)
-        .maybeSingle();
-      state = stateRow?.state as typeof state;
-    }
+    const { data: stateRow } = await supabase
+      .from("mock_vehicle_state")
+      .select("state")
+      .eq("vehicle_id", vehicleId)
+      .maybeSingle();
+    const state = (stateRow?.state as PlanningState | undefined) ?? null;
 
     // Use body origin if provided, otherwise fall back to vehicle state location
     let origin: { lat: number; lng: number; label?: string };

@@ -23,10 +23,7 @@ import {
 import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-fetch";
-import { SleepPanel } from "@/components/debug/SleepPanel";
 import { GeolocationProbe } from "@/components/debug/geolocation-probe";
-import { NavProbe } from "@/components/debug/nav-probe";
-import { useSleepMode } from "@/lib/vehicle-sleep";
 
 interface ChargerStats {
   total: number;
@@ -136,60 +133,9 @@ interface RlsPayload {
   }[];
 }
 
-interface PublishedKey {
-  label: string;
-  url: string;
-  status: number | null;
-  cache: string | null;
-  age: string | null;
-  cacheControl: string | null;
-  text: string;
-}
-
-interface FleetStatusResult {
-  ok: boolean;
-  hint: string;
-  cars: {
-    vehicle: string;
-    vin: string;
-    // Three-valued on purpose: Tesla naming the VIN in neither list is not the
-    // same as saying it is unpaired.
-    paired: boolean | null;
-    firmware?: string | null;
-    commandProtocolRequired?: boolean | null;
-    fleetTelemetry?: string | null;
-    error?: string;
-  }[];
-}
-
 // The four values that must all be identical before a signed command can work.
 // Named here because the car report, the callout and the key table all read the
 // same shape and drifted apart when each declared its own.
-interface PartnerResult {
-  verdict?: string;
-  warning?: string;
-  proxyPublicKeyPem?: string;
-  proxyPublicKeyOneLine?: string;
-  servedKeyMatches?: boolean;
-  keys?: {
-    env?: string | null;
-    wellKnown?: string | null;
-    wellKnownStatus?: number | null;
-    wellKnownError?: string;
-    domainOrigin?: string | null;
-    domainCdn?: string | null;
-    domainAgeSeconds?: number | null;
-    domainCacheControl?: string | null;
-    tesla?: string | null;
-    proxy?: string | null;
-    proxyStatus?: number | null;
-    proxyError?: string;
-    envMatchesWellKnown?: boolean | null;
-    proxyMatchesWellKnown?: boolean | null;
-  };
-  body?: { response?: { public_key?: string; updated_at?: string } };
-}
-
 // Every bulk country, so a region can be topped up without editing code.
 // Order puts the RO/Balkan corridor first because that is the one being worked.
 const COUNTRIES: { code: string; name: string }[] = [
@@ -273,25 +219,12 @@ export function DebugClient() {
   // than a wall of controls — it is read on a phone far more often than acted on.
   const [open, setOpen] = useState<Record<string, boolean>>({});
   // Declared with the other hooks: this component has early returns for its
-  // loading and error states, and a hook below them runs in a different order
-  // on the renders that take those paths.
-  const sleeping = useSleepMode();
   const [apiPath, setApiPath] = useState("/api/chargers/stats");
   const [apiResult, setApiResult] = useState<unknown>(null);
   // Several routes worth poking at are POST-only; GET on them returns 405.
   const [apiMethod, setApiMethod] = useState<"GET" | "POST">("GET");
-  const [partnerResult, setPartnerResult] = useState<unknown>(null);
-  const [fleetStatus, setFleetStatus] = useState<FleetStatusResult | null>(null);
-  const [publishedKeys, setPublishedKeys] = useState<PublishedKey[] | null>(null);
   const [rls, setRls] = useState<RlsPayload | null>(null);
   const [ocrResult, setOcrResult] = useState<unknown>(null);
-  // Held in memory for exactly as long as this page stays open, and never put
-  // anywhere else — see the deliberate omission from copyAll below.
-  const [keypair, setKeypair] = useState<{
-    privateKeyPem: string;
-    privateKeyBase64: string;
-    publicKeyPem: string;
-  } | null>(null);
   // Populated only when the clipboard write is refused, so the text can still
   // be selected by hand — some mobile browsers block the API outright.
   const [copyFallback, setCopyFallback] = useState<string | null>(null);
@@ -360,35 +293,6 @@ export function DebugClient() {
   // screen was a day or two old while being read as current.
   const DAY_MS = 24 * 60 * 60 * 1000;
   const generatedAtMs = data?.generatedAt ? Date.parse(data.generatedAt) : 0;
-  const teslaFresh = groupedLogs.tesla.filter(
-    (l) => generatedAtMs - new Date(l.latest).getTime() < DAY_MS,
-  ).length;
-  // The car answered and said our key is not one of its keys. Distinct from
-  // never having paired: re-pairing is the obvious response and the wrong one,
-  // because it re-pairs whatever key Tesla currently holds for the domain.
-  //
-  // Only when it is still TRUE. This had no freshness filter and no notion of
-  // being disproven, so a refusal from three days ago went on warning about
-  // pairing while eighteen commands reached the car that same morning. The
-  // owner read the panel, saw the warning, and reported the panel — correctly.
-  // A pairing failure is disproven the moment a command succeeds, and this now
-  // says so on both counts: recent, and not since contradicted.
-  const lastKeyRefusal = groupedLogs.tesla
-    .filter(
-      (l) =>
-        l.scope === "vehicles/commands" &&
-        typeof l.context?.matched === "string" &&
-        l.context.matched === "key-not-paired",
-    )
-    .reduce<number>((newest, l) => Math.max(newest, Date.parse(l.latest)), 0);
-  const commandsReachedCar = (data?.teslaCalls?.command ?? 0) > 0;
-  const refusedForKeyNotPaired =
-    lastKeyRefusal > 0 &&
-    generatedAtMs - lastKeyRefusal < DAY_MS &&
-    // A command counted in the last 24h is the car accepting our key. It
-    // outranks any older log line claiming otherwise.
-    !commandsReachedCar;
-
   function toggleCountry(code: string) {
     setPickedCountries((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
@@ -588,82 +492,11 @@ export function DebugClient() {
     }
   }
 
-  async function teslaPartner(action: "status" | "register") {
-    setRunning(`partner:${action}`);
-    setLastError(null);
-    setPartnerResult(null);
-    try {
-      setPartnerResult(
-        await apiFetch<unknown>("/api/internal/debug/tesla-partner", {
-          method: "POST",
-          body: JSON.stringify({ action, region: "eu" }),
-        }),
-      );
-    } catch (err) {
-      setLastError(`Partner ${action} failed: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setRunning(null);
-    }
-  }
-
   // A phone cannot open an application/x-pem-file download, so the one way to
   // see what the domain publishes was unavailable on the device this app is
   // tested from. Fetched here and shown as text instead.
   // Only once a check has actually run — an unchecked panel must not claim the
   // keys disagree and block the link on a guess.
-  const partnerKeys = (partnerResult as PartnerResult | null)?.keys;
-  const partnerKeysDisagree = Boolean(
-    partnerKeys?.tesla && partnerKeys.wellKnown && partnerKeys.tesla !== partnerKeys.wellKnown,
-  );
-
-  async function showPublishedKeys() {
-    setRunning("published-keys");
-    setLastError(null);
-    setPublishedKeys(null);
-    const wellKnown = "/.well-known/appspecific/com.tesla.3p.public-key.pem";
-    const read = async (url: string, label: string) => {
-      try {
-        const res = await fetch(url, { cache: "no-store" });
-        const text = await res.text();
-        return {
-          label,
-          url,
-          status: res.status,
-          // Same origin, so every header is readable — including the ones that
-          // say whether this came from a cache and how old it is.
-          cache: res.headers.get("x-vercel-cache"),
-          age: res.headers.get("age"),
-          cacheControl: res.headers.get("cache-control"),
-          text: text.trim(),
-        };
-      } catch (err) {
-        return {
-          label,
-          url,
-          status: null,
-          cache: null,
-          age: null,
-          cacheControl: null,
-          text: err instanceof Error ? err.message : String(err),
-        };
-      }
-    };
-    try {
-      setPublishedKeys(
-        await Promise.all([
-          read(wellKnown, "what Tesla fetches"),
-          // A query string is part of the CDN cache key, so this can only be
-          // answered by the route itself. Different text here means a copy in
-          // front is stale; identical text rules that out.
-          read(`${wellKnown}?cache-bust=${Date.now()}`, "past any cache"),
-          read("/api/tesla-public-key", "the route directly"),
-        ]),
-      );
-    } finally {
-      setRunning(null);
-    }
-  }
-
   // Row-level-security state and the sweep that fixes it. Here rather than in
   // the Supabase SQL editor because the editor needs pasted SQL, and this app
   // is operated from a phone.
@@ -691,23 +524,6 @@ export function DebugClient() {
     } catch (err) {
       setLastError(`RLS sweep failed: ${err instanceof Error ? err.message : String(err)}`);
       toast.error("RLS sweep failed");
-    } finally {
-      setRunning(null);
-    }
-  }
-
-  async function runFleetStatus() {
-    setRunning("fleet-status");
-    setLastError(null);
-    setFleetStatus(null);
-    try {
-      setFleetStatus(
-        await apiFetch<FleetStatusResult>("/api/internal/debug/tesla-fleet-status", {
-          method: "POST",
-        }),
-      );
-    } catch (err) {
-      setLastError(`Fleet status failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setRunning(null);
     }
@@ -751,34 +567,6 @@ export function DebugClient() {
     }
   }
 
-  async function generateKeypair() {
-    setRunning("keypair");
-    setLastError(null);
-    setKeypair(null);
-    try {
-      setKeypair(
-        await apiFetch<{
-          privateKeyPem: string;
-          privateKeyBase64: string;
-          publicKeyPem: string;
-        }>("/api/internal/debug/tesla-keypair", { method: "POST" }),
-      );
-    } catch (err) {
-      setLastError(
-        `Keypair generation failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    } finally {
-      setRunning(null);
-    }
-  }
-
-  function copyText(text: string, label: string) {
-    navigator.clipboard
-      ?.writeText(text)
-      .then(() => toast.success(`${label} copied`))
-      .catch(() => toast.error("Clipboard blocked — select the text instead"));
-  }
-
   /**
    * A section as a handful of lines, not a payload.
    *
@@ -788,95 +576,21 @@ export function DebugClient() {
    * nothing else. "Copy all (raw)" is still there for when the shape of the
    * data is itself the question.
    */
-  function buildReport(section: "car" | "chargers" | "progress"): string {
+  function buildReport(section: "chargers" | "progress"): string {
     if (!data) return "no data";
     const when = new Date(data.generatedAt).toISOString().slice(0, 16).replace("T", " ");
     const out: string[] = [`FLUX · ${section.toUpperCase()} · ${when}Z`];
 
-    const logLine = (l: (typeof groupedLogs.tesla)[number]) => {
+    const logLine = (l: (typeof groupedLogs.other)[number]) => {
       const ageH = Math.round((generatedAtMs - new Date(l.latest).getTime()) / 3_600_000);
       const age = ageH >= 24 ? `${Math.floor(ageH / 24)}d` : `${ageH}h`;
       const ctx = l.context ? ` ${JSON.stringify(l.context).slice(0, 120)}` : "";
       return `  ${l.scope} ×${l.count} ${age} — ${l.message}${ctx}`;
     };
 
-    if (section === "car") {
-      const t = data.tesla;
-      if (t) {
-        const unmet = t.steps.filter((x) => !x.ok);
-        out.push(
-          `setup ${t.steps.length - unmet.length}/${t.steps.length} ok` +
-            (unmet.length ? ` · missing: ${unmet.map((x) => x.step).join(", ")}` : ""),
-        );
-        out.push(`next: ${t.nextStep ?? "—"}`);
-        for (const g of t.grants ?? []) {
-          out.push(
-            `car "${g.vehicle}" · scopes ${g.granted.length}/9` +
-              (g.missing.length ? ` · missing ${g.missing.join(",")}` : ""),
-          );
-        }
-        if (!t.grants?.length) out.push("no linked car");
-      }
-      if (refusedForKeyNotPaired) {
-        out.push(
-          "!! car refused a SIGNED command: our key is not paired to it." +
-            " Re-pairing helps only if the four keys below already agree —" +
-            " otherwise the car would pair a key the proxy does not hold.",
-        );
-      }
-      // Whatever the last Verifică starea returned, if one was run. The key match
-      // is the question every "not paired" failure turns into, and it is
-      // otherwise buried in a raw JSON dump further down the page.
-      const pr = partnerResult as PartnerResult | null;
-      if (pr?.verdict) {
-        out.push(`keys: ${pr.verdict}`);
-        if (pr.warning) out.push(`  warn: ${pr.warning}`);
-      } else {
-        out.push("keys: not checked this session");
-      }
-      // Four things are all called "the key" and only their disagreement is
-      // diagnostic, so print all four side by side. Eight hex chars is enough
-      // to tell them apart and short enough to read on a phone.
-      if (pr?.keys) {
-        const k = pr.keys;
-        const head = (v: string | null | undefined) => (v ? v.slice(0, 8) : "none");
-        out.push(
-          `  env ${head(k.env)} · served ${head(k.wellKnown)} (HTTP ${k.wellKnownStatus ?? "—"}` +
-            `${k.wellKnownError ? ` ${k.wellKnownError}` : ""})`,
-        );
-        // Printed even when it agrees. Omitted, "no origin line" read as "the
-        // check is not deployed yet" and the same report was sent twice.
-        out.push(
-          `  origin ${head(k.domainOrigin)}${k.domainOrigin && k.domainOrigin !== k.wellKnown ? " — SERVED COPY IS STALE" : " (same as served)"}` +
-            ` · ${k.domainCdn ?? "no x-vercel-cache"}, age ${k.domainAgeSeconds ?? "?"}s, ${k.domainCacheControl ?? "no cache-control"}`,
-        );
-        out.push(
-          `  proxy ${head(k.proxy)} (HTTP ${k.proxyStatus ?? "—"}${k.proxyError ? ` ${k.proxyError}` : ""})` +
-            ` · tesla ${head(k.tesla)}` +
-            (pr.body?.response?.updated_at ? ` since ${pr.body.response.updated_at.slice(0, 10)}` : ""),
-        );
-      }
-      // Tesla's own answer to "is this car paired with our key" — the only one
-      // that is not an inference.
-      if (fleetStatus) {
-        for (const c of fleetStatus.cars) {
-          out.push(
-            `fleet_status "${c.vehicle}" …${c.vin.slice(-6)} · paired ${c.paired ?? "necunoscut"}` +
-              (c.commandProtocolRequired != null ? ` · signing required ${c.commandProtocolRequired}` : "") +
-              (c.firmware ? ` · fw ${c.firmware}` : "") +
-              (c.error ? ` · ${c.error}` : ""),
-          );
-        }
-      } else {
-        out.push("fleet_status: not checked this session");
-      }
-      out.push(
-        groupedLogs.tesla.length
-          ? `logs (${groupedLogs.tesla.length} distinct):`
-          : "logs: none — no command has failed server-side",
-      );
-      out.push(...groupedLogs.tesla.map(logLine));
-    }
+    // The "car" report went with the Tesla integration: every line in it was
+    // about pairing, signing keys or fleet_status. The button that produced
+    // it is gone too, so the section is unreachable rather than empty.
 
     if (section === "chargers") {
       const c = data.chargers;
@@ -929,7 +643,7 @@ export function DebugClient() {
     return out.join("\n");
   }
 
-  function copyReport(section: "car" | "chargers" | "progress") {
+  function copyReport(section: "chargers" | "progress") {
     const text = buildReport(section);
     setCopyFallback(null);
     navigator.clipboard
@@ -957,8 +671,6 @@ export function DebugClient() {
         probe,
         rawProbe,
         apiResult,
-        partnerResult,
-        fleetStatus,
         ocrResult,
         lastResult,
         lastError,
@@ -1200,398 +912,6 @@ export function DebugClient() {
           )}
         </div>
       </section>
-
-      <div className="flex items-start gap-2 pt-2">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold">🚗 Mașina</h2>
-          <p className="text-xs text-muted-foreground">Dacă o contactăm, dacă e conectată, și ce a mers prost.</p>
-        </div>
-        <button
-          onClick={() => copyReport("car")}
-          className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground"
-        >
-          <Copy className="size-3" />Raport</button>
-      </div>
-
-      <Panel
-        title="Somnul și traficul spre mașină"
-        purpose="Ține aplicația mașina trează? Comutatorul, și câte cereri au ajuns efectiv la ea."
-        badge={sleeping ? "lăsată în pace" : "normal"}
-        tone={sleeping ? "ok" : "muted"}
-        open={open.sleep ?? true}
-        onToggle={() => toggle("sleep")}
-      >
-        <SleepPanel />
-      </Panel>
-
-      {tesla && (
-        <Panel
-          title="Pornirea cu Tesla"
-        purpose="Tot ce are nevoie o Tesla reală, în ordinea în care se blochează unele pe altele. Primul pas nebifat e cel de făcut."
-          badge={tesla.nextStep ? `next: ${tesla.nextStep}` : "ready"}
-          tone={tesla.nextStep ? "warn" : "ok"}
-          open={open.tesla ?? false}
-          onToggle={() => toggle("tesla")}
-        >
-          <p className="text-xs text-muted-foreground">
-            În ordine — fiecare pas e inutil fără cei de deasupra. Procedura completă în
-            <code className="ml-1">docs/VEHICLE-CONNECTION.md</code>.
-          </p>
-          <ol className="space-y-1.5">
-            {tesla.steps.map((s) => (
-              <li key={s.step} className="flex gap-2 text-xs">
-                {s.ok ? (
-                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-green-400" />
-                ) : (
-                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                )}
-                <span className={s.ok ? "text-muted-foreground" : ""}>
-                  <span className="font-mono">{s.step}</span>
-                  <span className="text-muted-foreground"> — blocks {s.blocks}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          <div className="space-y-2 border-t border-border/60 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Perechea de chei pentru semnarea comenzilor
-            </p>
-            <p className="text-xs text-muted-foreground">
-              EC P-256, the curve Tesla requires. Generated here because the two
-              halves belong in two different places and neither is a shell. Shown
-              once and stored nowhere — not in the database, not in a log, not in
-              &quot;Copy all&quot;. Close this page and it is gone.
-            </p>
-
-            {tesla.grants && tesla.grants.length > 0 && (
-              <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-300">
-                A car is already linked. Replacing the pair means redoing{" "}
-                <strong>both</strong> halves in order: public key deployed and
-                confirmed served, <em>then</em>Înregistrează. Tesla recitește /.well-known în timpul înregistrării, deci dacă înregistrezi cât timp se servește cheia veche, tot pe cea veche o reînregistrezi.</p>
-            )}
-
-            <IngestButton
-              label="Generează perechea"
-              busy={running === "keypair"}
-              disabled={running !== null}
-              onClick={() => void generateKeypair()}
-            />
-
-            {keypair && (
-              <div className="space-y-3 rounded-md border border-border/60 p-3">
-                <div className="space-y-1">
-                  <div className="text-xs font-medium">
-                    1. Private half → the proxy host
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Single-line base64, the form that survives a control panel
-                    storing one line per variable. Set it as{" "}
-                    <code>TESLA_PRIVATE_KEY</code>, and make sure it is a runtime
-                    variable — a build argument gets printed in the deploy log.
-                  </p>
-                  <button
-                    onClick={() => copyText(keypair.privateKeyBase64, "Private key")}
-                    className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
-                  >
-                    Copiază cheia privată (base64)
-                  </button>
-                </div>
-
-                <div className="space-y-1 border-t border-border/60 pt-2">
-                  <div className="text-xs font-medium">
-                    2. Public half → <code>TESLA_PUBLIC_KEY</code> în Vercel
-                  </div>
-                  <p className="text-xs text-muted-foreground">Se servește la /.well-known/appspecific/com.tesla.3p.public-key.pem. Publică-l înainte să înregistrezi contul de partener — Tesla îl citește în timpul înregistrării.</p>
-                  <button
-                    onClick={() => copyText(keypair.publicKeyPem, "Public key")}
-                    className="rounded-lg bg-secondary px-3 py-2 text-xs font-medium"
-                  >
-                    Copiază cheia publică (PEM)
-                  </button>
-                  <pre className="-mx-1 mt-1 max-h-40 overflow-auto rounded bg-muted/40 p-2 text-[10px] leading-relaxed">
-                    {keypair.publicKeyPem}
-                  </pre>
-                </div>
-
-                <p className="text-xs text-amber-300">Ambele jumătăți trebuie să vină din aceeași generare. O cheie privată pusă cu jumătatea publică a altcuiva semnează comenzi pe care mașina le refuză.</p>
-              </div>
-            )}
-          </div>
-
-          {refusedForKeyNotPaired && (
-            <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/10 p-3">
-              <p className="text-xs font-medium text-destructive">
-                Mașina a refuzat o comandă semnată: cheia noastră nu e împerecheată cu ea
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Pairing again will not help if it has already been done. The car
-                stores the public key Tesla holds for this domain — so if that
-                record is older than the keypair the proxy signs with, the car
-                paired a key we no longer own and rejects every signature.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Press <strong>Verifică starea</strong> below. It lists all four keys —
-                variable, domain, proxy, Tesla — and says which one is wrong. They
-                must all be the same value before pairing the car is worth doing;
-                pairing while they differ just stores a key the proxy cannot sign
-                with. <strong>Verifică împerecherea</strong> then confirms with Tesla
-                whether the car took it.
-              </p>
-            </div>
-          )}
-
-          {tesla.virtualKeyUrl && (
-            <div className="space-y-2 border-t border-border/60 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Cheia virtuală
-              </p>
-              <p className="text-xs text-muted-foreground">
-                The last step, and the only one that happens on the car rather than a
-                server. Open this on a phone that has the Tesla app installed and approve —
-                it hands our public key to the car, which then accepts signed commands.
-                Pointless until the proxy is deployed: without it nothing signs the
-                commands, so the car never sees a signature to check.
-              </p>
-              {/* Tesla's pairing page validates the domain against its own
-                  partner record, and when they disagree it says "This third
-                  party isn't registered with Tesla" — which reads as the app
-                  never having been registered at all, not as "your record is
-                  one key behind". Blocking the link is kinder than letting the
-                  owner walk to the car for a dead end. */}
-              {partnerKeysDisagree ? (
-                <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
-                  Register first. Tesla still holds a different key than this
-                  domain serves, so its pairing page will refuse with &ldquo;this
-                  third party isn&apos;t registered with Tesla&rdquo;. Press
-                  Register above, confirm all four keys agree, then come back.
-                </p>
-              ) : (
-                <a
-                  href={tesla.virtualKeyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block break-all rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
-                >
-                  Pair Cheia virtuală →
-                </a>
-              )}
-              <p className="break-all font-mono text-[10px] text-muted-foreground">
-                {tesla.virtualKeyUrl}
-              </p>
-            </div>
-          )}
-
-          {tesla.grants && tesla.grants.length > 0 && (
-            <div className="space-y-2 border-t border-border/60 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Permisiuni acordate
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Tesla&apos;s consent screen is a tickbox per permission, so a grant can come
-                back narrower than what was asked for. Anything missing here was unticked
-                during sign-in — reconnect and use &quot;Selectează tot&quot;.
-              </p>
-              {tesla.grants.map((g) => (
-                <div key={g.vehicle} className="space-y-1">
-                  <div className="text-xs font-medium">{g.vehicle}</div>
-                  <div className="flex flex-wrap gap-1">
-                    {g.granted.map((s) => (
-                      <span
-                        key={s}
-                        className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-[10px] text-green-400"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                    {g.missing.map((s) => (
-                      <span
-                        key={s}
-                        className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-400 line-through"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="space-y-2 border-t border-border/60 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Cont de partener (UE)
-            </p>
-            <p className="text-xs text-muted-foreground">Singurul pas de configurare fără o variabilă de mediu în spate, deci lista de mai sus nu-l poate vedea. Tesla citește cheia publică în timpul înregistrării — verifică întâi starea; înregistrează abia după ce cheia se servește.</p>
-            <div className="flex flex-wrap gap-2">
-              <IngestButton
-                label="Verifică starea"
-                busy={running === "partner:status"}
-                disabled={running !== null}
-                onClick={() => void teslaPartner("status")}
-              />
-              <IngestButton
-                label="Înregistrează"
-                busy={running === "partner:register"}
-                disabled={running !== null}
-                onClick={() => void teslaPartner("register")}
-              />
-            </div>
-            <KeyTable result={partnerResult as PartnerResult | null} onCopy={copyText} />
-            {partnerResult != null && (
-              <details>
-                <summary className="cursor-pointer text-[11px] text-muted-foreground">
-                  Răspuns brut
-                </summary>
-                <pre className="-mx-4 max-h-72 overflow-auto px-4 text-[11px] leading-relaxed">
-                  {JSON.stringify(partnerResult, null, 2)}
-                </pre>
-              </details>
-            )}
-          </div>
-
-          <div className="space-y-2 border-t border-border/60 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Ce publică domeniul
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Opening the URL on a phone downloads a .pem nothing can read. This
-              shows the text of all three paths to it — the one Tesla fetches, the
-              same one past any cache, and the route directly. Identical is what
-              you want.
-            </p>
-            <IngestButton
-              label="Arată cheia publicată"
-              busy={running === "published-keys"}
-              disabled={running !== null}
-              onClick={() => void showPublishedKeys()}
-            />
-            {publishedKeys && (
-              <div className="space-y-1.5">
-                {publishedKeys.map((p) => (
-                  <div
-                    key={p.url}
-                    className="rounded border border-border/60 bg-muted/20 p-2 text-[11px]"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{p.label}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground">
-                        {p.status ?? "failed"}
-                        {p.cache ? ` · ${p.cache}` : ""}
-                        {p.age ? ` · age ${p.age}s` : ""}
-                      </span>
-                    </div>
-                    <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed">
-                      {p.text}
-                    </pre>
-                  </div>
-                ))}
-                <p className="text-[11px] text-muted-foreground">
-                  {new Set(publishedKeys.map((p) => p.text)).size === 1
-                    ? "All three agree — nothing is caching a stale copy."
-                    : "These do NOT all match. Whichever differs is being answered by something other than the route."}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2 border-t border-border/60 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              E mașina împerecheată? (răspunsul Tesla)
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Tot restul here is inference — a command that worked once, a key
-              added on a screen that never said whose. This asks Tesla directly
-              whether the VIN is paired with the key registered for this domain.
-            </p>
-            <IngestButton
-              label="Verifică împerecherea"
-              busy={running === "fleet-status"}
-              disabled={running !== null}
-              onClick={() => void runFleetStatus()}
-            />
-            {fleetStatus && (
-              <div className="space-y-1.5">
-                {fleetStatus.cars.map((c) => (
-                  <div
-                    key={c.vin}
-                    className="rounded border border-border/60 bg-muted/20 p-2 text-[11px]"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{c.vehicle}</span>
-                      <span
-                        className={
-                          c.paired === true
-                            ? "font-mono text-emerald-400"
-                            : c.paired === false
-                              ? "font-mono text-destructive"
-                              : "font-mono text-amber-400"
-                        }
-                      >
-                        {c.paired === true ? "paired" : c.paired === false ? "NEîmperecheată" : "necunoscut"}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                      …{c.vin.slice(-6)}
-                      {c.firmware ? ` · fw ${c.firmware}` : ""}
-                      {c.commandProtocolRequired != null
-                        ? ` · signing ${c.commandProtocolRequired ? "necesar" : "nu e necesar"}`
-                        : ""}
-                    </p>
-                    {c.error && <p className="mt-0.5 text-[10px] text-destructive">{c.error}</p>}
-                  </div>
-                ))}
-                <p className="text-[11px] text-muted-foreground">{fleetStatus.hint}</p>
-              </div>
-            )}
-          </div>
-        </Panel>
-      )}
-
-      <Panel
-        title="Activitatea mașinii"
-        purpose="Erorile produse de mașină și de API-ul Tesla, cu ce a reușit între timp. O eroare veche fără nimic după ea e istorie, nu o problemă."
-        badge={teslaFresh > 0 ? `${teslaFresh} today` : groupedLogs.tesla.length > 0 ? "mai vechi" : "liniște"}
-        tone={teslaFresh > 0 ? "warn" : undefined}
-        open={open.carLog ?? false}
-        onToggle={() => toggle("carLog")}
-      >
-        <p className="text-xs text-muted-foreground">
-          {groupedLogs.total} entries,{" "}
-          {groupedLogs.tesla.length + groupedLogs.other.length} distinct, repeats
-          collapsed. Split by area because a flat list is always dominated by
-          whichever subsystem is noisiest — never the one being debugged.
-        </p>
-        {/* What succeeded, above what failed. The list alone told the owner his
-            commands were broken while eighteen of them were reaching the car
-            that morning — the errors were three days old and nothing on screen
-            said so, or said what had happened since. */}
-        {data?.teslaCalls?.available && (
-          <div className="rounded-lg border border-border px-3 py-2.5 text-xs">
-            <span className="text-muted-foreground">În ultimele 24h au ajuns la mașină </span>
-            <span className={commandsReachedCar ? "text-emerald-400" : "text-muted-foreground"}>
-              {data.teslaCalls.command} comenzi
-            </span>
-            <span className="text-muted-foreground">
-              {" "}și {data.teslaCalls.read} citiri
-              {data.teslaCalls.wake > 0 ? `, ${data.teslaCalls.wake} treziri` : ", nicio trezire"}.
-            </span>
-            {commandsReachedCar && lastKeyRefusal > 0 && (
-              <span className="mt-1 block text-muted-foreground">
-                Deci împerecherea cheii funcționează, oricât de alarmant ar arăta o refuzare mai
-                veche mai jos.
-              </span>
-            )}
-          </div>
-        )}
-
-        <LogGroup
-          title="Tesla și mașina"
-          entries={groupedLogs.tesla}
-          emptyNote="Nimic în jurnal. Dacă aștepți să apară aici o comandă eșuată, înseamnă că n-a ajuns la server — sau că a funcționat."
-          dayMs={DAY_MS}
-          now={generatedAtMs}
-        />
-      </Panel>
 
       <div className="flex items-start gap-2 pt-2">
         <div className="min-w-0 flex-1">
@@ -2047,20 +1367,6 @@ export function DebugClient() {
         </div>
       </Panel>
 
-      <div className="pt-2">
-        <h2 className="text-sm font-semibold">🔧 Unelte</h2>
-        <p className="text-xs text-muted-foreground">Sonde de unică folosință. Fără buton de raport și fără etichete: nimic de aici nu descrie o stare, doar face lucruri când apeși.</p>
-      </div>
-
-
-      <Panel
-        title="Preîncălzire: cum trimitem destinația"
-        purpose="Mașina preîncălzește bateria doar când știe că destinația e o stație. Trimitem coordonate goale — Google Maps trimite o adresă. Asta măsoară care variantă pornește preîncălzirea."
-        open={open.nav ?? false}
-        onToggle={() => toggle("nav")}
-      >
-        <NavProbe />
-      </Panel>
 
       <Panel
         title="GPS din browser"
@@ -2320,120 +1626,6 @@ function IngestButton({
   );
 }
 
-/**
- * The four keys, side by side.
- *
- * A signed command works only when all four are the same value, and the whole
- * class of failure here has been two of them silently differing. The raw JSON
- * held the answer for weeks and nobody read it, so this is four rows and a
- * sentence: the first eight hex characters are plenty to see a mismatch, and
- * the verdict says which one to go and fix.
- */
-function KeyTable({
-  result,
-  onCopy,
-}: {
-  result: PartnerResult | null;
-  onCopy: (text: string, label: string) => void;
-}) {
-  if (!result?.keys) return null;
-  const k = result.keys;
-  const truth = k.wellKnown ?? null;
-  const rows: { label: string; value: string | null | undefined; note?: string }[] = [
-    { label: "variable", value: k.env, note: "TESLA_PUBLIC_KEY" },
-    {
-      label: "domain",
-      value: k.wellKnown,
-      note: `what Tesla reads · HTTP ${k.wellKnownStatus ?? "—"}${k.wellKnownError ? ` ${k.wellKnownError}` : ""}`,
-    },
-    // Only when it disagrees with the cached copy. Shown always, it is a fifth
-    // identical row and one more thing to read past.
-    ...(k.domainOrigin && k.domainOrigin !== k.wellKnown
-      ? [
-          {
-            label: "↳ origin",
-            value: k.domainOrigin,
-            note: `route output, past the cache · ${k.domainCdn ?? "?"} age ${k.domainAgeSeconds ?? "?"}s`,
-          },
-        ]
-      : []),
-    {
-      label: "proxy",
-      value: k.proxy,
-      note: k.proxyError ?? `what signs commands · HTTP ${k.proxyStatus ?? "—"}`,
-    },
-    { label: "tesla", value: k.tesla, note: "what Tesla stored" },
-  ];
-
-  return (
-    <div className="space-y-1.5">
-      {result.verdict && (
-        <p
-          className={
-            k.proxyMatchesWellKnown === false || k.envMatchesWellKnown === false
-              ? "rounded border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive"
-              : "rounded border border-border/60 bg-muted/20 p-2 text-[11px] text-muted-foreground"
-          }
-        >
-          {result.verdict}
-        </p>
-      )}
-      <div className="space-y-0.5">
-        {rows.map((r) => {
-          // Compared against the domain, not against each other pairwise: it is
-          // the one value Tesla and the car both act on, so it is the reference
-          // the other three have to match.
-          const agrees = r.value && truth ? r.value === truth : null;
-          return (
-            <div key={r.label} className="flex items-baseline gap-2 text-[11px]">
-              <span className="w-16 shrink-0 text-muted-foreground">{r.label}</span>
-              <span
-                className={
-                  agrees === false
-                    ? "font-mono text-destructive"
-                    : agrees
-                      ? "font-mono text-emerald-400"
-                      : "font-mono text-amber-400"
-                }
-              >
-                {r.value ? r.value.slice(0, 8) : "none"}
-              </span>
-              <span className="truncate text-[10px] text-muted-foreground">{r.note}</span>
-            </div>
-          );
-        })}
-      </div>
-      {result.warning && (
-        <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
-          {result.warning}
-        </p>
-      )}
-      {result.proxyPublicKeyPem && (
-        <div className="space-y-1 rounded border border-border/60 bg-muted/20 p-2">
-          <p className="text-[11px] text-muted-foreground">
-            Cheia publică a proxy-ului. Lipește-o în <code>TESLA_PUBLIC_KEY</code>{" "}
-            to make everything adopt the key the proxy already signs with — that
-            path needs no private key you might no longer have.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => onCopy(result.proxyPublicKeyPem!, "Proxy public key")}
-              className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
-            >
-              Copiază PEM
-            </button>
-            <button
-              onClick={() => onCopy(result.proxyPublicKeyOneLine!, "Proxy public key (one line)")}
-              className="min-h-9 rounded-lg bg-secondary px-3 text-xs font-medium"
-            >
-              Copiază pe o linie (\n)
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /**
  * One area's worth of collapsed log entries.
