@@ -1,11 +1,16 @@
-# Branch-uri șterse — 2026-09-05
+# Branch-uri de șters — listă pregătită 2026-09-05
 
 Rămășițe de la rulări cu agenți în paralel (mai–iunie 2026), plus un branch de audit
 care era integral în `main`. Conținutul lor e în aplicație; commit-urile au ajuns pe
 `main` prin altă cale decât un merge, ceea ce face ca `git rev-list main..branch` să
 raporteze sute de commit-uri "neintegrate" care nu sunt muncă pierdută.
 
-Ștergerea e reversibilă: `git push origin <sha>:refs/heads/<nume>`
+**Nu sunt încă șterse.** Sesiunea care a pregătit lista poate face push de
+commit-uri, dar nu poate șterge ref-uri pe remote — GitHub răspunde 403 — așa că
+ștergerea trebuie făcută de pe o mașină cu drepturi depline.
+
+Ștergerea e reversibilă cât timp SHA-urile de mai jos există:
+`git push origin <sha>:refs/heads/<nume>`
 
 ```
 54c0beb58fba3d8f3e7c74c5d8d3ed147b0dc5a1 claude/app-documentation-audit-y7gc9g
