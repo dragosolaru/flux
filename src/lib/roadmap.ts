@@ -40,7 +40,8 @@ export interface Milestone {
   check?: (c: Record<string, boolean | string>) => boolean;
 }
 
-export const GOAL = "Clienți reali care conduc cu Flux, cu Tesla lor conectată.";
+export const GOAL =
+  "Clienți plătitori care își știu costurile mașinii din hârtiile lor, în RON.";
 
 export const ROADMAP: Milestone[] = [
   // ---- Gate 1 -------------------------------------------------------------

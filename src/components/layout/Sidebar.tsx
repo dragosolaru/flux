@@ -9,7 +9,6 @@ import {
   FileText,
   Info,
   LayoutGrid,
-  MapPin,
   Receipt,
   Route,
   Settings,
@@ -38,28 +37,35 @@ interface NavSection {
   items: NavItem[];
 }
 
+// Grouped by what someone is doing, not by which subsystem owns the screen.
+//
+// Two changes worth recording. Documents moved out of "the car" and next to
+// Costs, because a document IS a cost here — the OCR pipeline exists to turn
+// bills into the monthly figure, and separating them made the paid product read
+// as two unrelated features. And the station map is gone from this list
+// entirely: it is the `explore` tab on /map, so having both meant two entries
+// pointing at the same thing.
 const SECTIONS: NavSection[] = [
   {
     titleKey: "nav.section.car",
     items: [
-      { href: "/garage",    labelKey: "garage.title",    icon: LayoutGrid, capability: "NONE" },
-      { href: "/dashboard", labelKey: "nav.dashboard",   icon: Car,        capability: "VEHICLE" },
-      { href: "/insights",   labelKey: "nav.insights",   icon: BarChart3,  capability: "VEHICLE" },
-      { href: "/documents",  labelKey: "nav.documents",  icon: FileText,   capability: "VEHICLE" },
+      { href: "/garage",    labelKey: "garage.title",  icon: LayoutGrid, capability: "NONE" },
+      { href: "/dashboard", labelKey: "nav.dashboard", icon: Car,        capability: "VEHICLE" },
+      { href: "/insights",  labelKey: "nav.insights",  icon: BarChart3,  capability: "VEHICLE" },
     ],
   },
   {
     titleKey: "nav.section.money",
     items: [
-      { href: "/costs",        labelKey: "nav.costs",        icon: Receipt, capability: "VEHICLE" },
-      { href: "/energy",       labelKey: "nav.energy",       icon: Zap,     capability: "TARIFF" },
-      { href: "/charging-map", labelKey: "nav.charging_map", icon: MapPin,  capability: "NONE" },
+      { href: "/costs",     labelKey: "nav.costs",     icon: Receipt,  capability: "VEHICLE" },
+      { href: "/documents", labelKey: "nav.documents", icon: FileText, capability: "VEHICLE" },
+      { href: "/energy",    labelKey: "nav.energy",    icon: Zap,      capability: "TARIFF" },
     ],
   },
   {
     titleKey: "nav.section.planning",
     items: [
-      { href: "/map",  labelKey: "nav.map",  icon: Route, capability: "NONE" },
+      { href: "/map", labelKey: "nav.map", icon: Route, capability: "NONE" },
     ],
   },
 ];

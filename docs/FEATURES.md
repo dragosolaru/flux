@@ -1464,3 +1464,55 @@ the guard order and the list of every route that must consult the flag, because
 "no costs" is a claim about all of them at once.
 
 **Dependencies:** none. Bringing the car back is setting `LIVE_INTEGRATIONS=tesla`.
+
+
+---
+
+## 30. Menus and `/debug`, brought back in line with the product
+
+**Menus.** Three sections, grouped by what someone is doing rather than by which
+subsystem owns the screen:
+
+| Section | Items |
+| --- | --- |
+| Mașina | Garaj, Mașina, Analize |
+| Bani | Costuri, **Documente**, Energie |
+| Hartă | Hartă |
+
+Two changes, both with a reason:
+
+- **Documents moved out of "the car" and next to Costs.** A document *is* a cost
+  here — the OCR pipeline exists to turn bills into the monthly figure — and
+  splitting them made the paid product read as two unrelated features.
+- **`/charging-map` is gone from the menu and is now a redirect** to
+  `/map?mode=explore`, which uses the same `StationMap`, the same detail sheets
+  and the same `GET /api/chargers`. Keeping both was the trap `/trip` already
+  documents: two planners produced three bugs in a row from features landing on
+  one screen only. Redirecting rather than deleting keeps old links working.
+
+The mobile tab bar is Mașina · Hartă · Mai multe, and every link in all three nav
+files is checked against the pages that actually exist (§29 note below).
+
+**`/debug`.** It described a product that no longer exists. Now:
+
+- **The goal line** was "real customers driving with Flux, with their Tesla
+  connected". It is now about paying customers who know their car's costs from
+  their own paperwork — which is what the spec says we are selling.
+- **"Pasul următor" reads off the roadmap** instead of carrying its own Tesla
+  branch, so the headline sentence cannot drift from the list rendered directly
+  beneath it.
+- **The log groups were silently swallowing errors.** Entries were split into
+  tesla / sources / other, and the Tesla panel was deleted without the group —
+  so every `vehicles/*` line, which the simulator still writes, was filtered
+  into a bucket nothing rendered while still counting toward the total. Two
+  groups now: charger connectors, and everything else.
+- Gone with the integration: the **🚗 Mașina** section, the sleep-and-traffic
+  panel, the Tesla start checklist, the call counters, the partner-key table,
+  fleet status, the keypair generator and the `car` report.
+
+**Key files:** `src/components/layout/{Sidebar,SlideUpMenu,BottomNav}.tsx`,
+`src/app/(dashboard)/charging-map/page.tsx`, `src/lib/roadmap.ts`,
+`src/app/(dashboard)/debug/debug-client.tsx`,
+`src/components/layout/__tests__/nav-targets-exist.test.ts`.
+
+**Dependencies:** none.

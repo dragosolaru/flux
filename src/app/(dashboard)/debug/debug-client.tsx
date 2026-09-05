@@ -68,24 +68,7 @@ interface DebugPayload {
   sources: { source: string; rows: number }[];
   recentRuns: IngestRun[];
   config: Record<string, boolean | string>;
-  tesla?: {
-    steps: { step: string; ok: boolean; blocks: string }[];
-    nextStep: string | null;
-    grants?: {
-      vehicle: string;
-      granted: string[];
-      missing: string[];
-      updatedAt: string | null;
-    }[];
-    virtualKeyUrl?: string | null;
-  };
   /** What actually reached the car in the last 24h, per hour. */
-  teslaCalls?: {
-    available: boolean;
-    read: number;
-    wake: number;
-    command: number;
-  };
   roadmap?: {
     goal: string;
     milestones: {
@@ -270,21 +253,22 @@ export function DebugClient() {
     }
     // Split by area. "I only have charger errors" was the complaint, and it was
     // accurate: a flat list is dominated by whichever subsystem is noisiest,
-    // which is never the one being debugged. Tesla comes first and is shown
-    // even when empty — "nothing logged" is itself the answer when you are
-    // waiting for a command failure to appear.
+    // which is never the one being debugged.
+    //
+    // There used to be a third group for Tesla, rendered by a panel that has
+    // since gone. Removing the panel and leaving the group meant every
+    // `vehicles/*` entry — which the simulator still writes — was filtered into
+    // a bucket nothing displayed, so those errors vanished from the page while
+    // still being counted in the total. Two groups now, and everything that is
+    // not a charger connector is visible under "Tot restul".
     const all = [...byKey.values()];
-    const isTesla = (scope: string) =>
-      scope.startsWith("tesla/") || scope.startsWith("vehicles/");
     // A charger connector, i.e. exactly what the "Verifică sursele" panel is
     // about. Splitting these out is what lets that panel's badge count the
-    // thing the panel contains — it used to count every error in the table,
-    // Tesla included, on a panel that displayed none of them.
+    // thing the panel contains — it used to count every error in the table.
     const isSource = (scope: string) => SOURCE_SCOPES.has(scope);
     return {
-      tesla: all.filter((l) => isTesla(l.scope)),
-      sources: all.filter((l) => !isTesla(l.scope) && isSource(l.scope)),
-      other: all.filter((l) => !isTesla(l.scope) && !isSource(l.scope)),
+      sources: all.filter((l) => isSource(l.scope)),
+      other: all.filter((l) => !isSource(l.scope)),
       total: data?.logs?.length ?? 0,
     };
   }, [data?.logs]);
@@ -713,7 +697,6 @@ export function DebugClient() {
   }
 
   const c = data.chargers;
-  const tesla = data.tesla;
   const migrationList = migrations.data?.migrations ?? [];
   const unapplied = migrationList.filter((m) => m.status !== "applied");
   const unsetConfig = Object.entries(data.config).filter(
@@ -732,13 +715,19 @@ export function DebugClient() {
 
   // One line saying what to do next, rather than leaving it to be inferred from
   // four separate sections. Ordered by what blocks the most.
+  // The first unmet milestone, in gate order — the Tesla step used to sit here
+  // and there is no Tesla step any more. Reading it off the roadmap means this
+  // line cannot drift from the list rendered directly below it.
+  const firstOpenMilestone = (data.roadmap?.milestones ?? []).find(
+    (m) => m.state === "todo" || m.state === "manual",
+  );
   const nextAction =
     !migrations.data?.bootstrapped
       ? "Paste migration 037 into the Supabase SQL editor — nothing else here can run without it."
       : unapplied.length > 0
         ? `Apply ${unapplied.length} migration${unapplied.length > 1 ? "s" : ""}: ${unapplied.map((m) => m.id.slice(0, 3)).join(", ")}.`
-        : tesla?.nextStep
-          ? `Tesla: set ${tesla.nextStep}.`
+        : firstOpenMilestone
+          ? `${firstOpenMilestone.goal} — ${firstOpenMilestone.nextStep}`
           : null;
 
   function toggle(id: string) {
@@ -1149,7 +1138,7 @@ export function DebugClient() {
         <LogGroup
           title="Tot restul"
           entries={groupedLogs.other}
-          emptyNote="Nimic în jurnal în afară de Tesla și conectorii de stații."
+          emptyNote="Nimic în jurnal în afara conectorilor de stații."
           dayMs={DAY_MS}
           now={generatedAtMs}
         />
