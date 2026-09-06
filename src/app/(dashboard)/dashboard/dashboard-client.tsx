@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VehicleRecordCard } from "@/components/vehicle/VehicleRecordCard";
 import { VehicleNotifications } from "@/components/notifications/VehicleNotifications";
 import { GettingStartedCard, type ChecklistData } from "@/components/onboarding/GettingStartedCard";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
@@ -40,10 +41,6 @@ function formatMinutes(min: number | null | undefined): string {
   return `${h}h ${m}m`;
 }
 
-function isDataFresh(recordedAt: string): boolean {
-  return Date.now() - new Date(recordedAt).getTime() < 5 * 60 * 1000;
-}
-
 // SOC level → token accent class (theme-safe).
 function getSocColor(level: number): string {
   if (level > 50) return "bg-chart-2";
@@ -59,14 +56,12 @@ function HeroCard({
   isLoading,
   isFetching,
   vehicleName,
-  simulated,
   footer,
 }: {
   state: VehicleState | undefined;
   isLoading: boolean;
   isFetching: boolean;
   vehicleName: string;
-  simulated: boolean;
   /** Rendered inside the card — the sleep control belongs to this car. */
   footer?: React.ReactNode;
 }) {
@@ -77,7 +72,6 @@ function HeroCard({
       ? Math.round(rawSoc)
       : "—";
   const soc = typeof displayBattery === "number" ? displayBattery : 0;
-  const fresh = state ? isDataFresh(state.recordedAt) : false;
   const charging = state?.chargingState === "charging";
 
   return (
@@ -88,12 +82,7 @@ function HeroCard({
         {isLoading ? (
           <Skeleton className="h-5 w-14 rounded-full" />
         ) : (
-          <LiveBadge
-            fresh={fresh}
-            isFetching={isFetching}
-            label={simulated ? td("demo_label") : td("live_label")}
-            simulated={simulated}
-          />
+          <DemoBadge isFetching={isFetching} />
         )}
       </div>
 
@@ -159,59 +148,32 @@ function HeroCard({
 }
 
 /**
- * `fresh` is about the timestamp, not the source — and the simulator always
- * produces a current one, so this read "Live" on a mock vehicle forever. That
- * is how a linked car showing Prague and 15 degrees to a driver in Greece
- * looked like a working live integration rather than a bug. `simulated` says
- * which it is; freshness now only chooses how alive the badge looks.
+ * Says this is the simulator.
+ *
+ * It used to be a LiveBadge with two modes, and the second one is why an empty
+ * screen shipped wearing a green "Live" label: `fresh` is about the timestamp,
+ * not the source, and the simulator always produces a current one — so a car we
+ * never read looked freshly reported. Only the demo reaches this now, so the
+ * mode that could lie is deleted rather than left unreachable.
  */
-function LiveBadge({
-  fresh,
-  isFetching,
-  label,
-  simulated,
-}: {
-  fresh: boolean;
-  isFetching?: boolean;
-  label: string;
-  simulated?: boolean;
-}) {
-  const dotColor = isFetching ? "bg-primary" : fresh ? "bg-chart-2" : "bg-muted-foreground";
+function DemoBadge({ isFetching }: { isFetching?: boolean }) {
+  const td = useTranslations("dashboard");
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-        simulated
-          ? "bg-amber-500/15 text-amber-400"
-          : fresh
-            ? "bg-chart-2/15 text-chart-2"
-            : "bg-muted text-muted-foreground"
-      }`}
-    >
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-400">
       {isFetching ? (
         <motion.span
-          className={`size-1.5 rounded-full ${dotColor} animate-pulse`}
+          className="size-1.5 animate-pulse rounded-full bg-amber-400"
           animate={{ opacity: [1, 0.4, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
         />
       ) : (
-        <span
-          className={`size-1.5 rounded-full transition-colors ${
-            simulated
-              ? "bg-amber-400"
-              : fresh
-                ? "animate-pulse bg-chart-2"
-                : "bg-muted-foreground"
-          }`}
-        />
+        <span className="size-1.5 rounded-full bg-amber-400" />
       )}
-      {label}
+      {td("demo_label")}
     </span>
   );
 }
 
-// --------------------------------------------------------------------------
-// Stat chips row — compact info tiles
-// --------------------------------------------------------------------------
 interface ChipData {
   key: string;
   icon: React.ReactNode;
@@ -277,10 +239,7 @@ function StatChips({ state, isLoading }: { state: VehicleState | undefined; isLo
           key: "lastseen",
           icon: <RefreshCw className="size-4 text-muted-foreground" />,
           value: formatRelativeTime(state.lastSeenAt, td),
-          // Under "last seen", a paused link reads as a car that is merely
-          // asleep — plausible, and not what happened. Nothing is going to
-          // refresh this reading, so the label says so.
-          label: state.linkPaused ? td("chip_link_paused") : td("chip_last_seen"),
+          label: td("chip_last_seen"),
         }
       : null,
   ].filter(Boolean) as ChipData[];
@@ -374,13 +333,13 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
   const vehicleId = selectedVehicleId ?? "";
   const vehicleName = vehicle ? (vehicle.nickname ?? vehicle.displayName) : "";
 
-  const isLive = vehicle?.dataSource === "live";
+  const isReal = vehicle?.dataSource === "real";
   // A linked car is a record with no telemetry: nothing about it changes, so
   // there is nothing to poll for. The simulator does change, and is our own
   // database, so it polls.
   const { data, isLoading, isFetching, isError, refetch } = useVehicle(
     vehicleId,
-    !isLive,
+    !isReal,
   );
   const td = useTranslations("dashboard");
   const { isPulling } = usePullToRefresh(null, refetch, { disabled: isFetching });
@@ -464,19 +423,32 @@ export function DashboardClient({ checklist }: DashboardClientProps) {
         </Card>
       ) : (
         <>
-      <HeroCard
-        state={data}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        vehicleName={vehicleName}
-        simulated={!isLive}
-      />
+      {isReal ? (
+        // Two different things share this screen. A real car is a record — its
+        // first screen is what the paperwork says. The simulator is the demo,
+        // and a battery hero is exactly what a demo should show.
+        <>
+          <div className="px-1 pb-3 pt-1">
+            <h1 className="truncate text-lg font-semibold tracking-tight">{vehicleName}</h1>
+          </div>
+          <VehicleRecordCard vehicleId={vehicleId} />
+        </>
+      ) : (
+        <>
+          <HeroCard
+            state={data}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            vehicleName={vehicleName}
+          />
 
-      {data?.chargingState === "charging" && <ChargingOverlayCard state={data} />}
+          {data?.chargingState === "charging" && <ChargingOverlayCard state={data} />}
 
-      <StatChips state={data} isLoading={isLoading} />
+          <StatChips state={data} isLoading={isLoading} />
+        </>
+      )}
 
-      {showLocation && data && (
+      {!isReal && showLocation && data && (
         // Tappable. It showed a coordinate-derived label and did nothing,
         // which is the wrong half of "where is my car" — the question is
         // almost always asked while walking towards it.

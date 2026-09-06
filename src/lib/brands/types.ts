@@ -127,6 +127,6 @@ export interface BrandProfile {
   key: BrandKey;
   displayName: string;
   capabilities: BrandCapabilities;
-  dataSource: "mock" | "live";
+  dataSource: "mock" | "real";
   adapter: BrandAdapter;
 }

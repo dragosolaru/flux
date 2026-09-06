@@ -381,7 +381,6 @@
     "step_explore": "Explorer la démo"
   },
   "dashboard": {
-    "live_label": "Live",
     "demo_label": "Démo",
     "live_subtitle": "mise à jour toutes les 30s",
     "demo_subtitle": "Données démo · mise à jour toutes les 30s",
@@ -397,7 +396,6 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odomètre",
     "chip_last_seen": "Vu",
-    "chip_link_paused": "Liaison en pause",
     "chip_last_charge": "Dernière recharge",
     "action_charge": "Recharge",
     "time_now": "maintenant",
@@ -1291,5 +1289,13 @@
     "stations_link": "Bornes de recharge",
     "find_car_link": "Où est la voiture",
     "plan_trip": "Planifier un trajet"
+  },
+  "vehicle_record": {
+    "odometer": "Kilométrage",
+    "month_cost": "Ce mois-ci",
+    "expires_in": "expire dans {days} jours",
+    "no_deadline": "Aucun document n'expire prochainement",
+    "no_odometer": "Ajoutez le kilométrage pour le coût au kilomètre.",
+    "no_cost": "Importez une facture pour voir le coût de ce mois."
   }
 }

@@ -381,7 +381,6 @@
     "step_explore": "Explore the demo"
   },
   "dashboard": {
-    "live_label": "Live",
     "demo_label": "Demo",
     "live_subtitle": "updates every 30s",
     "demo_subtitle": "Demo data · updates every 30s",
@@ -397,7 +396,6 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odometer",
     "chip_last_seen": "Last seen",
-    "chip_link_paused": "Link paused",
     "chip_last_charge": "Last charge",
     "action_charge": "Charge",
     "time_now": "now",
@@ -1291,5 +1289,13 @@
     "stations_link": "Charging stations",
     "find_car_link": "Where the car is",
     "plan_trip": "Plan a trip"
+  },
+  "vehicle_record": {
+    "odometer": "Odometer",
+    "month_cost": "This month",
+    "expires_in": "expires in {days} days",
+    "no_deadline": "No document expiring soon",
+    "no_odometer": "Add your mileage to get cost per kilometre.",
+    "no_cost": "Upload a bill to see what this month cost."
   }
 }

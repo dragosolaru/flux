@@ -63,7 +63,7 @@ const FREE_MOCK_VEHICLES = 3;
 export async function canAddVehicle(
   userId: string,
   /** Simulators and real cars are limited separately — see FREE_MOCK_VEHICLES. */
-  dataSource: "mock" | "live" = "live",
+  dataSource: "mock" | "real" = "real",
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
   const tier = await getSubscriptionTier(userId);
   if (tier !== "free") return { allowed: true };

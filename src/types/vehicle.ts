@@ -9,7 +9,15 @@ import type { TeslaRegion } from "./tesla";
 import type { BrandKey } from "@/lib/brands/types";
 
 export type VehicleBrand = BrandKey;
-export type DataSource = "mock" | "live";
+/**
+ * What kind of vehicle this is.
+ *
+ * `real` is your car — a record with documents, costs and odometer readings and
+ * no telemetry at all. It was called `live` while there was a car to poll, and
+ * keeping that name is how an empty screen ended up wearing a green "Live"
+ * badge. `mock` is the simulator, which is the demo.
+ */
+export type DataSource = "mock" | "real";
 
 // ---------------------------------------------------------------------------
 // Vehicle row (DB-backed, identity + metadata)
@@ -81,16 +89,6 @@ export interface VehicleState {
   displayName: string;
   brand: VehicleBrand;
   dataSource: DataSource;
-  /**
-   * The car is linked, but its brand integration is switched off, so this
-   * reading came from storage and nothing will refresh it.
-   *
-   * Optional because it is an annotation from the route, not something the car
-   * reports. It exists so the screen can say "paused" instead of showing a
-   * stale reading under a "last seen" label, which would read as a car that is
-   * merely asleep — true-sounding, and not what happened.
-   */
-  linkPaused?: boolean;
   /**
    * What the car calls itself — `model3:p74d`. The key the trim table is keyed
    * on, carried through so an unmapped car can be identified from the screen

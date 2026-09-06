@@ -381,7 +381,6 @@
     "step_explore": "Fedezd fel a demót"
   },
   "dashboard": {
-    "live_label": "Live",
     "demo_label": "Demó",
     "live_subtitle": "30s-onként frissül",
     "demo_subtitle": "Demo adatok · 30s-onként frissül",
@@ -397,7 +396,6 @@
     "chip_temp": "Hőfok",
     "chip_odometer": "Km-óra",
     "chip_last_seen": "Utoljára",
-    "chip_link_paused": "Kapcsolat szüneteltetve",
     "chip_last_charge": "Utolsó töltés",
     "action_charge": "Töltés",
     "time_now": "most",
@@ -1291,5 +1289,13 @@
     "stations_link": "Töltőállomások",
     "find_car_link": "Hol az autó",
     "plan_trip": "Út tervezése"
+  },
+  "vehicle_record": {
+    "odometer": "Kilométeróra",
+    "month_cost": "Ebben a hónapban",
+    "expires_in": "{days} nap múlva jár le",
+    "no_deadline": "Nincs hamarosan lejáró dokumentum",
+    "no_odometer": "Add meg a kilométerórát a kilométerenkénti költséghez.",
+    "no_cost": "Tölts fel egy számlát, hogy lásd a havi költséget."
   }
 }

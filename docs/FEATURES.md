@@ -1516,3 +1516,55 @@ files is checked against the pages that actually exist (§29 note below).
 `src/components/layout/__tests__/nav-targets-exist.test.ts`.
 
 **Dependencies:** none.
+
+
+---
+
+## 31. A vehicle is a record, not a connection
+
+**The gap this closes.** `POST /api/vehicles` creates simulators only — its own
+comment says so, because a real car used to arrive through the Tesla OAuth flow.
+With that flow deleted there was **no way to add your own car at all**, while the
+paid product is entirely about attaching paperwork to one. The single remaining
+real car was an orphan of a flow that no longer exists, and the dashboard showed
+it as a blank page wearing a green **Live** badge.
+
+**`data_source: 'live'` is now `'real'`** (migration `053`). "Live" described a
+connection; what the row means is *your car* as opposed to the simulator. Keeping
+the old name is how an empty screen ends up labelled Live — the badge read
+`!isSimulated`, so the car we never read was the one called live.
+
+**The dashboard is two screens, because it is two things:**
+
+| | |
+| --- | --- |
+| **Your car** | Odometer with its reading date, this month's cost, and the next document to expire. |
+| **Demo** | The battery hero, charging card and stat chips — unchanged. It is the showcase. |
+
+The deadline is why the screen exists: nobody opens an app to look at a number,
+they open it not to be fined. It gets its own row rather than a third tile, and
+turns amber under a fortnight. `GET /api/vehicles/[id]/record` answers all three
+in one request; each is **null rather than zero** when nothing has been uploaded,
+because "0 lei this month" is the more confident of the two wrong answers.
+
+**`odometer_readings`** (migration `053`) — `vehicle_id`, `km`, `recorded_at`,
+`source` (`manual` | `document` | `photo`), `confidence`. A separate table rather
+than a column on `vehicles`, because a reading is an observation with a time and
+a source, not a property of the car; and rather than `vehicle_snapshots`, because
+mixing hand-typed numbers into a telemetry table with no marker is the ambiguity
+that produced C1–C5. RLS checks ownership through `vehicles`.
+
+**Gone with the change:** the `LiveBadge`'s second mode (replaced by `DemoBadge`,
+which has only the state that can be true), `isDataFresh` on the record path — a
+record has no freshness — the `live_label` and `chip_link_paused` strings in all
+five locales, and `VehicleState.linkPaused`.
+
+**Still to do**, and it is the next thing: `POST /api/vehicles` must accept a
+`kind`, defaulting to your car rather than a simulator, and `AddVehicleModal`
+must ask for the real details plus an opening odometer. Until then a new user can
+still only create demos.
+
+**Key files:** `supabase/migrations/053_vehicle_is_a_record.sql`,
+`src/app/api/vehicles/[vehicleId]/record/route.ts`,
+`src/components/vehicle/VehicleRecordCard.tsx`,
+`src/app/(dashboard)/dashboard/dashboard-client.tsx`, `src/types/vehicle.ts`.

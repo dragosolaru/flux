@@ -381,7 +381,6 @@
     "step_explore": "Explorează demo-ul"
   },
   "dashboard": {
-    "live_label": "Live",
     "demo_label": "Demo",
     "live_subtitle": "se actualizează la 30s",
     "demo_subtitle": "Date demo · se actualizează la 30s",
@@ -397,7 +396,6 @@
     "chip_temp": "Temp",
     "chip_odometer": "Odometru",
     "chip_last_seen": "Văzut",
-    "chip_link_paused": "Legătură oprită",
     "chip_last_charge": "Ultima încărcare",
     "action_charge": "Încărcare",
     "time_now": "acum",
@@ -1291,5 +1289,13 @@
     "stations_link": "Stații de încărcare",
     "find_car_link": "Unde e mașina",
     "plan_trip": "Planifică un drum"
+  },
+  "vehicle_record": {
+    "odometer": "Kilometraj",
+    "month_cost": "Luna aceasta",
+    "expires_in": "expiră în {days} zile",
+    "no_deadline": "Niciun document care expiră curând",
+    "no_odometer": "Adaugă kilometrajul ca să calculăm costul pe kilometru.",
+    "no_cost": "Încarcă o factură ca să vezi cât a costat luna aceasta."
   }
 }

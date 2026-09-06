@@ -43,7 +43,7 @@ export async function GET() {
 
   const vehicleRows = (vehicles ?? []) as Array<{
     id: string;
-    data_source: "mock" | "live";
+    data_source: "mock" | "real";
     virtual_key_paired: boolean;
   }>;
 

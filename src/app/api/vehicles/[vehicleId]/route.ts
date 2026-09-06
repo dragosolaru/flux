@@ -64,7 +64,7 @@ export async function PATCH(
       .maybeSingle();
     const kind = (existing as { data_source?: string } | null)?.data_source === "mock"
       ? "mock"
-      : "live";
+      : "real";
     const check = await canAddVehicle(userId, kind);
     if (!check.allowed) {
       return NextResponse.json({ error: "free_tier_limit", message: check.message }, { status: 403 });

@@ -10,7 +10,7 @@ export interface VehicleListItem {
   nickname: string | null;
   model: string | null;
   year: number | null;
-  dataSource: "mock" | "live";
+  dataSource: "mock" | "real";
   virtualKeyPaired: boolean;
 }
 

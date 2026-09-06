@@ -67,7 +67,7 @@ interface VehicleListItemWithActive {
   nickname: string | null;
   model: string | null;
   year: number | null;
-  dataSource: "mock" | "live";
+  dataSource: "mock" | "real";
   virtualKeyPaired: boolean;
   isActive: boolean;
   scenarioId?: string | null;

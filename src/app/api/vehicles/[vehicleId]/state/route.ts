@@ -38,8 +38,7 @@ function noTelemetryState(vehicle: {
     vehicleId: vehicle.id,
     displayName: vehicle.display_name,
     brand: vehicle.brand as BrandKey,
-    dataSource: "live",
-    linkPaused: true,
+    dataSource: "real",
     trimBadge: null,
     isOnline: false,
     lastSeenAt: null,
@@ -149,7 +148,7 @@ export async function GET(
   // identity we know, and null for every reading we do not. Screens already hide
   // null fields rather than substituting placeholders (see types/vehicle.ts), so
   // an honest empty is rendered without any of them needing a special case.
-  if (vehicle.data_source === "live") {
+  if (vehicle.data_source === "real") {
     return NextResponse.json(noTelemetryState(vehicle));
   }
 

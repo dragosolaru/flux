@@ -381,7 +381,6 @@
     "step_explore": "Demo erkunden"
   },
   "dashboard": {
-    "live_label": "Live",
     "demo_label": "Demo",
     "live_subtitle": "aktualisiert alle 30s",
     "demo_subtitle": "Demo-Daten · aktualisiert alle 30s",
@@ -397,7 +396,6 @@
     "chip_temp": "Temp",
     "chip_odometer": "Km-Stand",
     "chip_last_seen": "Zuletzt",
-    "chip_link_paused": "Verbindung pausiert",
     "chip_last_charge": "Letzte Ladung",
     "action_charge": "Laden",
     "time_now": "jetzt",
@@ -1291,5 +1289,13 @@
     "stations_link": "Ladestationen",
     "find_car_link": "Wo das Auto steht",
     "plan_trip": "Fahrt planen"
+  },
+  "vehicle_record": {
+    "odometer": "Kilometerstand",
+    "month_cost": "Diesen Monat",
+    "expires_in": "läuft in {days} Tagen ab",
+    "no_deadline": "Kein Dokument läuft demnächst ab",
+    "no_odometer": "Kilometerstand eintragen für die Kosten pro Kilometer.",
+    "no_cost": "Lade eine Rechnung hoch, um die Kosten dieses Monats zu sehen."
   }
 }

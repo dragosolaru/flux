@@ -63,7 +63,7 @@ export function ChargerDetailSheet({ charger, onClose }: ChargerDetailSheetProps
   // route handles both paths.
   const teslaVehicle = useMemo(() => {
     const teslas = (vehicles ?? []).filter((v) => v.brand === "tesla");
-    return teslas.find((v) => v.dataSource === "live") ?? teslas[0] ?? null;
+    return teslas.find((v) => v.dataSource === "real") ?? teslas[0] ?? null;
   }, [vehicles]);
 
   async function handleSendToCar() {

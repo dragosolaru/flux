@@ -68,7 +68,7 @@ export default async function AboutDataPage() {
           ) : (
             <div className="divide-y">
               {activeVehicles.map((v: { id: string; display_name: string; brand: string; model: string | null; data_source: string; nickname: string | null }) => {
-                const isLive = v.data_source === "live";
+                const isLive = v.data_source === "real";
 
                 return (
                   <div key={v.id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-6">

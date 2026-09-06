@@ -337,7 +337,7 @@ export function MapClient() {
   // trusting the old meaning.
   const { data: liveState } = useVehicle(
     vehicleId,
-    planningVehicle?.dataSource !== "live",
+    planningVehicle?.dataSource !== "real",
     false,
   );
   // Derived, not synced. An effect copying the live value into state would

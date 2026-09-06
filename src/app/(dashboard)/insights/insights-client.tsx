@@ -274,7 +274,7 @@ function ActivitySection({ vehicleId, from }: ActivitySectionProps) {
         because several errands between two readings arrive as one. Saying so is
         cheaper than having the number quietly disbelieved.
       */}
-      {vehicleState?.dataSource === "live" ? (
+      {vehicleState?.dataSource === "real" ? (
         <p className="text-2xs text-muted-foreground">{t("activity_derived_hint")}</p>
       ) : null}
     </div>
